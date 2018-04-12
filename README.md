@@ -1,6 +1,6 @@
 # LabChain
 
-In out BitLab Blockchain Course we develop our own blockchain platform.
+In our BitLab Blockchain Course we develop our own blockchain platform.
 
 ###Objectives for the Platform are:
 
