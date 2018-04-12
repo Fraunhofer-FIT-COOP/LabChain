@@ -2,7 +2,7 @@
 
 In out BitLab Blockchain Course we develop our own blockchain platform.
 
-###Objectives for the Platform are:
+### Objectives for the Platform are:
 
 - Exchangeable components
 - Strong documentation
