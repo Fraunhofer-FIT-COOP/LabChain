@@ -257,6 +257,7 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('3')
         self.queue_input('1')
         self.queue_input('')  # press enter
+        self.queue_input('5')
         self.client.main()
 
         # then
@@ -281,6 +282,7 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('3')
         self.queue_input('1')
         self.queue_input('')  # press enter
+        self.queue_input('5')
         self.client.main()
 
         # then
