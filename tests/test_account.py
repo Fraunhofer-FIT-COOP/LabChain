@@ -250,7 +250,6 @@ class LoadBlockTestCase(CommonTestCase):
         """ Test case: #10a
             Tested requirement: #210
         """
-        pass
         # given
         # blockchain is empty -> nothing to setup
 
