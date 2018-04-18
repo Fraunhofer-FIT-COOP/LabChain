@@ -210,42 +210,6 @@ class CreateTransactionTestCase(CommonTestCase):
 
 
 class TransactionTestCase(CommonTestCase):
-    pass
-
-
-class LoadBlockTestCase(CommonTestCase):
-    def test_request_block_from_blockchain_although_blockchain_is_empty(self):
-        """ Test case: #10
-            Tested requirement: #210
-        """
-        pass
-
-    def test_request_block_from_nonempty_blockchain(self):
-        """ Test case: #11
-            Tested requirement: #210
-        """
-
-        # given
-        transactions = []
-        for i in range(5):
-            transactions.append(MockTransaction("test_sender", "test_receiver", "payload_data"))
-
-        block0 = MockBlock(0, "merkle_tree_hash_qthq4thi4q4t", transactions, "nonce_hash", "creator_hash")
-        block1 = MockBlock(1, "merkle_tree_hash_qthq5thi4q1t", transactions, "nonce_hash", "creator_hash")
-        self.add_block(block0)
-        self.add_block(block1)
-
-        # when
-        self.queue_input('3')
-        self.queue_input('1')
-        self.queue_input('')  # press enter
-        self.client.main()
-        # then
-        self.assert_string_in_output('1')  # block number
-        self.assert_string_in_output('merkle_tree_hash_qthq4thi4q4t')  # merkle tree root
-        self.assert_string_in_output('nonce_hash')  # merkle tree root
-        self.assert_string_in_output('creator_hash')  # block creator
-
 
     def test_show_transaction_with_existing_transaction(self):
         """ Test case: #11
@@ -277,6 +241,20 @@ class LoadBlockTestCase(CommonTestCase):
         self.client.main()
         # then
         self.assert_string_in_output('Transaction does not exist')
+
+
+class LoadBlockTestCase(CommonTestCase):
+    def test_request_block_from_blockchain_although_blockchain_is_empty(self):
+        """ Test case: #10
+            Tested requirement: #210
+        """
+        pass
+
+    def test_request_block_from_nonempty_blockchain(self):
+        """ Test case: #11
+            Tested requirement: #210
+        """
+        pass
 
 
 class UnnecessaryTestCase(CommonTestCase):
