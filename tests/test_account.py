@@ -221,7 +221,7 @@ class LoadBlockTestCase(CommonTestCase):
         pass
 
     def test_request_block_from_nonempty_blockchain(self):
-        """ Test case: #11
+        """ Test case: #10a
             Tested requirement: #210
         """
 
@@ -245,10 +245,8 @@ class LoadBlockTestCase(CommonTestCase):
         self.assert_string_in_output('1')  # block number
         self.assert_string_in_output('merkle_tree_hash_qthq4thi4q4t')  # merkle tree root
         self.assert_string_in_output('nonce_hash')  # merkle tree root
-        self.assert_string_in_output('nonce_hash')  # merkle tree root
+        self.assert_string_in_output('creator_hash')  # block creator
 
-
-        pass
 
     def test_show_transaction_with_existing_transaction(self):
         """ Test case: #11
