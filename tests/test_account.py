@@ -247,13 +247,24 @@ class TransactionTestCase(CommonTestCase):
 
 class LoadBlockTestCase(CommonTestCase):
     def test_request_block_from_blockchain_although_blockchain_is_empty(self):
-        """ Test case: #10
+        """ Test case: #10a
             Tested requirement: #210
         """
         pass
+        # given
+        # blockchain is empty -> nothing to setup
+
+        # when
+        self.queue_input('3')
+        self.queue_input('1')
+        self.queue_input('')  # press enter
+        self.client.main()
+
+        # then
+        self.assert_string_in_output('There is no block with the given number')
 
     def test_request_block_from_nonempty_blockchain(self):
-        """ Test case: #10a
+        """ Test case: #10
             Tested requirement: #210
         """
 
