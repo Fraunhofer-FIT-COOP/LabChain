@@ -202,7 +202,175 @@ class CommonTestCase(TestCase):
 
 
 class ManageWalletTestCase(CommonTestCase):
-    pass
+    def test_show_own_addresses_with_two_addresses(self):
+        """ Test case: #1
+            Tested requirement: #170
+        """
+        # given
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
+        # when
+        self.queue_input('1')
+        self.queue_input('1')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        self.assert_string_in_output('test key 1')
+        self.assert_string_in_output('test key 2')
+
+    def test_show_own_addresses_with_empty_wallet(self):
+        """ Test case: #2
+            Tested requirement: #170
+        """
+        # when
+        self.queue_input('1')
+        self.queue_input('1')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        self.assert_string_in_output('No key pairs available')
+
+    def test_create_new_address_with_non_empty_name(self):
+        """ Test case: #3
+            Tested requirement: #160
+        """
+        # when
+        self.queue_input('1')
+        self.queue_input('2')
+        self.queue_input('test key')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        addresses = self.get_wallet_key_pairs()
+        self.assertEqual(len(addresses), 1)
+        label, pub_key, pr_key = addresses[0]
+        self.assertEqual(label, 'test key')
+        self.assertTrue(pub_key)
+        self.assertTrue(pr_key)
+
+    def test_create_new_address_with_empty_name(self):
+        """ Test case: #3a
+            Tested requirement: #160
+        """
+        # when
+        self.queue_input('1')
+        self.queue_input('2')
+        self.queue_input('')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        self.assert_string_in_output('Please enter non-empty name')
+
+    def test_create_new_address_with_one_existing_key(self):
+        """ Test case: #4
+            Tested requirement: #160
+        """
+        # given
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('existing key', pub_key, pr_key)
+        # when
+        self.queue_input('1')
+        self.queue_input('2')
+        self.queue_input('test key')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        addresses = self.get_wallet_key_pairs()
+        self.assertEqual(len(addresses), 2)
+        label, _, _ = addresses[0]
+        self.assertEqual(label, 'existing key')
+        label, pub_key, pr_key = addresses[1]
+        self.assertEqual(label, 'test key')
+        self.assertTrue(pub_key)
+        self.assertTrue(pr_key)
+
+    def test_create_not_unique_address_with_one_existing_key(self):
+        """ Test case: #4a
+            Tested requirement: #160
+        """
+        # given
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('existing key', pub_key, pr_key)
+        # when
+        self.queue_input('1')
+        self.queue_input('2')
+        self.queue_input('existing key')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        self.assert_string_in_output('Please enter unique name')
+
+    def test_delete_address_with_empty_wallet(self):
+        """ Test case: #5
+            Tested requirement: #170
+        """
+        # when
+        self.queue_input('1')
+        self.queue_input('3')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        self.assert_string_in_output('No key pairs available')
+
+    def test_show_addresses_which_can_be_deleted_with_two_addresses(self):
+        """ Test case: #6
+            Tested requirement: #170
+        """
+        # given
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
+        # when
+        self.queue_input('1')
+        self.queue_input('3')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        self.assert_string_in_output('test key 1')
+        self.assert_string_in_output('test key 2')
+
+    def test_delete_address_with_two_addresses(self):
+        """ Test case: #7
+            Tested requirement: #170
+        """
+        # given
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
+        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
+        # when
+        self.queue_input('1')
+        self.queue_input('3')
+        self.queue_input('2')
+        self.queue_input('')
+        self.queue_input('4')
+        self.queue_input('5')
+        self.client.main()
+        # then
+        addresses = self.get_wallet_key_pairs()
+        self.assertEqual(len(addresses), 1)
+        label, _, _ = addresses[0]
+        self.assertEqual(label, 'test key 1')
+        self.assert_string_in_output('Key #2 was deleted ')
 
 
 class CreateTransactionTestCase(CommonTestCase):
