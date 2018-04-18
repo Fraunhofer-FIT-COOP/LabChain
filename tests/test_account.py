@@ -210,21 +210,6 @@ class CreateTransactionTestCase(CommonTestCase):
 
 
 class TransactionTestCase(CommonTestCase):
-    pass
-
-
-class LoadBlockTestCase(CommonTestCase):
-    def test_request_block_from_blockchain_although_blockchain_is_empty(self):
-        """ Test case: #10
-            Tested requirement: #210
-        """
-        pass
-
-    def test_request_block_from_nonempty_blockchain(self):
-        """ Test case: #11
-            Tested requirement: #210
-        """
-        pass
 
     def test_show_transaction_with_existing_transaction(self):
         """ Test case: #11
@@ -256,6 +241,20 @@ class LoadBlockTestCase(CommonTestCase):
         self.client.main()
         # then
         self.assert_string_in_output('Transaction does not exist')
+
+
+class LoadBlockTestCase(CommonTestCase):
+    def test_request_block_from_blockchain_although_blockchain_is_empty(self):
+        """ Test case: #10
+            Tested requirement: #210
+        """
+        pass
+
+    def test_request_block_from_nonempty_blockchain(self):
+        """ Test case: #11
+            Tested requirement: #210
+        """
+        pass
 
 
 class UnnecessaryTestCase(CommonTestCase):
