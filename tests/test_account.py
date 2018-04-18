@@ -223,6 +223,7 @@ class TransactionTestCase(CommonTestCase):
         self.queue_input('4')
         self.queue_input('1a2b')
         self.queue_input('')
+        self.queue_input('5')
         self.client.main()
         # then
         self.assert_string_in_output('some_sender_id')
@@ -238,6 +239,7 @@ class TransactionTestCase(CommonTestCase):
         self.queue_input('4')
         self.queue_input('1a2b')
         self.queue_input('')
+        self.queue_input('5')
         self.client.main()
         # then
         self.assert_string_in_output('Transaction does not exist')
