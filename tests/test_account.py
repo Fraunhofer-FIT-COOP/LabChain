@@ -19,13 +19,23 @@ class MockTransaction:
         return True
 
 
+class MockBlock:
+    def __init__(self, number, merkle_tree, transactions, nonce, creator):
+        self.number = number
+        self.merkle_tree = merkle_tree
+        self.transactions = transactions
+        self.nonce = nonce
+        self.creator = creator
+
+
 class MockTransactionFactory:
     def createTransaction(self, sender, receiver, payload):
         return MockTransaction(sender, receiver, payload)
 
 
 class MockNetworkInterface:
-    def __init__(self, transactions, blocks):
+    def __init__(self, crypto_helper, transactions, blocks):
+        self.crypto_helper = crypto_helper
         self.transactions = transactions
         self.blocks = blocks
 
@@ -45,10 +55,15 @@ class MockNetworkInterface:
         return None
 
     def requestTransaction(self, hash):
-        pass
+        for transaction in self.transactions:
+            if self.crypto_helper.hash_transaction(transaction) == hash:
+                return transaction
 
-    def requestBlock(self, block_id):
-        pass
+    def requestBlock(self, block_number):
+        for block in self.blocks:
+            if block.number == block_number:
+                return block
+        return None
 
 
 class MockCryptoHelper:
@@ -79,6 +94,9 @@ class MockCryptoHelper:
             self.hash_counter += 1
         return self.hash_map[message]
 
+    def hash_transaction(self, transaction):
+        return self.hash(transaction.sender + transaction.receiver + transaction.payload + transaction.signature)
+
 
 class CommonTestCase(TestCase):
     """Common test superclass for utilities."""
@@ -101,9 +119,11 @@ class CommonTestCase(TestCase):
         self.wallet_file = StringIO()
         self.transactions = []
         self.blocks = []
-        return BlockchainClient(Wallet(self.wallet_file), MockTransactionFactory(),
-                                MockNetworkInterface(self.transactions, self.blocks),
-                                MockCryptoHelper())
+        self.mock_crypto_helper = MockCryptoHelper()
+        self.mock_transaction_factory = MockTransactionFactory()
+        self.mock_network_interface = MockNetworkInterface(self.mock_crypto_helper, self.transactions, self.blocks)
+        return BlockchainClient(Wallet(self.wallet_file), self.mock_transaction_factory,
+                                self.mock_network_interface, self.mock_crypto_helper)
 
     def get_output(self):
         """Get the whole stdout content since the start of the test. """
@@ -163,6 +183,14 @@ class CommonTestCase(TestCase):
             if key_tuple[0] == label:
                 return key_tuple[1].key_tuple[2]
         return None, None
+
+    def add_transaction(self, transaction):
+        """Add a transaction to all transactions in the blockchain."""
+        self.transactions.append(transaction)
+
+    def add_block(self, block):
+        """Add a block to all blocks in the blockchain."""
+        self.blocks.append(block)
 
 
 class ManageWalletTestCase(CommonTestCase):
