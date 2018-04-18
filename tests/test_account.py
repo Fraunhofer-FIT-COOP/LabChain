@@ -206,7 +206,17 @@ class TransactionTestCase(CommonTestCase):
 
 
 class LoadBlockTestCase(CommonTestCase):
-    pass
+    def test_request_block_from_blockchain_although_blockchain_is_empty(self):
+        """ Test case: #10
+            Tested requirement: #210
+        """
+        pass
+
+    def test_request_block_from_nonempty_blockchain(self):
+        """ Test case: #11
+            Tested requirement: #210
+        """
+        pass
 
 
 class UnnecessaryTestCase(CommonTestCase):
@@ -226,8 +236,10 @@ class UnnecessaryTestCase(CommonTestCase):
         Else you will get: EOFError: EOF when reading a line
         """
         self.queue_input('test')
+
         self.queue_input('test2')
         input_str = input('Please input something')
+
         input_str2 = input('Please input something')
-        self.assertEqual('test', input_str)
         self.assertEqual('test2', input_str2)
+        self.assertEqual('test', input_str)
