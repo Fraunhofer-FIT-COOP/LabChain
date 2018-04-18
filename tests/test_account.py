@@ -131,6 +131,39 @@ class CommonTestCase(TestCase):
         """Return a list of lines from the wallet file."""
         return self.wallet_file.getvalue().splitlines()
 
+    def store_key_pair_in_wallet(self, label, public_key, private_key):
+        """Stores a labeled key pair in the mocked wallet file.
+
+        The format is CSV: <label>;<public_key>;<private_key>
+        """
+        # go to end of file
+        self.wallet_file.seek(0, 2)
+        self.wallet_file.write(label + ';' + public_key + ';' + private_key)
+        # go to the beginning of the file
+        self.wallet_file.seek(0, 0)
+
+    def get_wallet_key_pairs(self):
+        """Return a list of key pair tuples.
+
+        A key pair tuple is structured as follows (<label>, <public_key>, <private_key>).
+        """
+        wallet_content = []
+        for line in self.get_wallet_file_content():
+            label, public_key, private_key = line.split(';', 2)
+            wallet_content.append((label, public_key, private_key))
+        return wallet_content
+
+    def get_wallet_key_pair_by_label(self, label):
+        """Return a (<public_key>, <private_key>) tuple, if there is a key pair with this label.
+
+        Returns (None, None) otherwise.
+        """
+        wallet_content = self.get_wallet_key_pairs()
+        for key_tuple in wallet_content:
+            if key_tuple[0] == label:
+                return key_tuple[1].key_tuple[2]
+        return None, None
+
 
 class ManageWalletTestCase(CommonTestCase):
     pass
