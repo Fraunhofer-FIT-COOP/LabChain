@@ -125,13 +125,21 @@ class CommonTestCase(TestCase):
         return BlockchainClient(Wallet(self.wallet_file), self.mock_transaction_factory,
                                 self.mock_network_interface, self.mock_crypto_helper)
 
+    def get_raw_output(self):
+        """Get the whole stdout content since the start of the test as raw string. """
+        return self.output_buffer.getvalue()
+
     def get_output(self):
-        """Get the whole stdout content since the start of the test. """
-        return self.output_buffer.getvalue().splitlines()
+        """Get the whole stdout content since the start of the test as list of lines. """
+        return self.get_raw_output().splitlines()
 
     def assert_line_in_output(self, line):
         """Assert that this line has been written to stdout since the start of the test."""
         self.assertIn(line, self.get_output())
+
+    def assert_string_in_output(self, string):
+        """Assert that this line has been written to stdout since the start of the test."""
+        self.assertIn(string, self.get_raw_output())
 
     def queue_input(self, line):
         """Queue an input to stdin to be retrieved later by an "input()" call.
@@ -217,6 +225,37 @@ class LoadBlockTestCase(CommonTestCase):
             Tested requirement: #210
         """
         pass
+
+    def test_show_transaction_with_existing_transaction(self):
+        """ Test case: #11
+            Tested requirement: #200
+        """
+        # given
+        transaction = MockTransaction('some_sender_id', 'some_receiver_id', 'some_payload')
+        transaction.signTransaction('some_signature')
+        self.add_transaction(transaction)
+        # when
+        self.queue_input('4')
+        self.queue_input('1a2b')
+        self.queue_input('')
+        self.client.main()
+        # then
+        self.assert_string_in_output('some_sender_id')
+        self.assert_string_in_output('some_receiver_id')
+        self.assert_string_in_output('some_sender_id')
+        self.assert_string_in_output('some_payload')
+
+    def test_show_transaction_with_nonexisting_transaction(self):
+        """ Test case: #11a
+            Tested requirement: #200
+        """
+        # when
+        self.queue_input('4')
+        self.queue_input('1a2b')
+        self.queue_input('')
+        self.client.main()
+        # then
+        self.assert_string_in_output('Transaction does not exist')
 
 
 class UnnecessaryTestCase(CommonTestCase):
