@@ -246,6 +246,20 @@ class TransactionTestCase(CommonTestCase):
 
 
 class LoadBlockTestCase(CommonTestCase):
+
+    def test_request_block_from_blockchain_with_empty_block_id(self):
+        """ Test case: #9
+            Tested requirement: #210
+        """
+        # given
+        #     blockchain is empty -> nothing to setup
+        # when
+        self.queue_input('3')
+        self.queue_input('')  # press enter
+        self.client.main()
+        # then
+        # TODO check whether the main menu is displayed
+
     def test_request_block_from_blockchain_although_blockchain_is_empty(self):
         """ Test case: #10a
             Tested requirement: #210
