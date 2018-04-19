@@ -202,6 +202,7 @@ class CommonTestCase(TestCase):
 
 
 class ManageWalletTestCase(CommonTestCase):
+
     def test_show_own_addresses_with_two_addresses(self):
         """ Test case: #1
             Tested requirement: #170
