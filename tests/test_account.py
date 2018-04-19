@@ -374,7 +374,93 @@ class ManageWalletTestCase(CommonTestCase):
 
 
 class CreateTransactionTestCase(CommonTestCase):
-    pass
+
+    def test_create_transaction_with_valid_input(self):
+        """ Test Case: 8
+            Test requirement: 180, 190
+        """
+        # given
+        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_456')
+        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
+        valid_signature = self.mock_crypto_helper.sign('private_111', 'public_555' + 'test_receiver' + 'test_payload')
+        # when
+        self.queue_input('2')  # go to menu 2
+        self.queue_input('2')  # choose label 2
+        self.queue_input('test_receiver')  # input receiver address
+        self.queue_input('test_payload')  # input payload
+        self.queue_input('')  # press Enter
+        # end of test case input
+        self.queue_input('5')  # quit client now
+        self.client.main()
+        # then
+        self.assertEqual(len(self.transactions), 1)
+        self.assertEqual(self.transactions[0].sender, 'BestLabel')
+        self.assertEqual(self.transactions[0].receiver, 'test_receiver')
+        self.assertEqual(self.transactions[0].payload, 'test_payload')
+        self.assertEqual(self.transactions[0].signature, valid_signature)
+
+    def test_create_transaction_with_invalid_key_pair_index_as_sender(self):
+        """ Test Case: 8a
+            Test requirement: 180, 190
+        """
+        # given
+        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_45')
+        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
+        # when
+        self.queue_input('2')
+        self.queue_input('3')
+        # end of test case input
+        # finish with valid input and quit client
+        self.queue_input('2')
+        self.queue_input('test_receiver')  # input receiver address
+        self.queue_input('test_payload')  # input payload
+        self.queue_input('')  # press Enter
+        self.queue_input('5')  # quit client now
+        self.client.main()
+        # then
+        self.assert_string_in_output('Please enter a valid key label!')
+
+    def test_create_transaction_with_invalid_receiver_address(self):
+        """ Test Case: 8b
+            Test requirement: 180, 190
+        """
+        # given
+        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_45')
+        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
+        # when
+        self.queue_input('2')
+        self.queue_input('2')
+        self.queue_input('')
+        # end of test case input
+        # finish with valid input and quit client
+        self.queue_input('test_receiver')  # input receiver address
+        self.queue_input('test_payload')  # input payload
+        self.queue_input('')  # press Enter
+        self.queue_input('5')  # quit client now
+        self.client.main()
+        # then
+        self.assert_string_in_output('Please enter a valid receiver!')
+
+    def test_create_transaction_with_invalid_payload(self):
+        """ Test Case: 8c
+            Test requirement: 180, 190
+        """
+        # given
+        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_45')
+        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
+        # when
+        self.queue_input('2')
+        self.queue_input('2')
+        self.queue_input('test_receiver')
+        self.queue_input('')
+        # end of test case input
+        # finish with valid input and quit client
+        self.queue_input('test_payload')  # input payload
+        self.queue_input('')  # press Enter
+        self.queue_input('5')  # quit client now
+        self.client.main()
+        # then
+        self.assert_string_in_output('Please enter a valid payload!')
 
 
 class TransactionTestCase(CommonTestCase):
