@@ -80,7 +80,7 @@ class BlockchainClient:
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction',),
             '3': ('Load Block',),
-            '4': ('Load Transaction',)
+            '4': ('Load Transaction',),
             '5': ('Exit Blockchain Client', self.exit_menu, []),
         }, 'Please select a value:')
 
