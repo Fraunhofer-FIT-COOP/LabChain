@@ -1,4 +1,5 @@
 import os
+from collections import OrderedDict
 
 
 class Wallet:
@@ -22,9 +23,13 @@ class Wallet:
 class Menu:
     def __init__(self, prompt_text, menu_items, input_text):
         self.prompt_text = prompt_text
-        self.menu_items = menu_items
+        self.menu_items = self.to_ordered_dict(menu_items)
         self.input_text = input_text
         self.error_message = ''
+
+    @staticmethod
+    def to_ordered_dict(dictionary):
+        return OrderedDict(sorted(dictionary.items(), key=lambda t: t[0]))
 
     @staticmethod
     def clear_screen():
