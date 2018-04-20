@@ -26,7 +26,8 @@ class Menu:
         self.input_text = input_text
         self.error_message = ''
 
-    def clear_screen(self):
+    @staticmethod
+    def clear_screen():
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def available_options(self):
