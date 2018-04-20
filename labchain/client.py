@@ -1,3 +1,6 @@
+import os
+
+
 class Wallet:
 
     def __init__(self, wallet_file):
@@ -24,8 +27,7 @@ class Menu:
         self.error_message = ''
 
     def clear_screen(self):
-        # TODO: implement
-        pass
+        os.system('cls' if os.name == 'nt' else 'clear')
 
     def available_options(self):
         return ','.join(self.menu_items.keys())
@@ -52,6 +54,7 @@ class Menu:
                 menu_tuple[1](*menu_tuple[2])
                 self.error_message = ''
             else:
+
                 self.error_message = 'Wrong input. Please select one of [' + self.available_options() + '].'
 
 
