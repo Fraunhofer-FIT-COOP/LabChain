@@ -22,6 +22,13 @@ class Wallet:
 
 class Menu:
     def __init__(self, prompt_text, menu_items, input_text):
+        """
+
+        :param prompt_text: A list of string that represent each line of the menu text.
+        :param menu_items: A dictionary with the input value as key and a tuple with
+                            ('<option description>', <function reference>, <list of args) as value.
+        :param input_text: The text at the bottom before the prompt.
+        """
         self.prompt_text = prompt_text
         self.menu_items = self.to_ordered_dict(menu_items)
         self.input_text = input_text
