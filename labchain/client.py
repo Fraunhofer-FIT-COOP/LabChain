@@ -1,4 +1,5 @@
 import os
+import sys
 from collections import OrderedDict
 
 
@@ -42,12 +43,12 @@ class Menu:
         self.clear_screen()
         for line in self.prompt_text:
             print(line)
-        print('')
-        print('')
+        print()
+        print()
         for opt_index, menu_tuple in self.menu_items.items():
             print(opt_index + ' - ' + menu_tuple[0])
-        print('')
-        print('')
+        print()
+        print()
         print(self.error_message)
 
     def show(self):
@@ -60,13 +61,16 @@ class Menu:
                 menu_tuple[1](*menu_tuple[2])
                 self.error_message = ''
             else:
-
                 self.error_message = 'Wrong input. Please select one of [' + self.available_options() + '].'
 
 
 class BlockchainClient:
 
     def __init__(self, wallet, transaction_factory, network_interface, crypto_helper):
+        self.wallet = wallet
+        self.transaction_factory = transaction_factory
+        self.network_interface = network_interface
+        self.crypto_helper = crypto_helper
         self.manage_wallet_menu = Menu(['prompt text'], {
             '1': ('Show own addresses',),
             '2': ('Create new addresses',),
@@ -76,9 +80,13 @@ class BlockchainClient:
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction',),
             '3': ('Load Block',),
-            '4': ('Load Transaction',),
-            '5': ('Quit LabChain Client',),
+            '4': ('Load Transaction',)
+            '5': ('Exit Blockchain Client', self.exit_menu, []),
         }, 'Please select a value:')
+
+    @staticmethod
+    def exit_blockchain_client():
+        sys.exit()
 
     def main(self):
         self.main_menu.show()
