@@ -60,13 +60,16 @@ class Menu:
                 menu_tuple[1](*menu_tuple[2])
                 self.error_message = ''
             else:
-
                 self.error_message = 'Wrong input. Please select one of [' + self.available_options() + '].'
 
 
 class BlockchainClient:
 
     def __init__(self, wallet, transaction_factory, network_interface, crypto_helper):
+        self.wallet = wallet
+        self.transaction_factory = transaction_factory
+        self.network_interface = network_interface
+        self.crypto_helper = crypto_helper
         self.manage_wallet_menu = Menu(['prompt text'], {
             '1': ('',),
             '2': ('',),
