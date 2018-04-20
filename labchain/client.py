@@ -1,4 +1,5 @@
 import os
+import sys
 from collections import OrderedDict
 
 
@@ -80,8 +81,12 @@ class BlockchainClient:
             '2': ('',),
             '3': ('',),
             '4': ('',),
-            '5': ('',),
+            '5': ('Exit Blockchain Client', self.exit_menu, []),
         }, 'Please select a value:')
+
+    @staticmethod
+    def exit_blockchain_client():
+        sys.exit()
 
     def main(self):
         self.main_menu.show()
