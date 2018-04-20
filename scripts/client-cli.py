@@ -6,6 +6,9 @@ parent_fir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if parent_fir not in sys.path:
     sys.path.append(parent_fir)
 
+if not 'TERM' in os.environ:
+    os.environ['TERM'] = 'xterm-color'
+
 from labchain.client import Wallet, BlockchainClient
 from tests.test_account import MockCryptoHelper, MockTransactionFactory, MockNetworkInterface
 
