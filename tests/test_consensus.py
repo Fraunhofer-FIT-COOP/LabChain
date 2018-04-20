@@ -1,3 +1,6 @@
+from unittest import TestCase
+
+
 class Consensus:
 
     def __init__(self, configuration):
@@ -44,3 +47,22 @@ class Block:
 
     def __iter__(self):
         pass
+
+
+class Tests(TestCase):
+
+    def block_test_index(self, block):
+        self.assertTrue(self, block.index > -1, 'Index must be a zero or positive integer')
+
+    def consensus_test_configuration(self, consensus):
+        self.assertTrue(self, consensus.configuration > 0, 'Configuration must be a positive integer')
+
+    def consensus_mine_test_correctness(self):
+        block = Block(5, '11:50:31', [])
+        self.assertEqual(self, Consensus.mine(block, 5), 329302932, 'Mining nonce returned value should match')
+
+    def consensus_validate_tests_correctness(self):
+        consensus = Consensus(5)
+        block = Block(5, '11:50:31', [])
+        value = Consensus.mine(block, 5)
+        self.assertTrue(self, consensus.validate(block, value))
