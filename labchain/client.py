@@ -42,12 +42,12 @@ class Menu:
         self.clear_screen()
         for line in self.prompt_text:
             print(line)
-        print('')
-        print('')
+        print()
+        print()
         for opt_index, menu_tuple in self.menu_items.items():
             print(opt_index + ' - ' + menu_tuple[0])
-        print('')
-        print('')
+        print()
+        print()
         print(self.error_message)
 
     def show(self):
