@@ -20,12 +20,13 @@ class Consensus:
 
     def validate(self, block):
 
-        given_nonce = block.nonce
-        difficulty = calculate_difficulty()
+        difficulty = self. calculate_difficulty()
         zeros_array = "0" * ()
 
-        helper = new CryptoHelper()
-        block_hash = helper.hash()#What to take as input?
+        helper = CryptoHelper()
+        # Assumed that hash is str
+        encapsulated_block = str(block.index) + block.merkleHash + block.pre_hash + block.creator + str(block.nonce)
+        block_hash = helper.hash(encapsulated_block)
 
         return block_hash[0:difficulty] == zeros_array
 
