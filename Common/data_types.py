@@ -6,11 +6,8 @@ class Block:
         self.timestamp = timestamp
         self.data = data
         self.pre_hash = None
-        self.hash = self.generate_hash()
         self.nonce = 0
 
-    def generate_hash(self):
-        return self.data  # TO Be Implemented to return Hash
 
     def __getitem__(self, item):
         pass
@@ -20,3 +17,12 @@ class Block:
 
     def __iter__(self):
         pass
+
+class CryptoHelper:
+
+    def __init__(self):
+        pass
+
+    def hash(self, data):
+        # TO Be Implemented to return Hash
+        return data
