@@ -1,10 +1,14 @@
+from datetime import datetime
 from common.data_types import CryptoHelper
 
 
 class Consensus:
 
     def __init__(self):
-        self.difficulty = 12
+        self.difficulty = 1
+        self.last_block_timestamp = datetime.now()
+        self.difficulty_threshold_range = 0.09  # Threshold to be defined
+        self.max_diff = 12  # Threshold to be defined
 
     def __getitem__(self, item):
         pass
@@ -15,9 +19,12 @@ class Consensus:
     def __iter__(self):
         pass
 
-    def calculate_difficulty(self):
+    def calculate_difficulty(self, timestamp):
         #   TO-DO:  must be configured somehow
-        self.difficulty = self.difficulty * 2
+        self.difficulty = (((timestamp - self.last_block_timestamp).timestamp()) / self.difficulty_threshold_range)
+        self.last_block_timestamp = timestamp
+        self.difficulty = self.difficulty % self.max_diff
+        self.difficulty = self.max_diff - self.difficulty
 
     def validate(self, block):
 
@@ -37,4 +44,5 @@ class Consensus:
             block.nonce += 1
             encapsulated_block = str(block.index) + block.merkleHash + block.pre_hash + block.creator + str(block.nonce)
             block_hash = helper.hash(encapsulated_block)
+        self.calculate_difficulty(block.timestamp)
         return block.nonce
