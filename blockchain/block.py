@@ -10,5 +10,12 @@ class Block:
         self.__block_creator_id = None
         self.__transactions = []
 
-    def get_json(self):
+    def getJson(self):
+        pass
+
+    def getPredecessorHash(self):
+        return self.__predecessor_hash
+
+    def returnTransactions(self):
+        # return all transactions in the block to the transaction pool
         pass
