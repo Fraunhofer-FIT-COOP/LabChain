@@ -1,4 +1,5 @@
 import os
+import sys
 from collections import OrderedDict
 
 
@@ -78,17 +79,18 @@ class BlockchainClient:
         self.network_interface = network_interface
         self.crypto_helper = crypto_helper
         self.manage_wallet_menu = Menu(['prompt text'], {
-            '1': ('',),
-            '2': ('',),
-            '3': ('',),
+            '1': ('Show own addresses',),
+            '2': ('Create new addresses',),
+            '3': ('Delete address',),
         }, 'Please select a wallet option')
-        self.main_menu = Menu(['Main mneu'], {
+        self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
-            '2': ('',),
-            '3': ('',),
-            '4': ('',),
-            '5': ('',),
+            '2': ('Create Transaction',),
+            '3': ('Load Block',),
+            '4': ('Load Transaction',),
+            '5': ('Exit Blockchain Client', sys.exit, []),
         }, 'Please select a value:')
+
 
     def main(self):
         self.main_menu.show()
