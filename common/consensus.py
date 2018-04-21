@@ -1,4 +1,4 @@
-from Common.data_types import CryptoHelper
+from common.data_types import CryptoHelper
 
 
 class Consensus:
