@@ -1,20 +1,27 @@
 import os
 import sys
-from io import StringIO
 
-parent_fir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-if parent_fir not in sys.path:
-    sys.path.append(parent_fir)
+# append project dir to python path
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
 
-if not 'TERM' in os.environ:
+# set TERM environment variable if not set
+if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
 from labchain.client import Wallet, BlockchainClient
 from tests.test_account import MockCryptoHelper, MockTransactionFactory, MockNetworkInterface
 
+CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
+WALLET_FILE_PATH = os.path.join(CONFIG_DIRECTORY, 'wallet.csv')
 
-def create_client():
-    wallet_file = StringIO()
+
+def create_config_directory():
+    os.makedirs(CONFIG_DIRECTORY, exist_ok=True)
+
+
+def create_client(wallet_file):
     crypto_helper = MockCryptoHelper()
     transaction_factory = MockTransactionFactory()
     network_interface = MockNetworkInterface(crypto_helper, [], [])
@@ -23,5 +30,11 @@ def create_client():
 
 
 if __name__ == '__main__':
-    client = create_client()
-    client.main()
+    create_config_directory()
+    if os.path.exists(WALLET_FILE_PATH):
+        file_mode = 'r+'
+    else:
+        file_mode = 'w+'
+    with open(WALLET_FILE_PATH, file_mode) as open_wallet_file:
+        client = create_client(open_wallet_file)
+        client.main()
