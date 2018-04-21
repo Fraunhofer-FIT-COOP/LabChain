@@ -126,13 +126,13 @@ class BlockchainClient:
             '1': ('Show own addresses',),
             '2': ('Create new addresses',),
             '3': ('Delete address',),
-        }, 'Please select a wallet option')
+        }, 'Please select a wallet option: ')
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction',),
             '3': ('Load Block',),
             '4': ('Load Transaction',),
-        }, 'Please select a value:', 'Exit Blockchain Client')
+        }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
         self.main_menu.show()
