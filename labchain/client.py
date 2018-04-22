@@ -2,6 +2,10 @@ import os
 from collections import OrderedDict
 
 
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
 class Wallet:
 
     def __init__(self, wallet_file):
@@ -76,15 +80,11 @@ class Menu:
     def __to_ordered_dict(dictionary):
         return OrderedDict(sorted(dictionary.items(), key=lambda t: t[0]))
 
-    @staticmethod
-    def __clear_screen():
-        os.system('cls' if os.name == 'nt' else 'clear')
-
     def __available_options(self):
         return ','.join(self.menu_items.keys())
 
     def __print_menu(self):
-        self.__clear_screen()
+        clear_screen()
         for line in self.prompt_text:
             print(line)
         print()
@@ -131,8 +131,27 @@ class BlockchainClient:
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction',),
             '3': ('Load Block',),
-            '4': ('Load Transaction',),
+            '4': ('Load Transaction', self.__load_transaction, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
+        """Entry point for the client console application."""
         self.main_menu.show()
+
+    def __load_transaction(self):
+        """Prompt the user for a transaction hash and display the transaction details."""
+        clear_screen()
+        transaction_hash = input('Please enter a transaction hash: ')
+        transaction = self.network_interface.requestTransaction(transaction_hash)
+
+        clear_screen()
+        if not transaction:
+            print('Transaction does not exist')
+        else:
+            print('Sender ID: {}'.format(transaction.sender))
+            print('Receiver ID: {}'.format(transaction.receiver))
+            print('Payload: {}'.format(transaction.payload))
+            print('Signature: {}'.format(transaction.signature))
+        print()
+        # wait for any input before returning to menu
+        input('Press enter to continue...')

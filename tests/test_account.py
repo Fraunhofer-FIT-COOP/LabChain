@@ -474,9 +474,10 @@ class TransactionTestCase(CommonTestCase):
         transaction = MockTransaction('some_sender_id', 'some_receiver_id', 'some_payload')
         transaction.signTransaction('some_signature')
         self.add_transaction(transaction)
+        transaction_hash = self.mock_crypto_helper.hash_transaction(transaction)
         # when
         self.queue_input('4')
-        self.queue_input('1a2b')
+        self.queue_input(transaction_hash)
         self.queue_input('')
         self.queue_input('5')
         self.client.main()
