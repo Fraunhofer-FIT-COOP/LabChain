@@ -1,55 +1,32 @@
 from common.data_types import Block
+from common.consensus import Consensus
+from datetime import datetime
 from unittest import TestCase
-
-
-class Consensus:
-
-    def __init__(self, configuration):
-        self.configuration = configuration
-
-    def __getitem__(self, item):
-        pass
-
-    def __setitem__(self, key, value):
-        pass
-
-    def __iter__(self):
-        pass
-
-    def validate(self, block, nonce):
-        zeros_array = "0" * self.configuration
-        counter = 0
-        while block.hash[:self.configuration] != zeros_array:
-            counter += 1
-            block.hash = block.generate_hash()
-        if nonce == block.nonce:
-            return True
-        else:
-            return False
-
-    def mine(block, difficulty):
-        zeros_array = "0" * difficulty
-        while block.hash[:difficulty] != zeros_array:
-            block.nonce = block.nonce + 1
-            block.hash = block.generate_hash()
-        return block.nonce
-    mine = staticmethod(mine)
+import unittest
 
 
 class Tests(TestCase):
 
-    def block_test_index(self, block):
-        self.assertTrue(self, block.index > -1, 'Index must be a zero or positive integer')
+    def test_consensus_mine_true(self):
+        consensus = Consensus()
+        block = Block(5, datetime.now(), [])
+        self.assertTrue(consensus.mine(block) == 0, 'Nonce Value Matches')
 
-    def consensus_test_configuration(self, consensus):
-        self.assertTrue(self, consensus.configuration > 0, 'Configuration must be a positive integer')
+    def test_consensus_mine_false(self):
+        consensus = Consensus()
+        block = Block(5, datetime.now(), [])
+        self.assertFalse(consensus.mine(block) == 1, 'Nonce Value Does Not Match')
 
-    def consensus_mine_test_correctness(self):
-        block = Block(5, '11:50:31', [])
-        self.assertEqual(self, Consensus.mine(block, 5), 329302932, 'Mining nonce returned value should match')
+    def test_consensus_validate_true(self):
+        consensus = Consensus()
+        block = Block(5, datetime.now(), [])
+        self.assertTrue(consensus.validate(block, 0), 'Validation Success')
 
-    def consensus_validate_tests_correctness(self):
-        consensus = Consensus(5)
-        block = Block(5, '11:50:31', [])
-        value = Consensus.mine(block, 5)
-        self.assertTrue(self, consensus.validate(block, value))
+    def test_consensus_validate_false(self):
+        consensus = Consensus()
+        block = Block(5, datetime.now(), [])
+        self.assertFalse(consensus.validate(block, 1), 'Validation Failure')
+
+
+if __name__ == '__main__':
+    unittest.main()

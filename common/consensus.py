@@ -1,14 +1,16 @@
 from datetime import datetime
-from common.data_types import CryptoHelper
+from common.data_types import MockCryptoHelper
 
 
 class Consensus:
 
     def __init__(self):
         self.difficulty = 1
-        self.last_block_timestamp = datetime.now()
-        self.difficulty_threshold_range = 0.09  # Threshold to be defined
+        self.last_recalculation_timestamp = datetime.now()
+        self.blocks_mining_rate = 60  # Threshold to be defined
         self.max_diff = 12  # Threshold to be defined
+        self.blocks_threshold = 60
+        self.blocks_index = 0
 
     def __getitem__(self, item):
         pass
@@ -20,29 +22,33 @@ class Consensus:
         pass
 
     def calculate_difficulty(self, timestamp):
-        #   TO-DO:  must be configured somehow
-        self.difficulty = (((timestamp - self.last_block_timestamp).timestamp()) / self.difficulty_threshold_range)
-        self.last_block_timestamp = timestamp
-        self.difficulty = self.difficulty % self.max_diff
+        #
+        self.difficulty = ((((timestamp - self.last_recalculation_timestamp).total_seconds()) /
+                           self.blocks_mining_rate)).floor()
+        self.last_recalculation_timestamp = timestamp
+        if self.difficulty >= self.max_diff:
+            self.difficulty = self.max_diff - 1
         self.difficulty = self.max_diff - self.difficulty
 
-    def validate(self, block):
-
+    def validate(self, block, nonce):
         zeros_array = "0" * self.difficulty
-        helper = CryptoHelper()  # Assumed that hash is str
-        encapsulated_block = str(block.index) + block.merkleHash + block.pre_hash + block.creator + str(block.nonce)
-        block_hash = helper.hash(encapsulated_block)
-        return block_hash[:self.difficulty] == zeros_array
+        encapsulated_block = str(block.index) + str(block.tree_hash) + str(block.pre_hash) + str(block.creator) \
+                             + str(block.nonce)
+        block_hash = MockCryptoHelper.hash(encapsulated_block)  # Assumed that hash is str
+        return block_hash[:self.difficulty] == zeros_array and nonce == block.nonce
 
     def mine(self, block):
-
+        self.blocks_index += 1
         zeros_array = "0" * self.difficulty
-        helper = CryptoHelper()  # nonce is zero (we need to check that)
-        encapsulated_block = str(block.index) + block.tree_hash + block.pre_hash + block.creator + str(block.nonce)
-        block_hash = helper.hash(encapsulated_block)
+        encapsulated_block = str(block.index) + str(block.tree_hash) + str(block.pre_hash) + str(block.creator)\
+                             + str(block.nonce)
+        block_hash = MockCryptoHelper.hash(encapsulated_block)  # nonce is zero (we need to check that)
         while block_hash[:self.difficulty] != zeros_array:
             block.nonce += 1
-            encapsulated_block = str(block.index) + block.merkleHash + block.pre_hash + block.creator + str(block.nonce)
-            block_hash = helper.hash(encapsulated_block)
-        self.calculate_difficulty(block.timestamp)
+            encapsulated_block = (str(block.index) + str(block.tree_hash) + str(block.pre_hash) + str(block.creator)
+                                  + str(block.nonce))
+            block_hash = MockCryptoHelper.hash(encapsulated_block)
+        if self.blocks_index % self.blocks_threshold == 0:
+            self.blocks_index = 0
+            self.calculate_difficulty(datetime.now())
         return block.nonce
