@@ -29,14 +29,16 @@ class Wallet:
         del [key]
         self.__save_key_dict(key_dict)
 
-    def __csv_to_dict(self, csv_string):
+    @staticmethod
+    def __csv_to_dict(csv_string):
         result = {}
         for line in csv_string.splitlines():
             label, public_key, private_key = line.split(';', 2)
             result[label] = (public_key, private_key)
         return result
 
-    def __dict_to_csv(self, dictionary):
+    @staticmethod
+    def __dict_to_csv(dictionary):
         result = ''
         for label, key_tuple in dictionary.items():
             public_key, private_key = key_tuple
