@@ -147,11 +147,10 @@ class BlockchainClient:
         def read_blockchain_number():
             return input('Please input the block number you are looking for (Blocks are numbered starting at zero)!')
 
-        Menu.clear_screen()
         print()
         input_str = read_blockchain_number()
 
-        while not (str_represents_int(input_str) and input_str >= 0):
+        while not str_represents_int(input_str) or not int(input_str) >= 0:
             input_str = read_blockchain_number()
 
         print()
