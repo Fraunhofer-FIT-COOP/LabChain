@@ -130,9 +130,32 @@ class BlockchainClient:
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction',),
-            '3': ('Load Block',),
+            '3': ('Load Block', self.load_block, []),
             '4': ('Load Transaction',),
         }, 'Please select a value: ', 'Exit Blockchain Client')
+
+    @staticmethod
+    def load_block():
+
+        def str_represents_int(string):
+            try:
+                int(string)
+                return True
+            except ValueError:
+                return False
+
+        def read_blockchain_number():
+            return input('Please input the block number you are looking for (Blocks are numbered starting at zero)!')
+
+        Menu.clear_screen()
+        print()
+        input_str = read_blockchain_number()
+
+        while not (str_represents_int(input_str) and input_str >= 0):
+            input_str = read_blockchain_number()
+
+        print()
+        input('Press any key to go back to the main menu!')
 
     def main(self):
         self.main_menu.show()
