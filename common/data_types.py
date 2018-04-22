@@ -21,11 +21,13 @@ class Block:
 
 
 class CryptoHelper:
+    def __init__(self, data):
+        self.data = data
 
-    def hash(data):
+    def hash(self, data):
+        self.data = data
         # TO Be Implemented to return Hash
         return data
-    hash = staticmethod(hash)
 
 
 class MockCryptoHelper:
