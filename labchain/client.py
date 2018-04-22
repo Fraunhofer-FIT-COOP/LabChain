@@ -130,12 +130,16 @@ class BlockchainClient:
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction',),
-            '3': ('Load Block', self.load_block, []),
+            '3': ('Load Block', self.__load_block, []),
             '4': ('Load Transaction', self.__load_transaction, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
+    def main(self):
+        """Entry point for the client console application."""
+        self.main_menu.show()
+
     @staticmethod
-    def load_block():
+    def __load_block():
 
         def str_represents_int(string):
             try:
@@ -155,10 +159,6 @@ class BlockchainClient:
 
         print()
         input('Press any key to go back to the main menu!')
-
-    def main(self):
-        """Entry point for the client console application."""
-        self.main_menu.show()
 
     def __load_transaction(self):
         """Prompt the user for a transaction hash and display the transaction details."""
