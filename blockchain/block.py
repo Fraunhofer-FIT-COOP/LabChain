@@ -2,15 +2,17 @@ import hashlib, json, sys
 
 state = {u'X':50, u'Y':50}  # the initial state
 
-def __init__(self):
+class Block:
+    def __init__(self, transactions):
         self.__block_number = None
         self.__timestamp = None
         self.__merkle_tree_root = None
         self.__predecessor_hash = None
         self.__nonce = None
         self.__block_creator_id = None
-        self.__transactions = []
+        self.__transactions = transactions
 
+#add block code should be in the blockchain.py as far as i know
 def add_block(txns, chain):
         parent_block = chain[-1]
         parent_hash = parentBlock[u'hash']
@@ -41,6 +43,7 @@ while len(txnbuffer) > 0:
             else:
                 print("Transaction Flushed")
                 sys.stdout.flush()  ## check this command, I took this from some code on google
+                #  this should just empty the std out, whether its pointed to file or terminal
                 continue  # Ignoring invalid transaction and continue
 
         ## Make a block
