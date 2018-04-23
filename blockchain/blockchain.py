@@ -1,4 +1,4 @@
-from block import Block
+from blockchain.block import Block
 
 
 class BlockChain:
@@ -21,10 +21,10 @@ class BlockChain:
 
     def add_block_created(self, block):
         # Add block created by this node to the chain
-        if False == self.validate_block():
+        if not self.validate_block():
             block.return_transactions()
             del block
-        block_hash = None # have to compute hash here
+        block_hash = None  # have to compute hash here
         self.__blockchain[block_hash] = block
         pass
 
@@ -47,7 +47,7 @@ class BlockChain:
         _max_length = 1
 
         for (_head, _length) in self.__current_branch_heads.items():
-            if (_length > _max_length):
+            if _length > _max_length:
                 _max_head = _head
                 _max_length = _length
 
@@ -56,12 +56,12 @@ class BlockChain:
             for (_block, _length) in self.__current_branch_heads.items():
                 __prev_block_hash = None
                 _curr_block = _block
-                while (self.__branch_point_hash != __prev_block_hash):
+                while self.__branch_point_hash != __prev_block_hash:
                     _prev_block_hash = _curr_block.get_predecessor_hash()
                     _curr_block.return_transactions()
                     del _curr_block
                     _curr_block = self.__blockchain[_prev_block_hash]
-            self.__current_branch_heads = { _max_head : 0, }
+            self.__current_branch_heads = {_max_head: 0, }
             self.__branch_point_hash = None
 
     def compute_merkle_root(self):
