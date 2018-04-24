@@ -23,13 +23,13 @@ class Consensus:
         pass
 
     def calculate_difficulty(self, timestamp):
-        #
-        self.difficulty = ((((timestamp - self.last_recalculation_timestamp).total_seconds()) /
+        difficulty = ((((timestamp - self.last_recalculation_timestamp).total_seconds()) /
                            self.time_to_mine_blocks_threshold)).floor()
         self.last_recalculation_timestamp = timestamp
-        if self.difficulty >= self.max_diff:
-            self.difficulty = self.max_diff - 1
-        self.difficulty = self.max_diff - self.difficulty
+        if difficulty >= self.max_diff:
+            difficulty = self.max_diff - 1
+        difficulty = self.max_diff - difficulty
+        return difficulty
 
     def validate(self, block, nonce):
         zeros_array = "0" * self.difficulty
@@ -51,5 +51,5 @@ class Consensus:
             block_hash = self.crypto_helper.hash(encapsulated_block)
         if self.blocks_counter % self.blocks_threshold == 0:
             self.blocks_counter = 0
-            self.calculate_difficulty(datetime.now())
+            self.difficulty = self.calculate_difficulty(datetime.now())
         return block.nonce
