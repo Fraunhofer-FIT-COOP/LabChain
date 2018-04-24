@@ -151,7 +151,7 @@ class BlockchainClient:
         def read_blockchain_number():
             return input('Please input the block number you are looking for (Blocks are numbered starting at zero)!')
 
-        print()
+        clear_screen()
         input_str = read_blockchain_number()
 
         while not str_represents_int(input_str) or not int(input_str) >= 0:
@@ -162,6 +162,7 @@ class BlockchainClient:
             print()
             input_str = read_blockchain_number()
 
+        clear_screen()
         block = self.network_interface.requestBlock(int(input_str))
         if block is not None:
             print('block number: ' + str(block.number))
