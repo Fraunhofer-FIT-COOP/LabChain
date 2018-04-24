@@ -512,9 +512,15 @@ class LoadBlockTestCase(CommonTestCase):
         # when
         self.queue_input('3')
         self.queue_input('')  # press enter
+        # at this point the main menu is shown
+        self.queue_input('5')  # exit blockchain client
         self.client.main()
         # then
-        # TODO check whether the main menu is displayed
+        # check if submenu 3 was printed
+        self.assert_string_in_output(
+            'Please input the block number you are looking for (Blocks are numbered starting at zero)!')
+        # check if main menu is shown
+        self.assert_string_in_output('Main menu')
 
     def test_request_block_from_blockchain_although_blockchain_is_empty(self):
         """ Test case: #10a
