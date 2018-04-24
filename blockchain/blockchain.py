@@ -3,38 +3,110 @@ from blockchain.block import Block
 
 class BlockChain:
     def __init__(self):
-        # __blockchain is a dictionary containing the blocks in chain.
-        # key = hash of the block, value = Block instance
+        """Constructor for Blockchain class.
+
+        Class Variables:
+            __blockchain (dict): Dictionary of blocks currently in chain
+                                 key = Hash of the block
+                                 value = Block Instance
+            __current_branch_heads (dict): Dictionary storing the block
+                                 instances currently head of branches.
+                                 key = Block instance
+                                 value = length of branch from branch point
+            __branch_point_hash (String): The hash of the block from where
+                                 branching started
+
+        """
         self.__blockchain = {}
-
-        # Dictionary storing the instances of the Block class which are
-        # currently at head of each of the branches being maintained.
-        # key= Block instance, value= Length of branch from branch point
         self.__current_branch_heads = {}
-
-        # The point in chain from where branching started
         self.__branch_point_hash = None
 
-    def add_block_received(self):
-        # Add bock received from some other node, validate first
-        pass
+    def add_block(self, our_own_block=False, block=None):
+        """Adds a block to the blockchain.
+        Need to validate block first before adding.
 
-    def add_block_created(self, block):
-        # Add block created by this node to the chain
-        if not self.validate_block():
-            block.return_transactions()
+        Args:
+            our_own_block (Boolean): True if we Block was created by us.
+                                     False if Block received from other node.
+            block (Block): The Block instance we wish to add to the chain
+
+        Returns:
+            Boolean: True for successful addition of block to the chain
+
+        """
+        if not isinstance(block, Block):
             del block
-        block_hash = None  # have to compute hash here
-        self.__blockchain[block_hash] = block
+            return False
+
+        if not self.validate_block():
+            if our_own_block:
+                _txns = block.get_transcations()
+                self.return_transactions_to_pool(_txns)
+            del block
+            return False
+
+        _prev_hash = block.get_predecessor_hash()
+        if not our_own_block:
+            # Check if predecessor block is there in our blockchain head
+            if _prev_hash not in self.__blockchain:
+                # have to somehow call nodes to get blockchain, needs discussion
+                del block
+                return False
+            _prev_block = self.__blockchain[_prev_hash]
+            if _prev_block not in self.__current_branch_heads:
+                # We have missed some block updates from node
+                # need to get them, needs discussion.
+                del block
+                return False
+
+        _prev_block = self.__blockchain[_prev_hash]
+        _branch_length = self.__current_branch_heads.pop(_prev_block)
+        self.__current_branch_heads[block] = _branch_length + 1
+
+        _block_hash = None # TBD: compute hash over here
+        self.__blockchain[_block_hash] = block
+        self.switch_to_longest_branch()
+
+    def return_transactions_to_pool(self, txns):
+        """Return transactions to the transaction pool of node
+
+        Args:
+            txns (List): Transactions to return
+
+        """
         pass
 
     def validate_block(self):
-        pass
+        """Validate the block by checking -
+           1. Checking the transaction signatures in the block
+           2. Checking the Merkle Tree correctness
+           3. Checking the Block Hash with given Nonce to see if it
+              satisfies the configured number of zeroes.
+
+        Returns:
+            Boolean: True for successful validation, False otherwise
+
+        """
+        return True
 
     def create_block(self, transactions):
+        """Create a new Block for mining.
+
+        Args:
+            transactions (List): Transactions to add to the block
+
+        Returns:
+            Boolean: True if block creation was successful
+
+        """
         pass
 
     def switch_to_longest_branch(self):
+        """Called after each block addition to the branch, to check if
+        branching (if present) has been resolved.
+
+        """
+
         if len(self.__current_branch_heads) <= 1:
             # No branching occured yet, nothing to do here
             return
