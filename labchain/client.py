@@ -151,8 +151,8 @@ class BlockchainClient:
         def read_blockchain_number():
             return input('Please input the block number you are looking for (Blocks are numbered starting at zero)!')
 
-        def query_and_print_block_info(blockid):
-            block = self.network_interface.requestBlock(blockid)
+        def query_and_print_block_info(block_id):
+            block = self.network_interface.requestBlock(block_id)
             if block is not None:
                 print(block.number)
                 print(block.merkle_tree)
@@ -167,6 +167,8 @@ class BlockchainClient:
             print("Invalid Input. Numbers starting from 0 are allowed.")
             print()
             input_str = read_blockchain_number()
+
+        query_and_print_block_info(input_str)
 
         print()
         input('Press any key to go back to the main menu!')
