@@ -531,7 +531,7 @@ class LoadBlockTestCase(CommonTestCase):
         self.client.main()
 
         # then
-        self.assert_string_in_output('There is no block with the given number')
+        self.assert_string_in_output('There is no block with the given number.')
 
     def test_request_block_from_nonempty_blockchain(self):
         """ Test case: #10
@@ -557,7 +557,7 @@ class LoadBlockTestCase(CommonTestCase):
 
         # then
         self.assert_string_in_output('1')  # block number
-        self.assert_string_in_output('merkle_tree_hash_qthq4thi4q4t')  # merkle tree root
+        self.assert_string_in_output('merkle_tree_hash_qthq5thi4q1t')  # merkle tree root
         self.assert_string_in_output('nonce_hash')  # merkle tree root
         self.assert_string_in_output('creator_hash')  # block creator
 
