@@ -155,17 +155,20 @@ class BlockchainClient:
         input_str = read_blockchain_number()
 
         while not str_represents_int(input_str) or not int(input_str) >= 0:
+            if input_str == '':
+                # show main menu
+                return
             print("Invalid Input. Numbers starting from 0 are allowed.")
             print()
             input_str = read_blockchain_number()
 
         block = self.network_interface.requestBlock(int(input_str))
         if block is not None:
-            print(block.number)
-            print(block.merkle_tree)
-            print(block.transactions)
-            print(block.nonce)
-            print(block.creator)
+            print('block number: ' + str(block.number))
+            print('merkle tree: ' + str(block.merkle_tree))
+            print('transactions: ' + str(block.transactions))
+            print('nonce: ' + str(block.nonce))
+            print('creator: ' + str(block.creator))
         else:
             print('There is no block with the given number.')
 
