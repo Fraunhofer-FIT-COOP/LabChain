@@ -140,9 +140,7 @@ class BlockchainClient:
         """Entry point for the client console application."""
         self.main_menu.show()
 
-    @staticmethod
-    def __load_block():
-
+    def __load_block(self):
         def str_represents_int(string):
             try:
                 int(string)
@@ -153,10 +151,21 @@ class BlockchainClient:
         def read_blockchain_number():
             return input('Please input the block number you are looking for (Blocks are numbered starting at zero)!')
 
+        def query_and_print_block_info(blockid):
+            block = self.network_interface.requestBlock(blockid)
+            if block is not None:
+                print(block.number)
+                print(block.merkle_tree)
+                print(block.transactions)
+                print(block.nonce)
+                print(block.creator)
+
         print()
         input_str = read_blockchain_number()
 
         while not str_represents_int(input_str) or not int(input_str) >= 0:
+            print("Invalid Input. Numbers starting from 0 are allowed.")
+            print()
             input_str = read_blockchain_number()
 
         print()
