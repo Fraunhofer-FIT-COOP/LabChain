@@ -56,10 +56,21 @@ class Wallet:
         key_dict = self.__csv_to_dict(wallet_file_contents)
         return key_dict
 
+    def get_ordered_key_dict(self):
+        wallet_file_contents = self.__get_wallet_file_contents()
+        key_dict = self.__csv_to_dict(wallet_file_contents)
+        return OrderedDict(sorted(key_dict.items(), key=lambda t: t[0]))
+
     def __get_wallet_file_contents(self):
         self.wallet_file.seek(0, 0)
         wallet_file_contents = self.wallet_file.read()
         return wallet_file_contents
+
+    def is_empty(self):
+        if self.__get_key_dict() is None:
+            return True
+        else:
+            return False
 
 
 class Menu:
@@ -131,7 +142,7 @@ class BlockchainClient:
         }, 'Please select a wallet option: ')
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
-            '2': ('Create Transaction',),
+            '2': ('Create Transaction', self.__create_transaction, []),
             '3': ('Load Block', self.__load_block, []),
             '4': ('Load Transaction', self.__load_transaction, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
@@ -139,6 +150,98 @@ class BlockchainClient:
     def main(self):
         """Entry point for the client console application."""
         self.main_menu.show()
+
+    def __create_transaction(self):
+        """Asks for all important information to create a new transaction and sends it to the network"""
+
+        def validate_sender_input(usr_input):
+            try:
+                int_usr_input = int(usr_input)
+            except ValueError:
+                return False
+
+            if int_usr_input != 0 and int_usr_input <= len(self.wallet.get_ordered_key_dict()):
+                return True
+            else:
+                return False
+
+        def validate_receiver_input(usr_input):
+            # TODO
+            if usr_input == str(1):
+                return True
+            else:
+                return False
+
+        def validate_payload_input(usr_input):
+            # TODO
+            if usr_input == str(1):
+                return True
+            else:
+                return False
+
+        def ask_for_key_from_wallet():
+            # retrieve dict with current keys in the wallet
+            wallet_key_dict = self.wallet.get_ordered_key_dict()
+
+            print(u'Current keys in the wallet: ')
+            counter = 0
+            for key, value_tuple in wallet_key_dict.items():
+                counter += 1
+                print (str(counter) + u': ' + str(key))
+                print (u'Private Key: ' + str(value_tuple[0]))
+                print (u'Public Key: ' + str(value_tuple[1]))
+                print ()
+
+            user_input = input('Please choose a sender account (by number): ')
+            return user_input
+
+        def ask_for_receiver():
+            usr_input = input('Please type in a receiver address: ')
+            return usr_input
+
+        def ask_for_payload():
+            usr_input = input('Please type in a payload: ')
+            return usr_input
+
+        # actual function code
+        clear_screen()
+
+        # check if wallet contains any keys
+        # case: wallet not empty
+        if not self.wallet.is_empty():
+            chosen_key = False
+            chosen_receiver = False
+            chosen_payload = False
+
+            # ask for valid sender input in a loop
+            while not validate_sender_input(chosen_key):
+                chosen_key = ask_for_key_from_wallet()
+                clear_screen()
+                print('Invalid input! Please choose a correct index!')
+                print()
+
+            clear_screen()
+            print (str(chosen_key))
+
+            while not validate_receiver_input(chosen_receiver):
+                chosen_receiver = ask_for_receiver()
+                clear_screen()
+                print('Invalid input! Please choose a correct receiver!')
+                print()
+            print (str(chosen_receiver))
+
+            while not validate_payload_input(chosen_payload):
+                chosen_payload = ask_for_payload()
+                clear_screen()
+                print('Invalid input! Please choose a correct payload!')
+                print()
+            print (str(chosen_payload))
+
+        # case: wallet is empty
+        else:
+            print(u'Wallet does not contain any keys! Please create one first!')
+
+        input('Press any key to go back to the main menu!')
 
     def __load_block(self):
         def str_represents_int(string):
