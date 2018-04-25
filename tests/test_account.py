@@ -166,7 +166,7 @@ class CommonTestCase(TestCase):
         """
         # go to end of file
         self.wallet_file.seek(0, 2)
-        self.wallet_file.write(label + ';' + public_key + ';' + private_key)
+        self.wallet_file.write(label + ';' + public_key + ';' + private_key + '\n')
         # go to the beginning of the file
         self.wallet_file.seek(0, 0)
 
