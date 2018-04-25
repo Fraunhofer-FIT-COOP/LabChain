@@ -20,13 +20,21 @@ class Wallet:
         key_dict = self.__get_key_dict()
         return key_dict.__iter__()
 
+    def __len__(self):
+        key_dict = self.__get_key_dict()
+        return len(key_dict.keys())
+
+    def __contains__(self, label):
+        key_dict = self.__get_key_dict()
+        return label in key_dict
+
     def __getitem__(self, item):
         key_dict = self.__get_key_dict()
         return key_dict[item]
 
     def __delitem__(self, key):
         key_dict = self.__get_key_dict()
-        del [key]
+        del key_dict[key]
         self.__save_key_dict(key_dict)
 
     @staticmethod
@@ -47,6 +55,7 @@ class Wallet:
 
     def __save_key_dict(self, key_dict):
         self.wallet_file.seek(0, 0)
+        self.wallet_file.truncate()
         csv = self.__dict_to_csv(key_dict)
         self.wallet_file.write(csv)
         self.wallet_file.flush()
@@ -63,7 +72,7 @@ class Wallet:
 
 
 class Menu:
-    def __init__(self, prompt_text, menu_items, input_text, back_option_label='Go back'):
+    def __init__(self, prompt_text, menu_items, input_text, back_option_label='Go back', fast_exit=False):
         """
 
         :param prompt_text: A list of string that represent each line of the menu text.
@@ -77,6 +86,7 @@ class Menu:
         self.__append_back_menu_item(back_option_label)
         self.input_text = input_text
         self.error_message = ''
+        self.fast_exit = fast_exit
 
     @staticmethod
     def __to_ordered_dict(dictionary):
@@ -108,6 +118,8 @@ class Menu:
                 # call the menu callback function
                 menu_tuple[1](*menu_tuple[2])
                 self.error_message = ''
+                if self.fast_exit:
+                    break
             else:
                 self.error_message = 'Wrong input. Please select one of [' + self.__available_options() + '].'
 
@@ -124,11 +136,11 @@ class BlockchainClient:
         self.transaction_factory = transaction_factory
         self.network_interface = network_interface
         self.crypto_helper = crypto_helper
-        self.manage_wallet_menu = Menu(['prompt text'], {
-            '1': ('Show own addresses',),
-            '2': ('Create new addresses',),
-            '3': ('Delete address',),
-        }, 'Please select a wallet option: ')
+        self.manage_wallet_menu = Menu(['Manage wallet'], {
+            '1': ('Show my addresses', self.__show_my_addresses, []),
+            '2': ('Create new address', self.__create_new_address, []),
+            '3': ('Delete address', self.__delete_address, [])
+        }, 'Please select a value: ', 'Exit Wallet Menu')
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction',),
@@ -139,6 +151,51 @@ class BlockchainClient:
     def main(self):
         """Entry point for the client console application."""
         self.main_menu.show()
+
+    def __show_my_addresses(self):
+        clear_screen()
+        if len(self.wallet) == 0:
+            print('Currently you have no addresses in your wallet.\n\n')
+        else:
+            print('Currently you have the following addresses in your wallet:\n\n')
+            for label in self.wallet:
+                print(label)
+                print(self.wallet[label])
+                print('\n\n')
+        input('Press any key to go back to the main menu!')
+
+    def __create_new_address(self):
+        clear_screen()
+        label = input('Please create a name for your new address:')
+        if len(label) == 0:
+            print('Name should not be empty')
+        elif label in self.wallet:
+            print('Name should be unique!')
+            print('Address <' + label + '> already exists')
+        else:
+            pr_key, pub_key = self.crypto_helper.generatePair()
+            self.wallet[label] = (pub_key, pr_key)
+            print('New address <' + label + '> created.')
+        input('Press any key to go back to the main menu!')
+
+    def __delete_by_label(self, label):
+        del self.wallet[label]
+        print('Address <' + label + '> was deleted from your wallet.')
+
+    def __delete_address(self):
+        clear_screen()
+        if len(self.wallet) == 0:
+            print('Currently you have no addresses in your wallet.\n\n')
+        else:
+            i = 1
+            addresses = {}
+            for label in self.wallet:
+                addresses[str(i)] = (label, self.__delete_by_label, [label, ])
+                i += 1
+            delete_menu = Menu(['Delete address'], addresses,
+                               'Please select a key to delete: ', 'Exit without deleting any addresses', True)
+            delete_menu.show()
+        input('Press any key to go back to the main menu!')
 
     def __load_block(self):
         def str_represents_int(string):
@@ -193,3 +250,4 @@ class BlockchainClient:
         print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
+

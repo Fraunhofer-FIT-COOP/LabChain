@@ -235,7 +235,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('No key pairs available')
+        self.assert_string_in_output('no addresses in your wallet')
 
     def test_create_new_address_with_non_empty_name(self):
         """ Test case: #3
@@ -270,7 +270,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter non-empty name')
+        self.assert_string_in_output('Name should not be empty')
 
     def test_create_new_address_with_one_existing_key(self):
         """ Test case: #4
@@ -313,7 +313,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter unique name')
+        self.assert_string_in_output('Name should be unique!')
 
     def test_delete_address_with_empty_wallet(self):
         """ Test case: #5
@@ -327,7 +327,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('No key pairs available')
+        self.assert_string_in_output('no addresses in your wallet')
 
     def test_show_addresses_which_can_be_deleted_with_two_addresses(self):
         """ Test case: #6
@@ -340,6 +340,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
         # when
         self.queue_input('1')
+        self.queue_input('3')
         self.queue_input('3')
         self.queue_input('')
         self.queue_input('4')
@@ -371,7 +372,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.assertEqual(len(addresses), 1)
         label, _, _ = addresses[0]
         self.assertEqual(label, 'test key 1')
-        self.assert_string_in_output('Key #2 was deleted ')
+        self.assert_string_in_output('<test key 2> was deleted')
 
 
 class CreateTransactionTestCase(CommonTestCase):
