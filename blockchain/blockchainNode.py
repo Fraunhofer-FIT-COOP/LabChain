@@ -9,17 +9,25 @@ from mock.txPool import TxPool
 from blockchain.blockchain import BlockChain
 
 
-# this method just handles the periodic checking to mine incase the
-# mining has't begun because of less transactions to start mining based
-# on number of transactions, there needs to be either a discussion on
-# few approaches
-def block_mine_timer(mine_freq, num_of_transactions, blockchain_obj,
-                     txn_pool_obj, consensus_obj):
+def block_mine_timer(mine_freq, block_transactions_size, blockchain_obj,
+                     txpool_obj, consensus_obj):
+    """ Thread which periodically checks to mine
+    Note: to start mining based on number of transactions,
+    there needs to be either a discussion on few approaches
+
+        Args:
+            mine_freq (integer): periodicity of mining in seconds
+            block_transactions_size (integer): max transactions in a block
+            blockchain_obj:
+            txpool_obj:
+            consensus_obj:
+
+    """
     next_call = time.time()
     while True:
         # check the last call of mine from consensus component
         if consensus.last_mine_time_sec >= mine_freq:
-            transactions = txn_pool_obj.get_transcations(num_of_transactions)
+            transactions = txpool_obj.get_transcations(block_transactions_size)
             # should the blockchain,py create block or Block,py create block
             block = blockchain_obj.create_block(transactions)
             consensus_obj.mine(block)
@@ -33,7 +41,10 @@ def block_mine_timer(mine_freq, num_of_transactions, blockchain_obj,
 
 
 if __name__ == '__main__':
-    # initialize every other component
+    """ initialize every other component
+    main method to initialize the block chain node
+    and all its components"""
+
     print("\nInitializing BlockChain Node\n")
 
     config = configparser.ConfigParser()

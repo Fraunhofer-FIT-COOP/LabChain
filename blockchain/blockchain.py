@@ -1,4 +1,6 @@
 from blockchain.block import Block
+from blockchain.merkletree import merkletree
+
 
 class BlockChain:
     def __init__(self, consensus_obj, txpool_obj, block_creator_id):
@@ -23,6 +25,7 @@ class BlockChain:
         self.__consensus_obj = consensus_obj
         self.__txpool_obj = txpool_obj
         self.__block_creator_id = block_creator_id
+        self.__merkle_tree_obj = merkletree()
 
 
 
@@ -97,10 +100,6 @@ class BlockChain:
         if not block_valid:
             return False
 
-        # validate_merkle_tree
-        if not block_valid:
-            return False
-
         #  validate nonce
         block_valid = self.__consensus_obj.validate_block(block)
 
@@ -113,12 +112,13 @@ class BlockChain:
             transactions (List): Transactions to add to the block
 
         Returns:
-            Boolean: True if block creation was successful
+            Boolean: created block object
 
         """
         #  get block nunber
         block_num = (self.__blockchain[self.__node_branch_head]).__block_number + 1
-        block = Block(block_num, self.__node_branch_head, self.__block_creator_id, transactions)
+        merkle_tree_root = self.__merkle_tree_obj.compute_merkle_root(transactions)
+        block = Block(block_num, merkle_tree_root, self.__node_branch_head, self.__block_creator_id, transactions)
         return block
 
     def switch_to_longest_branch(self):
@@ -155,6 +155,3 @@ class BlockChain:
                     _curr_block = self.__blockchain[_prev_block_hash]
             self.__current_branch_heads = {_max_head: 0, }
             self.__branch_point_hash = None
-
-    def compute_merkle_root(self):
-        pass

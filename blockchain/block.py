@@ -1,7 +1,7 @@
 import time
 
 class Block:
-    def __init__(self, block_number, predecessor_hash, block_creator_id, transactions):
+    def __init__(self, block_number, merkel_tree_root, predecessor_hash, block_creator_id, transactions):
         """Constructor for Block class
 
         Args:
@@ -19,7 +19,7 @@ class Block:
         """
         self.__block_number = block_number
         self.__timestamp = time.time()
-        self.__merkle_tree_root = None
+        self.__merkle_tree_root = merkel_tree_root
         self.__predecessor_hash = predecessor_hash
         self.__nonce = None
         self.__block_creator_id = block_creator_id
