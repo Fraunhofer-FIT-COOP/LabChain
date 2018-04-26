@@ -21,7 +21,7 @@ def block_mine_timer(mine_freq, num_of_transactions, blockchain_obj,
             block = blockchain_obj.create_block(transactions)
             consensus_obj.mine(block)  # instead of returning nonce, nonce should be added in the block object
             # have to check if other node already created a block
-            blockchain_obj.add_block_created(block)
+            blockchain_obj.add_block(True, block)
 
         next_call += (mine_freq - consensus_obj.last_mine_time_sec)
         time.sleep(next_call - time.time())
