@@ -173,21 +173,20 @@ class BlockchainClient:
                 return False
 
         def validate_receiver_input(usr_input):
-            if len(str(usr_input)) > 0:
+            print(usr_input)
+            print(u'len(usr_input)' + str(len(usr_input)))
+            if len(usr_input) > 0:
                 return True
             else:
                 return False
 
         def validate_payload_input(usr_input):
-            if len(str(usr_input)) > 0:
+            if len(usr_input) > 0:
                 return True
             else:
                 return False
 
         def ask_for_key_from_wallet():
-            # retrieve dict with current keys in the wallet
-            wallet_list = wallet_to_list(self.wallet)
-
             print(u'Current keys in the wallet: ')
             counter = 0
             for counter, key in enumerate(wallet_list, 1):
@@ -201,21 +200,24 @@ class BlockchainClient:
 
         def ask_for_receiver():
             usr_input = input('Please type in a receiver address: ')
-            return usr_input
+            return str(usr_input)
 
         def ask_for_payload():
             usr_input = input('Please type in a payload: ')
-            return usr_input
+            return str(usr_input)
 
         # actual function code
         clear_screen()
 
+        # convert dict to an ordered list
+        # this needs to be done to get an ordered list that does not change
+        # at runtime of the function
+        wallet_list = wallet_to_list(self.wallet)
+
         # check if wallet contains any keys
         # case: wallet not empty
         if not len(self.wallet) == 0:
-            chosen_key = False
-            chosen_receiver = False
-            chosen_payload = False
+            chosen_key = u''
 
             # ask for valid sender input in a loop
             while not validate_sender_input(chosen_key):
@@ -225,23 +227,46 @@ class BlockchainClient:
                 print()
 
             clear_screen()
-            print (str(chosen_key))
+            print(u'Sender: ' + str(chosen_key))
+            chosen_receiver = ask_for_receiver()
 
             while not validate_receiver_input(chosen_receiver):
-                chosen_receiver = ask_for_receiver()
-                clear_screen()
+                #clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
+                print(u'Sender: ' + str(chosen_key))
+                chosen_receiver = ask_for_receiver()
                 print()
-            print (str(chosen_receiver))
+
+            clear_screen()
+            print(u'Sender: ' + str(chosen_key))
+            print(u'Receiver: ' + str(chosen_receiver))
+            chosen_payload = ask_for_payload()
 
             while not validate_payload_input(chosen_payload):
-                chosen_payload = ask_for_payload()
-                clear_screen()
+                #clear_screen()
                 print('Invalid input! Please choose a correct payload!')
+                print(u'Sender: ' + str(chosen_key))
+                print(u'Receiver: ' + str(chosen_receiver))
+                chosen_payload = ask_for_payload()
                 print()
-            print (str(chosen_payload))
 
-            print ('Transaction successfully created!')
+            clear_screen()
+
+            # Create transaction Object and send to network
+            private_key = wallet_list[int(chosen_key)-1][1]
+            public_key = wallet_list[int(chosen_key)-1][2]
+
+            signat = self.crypto_helper.sign(private_key, str(public_key) + str(chosen_receiver) + str(chosen_payload))
+
+            new_transaction = self.transaction_factory.createTransaction(str(public_key), str(chosen_receiver), str(chosen_payload))
+            new_transaction.signTransaction(signat)
+            self.network_interface.sendTransaction(new_transaction)
+
+            print('Transaction successfully created!')
+            print(u'Sender: ' + public_key)
+            print(u'Receiver: ' + str(chosen_receiver))
+            print(u'Payload: ' + str(chosen_payload))
+            print()
 
         # case: wallet is empty
         else:

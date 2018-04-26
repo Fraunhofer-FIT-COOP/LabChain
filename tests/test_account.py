@@ -420,7 +420,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('5')  # quit client now
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter a valid key label!')
+        self.assert_string_in_output('Invalid input! Please choose a correct index!')
 
     def test_create_transaction_with_invalid_receiver_address(self):
         """ Test Case: 8b
@@ -441,7 +441,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('5')  # quit client now
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter a valid receiver!')
+        self.assert_string_in_output('Invalid input! Please choose a correct receiver!')
 
     def test_create_transaction_with_invalid_payload(self):
         """ Test Case: 8c
@@ -462,7 +462,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('5')  # quit client now
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter a valid payload!')
+        self.assert_string_in_output('Invalid input! Please choose a correct payload!')
 
 
 class TransactionTestCase(CommonTestCase):
