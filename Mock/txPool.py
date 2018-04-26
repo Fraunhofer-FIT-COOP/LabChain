@@ -1,7 +1,7 @@
 class TxPool:
 
     def __init__(self):
-        self.transactions_count = 0
+        self.__transactions_count = 0
         pass
 
     def get_transaction(self):
@@ -16,3 +16,5 @@ class TxPool:
     def add_transaction_if_not_exist(self, transaction):
         pass
 
+    def get_transaction_count(self):
+        return self.__transactions_count

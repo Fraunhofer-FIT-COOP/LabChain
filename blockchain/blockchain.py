@@ -2,7 +2,7 @@ from blockchain.block import Block
 
 
 class BlockChain:
-    def __init__(self):
+    def __init__(self, consensus_obj):
         """Constructor for Blockchain class.
 
         Class Variables:
@@ -20,6 +20,7 @@ class BlockChain:
         self.__blockchain = {}
         self.__current_branch_heads = {}
         self.__branch_point_hash = None
+        self.__consensus_obj = consensus_obj
 
     def add_block(self, our_own_block=False, block=None):
         """Adds a block to the blockchain.
@@ -76,7 +77,7 @@ class BlockChain:
         """
         pass
 
-    def validate_block(self):
+    def validate_block(self, block):
         """Validate the block by checking -
            1. Checking the transaction signatures in the block
            2. Checking the Merkle Tree correctness
@@ -87,7 +88,28 @@ class BlockChain:
             Boolean: True for successful validation, False otherwise
 
         """
-        return True
+        block_valid = False
+        #  validate signatures
+        transactions = block.get_transcations()
+        #  this can be optimized
+        for t in transactions:
+            if not t.validate_signature():
+                break
+        else:
+            block_valid = True
+
+        #  validate_merkle_tree
+        if not block_valid:
+            return False
+
+        # validate_merkle_tree
+        if not block_valid:
+            return False
+
+        #  validate nonce
+        block_valid = self.__consensus_obj.validate_block(block)
+
+        return block_valid
 
     def create_block(self, transactions):
         """Create a new Block for mining.

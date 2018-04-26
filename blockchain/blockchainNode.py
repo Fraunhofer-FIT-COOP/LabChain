@@ -3,6 +3,9 @@ import sys
 import threading
 import time
 
+from Mock.consensus import Consensus
+from Mock.networkInterface import NetworkInterface
+from Mock.txPool import TxPool
 from blockchain.blockchain import BlockChain
 
 
@@ -19,7 +22,9 @@ def block_mine_timer(mine_freq, num_of_transactions, blockchain_obj,
             transactions = txn_pool_obj.get_transcations(num_of_transactions)
             # should the blockchain,py create block or Block,py create block
             block = blockchain_obj.create_block(transactions)
-            consensus_obj.mine(block)  # instead of returning nonce, nonce should be added in the block object
+            consensus_obj.mine(block)
+            # instead of returning nonce,
+            # nonce should be added in the block object
             # have to check if other node already created a block
             blockchain_obj.add_block(True, block)
 
@@ -50,9 +55,10 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # singleton of these classes should be better
-    consensus = None
-    txpool = None
-    blockchain = BlockChain()
+    consensus = Consensus()
+    txpool = TxPool()
+    networkInterface = NetworkInterface()
+    blockchain = BlockChain(consensus)
 
     # start the scheduler for mining
     mine_thread = threading.Thread(target=block_mine_timer,
