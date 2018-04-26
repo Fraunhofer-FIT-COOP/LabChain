@@ -157,10 +157,10 @@ class BlockchainClient:
         """Ask for all important information to create a new transaction and sends it to the network."""
 
         def wallet_to_list(wallet):
-            wallet_list = []
+            wallet_list_result = []
             for key in wallet:
-                wallet_list.append([str(key), wallet[key][0], wallet[key][1]])
-            return wallet_list
+                wallet_list_result.append([str(key), wallet[key][0], wallet[key][1]])
+            return wallet_list_result
 
         def validate_sender_input(usr_input):
             try:
