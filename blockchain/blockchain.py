@@ -1,8 +1,7 @@
 from blockchain.block import Block
 
-
 class BlockChain:
-    def __init__(self, consensus_obj, txpool_obj):
+    def __init__(self, consensus_obj, txpool_obj, block_creator_id):
         """Constructor for Blockchain class.
 
         Class Variables:
@@ -19,9 +18,13 @@ class BlockChain:
         """
         self.__blockchain = {}
         self.__current_branch_heads = {}
+        self.__node_branch_head = None
         self.__branch_point_hash = None
         self.__consensus_obj = consensus_obj
         self.__txpool_obj = txpool_obj
+        self.__block_creator_id = block_creator_id
+
+
 
     def add_block(self, our_own_block=False, block=None):
         """Adds a block to the blockchain.
@@ -69,15 +72,6 @@ class BlockChain:
         self.__blockchain[_block_hash] = block
         self.switch_to_longest_branch()
 
-    def return_transactions_to_pool(self, txns):
-        """Return transactions to the transaction pool of node
-
-        Args:
-            txns (List): Transactions to return
-
-        """
-        pass
-
     def validate_block(self, block):
         """Validate the block by checking -
            1. Checking the transaction signatures in the block
@@ -122,7 +116,10 @@ class BlockChain:
             Boolean: True if block creation was successful
 
         """
-        pass
+        #  get block nunber
+        block_num = (self.__blockchain[self.__node_branch_head]).__block_number + 1
+        block = Block(block_num, self.__node_branch_head, self.__block_creator_id, transactions)
+        return block
 
     def switch_to_longest_branch(self):
         """Called after each block addition to the branch, to check if

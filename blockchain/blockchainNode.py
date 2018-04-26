@@ -49,6 +49,8 @@ if __name__ == '__main__':
                                   option='MINE_SCHEDULING_FREQUENCY_SEC')
         num_of_transactions = config.getint(section='MINING',
                                             option='BLOCK_TRANSACTION_SIZE')
+        block_creator_id = config.get(section='BLOCK',
+                                            option='BLOCK_CREATOR_ID')
     except:
         print("Configuration options missing, can't start module")
         # maybe could start with the default values, unless file locations are missing
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     consensus = Consensus()
     txpool = TxPool()
     networkInterface = NetworkInterface()
-    blockchain = BlockChain(consensus, txpool)
+    blockchain = BlockChain(consensus, txpool, block_creator_id)
 
     # start the scheduler for mining
     mine_thread = threading.Thread(target=block_mine_timer,
