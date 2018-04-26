@@ -58,7 +58,7 @@ if __name__ == '__main__':
     consensus = Consensus()
     txpool = TxPool()
     networkInterface = NetworkInterface()
-    blockchain = BlockChain(consensus)
+    blockchain = BlockChain(consensus, txpool)
 
     # start the scheduler for mining
     mine_thread = threading.Thread(target=block_mine_timer,

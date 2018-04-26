@@ -18,3 +18,7 @@ class TxPool:
 
     def get_transaction_count(self):
         return self.__transactions_count
+
+    def return_transactions_to_pool(self, transactions):
+        #  check_transaction_signature
+        pass

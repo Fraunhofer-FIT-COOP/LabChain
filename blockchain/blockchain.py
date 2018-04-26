@@ -2,7 +2,7 @@ from blockchain.block import Block
 
 
 class BlockChain:
-    def __init__(self, consensus_obj):
+    def __init__(self, consensus_obj, txpool_obj):
         """Constructor for Blockchain class.
 
         Class Variables:
@@ -21,6 +21,7 @@ class BlockChain:
         self.__current_branch_heads = {}
         self.__branch_point_hash = None
         self.__consensus_obj = consensus_obj
+        self.__txpool_obj = txpool_obj
 
     def add_block(self, our_own_block=False, block=None):
         """Adds a block to the blockchain.
@@ -39,10 +40,10 @@ class BlockChain:
             del block
             return False
 
-        if not self.validate_block():
+        if not self.validate_block(block):
             if our_own_block:
                 _txns = block.get_transcations()
-                self.return_transactions_to_pool(_txns)
+                self.__txpool_obj.return_transactions_to_pool(_txns)
             del block
             return False
 
