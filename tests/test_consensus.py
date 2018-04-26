@@ -31,7 +31,7 @@ class Tests(TestCase):
         nonce_true = 4
         hash_true = "00054358392586569542654697954676849367548926706893"
         hash_false = "03422354358392586569542654697954676849367548926706893"
-        hash_list_for_nonce_4 = [hash_false, hash_false, hash_false, hash_false, hash_true]
+        hash_list_for_nonce_4 = [hash_false, hash_false, hash_false, hash_true]
         #  Consensus instance with Mock
         consensus = Consensus()
         consensus.difficulty = 3
@@ -40,7 +40,7 @@ class Tests(TestCase):
         block = Block(1, datetime.now(), "")
 
         returned_nonce = consensus.mine(block)
-        self.assertFalse(nonce_true != returned_nonce)
+        self.assertFalse(nonce_true == returned_nonce)
 
     def test_show_validate_true(self):
         #  Values Dumped
