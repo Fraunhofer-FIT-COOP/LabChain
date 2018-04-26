@@ -1,3 +1,4 @@
+import os
 import sys
 from io import StringIO
 from unittest import TestCase
@@ -102,6 +103,9 @@ class CommonTestCase(TestCase):
     """Common test superclass for utilities."""
 
     def setUp(self):
+        # prevent warning in output
+        if 'TERM' not in os.environ:
+            os.environ['TERM'] = 'xterm-color'
         self.__stdout_original = sys.stdout
         self.__stdin_original = sys.stdin
         self.output_buffer = StringIO()
@@ -396,7 +400,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.client.main()
         # then
         self.assertEqual(len(self.transactions), 1)
-        self.assertEqual(self.transactions[0].sender, 'BestLabel')
+        self.assertEqual(self.transactions[0].sender, 'public_555')
         self.assertEqual(self.transactions[0].receiver, 'test_receiver')
         self.assertEqual(self.transactions[0].payload, 'test_payload')
         self.assertEqual(self.transactions[0].signature, valid_signature)

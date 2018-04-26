@@ -80,6 +80,7 @@ class Menu:
                             ('<option description>', <function reference>, <list of args) as value.
         :param input_text: The text at the bottom before the prompt.
         :param back_option_label: The text of the auto created leave menu button.
+        :param fast_exit: Set to True to exit after the first input regardless the value.
         """
         self.prompt_text = prompt_text
         self.menu_items = self.__to_ordered_dict(menu_items)
@@ -153,7 +154,7 @@ class BlockchainClient:
         self.main_menu.show()
 
     def __create_transaction(self):
-        """Asks for all important information to create a new transaction and sends it to the network"""
+        """Ask for all important information to create a new transaction and sends it to the network."""
 
         def wallet_to_list(wallet):
             wallet_list = []
@@ -188,12 +189,11 @@ class BlockchainClient:
 
         def ask_for_key_from_wallet():
             print(u'Current keys in the wallet: ')
-            counter = 0
             for counter, key in enumerate(wallet_list, 1):
-                print (str(counter) + u': ' + str(key[0]))
-                print (u'Private Key: ' + str(key[1]))
-                print (u'Public Key: ' + str(key[2]))
-                print ()
+                print(str(counter) + u': ' + str(key[0]))
+                print(u'Private Key: ' + str(key[1]))
+                print(u'Public Key: ' + str(key[2]))
+                print()
 
             user_input = input('Please choose a sender account (by number): ')
             return user_input
@@ -231,7 +231,7 @@ class BlockchainClient:
             chosen_receiver = ask_for_receiver()
 
             while not validate_receiver_input(chosen_receiver):
-                #clear_screen()
+                # clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
                 chosen_receiver = ask_for_receiver()
@@ -243,7 +243,7 @@ class BlockchainClient:
             chosen_payload = ask_for_payload()
 
             while not validate_payload_input(chosen_payload):
-                #clear_screen()
+                # clear_screen()
                 print('Invalid input! Please choose a correct payload!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Receiver: ' + str(chosen_receiver))
@@ -253,12 +253,13 @@ class BlockchainClient:
             clear_screen()
 
             # Create transaction Object and send to network
-            private_key = wallet_list[int(chosen_key)-1][1]
-            public_key = wallet_list[int(chosen_key)-1][2]
+            private_key = wallet_list[int(chosen_key) - 1][2]
+            public_key = wallet_list[int(chosen_key) - 1][1]
 
             signat = self.crypto_helper.sign(private_key, str(public_key) + str(chosen_receiver) + str(chosen_payload))
 
-            new_transaction = self.transaction_factory.createTransaction(str(public_key), str(chosen_receiver), str(chosen_payload))
+            new_transaction = self.transaction_factory.createTransaction(str(public_key), str(chosen_receiver),
+                                                                         str(chosen_payload))
             new_transaction.signTransaction(signat)
             self.network_interface.sendTransaction(new_transaction)
 
