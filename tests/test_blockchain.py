@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 import unittest
+from blockchain.merkletree import merkletree
 
 
 class BlockChainComponent(unittest.TestCase):
@@ -12,6 +13,9 @@ class BlockChainComponent(unittest.TestCase):
         block = Blockchain.retrieve_current_block()
         self.block = json.loads(block)
         self.nodeId = 'someID'
+        self.txns = ["apple", "banana", "orange", "mango", "berry"]
+        self.txns.append("pomegranate")
+
 
     def test_hold_blocks_potential_branches(self):
         """Testing if the blocks are maintained in a BlockChain
@@ -44,12 +48,16 @@ class BlockChainComponent(unittest.TestCase):
             self.assertTrue(Transaction.validate_transaction(transaction))
 
     def test_compute_merkle_tree(self):
-        """Test the merkle tree correctness using the hash value of
-        transactions in the block.
-        """
+        hash = "f75ad0e64820760ddb2c5748c2021c6fbcda832da821aafa5483c0c2faf4cdfb"
+        merkle_tree_object = merkletree()
+        merkle_root = merkle_tree_object.compute_merkle_root(self.txns)
+        self.assertEqual(merkle_root,hash)
 
-        merkle_root = MerkleTree.compute_merkle_root(self.block['transactions'])
-        self.assertIsNotNone(merkle_root)
+    def test_compute_merkle_tree_false(self):
+        hash = "c0c5ebdfa52b975ee46c367313dc34053251bf72b3e21f94622bf66a4d3c2e6c"
+        merkle_tree_object = merkletree()
+        merkle_root = merkle_tree_object.compute_merkle_root(self.txns)
+        self.assertNotEqual(merkle_root,hash)
 
     def test_block_hash_criteria_satisfied(self):
         """Test if the number of leading zeroes are as configured"""
