@@ -65,21 +65,10 @@ class Wallet:
         key_dict = self.__csv_to_dict(wallet_file_contents)
         return key_dict
 
-    def get_ordered_key_dict(self):
-        wallet_file_contents = self.__get_wallet_file_contents()
-        key_dict = self.__csv_to_dict(wallet_file_contents)
-        return OrderedDict(sorted(key_dict.items(), key=lambda t: t[0]))
-
     def __get_wallet_file_contents(self):
         self.wallet_file.seek(0, 0)
         wallet_file_contents = self.wallet_file.read()
         return wallet_file_contents
-
-    def is_empty(self):
-        if self.__get_key_dict() is None:
-            return True
-        else:
-            return False
 
 
 class Menu:
@@ -166,42 +155,45 @@ class BlockchainClient:
     def __create_transaction(self):
         """Asks for all important information to create a new transaction and sends it to the network"""
 
+        def wallet_to_list(wallet):
+            wallet_list = []
+            for key in wallet:
+                wallet_list.append([str(key), wallet[key][0], wallet[key][1]])
+            return wallet_list
+
         def validate_sender_input(usr_input):
             try:
                 int_usr_input = int(usr_input)
             except ValueError:
                 return False
 
-            if int_usr_input != 0 and int_usr_input <= len(self.wallet.get_ordered_key_dict()):
+            if int_usr_input != 0 and int_usr_input <= len(self.wallet):
                 return True
             else:
                 return False
 
         def validate_receiver_input(usr_input):
-            # TODO
-            if usr_input == str(1):
+            if len(str(usr_input)) > 0:
                 return True
             else:
                 return False
 
         def validate_payload_input(usr_input):
-            # TODO
-            if usr_input == str(1):
+            if len(str(usr_input)) > 0:
                 return True
             else:
                 return False
 
         def ask_for_key_from_wallet():
             # retrieve dict with current keys in the wallet
-            wallet_key_dict = self.wallet.get_ordered_key_dict()
+            wallet_list = wallet_to_list(self.wallet)
 
             print(u'Current keys in the wallet: ')
             counter = 0
-            for key, value_tuple in wallet_key_dict.items():
-                counter += 1
-                print (str(counter) + u': ' + str(key))
-                print (u'Private Key: ' + str(value_tuple[0]))
-                print (u'Public Key: ' + str(value_tuple[1]))
+            for counter, key in enumerate(wallet_list, 1):
+                print (str(counter) + u': ' + str(key[0]))
+                print (u'Private Key: ' + str(key[1]))
+                print (u'Public Key: ' + str(key[2]))
                 print ()
 
             user_input = input('Please choose a sender account (by number): ')
@@ -220,7 +212,7 @@ class BlockchainClient:
 
         # check if wallet contains any keys
         # case: wallet not empty
-        if not self.wallet.is_empty():
+        if not len(self.wallet) == 0:
             chosen_key = False
             chosen_receiver = False
             chosen_payload = False
@@ -248,6 +240,8 @@ class BlockchainClient:
                 print('Invalid input! Please choose a correct payload!')
                 print()
             print (str(chosen_payload))
+
+            print ('Transaction successfully created!')
 
         # case: wallet is empty
         else:
