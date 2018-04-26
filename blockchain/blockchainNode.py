@@ -3,9 +3,9 @@ import sys
 import threading
 import time
 
-from Mock.consensus import Consensus
-from Mock.networkInterface import NetworkInterface
-from Mock.txPool import TxPool
+from mock.consensus import Consensus
+from mock.networkInterface import NetworkInterface
+from mock.txPool import TxPool
 from blockchain.blockchain import BlockChain
 
 
