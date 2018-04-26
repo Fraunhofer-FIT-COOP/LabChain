@@ -22,7 +22,7 @@ class Consensus:
     def __iter__(self):
         pass
 
-    def calculate_difficulty(self, timestamp):
+    def calculate_difficulty(self, timestamp): 
         difficulty = ((((timestamp - self.last_recalculation_timestamp).total_seconds()) /
                            self.time_to_mine_blocks_threshold)).floor()
         self.last_recalculation_timestamp = timestamp
