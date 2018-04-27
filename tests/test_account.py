@@ -1,3 +1,4 @@
+import os
 import sys
 from io import StringIO
 from unittest import TestCase
@@ -102,6 +103,9 @@ class CommonTestCase(TestCase):
     """Common test superclass for utilities."""
 
     def setUp(self):
+        # prevent warning in output
+        if 'TERM' not in os.environ:
+            os.environ['TERM'] = 'xterm-color'
         self.__stdout_original = sys.stdout
         self.__stdin_original = sys.stdin
         self.output_buffer = StringIO()
@@ -166,7 +170,7 @@ class CommonTestCase(TestCase):
         """
         # go to end of file
         self.wallet_file.seek(0, 2)
-        self.wallet_file.write(label + ';' + public_key + ';' + private_key)
+        self.wallet_file.write(label + ';' + public_key + ';' + private_key + '\n')
         # go to the beginning of the file
         self.wallet_file.seek(0, 0)
 
@@ -235,7 +239,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('No key pairs available')
+        self.assert_string_in_output('no addresses in your wallet')
 
     def test_create_new_address_with_non_empty_name(self):
         """ Test case: #3
@@ -270,7 +274,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter non-empty name')
+        self.assert_string_in_output('Name should not be empty')
 
     def test_create_new_address_with_one_existing_key(self):
         """ Test case: #4
@@ -313,7 +317,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter unique name')
+        self.assert_string_in_output('Name should be unique!')
 
     def test_delete_address_with_empty_wallet(self):
         """ Test case: #5
@@ -327,7 +331,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('5')
         self.client.main()
         # then
-        self.assert_string_in_output('No key pairs available')
+        self.assert_string_in_output('no addresses in your wallet')
 
     def test_show_addresses_which_can_be_deleted_with_two_addresses(self):
         """ Test case: #6
@@ -340,6 +344,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
         # when
         self.queue_input('1')
+        self.queue_input('3')
         self.queue_input('3')
         self.queue_input('')
         self.queue_input('4')
@@ -371,7 +376,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.assertEqual(len(addresses), 1)
         label, _, _ = addresses[0]
         self.assertEqual(label, 'test key 1')
-        self.assert_string_in_output('Key #2 was deleted ')
+        self.assert_string_in_output('<test key 2> was deleted')
 
 
 class CreateTransactionTestCase(CommonTestCase):
@@ -395,7 +400,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.client.main()
         # then
         self.assertEqual(len(self.transactions), 1)
-        self.assertEqual(self.transactions[0].sender, 'BestLabel')
+        self.assertEqual(self.transactions[0].sender, 'public_555')
         self.assertEqual(self.transactions[0].receiver, 'test_receiver')
         self.assertEqual(self.transactions[0].payload, 'test_payload')
         self.assertEqual(self.transactions[0].signature, valid_signature)
@@ -419,7 +424,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('5')  # quit client now
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter a valid key label!')
+        self.assert_string_in_output('Invalid input! Please choose a correct index!')
 
     def test_create_transaction_with_invalid_receiver_address(self):
         """ Test Case: 8b
@@ -440,7 +445,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('5')  # quit client now
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter a valid receiver!')
+        self.assert_string_in_output('Invalid input! Please choose a correct receiver!')
 
     def test_create_transaction_with_invalid_payload(self):
         """ Test Case: 8c
@@ -461,7 +466,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('5')  # quit client now
         self.client.main()
         # then
-        self.assert_string_in_output('Please enter a valid payload!')
+        self.assert_string_in_output('Invalid input! Please choose a correct payload!')
 
 
 class TransactionTestCase(CommonTestCase):
@@ -474,9 +479,10 @@ class TransactionTestCase(CommonTestCase):
         transaction = MockTransaction('some_sender_id', 'some_receiver_id', 'some_payload')
         transaction.signTransaction('some_signature')
         self.add_transaction(transaction)
+        transaction_hash = self.mock_crypto_helper.hash_transaction(transaction)
         # when
         self.queue_input('4')
-        self.queue_input('1a2b')
+        self.queue_input(transaction_hash)
         self.queue_input('')
         self.queue_input('5')
         self.client.main()
@@ -511,9 +517,15 @@ class LoadBlockTestCase(CommonTestCase):
         # when
         self.queue_input('3')
         self.queue_input('')  # press enter
+        # at this point the main menu is shown
+        self.queue_input('5')  # exit blockchain client
         self.client.main()
         # then
-        # TODO check whether the main menu is displayed
+        # check if submenu 3 was printed
+        self.assert_string_in_output(
+            'Please input the block number you are looking for (Blocks are numbered starting at zero)!')
+        # check if main menu is shown
+        self.assert_string_in_output('Main menu')
 
     def test_request_block_from_blockchain_although_blockchain_is_empty(self):
         """ Test case: #10a
@@ -530,7 +542,7 @@ class LoadBlockTestCase(CommonTestCase):
         self.client.main()
 
         # then
-        self.assert_string_in_output('There is no block with the given number')
+        self.assert_string_in_output('There is no block with the given number.')
 
     def test_request_block_from_nonempty_blockchain(self):
         """ Test case: #10
@@ -556,7 +568,7 @@ class LoadBlockTestCase(CommonTestCase):
 
         # then
         self.assert_string_in_output('1')  # block number
-        self.assert_string_in_output('merkle_tree_hash_qthq4thi4q4t')  # merkle tree root
+        self.assert_string_in_output('merkle_tree_hash_qthq5thi4q1t')  # merkle tree root
         self.assert_string_in_output('nonce_hash')  # merkle tree root
         self.assert_string_in_output('creator_hash')  # block creator
 
