@@ -2,7 +2,7 @@
 import json
 import unittest
 
-from blockchain.blockchain import BlockChain
+from labchain.blockchain import BlockChain
 from mock.consensus import Consensus
 from mock.txPool import TxPool
 
@@ -22,14 +22,12 @@ class BlockChainComponent(unittest.TestCase):
         self.txns = ["apple", "banana", "orange", "mango", "berry"]
         self.txns.append("pomegranate")
 
-
     def test_hold_blocks_potential_branches(self):
         """Testing if the blocks are maintained in a BlockChain
         and all valid chains are being maintained
         """
 
         pass
-
 
     def test_add_block(self):
         """Testing the addition of a new block in the blockchain"""
@@ -40,12 +38,12 @@ class BlockChainComponent(unittest.TestCase):
         merkle_hash = blockchain_obj.compute_merkle_root(transactions)
         previous_block = blockchain_obj.retrieve_prev_block()
         nonce = Consensus.mine(self.block)
-        block_fields = json.dumps({'nr' : 12,
-                                   'merkle_hash' : merkle_hash,
-                                   'predecessorBlock' : previous_block.hash__,
-                                   'nonce' : nonce,
-                                   'creator' : self.nodeId,
-                                   'transactions' : transactions
+        block_fields = json.dumps({'nr': 12,
+                                   'merkle_hash': merkle_hash,
+                                   'predecessorBlock': previous_block.hash__,
+                                   'nonce': nonce,
+                                   'creator': self.nodeId,
+                                   'transactions': transactions
                                    })
         status = blockchain_obj.add_block(block_fields)
         self.assertEqual(status, True)
@@ -57,7 +55,7 @@ class BlockChainComponent(unittest.TestCase):
         blockchain_obj = BlockChain(consensus, txpool, None)
 
         merkle_root = blockchain_obj.compute_merkle_root(self.txns)
-        self.assertEqual(merkle_root,hash)
+        self.assertEqual(merkle_root, hash)
 
     def test_compute_merkle_tree_false(self):
         hash = "c0c5ebdfa52b975ee46c367313dc34053251bf72b3e21f94622bf66a4d3c2e6c"
@@ -66,7 +64,8 @@ class BlockChainComponent(unittest.TestCase):
         blockchain_obj = BlockChain(consensus, txpool, None)
 
         merkle_root = blockchain_obj.compute_merkle_root(self.txns)
-        self.assertNotEqual(merkle_root,hash)
+        self.assertNotEqual(merkle_root, hash)
+
 
 if __name__ == '__main__':
     unittest.main()
