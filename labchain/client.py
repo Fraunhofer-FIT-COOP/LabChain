@@ -1,6 +1,24 @@
 import os
 from collections import OrderedDict
 
+LABCHAIN_LOGO = """
+          .(##%*
+         ,(%########((#/.                                                                                                         ..
+        ,###(((###%(##(#####((#*              ....                      ...                         ...                          ....
+       .#(((########((####%#######%((##*      ....                      ...                         ...                           ..
+      ,(#(((%######(#######%#%#####(((###     ....           ....       ...   ...          ....     ...   ..          ....                    ...
+     ,/##########((#####(((%############(     ....        ..........    ............    .........   ...........    ..........    ....   ...........
+     ,(###(/#(/(########(((#####(#(#####(     ....               ...    ....    ....   ....         ....    ...           ....   ....   ....    ....
+      /###########/(#((#########(((%#(###     ....          .........   ...      ....  ...          ...     ...       ........   ....   ....     ...
+      /(##################((#(/#####(##(      ....       .....   ....   ...      ...   ...          ...     ...    ....   ....   ....   ....     ...
+           .((/##################((#(#(       ....       ....    ....   ....    ....   ....     .   ...     ...   ....    ....   ....   ....     ...
+                   .#(/############(((        ..........  ...........   ...........     .........   ...     ...    ...........   ....   ....     ...
+                           *#/(####(/
+                                  .#
+"""
+
+LABCHAIN_LOGO_LIST = LABCHAIN_LOGO.splitlines()
+
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -72,9 +90,10 @@ class Wallet:
 
 
 class Menu:
+    """Create a CLI menu with this class."""
+
     def __init__(self, prompt_text, menu_items, input_text, back_option_label='Go back', fast_exit=False):
         """
-
         :param prompt_text: A list of string that represent each line of the menu text.
         :param menu_items: A dictionary with the input value as key and a tuple with
                             ('<option description>', <function reference>, <list of args) as value.
@@ -108,7 +127,13 @@ class Menu:
         print()
         print(self.error_message)
 
+    def __append_back_menu_item(self, back_option_label):
+        max_key = max(self.menu_items, key=int)
+        self.back_option_key = str(int(max_key) + 1)
+        self.menu_items[self.back_option_key] = (back_option_label, None, None)
+
     def show(self):
+        """Start the menu."""
         while True:
             self.__print_menu()
             input_value = input(self.input_text)
@@ -124,95 +149,80 @@ class Menu:
             else:
                 self.error_message = 'Wrong input. Please select one of [' + self.__available_options() + '].'
 
-    def __append_back_menu_item(self, back_option_label):
-        max_key = max(self.menu_items, key=int)
-        self.back_option_key = str(int(max_key) + 1)
-        self.menu_items[self.back_option_key] = (back_option_label, None, None)
 
+class TransactionWizard:
+    """CLI wizard for creating new transactions."""
 
-class BlockchainClient:
-
-    def __init__(self, wallet, transaction_factory, network_interface, crypto_helper):
-        self.wallet = wallet
+    def __init__(self, transaction_factory, wallet, crypto_helper, network_interface):
         self.transaction_factory = transaction_factory
-        self.network_interface = network_interface
+        self.wallet = wallet
         self.crypto_helper = crypto_helper
-        self.manage_wallet_menu = Menu(['Manage wallet'], {
-            '1': ('Show my addresses', self.__show_my_addresses, []),
-            '2': ('Create new address', self.__create_new_address, []),
-            '3': ('Delete address', self.__delete_address, [])
-        }, 'Please select a value: ', 'Exit Wallet Menu')
-        self.main_menu = Menu(['Main menu'], {
-            '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
-            '2': ('Create Transaction', self.__create_transaction, []),
-            '3': ('Load Block', self.__load_block, []),
-            '4': ('Load Transaction', self.__load_transaction, []),
-        }, 'Please select a value: ', 'Exit Blockchain Client')
+        self.network_interface = network_interface
 
-    def main(self):
-        """Entry point for the client console application."""
-        self.main_menu.show()
+    def __wallet_to_list(self):
+        wallet_list_result = []
+        for key in self.wallet:
+            wallet_list_result.append([str(key), self.wallet[key][0], self.wallet[key][1]])
+        return wallet_list_result
 
-    def __create_transaction(self):
-        """Ask for all important information to create a new transaction and sends it to the network."""
+    def __validate_sender_input(self, usr_input):
+        try:
+            int_usr_input = int(usr_input)
+        except ValueError:
+            return False
 
-        def wallet_to_list(wallet):
-            wallet_list_result = []
-            for key in wallet:
-                wallet_list_result.append([str(key), wallet[key][0], wallet[key][1]])
-            return wallet_list_result
+        if int_usr_input != 0 and int_usr_input <= len(self.wallet):
+            return True
+        else:
+            return False
 
-        def validate_sender_input(usr_input):
-            try:
-                int_usr_input = int(usr_input)
-            except ValueError:
-                return False
+    @staticmethod
+    def __validate_receiver_input(usr_input):
+        print(usr_input)
+        print(u'len(usr_input)' + str(len(usr_input)))
+        if len(usr_input) > 0:
+            return True
+        else:
+            return False
 
-            if int_usr_input != 0 and int_usr_input <= len(self.wallet):
-                return True
-            else:
-                return False
+    @staticmethod
+    def __validate_payload_input(usr_input):
+        if len(usr_input) > 0:
+            return True
+        else:
+            return False
 
-        def validate_receiver_input(usr_input):
-            print(usr_input)
-            print(u'len(usr_input)' + str(len(usr_input)))
-            if len(usr_input) > 0:
-                return True
-            else:
-                return False
+    @staticmethod
+    def __ask_for_key_from_wallet(wallet_list):
+        print(u'Current keys in the wallet: ')
+        for counter, key in enumerate(wallet_list, 1):
+            print()
+            print(str(counter) + u':\t' + str(key[0]))
+            print(u'\tPrivate Key: ' + str(key[1]))
+            print(u'\tPublic Key: ' + str(key[2]))
+            print()
 
-        def validate_payload_input(usr_input):
-            if len(usr_input) > 0:
-                return True
-            else:
-                return False
+        user_input = input('Please choose a sender account (by number): ')
+        return user_input
 
-        def ask_for_key_from_wallet():
-            print(u'Current keys in the wallet: ')
-            for counter, key in enumerate(wallet_list, 1):
-                print(str(counter) + u': ' + str(key[0]))
-                print(u'Private Key: ' + str(key[1]))
-                print(u'Public Key: ' + str(key[2]))
-                print()
+    @staticmethod
+    def __ask_for_receiver():
+        usr_input = input('Please type in a receiver address: ')
+        return str(usr_input)
 
-            user_input = input('Please choose a sender account (by number): ')
-            return user_input
+    @staticmethod
+    def __ask_for_payload():
+        usr_input = input('Please type in a payload: ')
+        return str(usr_input)
 
-        def ask_for_receiver():
-            usr_input = input('Please type in a receiver address: ')
-            return str(usr_input)
-
-        def ask_for_payload():
-            usr_input = input('Please type in a payload: ')
-            return str(usr_input)
-
-        # actual function code
+    def show(self):
+        """Start the wizard."""
         clear_screen()
 
         # convert dict to an ordered list
         # this needs to be done to get an ordered list that does not change
         # at runtime of the function
-        wallet_list = wallet_to_list(self.wallet)
+        wallet_list = self.__wallet_to_list()
 
         # check if wallet contains any keys
         # case: wallet not empty
@@ -220,34 +230,34 @@ class BlockchainClient:
             chosen_key = u''
 
             # ask for valid sender input in a loop
-            while not validate_sender_input(chosen_key):
-                chosen_key = ask_for_key_from_wallet()
+            while not self.__validate_sender_input(chosen_key):
+                chosen_key = self.__ask_for_key_from_wallet(wallet_list)
                 clear_screen()
                 print('Invalid input! Please choose a correct index!')
                 print()
 
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
-            chosen_receiver = ask_for_receiver()
+            chosen_receiver = self.__ask_for_receiver()
 
-            while not validate_receiver_input(chosen_receiver):
+            while not self.__validate_receiver_input(chosen_receiver):
                 # clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
-                chosen_receiver = ask_for_receiver()
+                chosen_receiver = self.__ask_for_receiver()
                 print()
 
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
             print(u'Receiver: ' + str(chosen_receiver))
-            chosen_payload = ask_for_payload()
+            chosen_payload = self.__ask_for_payload()
 
-            while not validate_payload_input(chosen_payload):
+            while not self.__validate_payload_input(chosen_payload):
                 # clear_screen()
                 print('Invalid input! Please choose a correct payload!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Receiver: ' + str(chosen_receiver))
-                chosen_payload = ask_for_payload()
+                chosen_payload = self.__ask_for_payload()
                 print()
 
             clear_screen()
@@ -274,6 +284,38 @@ class BlockchainClient:
             print(u'Wallet does not contain any keys! Please create one first!')
 
         input('Press any key to go back to the main menu!')
+
+
+class BlockchainClient:
+
+    def __init__(self, wallet, transaction_factory, network_interface, crypto_helper):
+        self.wallet = wallet
+        self.transaction_factory = transaction_factory
+        self.network_interface = network_interface
+        self.crypto_helper = crypto_helper
+        self.manage_wallet_menu = Menu(['Manage wallet'], {
+            '1': ('Show my addresses', self.__show_my_addresses, []),
+            '2': ('Create new address', self.__create_new_address, []),
+            '3': ('Delete address', self.__delete_address, [])
+        }, 'Please select a value: ', 'Exit Wallet Menu')
+        self.main_menu = Menu(LABCHAIN_LOGO_LIST + ['Main menu'], {
+            '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
+            '2': ('Create Transaction', self.__create_transaction, []),
+            '3': ('Load Block', self.__load_block, []),
+            '4': ('Load Transaction', self.__load_transaction, []),
+        }, 'Please select a value: ', 'Exit Blockchain Client')
+
+    def main(self):
+        """Entry point for the client console application."""
+        self.main_menu.show()
+
+    def __create_transaction(self):
+        """Ask for all important information to create a new transaction and sends it to the network."""
+        transaction_wizard = TransactionWizard(self.transaction_factory,
+                                               self.wallet,
+                                               self.crypto_helper,
+                                               self.network_interface)
+        transaction_wizard.show()
 
     def __show_my_addresses(self):
         clear_screen()
