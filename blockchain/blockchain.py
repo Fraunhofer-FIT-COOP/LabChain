@@ -1,3 +1,5 @@
+from hashlib import __all__
+
 from blockchain.block import Block
 from blockchain.merkletree import merkletree
 import hashlib
@@ -155,7 +157,7 @@ class BlockChain:
         """
         #  get block nunber
         block_num = (self.__blockchain[self.__node_branch_head]).__block_number + 1
-        merkle_tree_root = self.__merkle_tree_obj.compute_merkle_root(transactions)
+        merkle_tree_root = compute_merkle_root(transactions)
         block = Block(block_num, merkle_tree_root, self.__node_branch_head, self.__block_creator_id, transactions)
         return block
 
@@ -193,3 +195,39 @@ class BlockChain:
                     _curr_block = self.__blockchain[_prev_block_hash]
             self.__current_branch_heads = {_max_head: 0, }
             self.__branch_point_hash = None
+
+
+    def merkle_root(hashes):
+        """
+        Recursively calls itself and calculate hash of two consecutive
+        hashes till it gets one last hash
+
+        :param hashes: hashes of all transactions
+        :return:one hash of all hashes
+        """
+        sub_tree = []
+        for i in range(0, len(hashes), 2):
+            """If not the last element"""
+            if i + 1 < len(hashes):
+                """Concatenate the hashes and calculate their hash"""
+                value = str(hashes[i]+hashes[i+1]).encode('utf-8')
+                hash = sha(value).hexdigest()
+            else:
+                hash = hashes[i]
+            sub_tree.append(hash)
+        if len(sub_tree) == 1:
+            return sub_tree[0]
+        else:
+            return merkle_root(sub_tree)
+
+
+    def compute_merkle_root(txns):
+        """
+        Computes hash of all transactions and call merkle root
+
+        :param txns:list of all transactions
+        :return:one hash of all the transactions
+        """
+        for i,tx in enumerate(txns):
+            txns[i] = sha(tx.encode('utf-8')).hexdigest()
+        return merkle_root(txns)
