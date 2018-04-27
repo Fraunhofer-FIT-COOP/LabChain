@@ -202,7 +202,7 @@ class TransactionWizard:
             print(u'\tPublic Key: ' + str(key[2]))
             print()
 
-        user_input = input('Please choose a sender account (by number): ')
+        user_input = input('Please choose a sender account (by number) or press enter to return: ')
         return user_input
 
     @staticmethod
@@ -227,11 +227,15 @@ class TransactionWizard:
         # check if wallet contains any keys
         # case: wallet not empty
         if not len(self.wallet) == 0:
-            chosen_key = u''
+            chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+            if chosen_key == '':
+                return
 
             # ask for valid sender input in a loop
             while not self.__validate_sender_input(chosen_key):
                 chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+                if chosen_key == '':
+                    return
                 clear_screen()
                 print('Invalid input! Please choose a correct index!')
                 print()
@@ -274,6 +278,7 @@ class TransactionWizard:
             self.network_interface.sendTransaction(new_transaction)
 
             print('Transaction successfully created!')
+            print()
             print(u'Sender: ' + public_key)
             print(u'Receiver: ' + str(chosen_receiver))
             print(u'Payload: ' + str(chosen_payload))
