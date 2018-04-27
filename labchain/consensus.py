@@ -1,5 +1,5 @@
 from datetime import datetime
-from common.data_types import CryptoHelper
+from labchain.data_types import CryptoHelper
 
 
 class Consensus:

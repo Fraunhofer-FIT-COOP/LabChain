@@ -6,7 +6,7 @@ import time
 from mock.consensus import Consensus
 from mock.networkInterface import NetworkInterface
 from mock.txPool import TxPool
-from blockchain.blockchain import BlockChain
+from labchain.blockchain import BlockChain
 
 
 def block_mine_timer(mine_freq, block_transactions_size, blockchain_obj,
