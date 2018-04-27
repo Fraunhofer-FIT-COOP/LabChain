@@ -1,7 +1,7 @@
 import hashlib
 from hashlib import __all__
 
-from blockchain.block import Block
+from labchain.block import Block
 from hashlib import sha256 as sha
 import json
 
