@@ -1,5 +1,7 @@
 from blockchain.block import Block
 from blockchain.merkletree import merkletree
+import hashlib
+import json
 
 
 class BlockChain:
@@ -27,6 +29,42 @@ class BlockChain:
         self.__block_creator_id = block_creator_id
         self.__merkle_tree_obj = merkletree()
 
+    def get_computed_hash(self, block):
+
+        """
+        Get sha256 hash of a block
+        :param self:
+        :param block:
+        :return hashed string of a block:
+        """
+
+        # we must make sure the dictionary is ordered , otherwise we will get inconsistent hashes
+
+        block_string = json.dump(block, sort_keys=True).encode()
+        return hashlib.sha256(block_string).hexdigest()
+
+    def save_blockchain(self):
+        block_chain = self.__blockchain
+        _block1 = Block()
+        _block1.__block_number = 1
+        _block1.__merkle_tree_root = hashlib.sha256(1).hexdigest()
+        _block1.__predecessor_hash = hashlib.sha256(2).hexdigest()
+        _block1.__nonce = 2
+        _block1.__block_creator_id = "10"
+        _block1.__transactions = [{"From": "Farhad", "To": "Ali"}]
+
+        _block2 = Block()
+        _block2.__block_number = 2
+        _block2.__merkle_tree_root = hashlib.sha256(2).hexdigest()
+        _block2.__predecessor_hash = hashlib.sha256(3).hexdigest()
+        _block2.__nonce = 3
+        _block2.__block_creator_id = "13"
+        _block2.__transactions = [{"From": "Owais", "To": "Ahmed"}]
+        block_chain[self.get_computed_hash(_block1)] = _block1
+        block_chain[self.get_computed_hash(_block2)] = _block2
+
+        with open('resources\data.json', 'w') as fp:
+            json.dump(block_chain, fp, sort_keys=True, indent=4)
 
 
     def add_block(self, our_own_block=False, block=None):
@@ -71,7 +109,7 @@ class BlockChain:
         _branch_length = self.__current_branch_heads.pop(_prev_block)
         self.__current_branch_heads[block] = _branch_length + 1
 
-        _block_hash = None # TBD: compute hash over here
+        _block_hash = None  # TBD: compute hash over here
         self.__blockchain[_block_hash] = block
         self.switch_to_longest_branch()
 
