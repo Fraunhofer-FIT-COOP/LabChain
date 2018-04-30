@@ -54,15 +54,29 @@ class ServerNetworkInterface(NetworkInterface):
     def __init__(self, json_rpc_client, initial_peers,
                  on_block_received_callback,
                  on_transaction_received_callback,
+                 get_block_callback,
+                 get_transaction_callback,
                  timeout=10):
         super().__init__(json_rpc_client, initial_peers, timeout=timeout)
         self.on_block_received_callback = on_block_received_callback
         self.on_transaction_received_callback = on_transaction_received_callback
+        self.get_block_callback = get_block_callback,
+        self.get_transaction_callback = get_transaction_callback
+        self.werkzeug_app = self.__build_app()
 
-    def start_exchange_peer_lists(self, poll_interval=10):
+    def exchange_peer_lists(self):
+        pass
+
+    def advertiseToPeers(self):
+        pass
+
+    def poll_exchange_peer_lists(self, poll_interval=10):
         pass
 
     def start_listening(self, port):
+        pass
+
+    def __build_app(self):
         pass
 
 
