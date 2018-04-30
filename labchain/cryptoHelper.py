@@ -4,11 +4,11 @@ from Crypto.Hash import SHA256
 
 from labchain.singleton import Singleton
 
+import json
 
 @Singleton
 class CryptoHelper:
 
-    # Must add singleton feature
     def __init__(self):
         pass
 
@@ -37,16 +37,15 @@ class CryptoHelper:
 
         try:
             verifier.verify(h, signature)
-            print("The message is authentic.")
             result = True
 
         except ValueError:
-            print("The message is not authentic.")
             result = False
 
         return result
 
     def generate_key_pair(self):
+
         key = ECC.generate(curve='P-256')
         private_key = key.export_key(format='PEM')
         public_key = key.public_key()
@@ -54,6 +53,7 @@ class CryptoHelper:
 
     def hash(self, payload):
 
-        message = payload.encode()
-        hash = SHA256.new(message)
-        return hash
+        string_payload = json.dumps(payload)
+        message = string_payload.encode()
+        message_hash = SHA256.new(message)
+        return message_hash
