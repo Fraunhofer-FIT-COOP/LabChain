@@ -54,5 +54,9 @@ class Tests(TestCase):
     def test_validate_input_true(self):
         pass
 
+    # Check if public key is the corresponding public key for the given private key
+    def test_key_pairs_match(self):
+        pass
+
     if __name__ == '__main__':
         unittest.main()
