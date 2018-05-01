@@ -45,8 +45,8 @@ class NetworkInterface:
     def requestBlock(self, block_id):
         pass
 
-    def add_peer(self, ip_address):
-        self.peers.append(ip_address)
+    def add_peer(self, ip_address, port):
+        self.peers.append({ip_address: {'port': port}})
 
 
 class ServerNetworkInterface(NetworkInterface):
@@ -67,7 +67,7 @@ class ServerNetworkInterface(NetworkInterface):
     def exchange_peer_lists(self):
         pass
 
-    def advertiseToPeers(self):
+    def advertise_to_peers(self):
         pass
 
     def poll_exchange_peer_lists(self, poll_interval=10):
