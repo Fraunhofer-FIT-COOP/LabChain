@@ -97,7 +97,6 @@ class MockJsonRpcClient:
     def __init__(self):
         self.requests = {}
         self.response_queue = []
-        self.counter = 1
 
     def queue_response(self, response_data):
         """Set the content of the result field for future requests."""
@@ -206,6 +205,9 @@ class RequestBlockClientTestCase(CommonTestCase):
 
     def test_request_nonexistent_block(self):
         """Test case #17."""
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        # when
         self.json_rpc_client.queue_response(None)
         block = self.network_interface.requestBlock(2)
         # then
