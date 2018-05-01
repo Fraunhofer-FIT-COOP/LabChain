@@ -1,3 +1,4 @@
+from Crypto.PublicKey import ECC
 from labchain.cryptoHelper import CryptoHelper
 from unittest import TestCase
 import unittest
@@ -46,6 +47,24 @@ class Tests(TestCase):
 
         self.assertFalse(helper.validate(public_key, message_false, signature_true))
 
+    def test_show_validate_false(self):
+        helper = CryptoHelper.instance()
+        public_key, private_key = helper.generate_key_pair()
+
+        message = {'message': 'Hello World'}
+        signature_true = helper.sign(private_key, message)
+
+        #  generate a new public key
+        public_key_false, private_key_false = helper.generate_key_pair()
+
+        #  tamper with signature
+        signature_byte_array = bytearray(signature_true)
+        signature_byte_array[0] = (signature_byte_array[0]+1)%256
+        signature_false = bytes(signature_byte_array)
+
+        self.assertFalse(helper.validate(public_key, message, signature_false))
+        self.assertFalse(helper.validate(public_key_false, message, signature_true))
+
     # Is input in json format?
     def test_signature_input_true(self):
         pass
@@ -56,7 +75,12 @@ class Tests(TestCase):
 
     # Check if public key is the corresponding public key for the given private key
     def test_key_pairs_match(self):
-        pass
+        helper = CryptoHelper.instance()
+        public_key, private_key = helper.generate_key_pair()
+        key = ECC.import_key(private_key)
+        public_key_true = key.public_key()
+
+        self.assertEqual(public_key_true, public_key)
 
     if __name__ == '__main__':
         unittest.main()
