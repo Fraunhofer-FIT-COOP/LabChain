@@ -49,7 +49,7 @@ class CryptoHelper:
         key = ECC.generate(curve='P-256')
         private_key = key.export_key(format='PEM')
         public_key = key.public_key()
-        return private_key, public_key
+        return public_key, private_key
 
     def hash(self, payload):
 

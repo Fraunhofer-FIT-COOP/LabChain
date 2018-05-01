@@ -27,10 +27,24 @@ class Tests(TestCase):
         self.assertFalse(hash_false == returned_hash)
 
     def test_show_signature_true(self):
-        pass
+        helper = CryptoHelper.instance()
+        public_key, private_key = helper.generate_key_pair()
+
+        message = {'message': 'Hello World'}
+        signature_true = helper.sign(private_key, message)
+
+        self.assertTrue(helper.validate(public_key, message, signature_true))
 
     def test_show_signature_false(self):
-        pass
+        helper = CryptoHelper.instance()
+        public_key, private_key = helper.generate_key_pair()
+
+        message_true = {'message': 'Hello World'}
+        signature_true = helper.sign(private_key, message_true)
+
+        message_false = {'message': 'Bye World'}
+
+        self.assertFalse(helper.validate(public_key, message_false, signature_true))
 
     # Is input in json format?
     def test_signature_input_true(self):
