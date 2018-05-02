@@ -14,7 +14,7 @@ class Tests(TestCase):
         hash_true = '98be8b9818c2538fd0c476f3ddd0d6b7e3a58ad77be5cef38a74ecdcd9c01ef1'
 
         helper = CryptoHelper.instance()
-        returned_hash = helper.hash(message).hexdigest()
+        returned_hash = helper.hash(message)
         self.assertEqual(hash_true, returned_hash)
 
     def test_show_hash_false(self):
@@ -23,13 +23,13 @@ class Tests(TestCase):
         hash_false = '98be8b9818c2538fd0c476f3ddd0d6b7e3a58ad77be5cef38a74ecdcd9c01ef1'
 
         helper = CryptoHelper.instance()
-        returned_hash = helper.hash(message).hexdigest()
+        returned_hash = helper.hash(message)
 
         self.assertFalse(hash_false == returned_hash)
 
     def test_show_signature_true(self):
         helper = CryptoHelper.instance()
-        public_key, private_key = helper.generate_key_pair()
+        private_key, public_key = helper.generate_key_pair()
 
         message = {'message': 'Hello World'}
         signature_true = helper.sign(private_key, message)
@@ -38,7 +38,7 @@ class Tests(TestCase):
 
     def test_show_signature_false(self):
         helper = CryptoHelper.instance()
-        public_key, private_key = helper.generate_key_pair()
+        private_key, public_key = helper.generate_key_pair()
 
         message_true = {'message': 'Hello World'}
         signature_true = helper.sign(private_key, message_true)
@@ -49,7 +49,7 @@ class Tests(TestCase):
 
     def test_show_validate_false(self):
         helper = CryptoHelper.instance()
-        public_key, private_key = helper.generate_key_pair()
+        private_key, public_key = helper.generate_key_pair()
 
         message = {'message': 'Hello World'}
         signature_true = helper.sign(private_key, message)
@@ -79,8 +79,7 @@ class Tests(TestCase):
         public_key, private_key = helper.generate_key_pair()
         key = ECC.import_key(private_key)
         public_key_true = key.public_key()
-
-        self.assertEqual(public_key_true, public_key)
+        self.assertEqual(public_key_true, ECC.import_key(private_key))
 
     if __name__ == '__main__':
         unittest.main()

@@ -23,15 +23,17 @@ class CryptoHelper:
 
     def sign(self, private_key, payload):
 
-        h = self.hash(payload)
+        h = self.__hash(payload)
 
         signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')
         signature = signer.sign(h)
         return signature
 
-    def validate(self, public_key, payload, signature):
+    def validate(self, pub_key, payload, signature):
 
-        h = self.hash(payload)
+        h = self.__hash(payload)
+
+        public_key = ECC.import_key(pub_key)
 
         verifier = DSS.new(public_key, 'fips-186-3')
 
@@ -48,12 +50,17 @@ class CryptoHelper:
 
         key = ECC.generate(curve='P-256')
         private_key = key.export_key(format='PEM')
-        public_key = key.public_key()
-        return public_key, private_key
+        public_key = key.public_key().export_key(format='PEM')
+        return private_key, public_key
 
-    def hash(self, payload):
-
+    def __hash(self, payload):
         string_payload = json.dumps(payload)
         message = string_payload.encode()
         message_hash = SHA256.new(message)
         return message_hash
+
+
+    def hash(self, payload):
+
+        hash_object = self.__hash(payload)
+        return hash_object.hexdigest()
