@@ -220,17 +220,46 @@ class RequestTransactionServerTestCase(CommonTestCase):
     def test_request_transaction(self):
         """test case #9 """
         pass
+        # given
+        self.add_peer('192.168.100.4', 6666)
 
     def test_request_nonexistent_transaction(self):
         """test case #10 """
         pass
+        # given
+        self.add_peer('192.168.100.4', 6666)
 
 
 class RequestTransactionClientTestCase(CommonTestCase):
     def test_request_transaction(self):
         """test case #11 """
-        pass
+        # given
+        self.add_peer('192.168.100.4', 6666)
+
+        self.json_rpc_client.queue_response({
+            'sender': 'pubkey_of_test_sender',
+            'receiver': 'pubkey_of_test_receiver',
+            'payload': 'test_payload',
+            'signature': 'test_signature'})
+        transaction = self.network_interface.requestTransaction('hash_of_transaction_#1')
+
+        # then
+        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        self.assertEqual(last_request_method, 'requestTransaction')
+        self.assertEqual(last_request_params, [])
+
+        self.assertEqual(transaction.sender, 'pubkey_of_test_sender')
+        self.assertEqual(transaction.receiver, 'pubkey_of_test_receiver')
+        self.assertEqual(transaction.payload, 'test_payload')
+        self.assertEqual(transaction.signature, 'test_signature')
 
     def test_request_nonexistent_transaction(self):
         """test case #12 """
-        pass
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        # when
+        self.json_rpc_client.queue_response(None)
+        transaction = self.network_interface.requestTransaction('non_existent_hash')
+        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        self.assertEqual(last_request_method, 'requestTransaction')
+        self.assertIsNone(transaction)
