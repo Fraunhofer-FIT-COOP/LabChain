@@ -25,7 +25,7 @@ class CryptoHelper:
     def sign(self, private_key, payload):
 
         h = self.__hash(payload)                                        # Hash the payload
-        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')     # Get the signer object
+        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')     # Get the signature object
         signature = signer.sign(h)                                      # Sign the hash
         return signature
 
@@ -33,7 +33,7 @@ class CryptoHelper:
 
         h = self.__hash(payload)                            # Hash the payload
         public_key = ECC.import_key(pub_key)                # Get the public key object using public key string
-        verifier = DSS.new(public_key, 'fips-186-3')        # Create a verifier object
+        verifier = DSS.new(public_key, 'fips-186-3')        # Create a signature object
 
         try:
             verifier.verify(h, signature)                   # Check if the signature is verified
@@ -60,7 +60,6 @@ class CryptoHelper:
     def hash(self, payload):
 
         real_payload = self.__unpack_payload(payload)   # Get the real payload to be hashed
-
         hash_object = self.__hash(real_payload)         # Hash the payload
         return hash_object.hexdigest()                  # Return hex representation of the hash
 
