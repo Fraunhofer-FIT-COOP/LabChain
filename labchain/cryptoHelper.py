@@ -21,6 +21,7 @@ class CryptoHelper:
     def __iter__(self):
         pass
 
+
     def sign(self, private_key, payload):
 
         h = self.__hash(payload)
@@ -54,13 +55,23 @@ class CryptoHelper:
         return private_key, public_key
 
     def __hash(self, payload):
-        string_payload = json.dumps(payload)
-        message = string_payload.encode()
+        message = payload.encode()
         message_hash = SHA256.new(message)
         return message_hash
 
 
     def hash(self, payload):
 
-        hash_object = self.__hash(payload)
+        real_payload = self.__unpack_payload(payload)
+
+        hash_object = self.__hash(real_payload)
         return hash_object.hexdigest()
+
+    def __unpack_payload(self, payload):
+        payload_dict = json.loads(payload)
+        sorted_payload = sorted(payload_dict)
+        real_payload = ""
+        for i in sorted_payload:
+            real_payload += payload_dict[i]
+
+        return real_payload
