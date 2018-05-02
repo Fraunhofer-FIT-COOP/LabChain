@@ -340,11 +340,19 @@ class RequestTransactionServerTestCase(CommonTestCase):
         # given
         self.add_peer('192.168.100.4', 6666)
 
+        json_rpc_request = {"jsonrpc": "2.0", "method": "requestTransaction", "params": ["hash_of_transaction_#1"],
+                            "id": 1}
+        self.make_request(json.dumps(json_rpc_request))
+
     def test_request_nonexistent_transaction(self):
         """test case #10 """
         pass
         # given
         self.add_peer('192.168.100.4', 6666)
+
+        json_rpc_request = {"jsonrpc": "2.0", "method": "requestTransaction", "params": ["hash_of_transaction_#1"],
+                            "id": 1}
+        self.make_request(json.dumps(json_rpc_request))
 
 
 class RequestTransactionClientTestCase(CommonTestCase):
