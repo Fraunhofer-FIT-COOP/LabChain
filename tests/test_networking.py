@@ -214,3 +214,23 @@ class RequestBlockClientTestCase(CommonTestCase):
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestBlock')
         self.assertIsNone(block)
+
+
+class RequestTransactionServerTestCase(CommonTestCase):
+    def test_request_transaction(self):
+        """test case #9 """
+        pass
+
+    def test_request_nonexistent_transaction(self):
+        """test case #10 """
+        pass
+
+
+class RequestTransactionClientTestCase(CommonTestCase):
+    def test_request_transaction(self):
+        """test case #11 """
+        pass
+
+    def test_request_nonexistent_transaction(self):
+        """test case #12 """
+        pass
