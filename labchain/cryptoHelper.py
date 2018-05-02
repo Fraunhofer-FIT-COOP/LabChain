@@ -24,22 +24,19 @@ class CryptoHelper:
 
     def sign(self, private_key, payload):
 
-        h = self.__hash(payload)
-
-        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')
-        signature = signer.sign(h)
+        h = self.__hash(payload)                                        # Hash the payload
+        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')     # Get the signer object
+        signature = signer.sign(h)                                      # Sign the hash
         return signature
 
     def validate(self, pub_key, payload, signature):
 
-        h = self.__hash(payload)
-
-        public_key = ECC.import_key(pub_key)
-
-        verifier = DSS.new(public_key, 'fips-186-3')
+        h = self.__hash(payload)                            # Hash the payload
+        public_key = ECC.import_key(pub_key)                # Get the public key object using public key string
+        verifier = DSS.new(public_key, 'fips-186-3')        # Create a verifier object
 
         try:
-            verifier.verify(h, signature)
+            verifier.verify(h, signature)                   # Check if the signature is verified
             result = True
 
         except ValueError:
@@ -49,29 +46,30 @@ class CryptoHelper:
 
     def generate_key_pair(self):
 
-        key = ECC.generate(curve='P-256')
-        private_key = key.export_key(format='PEM')
-        public_key = key.public_key().export_key(format='PEM')
+        key = ECC.generate(curve='P-256')                       # Create ECC key object
+        private_key = key.export_key(format='PEM')              # Get the string of private key
+        public_key = key.public_key().export_key(format='PEM')  # Get the string of public key
         return private_key, public_key
 
     def __hash(self, payload):
-        message = payload.encode()
-        message_hash = SHA256.new(message)
+        message = payload.encode()          # Encode string for hashing
+        message_hash = SHA256.new(message)  # Hash using SHA256 scheme
         return message_hash
 
 
     def hash(self, payload):
 
-        real_payload = self.__unpack_payload(payload)
+        real_payload = self.__unpack_payload(payload)   # Get the real payload to be hashed
 
-        hash_object = self.__hash(real_payload)
-        return hash_object.hexdigest()
+        hash_object = self.__hash(real_payload)         # Hash the payload
+        return hash_object.hexdigest()                  # Return hex representation of the hash
 
     def __unpack_payload(self, payload):
-        payload_dict = json.loads(payload)
-        sorted_payload = sorted(payload_dict)
+        payload_dict = json.loads(payload)      # Get JSON string
+
+        sorted_payload = sorted(payload_dict)   # Get the sorted list of keys
         real_payload = ""
         for i in sorted_payload:
-            real_payload += payload_dict[i]
+            real_payload += payload_dict[i]     # Concatenate all values according to sorted keys
 
         return real_payload
