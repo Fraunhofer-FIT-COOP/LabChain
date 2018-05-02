@@ -173,6 +173,45 @@ class PeerListExchangeTestCase(CommonTestCase):
         self.assertEqual(response_data, '{ "jsonrpc": "2.0", result: {"192.168.2.3": {"port": 6666}}, id: 1}')
 
 
+class SendTransactionTestCase(CommonTestCase):
+
+    def test_send_transaction_server_valid(self):
+        """Test Case #5"""
+
+        # Given
+        # -Nothing
+
+        # When
+        request = '{"jsonrpc": "2.0", ' \
+                  'method: "sendTransaction", ' \
+                  'params: ' \
+                  '[{“sender”: “test_sender”, ' \
+                  '“receiver”: “test_receiver”, ' \
+                  '“payload”: “test_payload”, ' \
+                  '“signature”: “test_signature”}], ' \
+                  'id: 1}'
+
+    def test_send_transaction_client_valid(self):
+        """Test Case #6"""
+        # Given
+
+        test_transaction = None
+
+        # When
+        self.json_rpc_client.queue_response({
+            'jsonrpc': '2.0',
+            'result': True,
+            'id': 1
+            })
+        self.network_interface.sendTransaction(test_transaction)
+
+        # Then
+
+
+class SendBlockTestCase(CommonTestCase):
+    pass
+
+
 class RequestBlockClientTestCase(CommonTestCase):
     def test_request_block(self):
         """Test case #16."""
