@@ -3,8 +3,8 @@ import json
 import unittest
 
 from labchain.blockchain import BlockChain
+from labchain.txpool import TxPool
 from mock.consensus import Consensus
-from mock.txPool import TxPool
 
 
 class BlockChainComponent(unittest.TestCase):
@@ -33,7 +33,8 @@ class BlockChainComponent(unittest.TestCase):
         """Testing the addition of a new block in the blockchain"""
         txpool = TxPool()
         consensus = Consensus()
-        transactions = txpool.get_transactions()
+        count = 2
+        transactions = txpool.get_transactions(count)
         blockchain_obj = BlockChain(consensus, txpool, None)
         merkle_hash = blockchain_obj.compute_merkle_root(transactions)
         previous_block = blockchain_obj.retrieve_prev_block()

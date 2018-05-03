@@ -3,9 +3,9 @@ import sys
 import threading
 import time
 
+from labchain.txpool import TxPool
 from mock.consensus import Consensus
 from mock.networkInterface import NetworkInterface
-from mock.txPool import TxPool
 from labchain.blockchain import BlockChain
 
 
@@ -51,7 +51,8 @@ if __name__ == '__main__':
 
     try:
         config.read('resources/node_configuration.ini')
-    except:
+    except RuntimeError:
+        #  need to use the correct type of error
         # Need to do proper handling of exceptions
         pass
 
@@ -61,8 +62,9 @@ if __name__ == '__main__':
         num_of_transactions = config.getint(section='MINING',
                                             option='BLOCK_TRANSACTION_SIZE')
         block_creator_id = config.get(section='BLOCK',
-                                            option='BLOCK_CREATOR_ID')
-    except:
+                                      option='BLOCK_CREATOR_ID')
+    except RuntimeError:
+        #  need to use the correct type of error
         print("Configuration options missing, can't start module")
         # maybe could start with the default values, unless file locations are missing
         sys.exit(0)
