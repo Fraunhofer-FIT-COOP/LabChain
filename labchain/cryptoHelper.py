@@ -60,19 +60,22 @@ class CryptoHelper:
 
     def hash(self, payload):
 
-        real_payload = self.__unpack_payload(payload)   # Get the real payload to be hashed
-        hash_object = self.__hash(real_payload)         # Hash the payload
-        return hash_object.hexdigest()                  # Return hex representation of the hash
+        try:
+            real_payload = self.__unpack_payload(payload)   # Get the real payload to be hashed
+        except ValueError:
+            raise ValueError('Payload is not json')
+        hash_object = self.__hash(real_payload)             # Hash the payload
+        return hash_object.hexdigest()                      # Return hex representation of the hash
 
     def __unpack_payload(self, payload):
-        real_payload = ""
 
         if not Utility.is_json(payload):
-            real_payload = {'message': 'Payload is not json'}
-            return real_payload
+            raise ValueError('Payload is not json')
 
         payload_dict = json.loads(payload)  # Get JSON string
         sorted_payload = sorted(payload_dict)  # Get the sorted list of keys
+
+        real_payload = ""
 
         for i in sorted_payload:
             real_payload += payload_dict[i]  # Concatenate all values according to sorted keys
