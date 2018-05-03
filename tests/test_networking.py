@@ -68,7 +68,8 @@ class CommonTestCase(TestCase):
 
     def make_request(self, data):
         """Make a request to the node and return the response dict."""
-        app_iter, status, headers = self.client.post('/', data=json.dumps(data))
+        app_iter, status, headers = self.client.post('/', data=json.dumps(data),
+                                                     environ_base={'REMOTE_ADDR': '1.2.3.4'})
         return ''.join(app_iter)
 
     def get_last_request(self, host, port):
@@ -82,8 +83,10 @@ class CommonTestCase(TestCase):
         self.assertEqual(json.loads(json_expected), json.loads(json_actual))
 
 
+
 class PeerListExchangeTestCase(CommonTestCase):
-    def test_get_peers_with_one_entry(self):
+
+    def test_server_test_get_peers_with_one_entry(self):
         """Test case #1."""
         # given
         self.add_peer('192.168.2.3', 6666)
@@ -91,6 +94,64 @@ class PeerListExchangeTestCase(CommonTestCase):
         response_data = self.make_request('{ "jsonrpc": "2.0", method: "getPeers", params:[], id: 1}')
         # then
         self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", result: {"192.168.2.3": {"port": 6666}}, id: 1}')
+
+    def test_server_test_get_peers_with_no_entries(self):
+        """Test case #1a."""
+        # when
+        response_data = self.make_request('{ "jsonrpc": "2.0", method: "getPeers", params:[], id: 1}')
+        # then
+        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", result: {}, id: 1}')
+
+    def test_server_advertise_peer_with_port_param(self):
+        """Test case #2."""
+        # when
+        response_data = self.make_request('{ "jsonrpc": "2.0", method: "advertisePeer", params:[6667], id: 1}')
+        # then
+        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", result: true, id: 1}')
+        self.assertDictEqual(self.network_interface.peers, {"1.2.3.4": {"port": 6667}})
+
+    def test_server_advertise_peer_with_no_port_param(self):
+        """Test case #2a."""
+        # when
+        response_data = self.make_request('{ "jsonrpc": "2.0", method: "advertisePeer", id: 1}')
+        # then
+        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", result: true, id: 1}')
+        self.assertDictEqual(self.network_interface.peers, {"1.2.3.4": {"port": 6666}})
+
+    def test_client_exchange_peer_list(self):
+        """Test case #3."""
+        # given
+        self.add_peer('192.168.121.77', 6666)
+        self.add_peer('192.168.100.4', 6666)
+        # when
+        self.json_rpc_client.queue_response({ 'jsonrpc': '2.0', 'result': {'192.168.2.3': {'port': 6666}}, 'id': 1})
+        self.json_rpc_client.queue_response({ 'jsonrpc': '2.0', 'result': {'192.168.5.6': {'port': 6666}}, 'id': 1})
+        self.network_interface.exchange_peer_lists()
+        # then
+        last_request_method, last_request_params = self.get_last_request('192.168.121.77', 6666)
+        self.assertEqual(last_request_method, 'getPeers')
+        self.assertEqual(last_request_params, [])
+        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        self.assertEqual(last_request_method, 'getPeers')
+        self.assertEqual(last_request_params, [])
+        self.assertDictEqual(self.network_interface.peers, {"192.168.2.3": {"port": 6666}, "192.168.5.6": {"port": 6666}})
+
+    def test_client_advertise_peer(self):
+        """Test case #4."""
+        # given
+        self.add_peer('192.168.121.77', 6666)
+        self.add_peer('192.168.100.4', 6666)
+        # when
+        self.json_rpc_client.queue_response({ 'jsonrpc': '2.0', 'result': True, 'id': 1})
+        self.json_rpc_client.queue_response({ 'jsonrpc': '2.0', 'result': True, 'id': 1})
+        self.network_interface.advertise_to_peers()
+        # then
+        last_request_method, last_request_params = self.get_last_request('192.168.121.77', 6666)
+        self.assertEqual(last_request_method, 'advertisePeer')
+        self.assertEqual(last_request_params, [6666])
+        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        self.assertEqual(last_request_method, 'advertisePeer')
+        self.assertEqual(last_request_params, [6666])
 
 
 class SendTransactionTestCase(CommonTestCase):
