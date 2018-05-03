@@ -9,6 +9,12 @@ class Tests(TestCase):
     def __init__(self, *args):
         super().__init__(*args)
 
+    def test_hash_input_false(self):
+        message = "Hello World"
+        helper = CryptoHelper.instance()
+        with self.assertRaises(ValueError):
+            helper.hash(message)
+
     def test_show_hash_true(self):
         #  Values Dumped
         data = {'message': 'Hello World'}
@@ -54,6 +60,16 @@ class Tests(TestCase):
 
         self.assertFalse(helper.validate(public_key, message_false, signature_true))
 
+    def test_show_validate_true(self):
+        helper = CryptoHelper.instance()
+        private_key, public_key = helper.generate_key_pair()
+
+        data = {'message': 'Hello World'}
+        message = json.dumps(data)
+        signature_true = helper.sign(private_key, message)
+
+        self.assertTrue(helper.validate(public_key, message, signature_true))
+
     def test_show_validate_false(self):
         helper = CryptoHelper.instance()
         private_key, public_key = helper.generate_key_pair()
@@ -73,14 +89,6 @@ class Tests(TestCase):
         self.assertFalse(helper.validate(public_key, message, signature_false))
         self.assertFalse(helper.validate(public_key_false, message, signature_true))
 
-    # Is input in json format?
-    def test_signature_input_true(self):
-        pass
-
-    # Same above.
-    def test_validate_input_true(self):
-        pass
-
     # Check if public key is the corresponding public key for the given private key
     def test_key_pairs_match(self):
         helper = CryptoHelper.instance()
@@ -88,6 +96,3 @@ class Tests(TestCase):
         key = ECC.import_key(private_key)
         public_key_true = key.public_key()
         self.assertEqual(public_key_true, ECC.import_key(private_key))
-
-    if __name__ == '__main__':
-        unittest.main()
