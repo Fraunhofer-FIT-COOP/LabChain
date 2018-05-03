@@ -79,7 +79,7 @@ class Tests(TestCase):
         signature_true = helper.sign(private_key, message)
 
         #  generate a new public key
-        public_key_false, private_key_false = helper.generate_key_pair()
+        private_key_false, public_key_false = helper.generate_key_pair()
 
         #  tamper with signature
         signature_byte_array = bytearray(signature_true)
@@ -92,7 +92,7 @@ class Tests(TestCase):
     # Check if public key is the corresponding public key for the given private key
     def test_key_pairs_match(self):
         helper = CryptoHelper.instance()
-        public_key, private_key = helper.generate_key_pair()
+        private_key, public_key = helper.generate_key_pair()
         key = ECC.import_key(private_key)
         public_key_true = key.public_key()
         self.assertEqual(public_key_true, ECC.import_key(private_key))
