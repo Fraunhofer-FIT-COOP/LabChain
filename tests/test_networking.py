@@ -174,7 +174,7 @@ class PeerListExchangeTestCase(CommonTestCase):
         # when
         response_data = self.make_request('{ "jsonrpc": "2.0", method: "getPeers", params:[], id: 1}')
         # then
-        self.assertEqual(response_data, '{ "jsonrpc": "2.0", result: {"192.168.2.3": {"port": 6666}}, id: 1}')
+        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", result: {"192.168.2.3": {"port": 6666}}, id: 1}')
 
 
 class SendTransactionTestCase(CommonTestCase):
@@ -199,7 +199,7 @@ class SendTransactionTestCase(CommonTestCase):
         self.assertEqual(transaction.signature, 'test_signature')
 
         # assert response
-        self.assertEqual(response, '{"jsonrpc": "2.0", result: true, id: 1}')
+        self.assert_json_equal(response, '{"jsonrpc": "2.0", result: true, id: 1}')
 
     def test_send_transaction_client_valid(self):
         """Test Case #6"""
@@ -258,7 +258,7 @@ class SendBlockTestCase(CommonTestCase):
         self.assertEqual(transaction.signature, 'test_signature')
 
         # assert response
-        self.assertEqual(response, '{"jsonrpc": "2.0", result: true, id: 1}')
+        self.assert_json_equal(response, '{"jsonrpc": "2.0", result: true, id: 1}')
 
     def test_send_block_client_valid(self):
         """Test Case #8"""
@@ -351,9 +351,9 @@ class RequestTransactionServerTestCase(CommonTestCase):
         response = self.make_request(json.dumps(json_rpc_request))
 
         # then
-        self.assertEqual(response,
-                         ('{ "jsonrpc": "2.0", result: {"sender": "test_sender", "receiver": "test_receiver", '
-                          '"payload": "test_payload", "signature": "test_signature"},id: 1}'))
+        self.assert_json_equal(response,
+                               '{ "jsonrpc": "2.0", result: {"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"},id: 1}')
 
     def test_request_nonexistent_transaction(self):
         """test case #10 """
@@ -364,7 +364,7 @@ class RequestTransactionServerTestCase(CommonTestCase):
                             "id": 1}
         response = self.make_request(json.dumps(json_rpc_request))
         # then
-        self.assertEqual(response, '{ "jsonrpc": "2.0", result: null, id: 1}')
+        self.assert_json_equal(response, '{ "jsonrpc": "2.0", result: null, id: 1}')
 
 
 class RequestTransactionClientTestCase(CommonTestCase):
