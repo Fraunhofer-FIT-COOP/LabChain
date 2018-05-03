@@ -2,7 +2,6 @@ import json
 from labchain.singleton import Singleton
 
 
-@Singleton
 class Utility:
 
     def __init__(self):

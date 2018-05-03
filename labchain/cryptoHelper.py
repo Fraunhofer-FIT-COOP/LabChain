@@ -3,6 +3,7 @@ from Crypto.Signature import DSS
 from Crypto.Hash import SHA256
 
 from labchain.singleton import Singleton
+from labchain.utility import Utility
 
 import json
 
@@ -64,11 +65,16 @@ class CryptoHelper:
         return hash_object.hexdigest()                  # Return hex representation of the hash
 
     def __unpack_payload(self, payload):
-        payload_dict = json.loads(payload)      # Get JSON string
-
-        sorted_payload = sorted(payload_dict)   # Get the sorted list of keys
         real_payload = ""
+
+        if not Utility.is_json(payload):
+            real_payload = {'message': 'Payload is not json'}
+            return real_payload
+
+        payload_dict = json.loads(payload)  # Get JSON string
+        sorted_payload = sorted(payload_dict)  # Get the sorted list of keys
+
         for i in sorted_payload:
-            real_payload += payload_dict[i]     # Concatenate all values according to sorted keys
+            real_payload += payload_dict[i]  # Concatenate all values according to sorted keys
 
         return real_payload
