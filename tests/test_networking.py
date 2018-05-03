@@ -161,6 +161,10 @@ class CommonTestCase(TestCase):
             return None, None
         return self.json_rpc_client.requests[key][-1]
 
+    def assert_json_equal(self, json_expected, json_actual):
+        """Assert that two JSON strings contain the same data."""
+        self.assertEqual(json.loads(json_expected), json.loads(json_actual))
+
 
 class PeerListExchangeTestCase(CommonTestCase):
     def test_get_peers_with_one_entry(self):
