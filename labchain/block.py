@@ -32,19 +32,21 @@ class Block:
         self.block_creator_id = block_creator_id
         self.transactions = transactions
 
+    def to_dict(self):
+        """Convert own data to a dictionary."""
+        return {
+            'nr': self.block_number,
+            'timestamp': self.timestamp,
+            'merkleHash': self.merkle_tree_root,
+            'predecessorBlock': self.predecessor_hash,
+            'nonce': self.nonce,
+            'creator': self.block_creator_id,
+            'transactions': [transaction.get_json() for transaction in self.transactions]
+        }
+
     def get_json(self):
         """Serialize this instance to a JSON string."""
-        return json.dumps(
-            {
-                'nr': self.block_number,
-                'timestamp': self.timestamp,
-                'merkleHash': self.merkle_tree_root,
-                'predecessorBlock': self.predecessor_hash,
-                'nonce': self.nonce,
-                'creator': self.block_creator_id,
-                'transactions': [transaction.get_json() for transaction in self.transactions]
-            }
-        )
+        return json.dumps(self.to_dict())
 
     @staticmethod
     def from_json(json_data):
@@ -58,3 +60,6 @@ class Block:
         return Block(data_dict['nr'], data_dict['merkleHash'], data_dict['predecessorBlock'], data_dict['creator'],
                      [Transaction.from_dict(transaction_dict) for transaction_dict in data_dict['transactions']],
                      data_dict['nonce'], data_dict['timestamp'])
+
+    def __str__(self):
+        return str(self.to_dict())
