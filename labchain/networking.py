@@ -26,6 +26,8 @@ class BlockDoesNotExistException(Exception):
 
 
 class JsonRpcClient:
+    """Handle outgoing JSON-RPC calls."""
+
     def __init__(self):
         self.id_counter = 0
 
@@ -48,14 +50,15 @@ class JsonRpcClient:
 
 
 class NetworkInterface:
-    def __init__(self, json_rpc_client, initial_peers, timeout=10):
+    """Basic network interface to be used by clients."""
+
+    def __init__(self, json_rpc_client, initial_peers):
         """
 
         :param initial_peers: List of IP addresses (optional with :port) of the initial peers (at least one).
         """
         self.json_rpc_client = json_rpc_client
         self.peers = initial_peers
-        self.timeout = timeout
 
     def sendTransaction(self, transaction):
         pass
@@ -67,6 +70,7 @@ class NetworkInterface:
         pass
 
     def requestBlock(self, block_id):
+        """Request a single block by block ID."""
         shuffled_peer_ips = self.__get_shuffeled_peers()
         for peer_ip in shuffled_peer_ips:
             peer_port = self.peers[peer_ip]['port']
@@ -76,6 +80,7 @@ class NetworkInterface:
         return None
 
     def add_peer(self, ip_address, port):
+        """Add a single peer to the peer list."""
         self.peers.append({ip_address: {'port': port}})
 
     def __get_shuffeled_peers(self):
@@ -86,14 +91,24 @@ class NetworkInterface:
 
 
 class ServerNetworkInterface(NetworkInterface):
+    """Advanced network interface for additional server-to-server communication."""
 
     def __init__(self, json_rpc_client, initial_peers,
                  on_block_received_callback,
                  on_transaction_received_callback,
                  get_block_callback,
-                 get_transaction_callback,
-                 timeout=10, port=6666):
-        super().__init__(json_rpc_client, initial_peers, timeout=timeout)
+                 get_transaction_callback, port=6666):
+        """
+        :param json_rpc_client: A JsonRpcClient instance.
+        :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
+        :param on_block_received_callback: A callable accepting a Block instance as argument.
+        :param on_transaction_received_callback: A callable accepting a Transaction instance as argument.
+        :param get_block_callback: A callable that gets a block ID and returns the corresponding Block instance or None.
+        :param get_transaction_callback: A callable that gets a transaction hash and returns the corresponding
+                                            Transaction instance or None.
+        :param port: The port number to listen on.
+        """
+        super().__init__(json_rpc_client, initial_peers)
         self.on_block_received_callback = on_block_received_callback
         self.on_transaction_received_callback = on_transaction_received_callback
         self.get_block_callback = get_block_callback
@@ -110,10 +125,12 @@ class ServerNetworkInterface(NetworkInterface):
         pass
 
     def start_listening(self):
+        """Start listening for incoming HTTP JSON-RPC calls."""
         run_simple('localhost', self.port, self.application, threaded=True)
 
     @Request.application
     def application(self, request):
+        """Define the JSON-RPC callbacks and handle an incoming request."""
         dispatcher['getPeers'] = self.__handle_get_peers
         dispatcher['advertisePeer'] = self.__handle_advertise_peer
         dispatcher['sendBlock'] = self.__handle_send_block
