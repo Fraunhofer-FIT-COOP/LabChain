@@ -106,6 +106,12 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestBlock'] = self.__handle_request_block
         dispatcher['requestTransaction'] = self.__handle_request_transaction
 
+        # insert IP address of peer if advertise peer is called
+        request_body_dict = json.loads(request.data.decode())
+        if request_body_dict['method'] == 'advertisePeer':
+            request_body_dict['params'].insert(0, request.remote_addr)
+        request.data = json.dumps(request_body_dict)
+
         response = JSONRPCResponseManager.handle(
             request.data, dispatcher)
         return Response(response.json, mimetype='application/json')
@@ -113,7 +119,7 @@ class ServerNetworkInterface(NetworkInterface):
     def __handle_get_peers(self):
         return {}
 
-    def __handle_advertise_peer(self, port):
+    def __handle_advertise_peer(self, remote_address, port):
         pass
 
     def __handle_send_block(self, block_data):
