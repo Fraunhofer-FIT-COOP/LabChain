@@ -5,18 +5,18 @@ class Transaction:
     """Represents a single transaction within the blockchain."""
 
     def __init__(self, sender, receiver, payload, signature=None):
-        self.sender = sender
-        self.receiver = receiver
-        self.payload = payload
-        self.signature = signature
+        self.__sender = sender
+        self.__receiver = receiver
+        self.__payload = payload
+        self.__signature = signature
 
     def to_dict(self):
         """Convert own data to a dictionary."""
         return {
-            'sender': self.sender,
-            'receiver': self.receiver,
-            'payload': self.payload,
-            'signature': self.signature,
+            'sender': self.__sender,
+            'receiver': self.__receiver,
+            'payload': self.__payload,
+            'signature': self.__signature,
         }
 
     def get_json(self):
@@ -36,3 +36,25 @@ class Transaction:
 
     def __str__(self):
         return str(self.to_dict())
+
+    @property
+    def sender(self):
+        return self.__sender
+
+    @property
+    def receiver(self):
+        return self.__receiver
+
+    @property
+    def payload(self):
+        return self.__payload
+
+    @property
+    def signature(self):
+        return self.__signature
+
+    @signature.setter
+    def signature(self, signature):
+        if self.__signature:
+            raise ValueError('signature is already set')
+        self.__signature = signature

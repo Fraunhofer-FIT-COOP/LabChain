@@ -7,7 +7,7 @@ from labchain.transaction import Transaction
 class Block:
     """Represents a block in the blockchain."""
 
-    def __init__(self, block_number, merkel_tree_root, predecessor_hash, block_creator_id, transactions=tuple(),
+    def __init__(self, block_number, merkle_tree_root, predecessor_hash, block_creator_id, transactions=tuple(),
                  nonce=None, timestamp=time.time()):
         """Constructor for Block class
 
@@ -24,24 +24,24 @@ class Block:
             transactions (List): Transactions in the block
 
         """
-        self.block_number = block_number
+        self.__block_number = block_number
         self.timestamp = timestamp
-        self.merkle_tree_root = merkel_tree_root
-        self.predecessor_hash = predecessor_hash
+        self.__merkle_tree_root = merkle_tree_root
+        self.__predecessor_hash = predecessor_hash
         self.nonce = nonce
-        self.block_creator_id = block_creator_id
-        self.transactions = transactions
+        self.__block_creator_id = block_creator_id
+        self.__transactions = tuple(transactions)
 
     def to_dict(self):
         """Convert own data to a dictionary."""
         return {
-            'nr': self.block_number,
+            'nr': self.__block_number,
             'timestamp': self.timestamp,
-            'merkleHash': self.merkle_tree_root,
-            'predecessorBlock': self.predecessor_hash,
+            'merkleHash': self.__merkle_tree_root,
+            'predecessorBlock': self.__predecessor_hash,
             'nonce': self.nonce,
-            'creator': self.block_creator_id,
-            'transactions': [transaction.get_json() for transaction in self.transactions]
+            'creator': self.__block_creator_id,
+            'transactions': [transaction.get_json() for transaction in self.__transactions]
         }
 
     def get_json(self):
@@ -63,3 +63,23 @@ class Block:
 
     def __str__(self):
         return str(self.to_dict())
+
+    @property
+    def block_number(self):
+        return self.__block_number
+
+    @property
+    def merkle_tree_root(self):
+        return self.__merkle_tree_root
+
+    @property
+    def predecessor_hash(self):
+        return self.__predecessor_hash
+
+    @property
+    def block_creator_id(self):
+        return self.__block_creator_id
+
+    @property
+    def transactions(self):
+        return self.__transactions
