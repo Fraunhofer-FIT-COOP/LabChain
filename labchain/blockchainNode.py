@@ -4,13 +4,17 @@ import threading
 import time
 
 from labchain.txpool import TxPool
+from mock.cryptoHelper import CryptoHelper
 from mock.consensus import Consensus
 from mock.networkInterface import NetworkInterface
 from labchain.blockchain import BlockChain
 
 
-def block_mine_timer(mine_freq, block_transactions_size, blockchain_obj,
-                     txpool_obj, consensus_obj):
+NODE_CONFIG_FILE = 'resources/node_configuration.ini'
+
+
+def block_mine_timer(mine_freq, block_transactions_size, blockchain,
+                     txpool, consensus):
     """ Thread which periodically checks to mine
     Note: to start mining based on number of transactions,
     there needs to be either a discussion on few approaches
@@ -27,53 +31,52 @@ def block_mine_timer(mine_freq, block_transactions_size, blockchain_obj,
     while True:
         # check the last call of mine from consensus component
         if consensus.last_mine_time_sec >= mine_freq:
-            transactions = txpool_obj.get_transcations(block_transactions_size)
+            transactions = txpool.get_transcations(block_transactions_size)
             # should the blockchain,py create block or Block,py create block
-            block = blockchain_obj.create_block(transactions)
-            consensus_obj.mine(block)
+            block = blockchain.create_block(transactions)
+            consensus.mine(block)
             # instead of returning nonce,
             # nonce should be added in the block object
             # have to check if other node already created a block
-            blockchain_obj.add_block(True, block)
+            blockchain.add_block(True, block)
 
-        next_call += (mine_freq - consensus_obj.last_mine_time_sec)
+        next_call += (mine_freq - consensus.last_mine_time_sec)
         time.sleep(next_call - time.time())
 
+def on_new_transaction_received():
+    # This method wakes up the txpool thread
+    pass
 
-if __name__ == '__main__':
-    """ initialize every other component
-    main method to initialize the block chain node
-    and all its components"""
-
-    print("\nInitializing BlockChain Node\n")
-
-    config = configparser.ConfigParser()
+def initializeNode():
+    """ Initialize every componenent of the node"""
 
     try:
-        config.read('resources/node_configuration.ini')
-    except RuntimeError:
-        #  need to use the correct type of error
-        # Need to do proper handling of exceptions
-        pass
+        config = configparser.ConfigParser()
+        config.read(NODE_CONFIG_FILE)
+    except:
+        print('Node Configuration file is corrupt or non-existent, \
+              exiting node startup.... \n')
+        sys.exit(0)
 
     try:
         mine_freq = config.getint(section='MINING',
                                   option='MINE_SCHEDULING_FREQUENCY_SEC')
         num_of_transactions = config.getint(section='MINING',
                                             option='BLOCK_TRANSACTION_SIZE')
-        block_creator_id = config.get(section='BLOCK',
-                                      option='BLOCK_CREATOR_ID')
-    except RuntimeError:
-        #  need to use the correct type of error
-        print("Configuration options missing, can't start module")
-        # maybe could start with the default values, unless file locations are missing
+    except:
+        print("Node configuration file is corrupt, exiting node startup" \
+              ".... \n")
         sys.exit(0)
 
-    # singleton of these classes should be better
     consensus = Consensus()
     txpool = TxPool()
     networkInterface = NetworkInterface()
-    blockchain = BlockChain(consensus, txpool, block_creator_id)
+    crypto_helper = CryptoHelper()
+
+    # Generate the node ID somehow.. TBD
+    node_id = 123
+
+    blockchain = BlockChain(consensus, txpool, node_id)
 
     # start the scheduler for mining
     mine_thread = threading.Thread(target=block_mine_timer,
@@ -83,3 +86,6 @@ if __name__ == '__main__':
                                                txn_pool_obj=txpool,
                                                consensus_obj=consensus))
     mine_thread.start()
+
+if __name__ == '__main__':
+    initializeNode()
