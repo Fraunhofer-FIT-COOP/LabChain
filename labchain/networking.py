@@ -1,9 +1,12 @@
 import json
+import random
 
 import requests
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
+
+from labchain.block import Block
 
 
 class NodeNotAvailableException(Exception):
@@ -64,10 +67,22 @@ class NetworkInterface:
         pass
 
     def requestBlock(self, block_id):
-        pass
+        shuffled_peer_ips = self.__get_shuffeled_peers()
+        for peer_ip in shuffled_peer_ips:
+            peer_port = self.peers[peer_ip]['port']
+            block_data = self.json_rpc_client.send(peer_ip, peer_port, 'requestBlock', [block_id])
+            if block_data:
+                return Block.from_dict(block_data)
+        return None
 
     def add_peer(self, ip_address, port):
         self.peers.append({ip_address: {'port': port}})
+
+    def __get_shuffeled_peers(self):
+        """Retrieve a shuffled list of peer IP addresses."""
+        peer_ips = self.peers.keys()
+        random.shuffle(peer_ips)
+        return peer_ips
 
 
 class ServerNetworkInterface(NetworkInterface):
@@ -81,7 +96,7 @@ class ServerNetworkInterface(NetworkInterface):
         super().__init__(json_rpc_client, initial_peers, timeout=timeout)
         self.on_block_received_callback = on_block_received_callback
         self.on_transaction_received_callback = on_transaction_received_callback
-        self.get_block_callback = get_block_callback,
+        self.get_block_callback = get_block_callback
         self.get_transaction_callback = get_transaction_callback
         self.port = port
 
@@ -129,7 +144,10 @@ class ServerNetworkInterface(NetworkInterface):
         pass
 
     def __handle_request_block(self, block_id):
-        pass
+        block = self.get_block_callback(block_id)
+        if block is None:
+            return None
+        return block.to_dict()
 
     def __handle_request_transaction(self, transaction_hash):
         pass

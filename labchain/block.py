@@ -41,7 +41,7 @@ class Block:
             'predecessorBlock': self.__predecessor_hash,
             'nonce': self.nonce,
             'creator': self.__block_creator_id,
-            'transactions': [transaction.get_json() for transaction in self.__transactions]
+            'transactions': [transaction.to_dict() for transaction in self.__transactions]
         }
 
     def get_json(self):
