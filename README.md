@@ -25,3 +25,13 @@ Please use git precommit hooks to style check before commiting. We created a glo
 For the Hook to work, you'll need to install pycodestyle: ```pip install pycodestyle```
 
 This script creats a symlink from ```.git//hooks/pre-commit``` to ```scripts/pre-commit.bash```. It is based on a script of sigmoidal.io (https://sigmoidal.io/automatic-code-quality-checks-with-git-hooks/) and the pep8-git-hook by cbrueffer (https://github.com/cbrueffer/pep8-git-hook).
+
+
+# Setup
+
+Run the following to install all dependencies:
+
+```bash
+pip install -r requirements.txt
+
+```
