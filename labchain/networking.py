@@ -1,3 +1,6 @@
+import json
+
+import requests
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
@@ -20,12 +23,25 @@ class BlockDoesNotExistException(Exception):
 
 
 class JsonRpcClient:
-    def send(self, ip_address, port, data):
+    def __init__(self):
+        self.id_counter = 0
+
+    def send(self, ip_address, port, method, params=tuple()):
         """Convert data to json and send it over the network.
 
         Return the answer dictionary.
         """
-        pass
+        url = 'http://{}:{}/'.format(ip_address, port)
+        headers = {'content-type': 'application/json'}
+        payload = {
+            "method": method,
+            "params": params,
+            "jsonrpc": "2.0",
+            "id": self.id_counter,
+        }
+        response = requests.post(url, data=json.dumps(payload), headers=headers).json()
+        self.id_counter += 1
+        return response['result']
 
 
 class NetworkInterface:

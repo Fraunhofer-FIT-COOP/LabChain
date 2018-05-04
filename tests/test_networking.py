@@ -21,7 +21,7 @@ class MockJsonRpcClient:
         """Set the content of the result field for future requests."""
         self.response_queue.append(response_data)
 
-    def send(self, ip_address, port, method, params=[]):
+    def send(self, ip_address, port, method, params=tuple()):
         """Store a json RPC call in self.requests."""
         key = str(ip_address) + ':' + str(port)
         if key not in self.requests:
