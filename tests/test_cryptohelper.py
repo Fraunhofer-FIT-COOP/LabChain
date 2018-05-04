@@ -1,7 +1,7 @@
 from Crypto.PublicKey import ECC
 from labchain.cryptoHelper import CryptoHelper
 from unittest import TestCase
-import unittest
+
 import json
 
 
@@ -35,7 +35,7 @@ class Tests(TestCase):
         helper = CryptoHelper.instance()
         returned_hash = helper.hash(message)
 
-        self.assertFalse(hash_false == returned_hash)
+        self.assertEqual(hash_false, returned_hash)
 
     def test_show_signature_true(self):
         helper = CryptoHelper.instance()
@@ -83,7 +83,7 @@ class Tests(TestCase):
 
         #  tamper with signature
         signature_byte_array = bytearray(signature_true)
-        signature_byte_array[0] = (signature_byte_array[0]+1)%256
+        signature_byte_array[0] = (signature_byte_array[0] + 1) % 256
         signature_false = bytes(signature_byte_array)
 
         self.assertFalse(helper.validate(public_key, message, signature_false))
