@@ -45,7 +45,7 @@ class CommonTestCase(TestCase):
         self.received_transactions = []
         self.json_rpc_client = MockJsonRpcClient()
         self.network_interface = self.create_server_network_interface(self.json_rpc_client)
-        self.client = Client(self.network_interface.werkzeug_app)
+        self.client = Client(self.network_interface.application)
 
     def on_block_received(self, block):
         self.received_blocks.append(block)
@@ -71,9 +71,13 @@ class CommonTestCase(TestCase):
 
     def make_request(self, data):
         """Make a request to the node and return the response dict."""
-        app_iter, status, headers = self.client.post('/', data=json.dumps(data),
-                                                     environ_base={'REMOTE_ADDR': '1.2.3.4'})
-        return ''.join(app_iter)
+        app_iter, status, headers = self.client.post('/', data=data,
+                                                     environ_base={'REMOTE_ADDR': '1.2.3.4'},
+                                                     headers={'Content-Type': 'application/json'})
+        result = ''
+        for line in app_iter:
+            result += line.decode()
+        return result
 
     def get_last_request(self, host, port):
         key = str(host) + ':' + str(port)
@@ -100,16 +104,16 @@ class PeerListExchangeTestCase(CommonTestCase):
     def test_server_test_get_peers_with_no_entries(self):
         """Test case #1a."""
         # when
-        response_data = self.make_request('{ "jsonrpc": "2.0", method: "getPeers", params:[], id: 1}')
+        response_data = self.make_request('{ "jsonrpc": "2.0", "method": "getPeers", "params":[], "id": 1}')
         # then
-        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", result: {}, id: 1}')
+        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", "result": {}, "id": 1}')
 
     def test_server_advertise_peer_with_port_param(self):
         """Test case #2."""
         # when
         response_data = self.make_request('{ "jsonrpc": "2.0", method: "advertisePeer", params:[6667], id: 1}')
         # then
-        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", result: true, id: 1}')
+        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", "result": true, "id": 1}')
         self.assertDictEqual(self.network_interface.peers, {"1.2.3.4": {"port": 6667}})
 
     def test_server_advertise_peer_with_no_port_param(self):
