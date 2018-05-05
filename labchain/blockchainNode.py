@@ -73,8 +73,9 @@ def initializeNode():
     networkInterface = NetworkInterface()
     crypto_helper = CryptoHelper()
 
-    # Generate the node ID somehow.. TBD
-    node_id = 123
+    # Generate the node ID using host ID
+    node_uuid = str(uuid.uuid1())
+    node_id = node_uuid[:node_uuid.find('-')]
 
     blockchain = BlockChain(consensus, txpool, node_id)
 
