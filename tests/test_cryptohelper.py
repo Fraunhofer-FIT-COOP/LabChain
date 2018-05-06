@@ -94,5 +94,5 @@ class Tests(TestCase):
         helper = CryptoHelper.instance()
         private_key, public_key = helper.generate_key_pair()
         key = ECC.import_key(private_key)
-        public_key_true = key.public_key()
-        self.assertEqual(public_key_true, ECC.import_key(private_key))
+        public_key_true = key.public_key().export_key(format='PEM')
+        self.assertEqual(public_key_true, public_key)
