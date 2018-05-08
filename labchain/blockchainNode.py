@@ -2,6 +2,7 @@ import configparser
 import sys
 import threading
 import time
+import uuid
 
 from labchain.txpool import TxPool
 from mock.cryptoHelper import CryptoHelper
@@ -77,7 +78,7 @@ def initializeNode():
     node_uuid = str(uuid.uuid1())
     node_id = node_uuid[:node_uuid.find('-')]
 
-    blockchain = BlockChain(consensus, txpool, node_id)
+    blockchain = BlockChain(consensus, txpool, node_id, crypto_helper)
 
     # start the scheduler for mining
     mine_thread = threading.Thread(target=block_mine_timer,

@@ -1,23 +1,60 @@
 import time
 import hashlib
+import json
 
-class Block:
-    def __init__(self, predecessor_hash, block_creator_id, transactions,
-                 consensus_obj):
-        self._timestamp = time.time()
+
+class Block(object):
+    def __init__(self, block_number=None, timestamp=time.time(), transactions=list(),
+                 merkle_tree_root=None, predecessor_hash=None, nonce=None,
+                 block_creator_id=None):
+        self._block_number = block_number
+        self._timestamp = timestamp
         self._transactions = transactions
-        self._merkle_tree_root = self.compute_merkle_root()
+        self._merkle_tree_root = merkle_tree_root
         self._predecessor_hash = predecessor_hash
-        self._nonce = None
+        self._nonce = nonce
         self._block_creator_id = block_creator_id
+
+    def to_dict(self):
+        """Convert own data to a dictionary."""
+        return {
+            'nr': self._block_number,
+            'timestamp': self._timestamp,
+            'merkleHash': self._merkle_tree_root,
+            'predecessorBlock': self._predecessor_hash,
+            'nonce': self._nonce,
+            'creator': self._block_creator_id,
+            'transactions': [transaction.get_json() for transaction in self._transactions]
+        }
+
+    def get_json(self):
+        """Serialize this instance to a JSON string."""
+        return json.dumps(self.to_dict())
+
+    def get_predecessor_hash(self):
+       return self._predecessor_hash
+
+    def get_transactions(self):
+        return self._transactions
+
+    def get_block_num(self):
+        return self._block_number
+
+
+class LogicalBlock(Block):
+    def __init__(self, block_number, transactions, predecessor_hash,
+                 block_creator_id, consensus_obj, crypto_helper_obj):
+        super(LogicalBlock, self).__init__(block_number=block_number,
+                                           transactions=transactions,
+                                           predecessor_hash=predecessor_hash,
+                                           block_creator_id=block_creator_id)
         self._length_in_chain = None
         self._consensus = consensus_obj
+        self._crypto_helper = crypto_helper_obj
+        self._merkle_tree_root = self.compute_merkle_root()
 
     def is_block_ours(self, node_id):
         return (self._block_creator_id == node_id)
-
-    def get_json(self):
-       pass
 
     def set_block_nonce(self, value):
         self._nonce = value
@@ -28,25 +65,15 @@ class Block:
     def set_block_pos(self, value):
         self._length_in_chain = value
 
-    def get_predecessor_hash(self):
-       return self._predecessor_hash
-
-    def get_transactions(self):
-        return self._transactions
-
     def get_computed_hash(self):
-        # we must make sure the dictionary is ordered , otherwise we will get inconsistent hashes
-        # This is wrong, json dump on self won't run. TBD
-        # block_string = json.dump(self, sort_keys=True).encode()
-        # return hashlib.sha256(block_string).hexdigest()
-        return 'abc'
+        return self._crypto_helper.hash(self.get_json())
 
     def validate_block(self):
         block_valid = False
         #  validate signatures, TBD
 
         transactions = self._transactions
-        #  this can be optimized
+        #  this can be optimized. How?
         for t in transactions:
             if not t.validate_signature():
                 break

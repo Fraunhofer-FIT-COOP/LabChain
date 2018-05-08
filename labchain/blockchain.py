@@ -1,10 +1,10 @@
-from labchain.block import Block
+from labchain.block import LogicalBlock
 import json
 
 CHECKPOINT_SIZE = 6
 
 class BlockChain:
-    def __init__(self, consensus_obj, txpool_obj, node_id):
+    def __init__(self, consensus_obj, txpool_obj, node_id, crypto_helper_obj):
         self._blockchain = {} # hash : block
         self._orphan_blocks = {} # parent-hash : block
         self._current_branch_heads = []
@@ -12,6 +12,7 @@ class BlockChain:
         self._last_checkpoint = None
         self._consensus = consensus_obj
         self._txpool = txpool_obj
+        self._crypto_helper = crypto_helper_obj
         self._node_id = node_id
 
         # Create a very first initial block, hardcoded in all nodes
@@ -65,10 +66,14 @@ class BlockChain:
         self.switch_to_longest_branch()
 
     def create_block(self, transactions):
-        new_block = Block(predecessor_hash=self._node_branch_head,
-                          block_creator_id=self._node_id,
-                          transactions=transactions,
-                          consensus_obj=self._consensus)
+        _curr_head = self._blockchain[self._node_branch_head]
+        _new_block_num = _curr_head.get_block_num() + 1
+        new_block = LogicalBlock(block_number=_new_block_num,
+                                 predecessor_hash=self._node_branch_head,
+                                 block_creator_id=self._node_id,
+                                 transactions=transactions,
+                                 consensus_obj=self._consensus,
+                                 crypto_helper_obj=self._crypto_helper)
         return new_block
 
     def switch_to_longest_branch(self):
