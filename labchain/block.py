@@ -75,7 +75,8 @@ class Block(object):
 
 class LogicalBlock(Block):
     def __init__(self, block_id=None, transactions=[], predecessor_hash=None,
-                 block_creator_id=None, consensus_obj=None, crypto_helper_obj=None):
+                 block_creator_id=None, merkle_tree_root=None,
+                 consensus_obj=None, crypto_helper_obj=None):
         """Constructor for LogicalBlock, derives properties from the
         placeholder class Block.
 
@@ -89,6 +90,8 @@ class LogicalBlock(Block):
             Hash of the predecessor block to this block
         block_creator_id : String
             ID of the node who created this block
+        merkle_tree_root : Hash
+            Merkle Tree Root of all transactions combined
         consensus_obj : Instance of consensus module
         crypto_helper_obj : Instance of cryptoHelper module
 
@@ -108,7 +111,8 @@ class LogicalBlock(Block):
                                            predecessor_hash=predecessor_hash,
                                            block_creator_id=block_creator_id)
         self._length_in_chain = None
-        self._merkle_tree_root = self.compute_merkle_root()
+        if not self._merkle_tree_root:
+            self._merkle_tree_root = self.compute_merkle_root()
         self._consensus = consensus_obj
         self._crypto_helper = crypto_helper_obj
 
@@ -163,19 +167,14 @@ class LogicalBlock(Block):
 
         """
 
-        block_valid = False
-        #  validate signatures, TBD
-
+        # Validate Transaction signatures
         transactions = self._transactions
-        #  this can be optimized. How?
         for t in transactions:
             if not self._crypto_helper.validate_signature(t):
-                break
-        else:
-            block_valid = True
+                return False
 
-        #  validate_merkle_tree, TBD
-        if not block_valid:
+        # Validate Merkle Tree correctness
+        if self.compute_merkle_root() != self._merkle_tree_root
             return False
 
         #  validate nonce
