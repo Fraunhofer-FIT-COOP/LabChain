@@ -71,8 +71,7 @@ def initialize_node():
         config = configparser.ConfigParser()
         config.read(NODE_CONFIG_FILE)
     except Exception:
-        print('Node Configuration file is corrupt or non-existent, \
-              exiting node startup.... \n')
+        print('Node Configuration file is corrupt or non-existent, exiting node startup.... \n')
         sys.exit(0)
 
     try:
@@ -85,8 +84,7 @@ def initialize_node():
         pruning_interval = config.getint(section='BLOCK_CHAIN',
                                          option='TIME_TO_PRUNE')
     except Exception:
-        print("Node configuration file is corrupt, exiting node startup \
-              .... \n")
+        print("Node configuration file is corrupt, exiting node startup.... \n")
         sys.exit(0)
 
     consensus = Consensus()
@@ -96,7 +94,7 @@ def initialize_node():
 
     # Generate the node ID using host ID
     node_uuid = str(uuid.uuid1())
-    node_id = node_uuid[node_uuid.find('-') + 1:]
+    node_id = node_uuid[node_uuid.rfind('-') + 1:]
 
     blockchain = BlockChain(node_id=node_id, tolerance_value=tolerance_value,
                             pruning_interval=pruning_interval, consensus_obj=consensus,
