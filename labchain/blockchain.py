@@ -9,8 +9,8 @@ class BlockChain:
 
         Parameters
         ----------
-        node_id : int
-                ID of the node running the blockchain
+        node_id : String
+            ID of the node running the blockchain
         consensus_obj : Instance of consensus module
         txpool_obj : Instance of txpool module
         crypto_helper_obj : Instance of cryptoHelper module
@@ -18,20 +18,20 @@ class BlockChain:
         Attributes
         ----------
         _node_id : String
-                ID of the node running the blockchain
+            ID of the node running the blockchain
         _blockchain : Dictionary
-                Dictionary of blocks in our blockchain
-                key = block hash, value = LogicalBlock instance
+            Dictionary of blocks in our blockchain
+            key = block hash, value = LogicalBlock instance
         _orphan_blocks : Dictionary
-                Dictionary of blocks whose predecessor block is not in our chain
-                key = predecessor block hash, value = LogicalBlock instance
+            Dictionary of blocks whose predecessor block is not in our chain
+            key = predecessor block hash, value = LogicalBlock instance
         _current_branch_heads : List
-                List of the block hashes, which are branch heads maintained by the node
+            List of the block hashes, which are branch heads maintained by the node
         _node_branch_head : Hash value
-                Hash value of the branch head this node is following
+            Hash value of the branch head this node is following
         _furthest_branching_point : Dictionary
-                Information about the point where earliest branching happened in chain
-                key = block instance of branching point, value = position in the chain
+            Information about the point where earliest branching happened in chain
+            key = block instance of branching point, value = position in the chain
         _consensus : Instance of the consensus module
         _txpool : Instance of the txpool module
         _crypto_helper : Instance of cryptoHelper module
@@ -58,7 +58,7 @@ class BlockChain:
         Parameters
         ----------
         block : LogicalBlock instance
-                The block instance to be added to the chain.
+            The block instance to be added to the chain.
 
         Returns
         -------
@@ -126,18 +126,18 @@ class BlockChain:
         Parameters
         ----------
         transactions : List
-                Transactions to be associated with the block
+            Transactions to be associated with the block
 
         Returns
         -------
         new_block : LogicalBlock instance
-                The New Block created from the transactions given
+            The New Block created from the transactions given
 
         """
 
         _curr_head = self._blockchain[self._node_branch_head]
         _new_block_num = _curr_head.get_block_num() + 1
-        new_block = LogicalBlock(block_number=_new_block_num,
+        new_block = LogicalBlock(block_id=_new_block_num,
                                  predecessor_hash=self._node_branch_head,
                                  block_creator_id=self._node_id,
                                  transactions=transactions,
@@ -204,13 +204,13 @@ class BlockChain:
         Parameters
         ----------
         requested_block_hash : Hash
-                Hash value of the block requested.
+            Hash value of the block requested.
 
         Returns
         -------
         block_info : Json structure
-                The Json of Block which was requested
-                None if Block was not found in node's chain.
+            The Json of Block which was requested
+            None if Block was not found in node's chain.
 
         """
 
@@ -226,7 +226,7 @@ class BlockChain:
         Parameters
         ----------
         requested_block_hash : Hash
-                Hash of the block requested by the node.
+            Hash of the block requested by the node.
 
         """
         pass
