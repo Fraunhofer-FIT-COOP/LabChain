@@ -169,7 +169,7 @@ class LogicalBlock(Block):
         transactions = self._transactions
         #  this can be optimized. How?
         for t in transactions:
-            if not t.validate_signature():
+            if not self._crypto_helper.validate_signature(t):
                 break
         else:
             block_valid = True
@@ -199,7 +199,7 @@ class LogicalBlock(Block):
                 # If not the last element
                 if i + 1 < len(hashes):
                     # Concatenate the hashes and calculate their hash
-                    value = str(hashes[i] + hashes[i+1]).encode('utf-8')
+                    value = str(hashes[i] + hashes[i + 1]).encode('utf-8')
                     hash = hashlib.sha256(value).hexdigest()
                 else:
                     hash = hashes[i]

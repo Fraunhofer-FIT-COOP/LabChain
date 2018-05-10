@@ -1,10 +1,11 @@
-from mock.transaction import Transaction
+from labchain.transaction import Transaction
 
 
 class TxPool:
 
-    def __init__(self):
+    def __init__(self, crypto_helper_obj):
         self.__transactions = []
+        self.__crypto_helper = crypto_helper_obj
 
     def get_transaction(self):
         return self.__transactions.pop()
@@ -22,7 +23,7 @@ class TxPool:
 
     def add_transaction_if_not_exist(self, transaction):
         if isinstance(transaction, Transaction):
-            if transaction not in self.__transactions and transaction.validate_signature():
+            if transaction not in self.__transactions and self.__crypto_helper.validate_signature(transaction):
                 self.__transactions.append(transaction)
                 return True
             else:

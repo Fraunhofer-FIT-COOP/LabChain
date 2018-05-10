@@ -1,17 +1,19 @@
 import unittest
 
 from labchain.txpool import TxPool
-from mock.transaction import Transaction
+from labchain.transaction import Transaction
+from mock.cryptoHelper import CryptoHelper
 
 
 class TxPoolTestCase(unittest.TestCase):
     """Class of testcases for the TxPool module"""
 
     def setUp(self):
-        self.__txPoolObj = TxPool()
-        self.__txPoolObj.add_transaction_if_not_exist(Transaction("a"))
-        self.__txPoolObj.add_transaction_if_not_exist(Transaction("b"))
-        self.__txPoolObj.add_transaction_if_not_exist(Transaction("c"))
+        crypto_helper_obj = CryptoHelper()
+        self.__txPoolObj = TxPool(crypto_helper_obj)
+        self.__txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "a"))
+        self.__txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "b"))
+        self.__txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "c"))
 
     def tearDown(self):
         del self.__txPoolObj
@@ -19,7 +21,7 @@ class TxPoolTestCase(unittest.TestCase):
     def test_add_transaction(self):
         """Test for add transaction, get transaction count and
         get transaction"""
-        transaction = Transaction("d")
+        transaction = Transaction("s", "r", "d")
         txpool_size = self.__txPoolObj.get_transaction_count()
         status = self.__txPoolObj.add_transaction_if_not_exist(transaction)
         self.assertEqual(status, True)
@@ -30,8 +32,8 @@ class TxPoolTestCase(unittest.TestCase):
         """Test to get a set of transactions"""
         tx_pool_count = self.__txPoolObj.get_transaction_count()
         if tx_pool_count < 2:
-            self.__txPoolObj.add_transaction_if_not_exist(Transaction("e"))
-            self.__txPoolObj.add_transaction_if_not_exist(Transaction("f"))
+            self.__txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "e"))
+            self.__txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "f"))
         if tx_pool_count < 2:
             self.assertFalse(True)
         else:
@@ -40,7 +42,7 @@ class TxPoolTestCase(unittest.TestCase):
 
     def test_remove_transaction(self):
         """Test remove transaction"""
-        transaction = Transaction("g")
+        transaction = Transaction("s", "r", "g")
         self.__txPoolObj.add_transaction_if_not_exist(transaction)
         tx_pool_count = self.__txPoolObj.get_transaction_count()
         transactions = self.__txPoolObj.get_transactions(tx_pool_count)
@@ -57,7 +59,7 @@ class TxPoolTestCase(unittest.TestCase):
 
     def test_return_transactions_to_pool(self):
         """Test for return transactions to pool"""
-        transactions = [Transaction("g"), Transaction("h"), Transaction("i")]
+        transactions = [Transaction("s", "r", "h"), Transaction("s", "r", "i"), Transaction("s", "r", "j")]
         tx_pool_count = self.__txPoolObj.get_transaction_count()
         status = self.__txPoolObj.return_transactions_to_pool(transactions)
         self.assertEqual(status, True)
