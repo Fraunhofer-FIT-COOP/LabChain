@@ -20,7 +20,7 @@ class Transaction:
             'sender': self.__sender,
             'receiver': self.__receiver,
             'payload': self.__payload,
-            'signature': self.__signature,
+            'signature': self.__signature
         }
 
     def get_json(self):

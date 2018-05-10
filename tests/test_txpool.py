@@ -34,11 +34,9 @@ class TxPoolTestCase(unittest.TestCase):
         if tx_pool_count < 2:
             self.__txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "e"))
             self.__txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "f"))
-        if tx_pool_count < 2:
-            self.assertFalse(True)
-        else:
-            transactions = self.__txPoolObj.get_transactions(tx_pool_count - 1)
-            self.assertEqual(len(transactions), tx_pool_count - 1)
+        self.assertFalse(tx_pool_count < 2)
+        transactions = self.__txPoolObj.get_transactions(tx_pool_count - 1)
+        self.assertEqual(len(transactions), tx_pool_count - 1)
 
     def test_remove_transaction(self):
         """Test remove transaction"""
@@ -47,15 +45,12 @@ class TxPoolTestCase(unittest.TestCase):
         tx_pool_count = self.__txPoolObj.get_transaction_count()
         transactions = self.__txPoolObj.get_transactions(tx_pool_count)
         self.__txPoolObj.return_transactions_to_pool(transactions)
-        if transaction in transactions:
-            status = self.__txPoolObj.remove_transaction(transaction)
-            self.assertEqual(status, True)
-            tx_pool_count = self.__txPoolObj.get_transaction_count()
-            transactions = self.__txPoolObj.get_transactions(tx_pool_count)
-            if transaction in transactions:
-                self.assertFalse(True)
-        else:
-            self.assertFalse(True)
+        self.assertTrue(transaction in transactions)
+        status = self.__txPoolObj.remove_transaction(transaction)
+        self.assertEqual(status, True)
+        tx_pool_count = self.__txPoolObj.get_transaction_count()
+        transactions = self.__txPoolObj.get_transactions(tx_pool_count)
+        self.assertFalse(transaction in transactions)
 
     def test_return_transactions_to_pool(self):
         """Test for return transactions to pool"""

@@ -1,42 +1,46 @@
 import json
 import unittest
-import some_txn_verify_package
 
-from labchain.blockchain import BlockChain
-from mock.consensus import Consensus
+from labchain.transaction import Transaction
 
 
 class TransactionTestCase(unittest.TestCase):
+    """Class of testcases for the TxPool module"""
 
-    def sign_transaction(self):
-        """
-        Sign transaction with private key
-        """
-        private_key = RSA.importKey(binascii.unhexlify(self.sender_private_key))
-        signer = PKCS1_v1_5.new(private_key)
-        h = SHA.new(str(self.to_dict()).encode('utf8'))
-        return binascii.hexlify(signer.sign(h)).decode('ascii')
+    def test_from_json(self):
+        """Test transaction creation from json"""
+        json_string = '{"receiver": "r", "signature": "sig", "payload": "1", "sender": "s"}'
+        transaction = Transaction.from_json(json_string)
+        self.assertTrue(isinstance(transaction, Transaction))
+        self.assertEqual("r", transaction.receiver)
+        self.assertEqual("sig", transaction.signature)
+        self.assertEqual("1", transaction.payload)
+        self.assertEqual("s", transaction.sender)
 
-    def validate_transaction(self):
-        # Check transaction validity; throw an error if an invalid transaction was found.
-        WALLET_KEYS = ["foo", "1", "2", "3", "4", "5"]
+    def test_from_dict(self):
+        """Test transaction creation from dict"""
+        d = {'sender': 's', 'receiver': 'r', 'payload': '1', 'signature': 'sig'}
+        transaction = Transaction.from_dict(d)
+        self.assertTrue(isinstance(transaction, Transaction))
+        self.assertEqual("r", transaction.receiver)
+        self.assertEqual("sig", transaction.signature)
+        self.assertEqual("1", transaction.payload)
+        self.assertEqual("s", transaction.sender)
 
-        for wk in WALLET_KEYS:
-            wallet = BIP32Node.from_master_secret(secp256k1_generator, wk.encode("utf8"))
-            text = wallet.wallet_key(as_private=True)
-            self.assertEqual(is_private_bip32_valid(text))
-            self.assertEqual(is_public_bip32_valid(text))
-            a = text[:-1] + chr(ord(text[-1]) + 1)
-            self.assertEqual(is_private_bip32_valid(a))
-            self.assertEqual(is_public_bip32_valid(a))
-            text = wallet.wallet_key(as_private=False)
-            self.assertEqual(is_private_bip32_valid(text))
-            self.assertEqual(is_public_bip32_valid(text))
-            a = text[:-1] + chr(ord(text[-1]) + 1)
-            self.assertEqual(is_private_bip32_valid(a))
-            self.assertEqual(is_public_bip32_valid(a))
-
-        self.assertEqual(status, True)
+    def test_set_signature(self):
+        """Test for signature setting"""
+        transaction = Transaction(sender="s", receiver="r", payload="1")
+        self.assertTrue(isinstance(transaction, Transaction))
+        transaction.signature = "sig"
+        self.assertEqual("r", transaction.receiver)
+        self.assertEqual("sig", transaction.signature)
+        self.assertEqual("1", transaction.payload)
+        self.assertEqual("s", transaction.sender)
+        try:
+            transaction.signature = "sg"
+            self.assertFalse(True)
+        except ValueError:
+            self.assertTrue(True)
 
 
 if __name__ == '__main__':
