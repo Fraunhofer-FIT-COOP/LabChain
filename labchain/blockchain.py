@@ -1,24 +1,73 @@
 from labchain.block import LogicalBlock
-import json
 
 TOLERANCE_LEVEL = 6
 
+
 class BlockChain:
-    def __init__(self, consensus_obj, txpool_obj, node_id, crypto_helper_obj):
-        self._blockchain = {} # hash : block
-        self._orphan_blocks = {} # parent-hash : block
+    def __init__(self, node_id, consensus_obj, txpool_obj, crypto_helper_obj):
+        """Constructor for BlockChain
+
+        Parameters
+        ----------
+        node_id : int
+                ID of the node running the blockchain
+        consensus_obj : Instance of consensus module
+        txpool_obj : Instance of txpool module
+        crypto_helper_obj : Instance of cryptoHelper module
+
+        Attributes
+        ----------
+        _node_id : String
+                ID of the node running the blockchain
+        _blockchain : Dictionary
+                Dictionary of blocks in our blockchain
+                key = block hash, value = LogicalBlock instance
+        _orphan_blocks : Dictionary
+                Dictionary of blocks whose predecessor block is not in our chain
+                key = predecessor block hash, value = LogicalBlock instance
+        _current_branch_heads : List
+                List of the block hashes, which are branch heads maintained by the node
+        _node_branch_head : Hash value
+                Hash value of the branch head this node is following
+        _furthest_branching_point : Dictionary
+                Information about the point where earliest branching happened in chain
+                key = block instance of branching point, value = position in the chain
+        _consensus : Instance of the consensus module
+        _txpool : Instance of the txpool module
+        _crypto_helper : Instance of cryptoHelper module
+
+        """
+
+        self._node_id = node_id
+        self._blockchain = {}
+        self._orphan_blocks = {}
         self._current_branch_heads = []
         self._node_branch_head = None
         self._furthest_branching_point = {"block" : None, "position" : float("inf")}
         self._consensus = consensus_obj
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
-        self._node_id = node_id
 
         # Create a very first initial block, hardcoded in all nodes
         # TBD
 
     def add_block(self, block):
+        """Finds correct position and adds the new block to the chain.
+        If block predecessor not found in chain, stores block as an orphan.
+
+        Parameters
+        ----------
+        block : LogicalBlock instance
+                The block instance to be added to the chain.
+
+        Returns
+        -------
+        Boolean
+            Returns True if block is saved as orphan or in the chain.
+            Return False if block validation fails and it is deleted.
+
+        """
+
         if not block.validate_block():
             if block.is_block_ours(self._node_id):
                 _txns = block.get_transcations()
@@ -72,6 +121,20 @@ class BlockChain:
         return True
 
     def create_block(self, transactions):
+        """Creates a new LogicalBlock instance.
+
+        Parameters
+        ----------
+        transactions : List
+                Transactions to be associated with the block
+
+        Returns
+        -------
+        new_block : LogicalBlock instance
+                The New Block created from the transactions given
+
+        """
+
         _curr_head = self._blockchain[self._node_branch_head]
         _new_block_num = _curr_head.get_block_num() + 1
         new_block = LogicalBlock(block_number=_new_block_num,
@@ -83,51 +146,87 @@ class BlockChain:
         return new_block
 
     def switch_to_longest_branch(self):
-        if len(self._current_branch_heads) > 1:
-            _check_point_pos = self._furthest_branching_point['position']
-            _check_point = self._furthest_branching_point['block']
-            _check_point_hash = _check_point.get_computed_hash()
+        """Functionality to switch to the longest chain among all the
+        chains currently maintained by blockchain.
+        Switches only if the length of one of the chains is more than
+        the tolerance level defined.
 
-            _max_len = 0
-            _max_head = None
-            for _branch_head_hash in self._current_branch_heads:
-                _head = self._blockchain.get(_branch_head_hash)
-                _path_len = _head.get_block_pos() - _check_point_pos
-                if _path_len > _max_len:
-                    _max_len = _path_len
-                    _max_head = _head
+        """
 
-            if _max_len > TOLERANCE_LEVEL:
-                _new_head_hash = _max_head.get_computed_hash()
+        if len(self._current_branch_heads) == 1:
+            # No Branching happened yet, nothing to do here
+            return
 
-                # Save all block hashes between furthest branch and head in max chain
-                _b_hash = _new_head_hash
-                _longest_chain = []
-                while _b_hash != _check_point_hash:
-                    _longest_chain.append(_b_hash)
-                    _b = self._blockchain.get(_b_hash)
+        _check_point_pos = self._furthest_branching_point['position']
+        _check_point = self._furthest_branching_point['block']
+        _check_point_hash = _check_point.get_computed_hash()
+
+        _max_len = 0
+        _max_head = None
+        for _branch_head_hash in self._current_branch_heads:
+            _head = self._blockchain.get(_branch_head_hash)
+            _path_len = _head.get_block_pos() - _check_point_pos
+            if _path_len > _max_len:
+                _max_len = _path_len
+                _max_head = _head
+
+        if _max_len > TOLERANCE_LEVEL:
+            _new_head_hash = _max_head.get_computed_hash()
+
+            # Save all block hashes between furthest branch and head in max chain
+            _b_hash = _new_head_hash
+            _longest_chain = []
+            while _b_hash != _check_point_hash:
+                _longest_chain.append(_b_hash)
+                _b = self._blockchain.get(_b_hash)
+                _b_hash = _b.get_predecessor_hash()
+            _longest_chain.append(_check_point_hash)
+
+            # Remove all other branches
+            self._current_branch_heads.remove(_new_head_hash)
+            for _head in self._current_branch_heads:
+                _b_hash = _head
+                while _b_hash not in _longest_chain:
+                    _b = self._blockchain.pop(_b_hash)
+                    if _b.is_block_ours(self._node_id):
+                        _txns = _b.get_transcations()
+                        self._txpool.return_transactions_to_pool(_txns)
                     _b_hash = _b.get_predecessor_hash()
-                _longest_chain.append(_check_point_hash)
+                    del _b
 
-                # Remove all other branches
-                self._current_branch_heads.remove(_new_head_hash)
-                for _head in self._current_branch_heads:
-                    _b_hash = _head
-                    while _b_hash not in _longest_chain:
-                        _b = self._blockchain.pop(_b_hash)
-                        if _b.is_block_ours(self._node_id):
-                            _txns = _b.get_transcations()
-                            self._txpool.return_transactions_to_pool(_txns)
-                        _b_hash = _b.get_predecessor_hash()
-                        del _b
-
-                self._current_branch_heads = [_new_head_hash,]
-                self._node_branch_head = _new_head_hash
-                self._furthest_branching_point = {"block" : None, "position" : float("inf")}
+            self._current_branch_heads = [_new_head_hash,]
+            self._node_branch_head = _new_head_hash
+            self._furthest_branching_point = {"block" : None, "position" : float("inf")}
 
     def send_block_to_neighbour(self, requested_block_hash):
-        return self._blockchain[requested_block_hash]
+        """Sends the Block information requested by any neighbour.
+
+        Parameters
+        ----------
+        requested_block_hash : Hash
+                Hash value of the block requested.
+
+        Returns
+        -------
+        block_info : Json structure
+                The Json of Block which was requested
+                None if Block was not found in node's chain.
+
+        """
+
+        block_info = None
+        _req_block = self._blockchain.get(requested_block_hash, None)
+        if _req_block:
+            block_info = _req_block.get_json()
+        return block_info
 
     def request_block_from_neighbour(self, requested_block_hash):
-        # Use networking component to send request
+        """Requests a block from other nodes connected with.
+
+        Parameters
+        ----------
+        requested_block_hash : Hash
+                Hash of the block requested by the node.
+
+        """
         pass

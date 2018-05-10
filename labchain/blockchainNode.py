@@ -76,9 +76,10 @@ def initializeNode():
 
     # Generate the node ID using host ID
     node_uuid = str(uuid.uuid1())
-    node_id = node_uuid[:node_uuid.find('-')]
+    node_id = node_uuid[node_uuid.find('-')+1:]
 
-    blockchain = BlockChain(consensus, txpool, node_id, crypto_helper)
+    blockchain = BlockChain(node_id=node_id, consensus_obj=consensus,
+                            txpool_obj=txpool, crypto_helper_obj=crypto_helper)
 
     # start the scheduler for mining
     mine_thread = threading.Thread(target=block_mine_timer,
