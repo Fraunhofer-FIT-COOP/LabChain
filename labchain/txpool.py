@@ -2,10 +2,20 @@ from labchain.transaction import Transaction
 
 
 class TxPool:
+    __singleton = None
+    __inti_variables = True
 
     def __init__(self, crypto_helper_obj):
-        self.__transactions = []
-        self.__crypto_helper = crypto_helper_obj
+        #  Note: Re-look this logic again later
+        if self.__inti_variables:
+            self.__transactions = []
+            self.__crypto_helper = crypto_helper_obj
+            self.__inti_variables = False
+
+    def __new__(cls, *args, **kwargs):
+        if not cls.__singleton:
+            cls.__singleton = object.__new__(TxPool)
+        return cls.__singleton
 
     def get_transaction(self):
         return self.__transactions.pop()

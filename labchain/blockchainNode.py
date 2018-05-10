@@ -4,6 +4,7 @@ import threading
 import time
 import uuid
 
+from labchain.transaction import Transaction
 from labchain.txpool import TxPool
 from mock.cryptoHelper import CryptoHelper
 from mock.consensus import Consensus
@@ -17,6 +18,7 @@ def schedule_orphans_killing(interval, blockchain_obj):
     while True:
         blockchain_obj.prune_orphans()
         time.sleep(interval)
+
 
 def block_mine_timer(mine_freq, block_transactions_size, blockchain,
                      txpool, consensus):
@@ -49,13 +51,17 @@ def block_mine_timer(mine_freq, block_transactions_size, blockchain,
         time.sleep(next_call - time.time())
 
 
-def on_new_transaction_received():
-    """When a new block is received, call add transaction method in txpool"""
+def on_new_transaction_received(transaction_json):
+    """Callback method to pass to network"""
+    #  Need to verify what is the parameter sent
+    transaction = Transaction.from_json(transaction_json)
+    txpool = TxPool(None)
+    txpool.add_transaction_if_not_exist(transaction)
     pass
 
 
-def on_new_block_received():
-    """When a new block is received, call add block method in blockchain"""
+def on_new_block_received(block_json):
+    """Callback method to pass to network, call add block method in blockchain"""
     pass
 
 

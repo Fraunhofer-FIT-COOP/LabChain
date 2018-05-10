@@ -62,6 +62,16 @@ class TxPoolTestCase(unittest.TestCase):
         status = any(transaction in transactions for transaction in transactions_new)
         self.assertEqual(status, True)
 
+    def test_singleton(self):
+        """Test the single behaviour of the class"""
+        transaction = Transaction("s", "r", "s")
+        self.__txPoolObj.add_transaction_if_not_exist(transaction)
+        tx_pool_count = self.__txPoolObj.get_transaction_count()
+        crypto_helper_obj = CryptoHelper()
+        txpool = TxPool(crypto_helper_obj)
+        self.assertEqual(txpool, self.__txPoolObj)
+        self.assertEqual(txpool.get_transaction_count(), tx_pool_count)
+
 
 if __name__ == '__main__':
     unittest.main()
