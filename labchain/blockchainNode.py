@@ -10,7 +10,6 @@ from mock.consensus import Consensus
 from mock.networkInterface import NetworkInterface
 from labchain.blockchain import BlockChain
 
-
 NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 
 
@@ -44,17 +43,29 @@ def block_mine_timer(mine_freq, block_transactions_size, blockchain,
         next_call += (mine_freq - consensus.last_mine_time_sec)
         time.sleep(next_call - time.time())
 
+
 def on_new_transaction_received():
-    # This method wakes up the txpool thread
+    """When a new block is received, call add transaction method in txpool"""
     pass
 
-def initializeNode():
+
+def on_new_block_received():
+    """When a new block is received, call add block method in blockchain"""
+    pass
+
+
+def on_new_block_created():
+    """When a new block is mined, send the block to other nodes via network"""
+    pass
+
+
+def initialize_node():
     """ Initialize every componenent of the node"""
 
     try:
         config = configparser.ConfigParser()
         config.read(NODE_CONFIG_FILE)
-    except:
+    except Exception:
         print('Node Configuration file is corrupt or non-existent, \
               exiting node startup.... \n')
         sys.exit(0)
@@ -64,19 +75,19 @@ def initializeNode():
                                   option='MINE_SCHEDULING_FREQUENCY_SEC')
         num_of_transactions = config.getint(section='MINING',
                                             option='BLOCK_TRANSACTION_SIZE')
-    except:
-        print("Node configuration file is corrupt, exiting node startup" \
-              ".... \n")
+    except Exception:
+        print("Node configuration file is corrupt, exiting node startup \
+              .... \n")
         sys.exit(0)
 
     consensus = Consensus()
-    txpool = TxPool()
-    networkInterface = NetworkInterface()
     crypto_helper = CryptoHelper()
+    networkInterface = NetworkInterface()
+    txpool = TxPool(crypto_helper_obj=crypto_helper)
 
     # Generate the node ID using host ID
     node_uuid = str(uuid.uuid1())
-    node_id = node_uuid[node_uuid.find('-')+1:]
+    node_id = node_uuid[node_uuid.find('-') + 1:]
 
     blockchain = BlockChain(node_id=node_id, consensus_obj=consensus,
                             txpool_obj=txpool, crypto_helper_obj=crypto_helper)
@@ -90,5 +101,6 @@ def initializeNode():
                                                consensus_obj=consensus))
     mine_thread.start()
 
+
 if __name__ == '__main__':
-    initializeNode()
+    initialize_node()
