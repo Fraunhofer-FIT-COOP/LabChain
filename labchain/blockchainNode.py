@@ -13,6 +13,11 @@ from labchain.blockchain import BlockChain
 NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 
 
+def schedule_orphans_killing(interval, blockchain_obj):
+    while True:
+        blockchain_obj.prune_orphans()
+        time.sleep(interval)
+
 def block_mine_timer(mine_freq, block_transactions_size, blockchain,
                      txpool, consensus):
     """ Thread which periodically checks to mine
@@ -75,6 +80,10 @@ def initialize_node():
                                   option='MINE_SCHEDULING_FREQUENCY_SEC')
         num_of_transactions = config.getint(section='MINING',
                                             option='BLOCK_TRANSACTION_SIZE')
+        tolerance_value = config.getint(section='BLOCK_CHAIN',
+                                        option='TOLERANCE_LEVEL')
+        pruning_interval = config.getint(section='BLOCK_CHAIN',
+                                         option='TIME_TO_PRUNE')
     except Exception:
         print("Node configuration file is corrupt, exiting node startup \
               .... \n")
@@ -89,7 +98,8 @@ def initialize_node():
     node_uuid = str(uuid.uuid1())
     node_id = node_uuid[node_uuid.find('-') + 1:]
 
-    blockchain = BlockChain(node_id=node_id, consensus_obj=consensus,
+    blockchain = BlockChain(node_id=node_id, tolerance_value=tolerance_value,
+                            pruning_interval=pruning_interval, consensus_obj=consensus,
                             txpool_obj=txpool, crypto_helper_obj=crypto_helper)
 
     # start the scheduler for mining
@@ -99,7 +109,11 @@ def initialize_node():
                                                blockchain_obj=blockchain,
                                                txn_pool_obj=txpool,
                                                consensus_obj=consensus))
+    orphan_killer = threading.Thread(target=schedule_orphans_killing,
+                                     kwargs=dict(interval=pruning_interval,
+                                                 blockchain_obj=blockchain))
     mine_thread.start()
+    orphan_killer.start()
 
 
 if __name__ == '__main__':
