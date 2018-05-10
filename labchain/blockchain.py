@@ -60,10 +60,11 @@ class BlockChain:
 
         else:
             # Put block in orphan pool, query predecessor block
-            self._orphan_blocks[_curr_block_hash] = block
+            self._orphan_blocks[_prev_hash] = block
             self.request_block_from_neighbour(_prev_hash)
 
         self.switch_to_longest_branch()
+        return True
 
     def create_block(self, transactions):
         _curr_head = self._blockchain[self._node_branch_head]
