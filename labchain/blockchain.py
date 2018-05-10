@@ -1,16 +1,21 @@
-from labchain.block import LogicalBlock
+from datetime import datetime
 
-TOLERANCE_LEVEL = 6
+from labchain.block import LogicalBlock
 
 
 class BlockChain:
-    def __init__(self, node_id, consensus_obj, txpool_obj, crypto_helper_obj):
+    def __init__(self, node_id, tolerance_value, pruning_interval,
+                 consensus_obj, txpool_obj, crypto_helper_obj):
         """Constructor for BlockChain
 
         Parameters
         ----------
         node_id : String
             ID of the node running the blockchain
+        tolerance_value : Int
+            Length required by the longest chain to be switched to
+        pruning_interval : Int
+            Time given in hours till which the orphan blocks will be stored
         consensus_obj : Instance of consensus module
         txpool_obj : Instance of txpool module
         crypto_helper_obj : Instance of cryptoHelper module
@@ -32,6 +37,10 @@ class BlockChain:
         _furthest_branching_point : Dictionary
             Information about the point where earliest branching happened in chain
             key = block instance of branching point, value = position in the chain
+        _tolerance_level : Int
+            Length required by the longest chain to be switched to
+        _pruning_interval : Int
+            Number of seconds orphan blocks are stored before being deleted
         _consensus : Instance of the consensus module
         _txpool : Instance of the txpool module
         _crypto_helper : Instance of cryptoHelper module
@@ -44,6 +53,8 @@ class BlockChain:
         self._current_branch_heads = []
         self._node_branch_head = None
         self._furthest_branching_point = {"block" : None, "position" : float("inf")}
+        self._tolerance_level = tolerance_value
+        self._pruning_interval = pruning_interval * 3600
         self._consensus = consensus_obj
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
@@ -175,7 +186,7 @@ class BlockChain:
                 _max_len = _path_len
                 _max_head = _head
 
-        if _max_len > TOLERANCE_LEVEL:
+        if _max_len > self._tolerance_level:
             _new_head_hash = _max_head.get_computed_hash()
 
             # Save all block hashes between furthest branch and head in max chain
@@ -202,6 +213,16 @@ class BlockChain:
             self._current_branch_heads = [_new_head_hash,]
             self._node_branch_head = _new_head_hash
             self._furthest_branching_point = {"block" : None, "position" : float("inf")}
+
+    def prune_orphans(self):
+        _curr_time = datetime.now()
+        for _hash in self._orphan_blocks:
+            _block = self._orphan_blocks[_hash]
+            _block_creation_time = datetime.fromtimestamp(_block.get_timestamp())
+            _time_passed = (_curr_time - _block_creation_time).total_seconds()
+            if  _time_passed >= self._pruning_interval:
+                self._orphan_blocks.pop(_hash)
+                del _block
 
     def send_block_to_neighbour(self, requested_block_hash):
         """Sends the Block information requested by any neighbour.

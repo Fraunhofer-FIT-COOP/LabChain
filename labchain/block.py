@@ -72,6 +72,11 @@ class Block(object):
 
         return self._block_id
 
+    def get_timestamp(self):
+        """Returns timestamp of the block"""
+
+        return self._timestamp
+
 
 class LogicalBlock(Block):
     def __init__(self, block_id=None, transactions=[], predecessor_hash=None,
@@ -175,7 +180,7 @@ class LogicalBlock(Block):
                 return False
 
         # Validate Merkle Tree correctness
-        if self.compute_merkle_root() != self._merkle_tree_root
+        if self.compute_merkle_root() != self._merkle_tree_root:
             return False
 
         #  validate nonce
