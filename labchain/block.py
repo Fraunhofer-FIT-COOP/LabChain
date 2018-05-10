@@ -103,7 +103,7 @@ class LogicalBlock(Block):
 
         """
 
-        super(LogicalBlock, self).__init__(block_number=block_number,
+        super(LogicalBlock, self).__init__(block_id=block_id,
                                            transactions=transactions,
                                            predecessor_hash=predecessor_hash,
                                            block_creator_id=block_creator_id)
@@ -204,7 +204,9 @@ class LogicalBlock(Block):
                 else:
                     hash = hashes[i]
                 sub_tree.append(hash)
-            if len(sub_tree) == 1:
+            if len(sub_tree) == 0:
+                return None
+            elif len(sub_tree) == 1:
                 return sub_tree[0]
             else:
                 return _merkle_root(sub_tree)

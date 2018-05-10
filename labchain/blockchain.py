@@ -48,8 +48,10 @@ class BlockChain:
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
 
-        # Create a very first initial block, hardcoded in all nodes
-        # TBD
+        # Create the very first Block, add it to Blockchain
+        _first_block = LogicalBlock(block_id=1, crypto_helper_obj=crypto_helper_obj)
+        _first_block.set_block_pos(0)
+        self._blockchain[_first_block.get_computed_hash()] = _first_block
 
     def add_block(self, block):
         """Finds correct position and adds the new block to the chain.
