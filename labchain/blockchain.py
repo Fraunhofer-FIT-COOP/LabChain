@@ -51,7 +51,10 @@ class BlockChain:
         # Create the very first Block, add it to Blockchain
         _first_block = LogicalBlock(block_id=1, crypto_helper_obj=crypto_helper_obj)
         _first_block.set_block_pos(0)
-        self._blockchain[_first_block.get_computed_hash()] = _first_block
+        _first_block_hash = _first_block.get_computed_hash()
+        self._blockchain[_first_block_hash] = _first_block
+        self._node_branch_head = _first_block_hash
+        self._current_branch_heads = [_first_block_hash,]
 
     def add_block(self, block):
         """Finds correct position and adds the new block to the chain.
