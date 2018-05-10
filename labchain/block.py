@@ -109,7 +109,8 @@ class LogicalBlock(Block):
         super(LogicalBlock, self).__init__(block_id=block_id,
                                            transactions=transactions,
                                            predecessor_hash=predecessor_hash,
-                                           block_creator_id=block_creator_id)
+                                           block_creator_id=block_creator_id,
+                                           merkle_tree_root=merkle_tree_root)
         self._length_in_chain = None
         if not self._merkle_tree_root:
             self._merkle_tree_root = self.compute_merkle_root()
