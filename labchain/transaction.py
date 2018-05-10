@@ -9,18 +9,18 @@ class Transaction:
     set signature according"""
 
     def __init__(self, sender, receiver, payload, signature=None):
-        self._sender = sender
-        self._receiver = receiver
-        self._payload = payload
-        self._signature = signature
+        self.__sender = sender
+        self.__receiver = receiver
+        self.__payload = payload
+        self.__signature = signature
 
     def to_dict(self):
         """Convert own data to a dictionary."""
         return {
-            'sender': self._sender,
-            'receiver': self._receiver,
-            'payload': self._payload,
-            'signature': self._signature
+            'sender': self.__sender,
+            'receiver': self.__receiver,
+            'payload': self.__payload,
+            'signature': self.__signature
         }
 
     def get_json(self):
@@ -44,22 +44,22 @@ class Transaction:
 
     @property
     def sender(self):
-        return self._sender
+        return self.__sender
 
     @property
     def receiver(self):
-        return self._receiver
+        return self.__receiver
 
     @property
     def payload(self):
-        return self._payload
+        return self.__payload
 
     @property
     def signature(self):
-        return self._signature
+        return self.__signature
 
     @signature.setter
     def signature(self, signature):
-        if self._signature:
+        if self.__signature:
             raise ValueError('signature is already set')
-        self._signature = signature
+        self.__signature = signature

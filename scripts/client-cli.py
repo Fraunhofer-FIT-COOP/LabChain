@@ -10,8 +10,8 @@ if parent_dir not in sys.path:
 if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
-from labchain.client import Wallet, BlockchainClient
-from tests.test_account import MockCryptoHelper, MockTransactionFactory, MockNetworkInterface
+from labchain.client import Wallet, BlockchainClient  # noqa
+from tests.test_account import MockCryptoHelper, MockNetworkInterface  # noqa
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 WALLET_FILE_PATH = os.path.join(CONFIG_DIRECTORY, 'wallet.csv')
@@ -23,10 +23,8 @@ def create_config_directory():
 
 def create_client(wallet_file):
     crypto_helper = MockCryptoHelper()
-    transaction_factory = MockTransactionFactory()
     network_interface = MockNetworkInterface(crypto_helper, [], [])
-    return BlockchainClient(Wallet(wallet_file), transaction_factory,
-                            network_interface, crypto_helper)
+    return BlockchainClient(Wallet(wallet_file), network_interface, crypto_helper)
 
 
 if __name__ == '__main__':

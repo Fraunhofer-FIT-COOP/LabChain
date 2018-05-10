@@ -2,11 +2,13 @@ import time
 import hashlib
 import json
 
+from labchain.transaction import Transaction
+
 
 class Block(object):
-    def __init__(self, block_id=None, timestamp=time.time(), transactions=[],
-                 merkle_tree_root=None, predecessor_hash=None, nonce=None,
-                 block_creator_id=None):
+    def __init__(self, block_id=None,
+                 merkle_tree_root=None, predecessor_hash=None, block_creator_id=None,
+                 transactions=[], nonce=None, timestamp=time.time()):
         """Constructor for Block, placeholder for Block information.
 
         Parameters
@@ -14,7 +16,7 @@ class Block(object):
         block_id : Int
             ID of the block
         timestamp : Timestamp of the block creation
-        transactions : List
+        transactions : List (Change to tuple later)
             Transactions to be included in the block
         merkle_tree_root : Hash
             Merkle Tree Root of all transactions combined
@@ -30,52 +32,70 @@ class Block(object):
         Same as the parameters
 
         """
-
-        self._block_id = block_id
-        self._timestamp = timestamp
-        self._transactions = transactions
-        self._merkle_tree_root = merkle_tree_root
-        self._predecessor_hash = predecessor_hash
-        self._nonce = nonce
-        self._block_creator_id = block_creator_id
+        self.__block_id = block_id
+        self.timestamp = timestamp
+        self.__transactions = transactions
+        self.__merkle_tree_root = merkle_tree_root
+        self.__predecessor_hash = predecessor_hash
+        self.nonce = nonce
+        self.__block_creator_id = block_creator_id
 
     def to_dict(self):
         """Returns block data as a dictionary."""
-
         return {
-            'nr': self._block_id,
-            'timestamp': self._timestamp,
-            'merkleHash': self._merkle_tree_root,
-            'predecessorBlock': self._predecessor_hash,
-            'nonce': self._nonce,
-            'creator': self._block_creator_id,
-            'transactions': [transaction.get_json() for transaction in self._transactions]
+            'nr': self.__block_id,
+            'timestamp': self.timestamp,
+            'merkleHash': self.__merkle_tree_root,
+            'predecessorBlock': self.__predecessor_hash,
+            'nonce': self.nonce,
+            'creator': self.__block_creator_id,
+            'transactions': [transaction.get_json() for transaction in self.__transactions]
         }
 
     def get_json(self):
-        """Returns the JSON string of the block information"""
-
+        """Serialize this instance to a JSON string."""
         return json.dumps(self.to_dict())
 
-    def get_predecessor_hash(self):
-        """Returns the hash of the predecessor block to this block."""
+    @staticmethod
+    def from_json(json_data):
+        """Deserialize a JSON string to a Block instance."""
+        data_dict = json.loads(json_data)
+        return Block.from_dict(data_dict)
 
-        return self._predecessor_hash
+    @staticmethod
+    def from_dict(data_dict):
+        """Instantiate a Block from a data dictionary."""
+        return Block(data_dict['nr'], data_dict['merkleHash'], data_dict['predecessorBlock'], data_dict['creator'],
+                     [Transaction.from_dict(transaction_dict) for transaction_dict in data_dict['transactions']],
+                     data_dict['nonce'], data_dict['timestamp'])
 
-    def get_transactions(self):
-        """Returns List of transactions associated with the block"""
+    def __str__(self):
+        return str(self.to_dict())
 
-        return self._transactions
+    @property
+    def block_id(self):
+        return self.__block_id
 
-    def get_block_id(self):
-        """Returns the block ID"""
+    @property
+    def merkle_tree_root(self):
+        return self.__merkle_tree_root
 
-        return self._block_id
+    @property
+    def predecessor_hash(self):
+        return self.__predecessor_hash
+
+    @property
+    def block_creator_id(self):
+        return self.__block_creator_id
+
+    @property
+    def transactions(self):
+        return self.__transactions
 
     def get_timestamp(self):
         """Returns timestamp of the block"""
 
-        return self._timestamp
+        return self.timestamp
 
 
 class LogicalBlock(Block):
@@ -112,10 +132,10 @@ class LogicalBlock(Block):
         """
 
         super(LogicalBlock, self).__init__(block_id=block_id,
-                                           transactions=transactions,
+                                           merkle_tree_root=merkle_tree_root,
                                            predecessor_hash=predecessor_hash,
                                            block_creator_id=block_creator_id,
-                                           merkle_tree_root=merkle_tree_root)
+                                           transactions=transactions,)
         self._length_in_chain = None
         if not self._merkle_tree_root:
             self._merkle_tree_root = self.compute_merkle_root()
@@ -137,12 +157,12 @@ class LogicalBlock(Block):
 
         """
 
-        return (self._block_creator_id == node_id)
+        return self.__block_creator_id == node_id
 
     def set_block_nonce(self, value):
         """Sets the nonce value for the block"""
 
-        self._nonce = value
+        self.nonce = value
 
     def get_block_pos(self):
         """Returns position at which block resides in the chain"""
@@ -174,13 +194,13 @@ class LogicalBlock(Block):
         """
 
         # Validate Transaction signatures
-        transactions = self._transactions
+        transactions = self.__transactions
         for t in transactions:
             if not self._crypto_helper.validate_signature(t):
                 return False
 
         # Validate Merkle Tree correctness
-        if self.compute_merkle_root() != self._merkle_tree_root:
+        if self.compute_merkle_root() != self.__merkle_tree_root:
             return False
 
         #  validate nonce
@@ -217,6 +237,6 @@ class LogicalBlock(Block):
                 return _merkle_root(sub_tree)
 
         txn_hash = []
-        for tx in self._transactions:
+        for tx in self.__transactions:
             txn_hash.append(hashlib.sha256(tx.encode('utf-8')).hexdigest())
         return _merkle_root(txn_hash)

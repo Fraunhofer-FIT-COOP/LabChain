@@ -38,14 +38,14 @@ def block_mine_timer(mine_freq, block_transactions_size, blockchain,
     while True:
         # check the last call of mine from consensus component
         if consensus.last_mine_time_sec >= mine_freq:
-            transactions = txpool.get_transcations(block_transactions_size)
+            transactions = txpool.get_transactions(block_transactions_size)
             # should the blockchain,py create block or Block,py create block
             block = blockchain.create_block(transactions)
             consensus.mine(block)
             # instead of returning nonce,
             # nonce should be added in the block object
             # have to check if other node already created a block
-            blockchain.add_block(True, block)
+            blockchain.add_block(block)
 
         next_call += (mine_freq - consensus.last_mine_time_sec)
         time.sleep(next_call - time.time())
@@ -60,7 +60,7 @@ def on_new_transaction_received(transaction_json):
     pass
 
 
-def on_new_block_received(block_json):
+def on_new_block_received():
     """Callback method to pass to network, call add block method in blockchain"""
     pass
 

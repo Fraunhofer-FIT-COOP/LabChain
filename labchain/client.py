@@ -1,6 +1,8 @@
 import os
 from collections import OrderedDict
 
+from labchain.transaction import Transaction
+
 LABCHAIN_LOGO = """
           .(##%*
          ,(%########((#/.                                                                                                         ..
@@ -153,8 +155,7 @@ class Menu:
 class TransactionWizard:
     """CLI wizard for creating new transactions."""
 
-    def __init__(self, transaction_factory, wallet, crypto_helper, network_interface):
-        self.transaction_factory = transaction_factory
+    def __init__(self, wallet, crypto_helper, network_interface):
         self.wallet = wallet
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
@@ -270,11 +271,10 @@ class TransactionWizard:
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
-            signat = self.crypto_helper.sign(private_key, str(public_key) + str(chosen_receiver) + str(chosen_payload))
+            signature = self.crypto_helper.sign(private_key,
+                                                str(public_key) + str(chosen_receiver) + str(chosen_payload))
 
-            new_transaction = self.transaction_factory.createTransaction(str(public_key), str(chosen_receiver),
-                                                                         str(chosen_payload))
-            new_transaction.signTransaction(signat)
+            new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload), signature)
             self.network_interface.sendTransaction(new_transaction)
 
             print('Transaction successfully created!')
@@ -293,9 +293,8 @@ class TransactionWizard:
 
 class BlockchainClient:
 
-    def __init__(self, wallet, transaction_factory, network_interface, crypto_helper):
+    def __init__(self, wallet, network_interface, crypto_helper):
         self.wallet = wallet
-        self.transaction_factory = transaction_factory
         self.network_interface = network_interface
         self.crypto_helper = crypto_helper
         self.manage_wallet_menu = Menu(['Manage wallet'], {
@@ -316,8 +315,7 @@ class BlockchainClient:
 
     def __create_transaction(self):
         """Ask for all important information to create a new transaction and sends it to the network."""
-        transaction_wizard = TransactionWizard(self.transaction_factory,
-                                               self.wallet,
+        transaction_wizard = TransactionWizard(self.wallet,
                                                self.crypto_helper,
                                                self.network_interface)
         transaction_wizard.show()
@@ -392,11 +390,13 @@ class BlockchainClient:
         clear_screen()
         block = self.network_interface.requestBlock(int(input_str))
         if block is not None:
-            print('block number: ' + str(block.number))
-            print('merkle tree: ' + str(block.merkle_tree))
-            print('transactions: ' + str(block.transactions))
+            print('block number: ' + str(block.block_number))
+            print('timestamp: ' + str(block.timestamp))
+            print('predecessor hash: ' + str(block.predecessor_hash))
+            print('merkle tree: ' + str(block.merkle_tree_root))
+            print('transactions: ' + ', '.join([str(transaction) for transaction in block.transactions]))
             print('nonce: ' + str(block.nonce))
-            print('creator: ' + str(block.creator))
+            print('creator: ' + str(block.block_creator_id))
         else:
             print('There is no block with the given number.')
 

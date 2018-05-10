@@ -52,7 +52,7 @@ class BlockChain:
         self._orphan_blocks = {}
         self._current_branch_heads = []
         self._node_branch_head = None
-        self._furthest_branching_point = {"block" : None, "position" : float("inf")}
+        self._furthest_branching_point = {"block": None, "position": float("inf")}
         self._tolerance_level = tolerance_value
         self._pruning_interval = pruning_interval * 3600
         self._consensus = consensus_obj
@@ -60,12 +60,13 @@ class BlockChain:
         self._crypto_helper = crypto_helper_obj
 
         # Create the very first Block, add it to Blockchain
+        # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=1, crypto_helper_obj=crypto_helper_obj)
         _first_block.set_block_pos(0)
         _first_block_hash = _first_block.get_computed_hash()
         self._blockchain[_first_block_hash] = _first_block
         self._node_branch_head = _first_block_hash
-        self._current_branch_heads = [_first_block_hash,]
+        self._current_branch_heads = [_first_block_hash, ]
 
     def add_block(self, block):
         """Finds correct position and adds the new block to the chain.
@@ -86,12 +87,12 @@ class BlockChain:
 
         if not block.validate_block():
             if block.is_block_ours(self._node_id):
-                _txns = block.get_transcations()
+                _txns = block.transactions
                 self._txpool.return_transactions_to_pool(_txns)
             del block
             return False
 
-        _prev_hash = block.get_predecessor_hash()
+        _prev_hash = block.predecessor_hash
         _curr_block_hash = block.get_computed_hash()
         _curr_block = block
 
@@ -114,14 +115,14 @@ class BlockChain:
                 self._node_branch_head = _curr_block_hash
 
             # Remove transactions covered by the block from our TxPool
-            self._txpool.remove_transactions(_curr_block.get_transactions())
+            self._txpool.remove_transactions(_curr_block.transactions)
 
             # Check recursively if blocks are parent to some orphans
             _parent_hash = _curr_block_hash
             _parent_block = _curr_block
             while _parent_hash in self._orphan_blocks:
                 _block = self._orphan_blocks[_parent_hash]
-                self._txpool.remove_transactions(_block.get_transactions())
+                self._txpool.remove_transactions(_block.transactions)
                 _this_block_hash = _block.get_computed_hash()
                 _block.set_block_pos(_parent_block.get_block_pos() + 1)
                 self._blockchain[_this_block_hash] = _block
@@ -152,8 +153,8 @@ class BlockChain:
         """
 
         _curr_head = self._blockchain[self._node_branch_head]
-        _new_block_num = _curr_head.get_block_num() + 1
-        new_block = LogicalBlock(block_id=_new_block_num,
+        _new_block_id = _curr_head.block_id + 1
+        new_block = LogicalBlock(block_id=_new_block_id,
                                  predecessor_hash=self._node_branch_head,
                                  block_creator_id=self._node_id,
                                  transactions=transactions,
@@ -195,7 +196,7 @@ class BlockChain:
             while _b_hash != _check_point_hash:
                 _longest_chain.append(_b_hash)
                 _b = self._blockchain.get(_b_hash)
-                _b_hash = _b.get_predecessor_hash()
+                _b_hash = _b.predecessor_hash
             _longest_chain.append(_check_point_hash)
 
             # Remove all other branches
@@ -207,20 +208,20 @@ class BlockChain:
                     if _b.is_block_ours(self._node_id):
                         _txns = _b.get_transcations()
                         self._txpool.return_transactions_to_pool(_txns)
-                    _b_hash = _b.get_predecessor_hash()
+                    _b_hash = _b.predecessor_hash
                     del _b
 
-            self._current_branch_heads = [_new_head_hash,]
+            self._current_branch_heads = [_new_head_hash, ]
             self._node_branch_head = _new_head_hash
-            self._furthest_branching_point = {"block" : None, "position" : float("inf")}
+            self._furthest_branching_point = {"block": None, "position": float("inf")}
 
     def prune_orphans(self):
         _curr_time = datetime.now()
         for _hash in self._orphan_blocks:
             _block = self._orphan_blocks[_hash]
-            _block_creation_time = datetime.fromtimestamp(_block.get_timestamp())
+            _block_creation_time = datetime.fromtimestamp(_block.timestamp)
             _time_passed = (_curr_time - _block_creation_time).total_seconds()
-            if  _time_passed >= self._pruning_interval:
+            if _time_passed >= self._pruning_interval:
                 self._orphan_blocks.pop(_hash)
                 del _block
 
