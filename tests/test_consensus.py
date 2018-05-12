@@ -68,6 +68,3 @@ class Tests(TestCase):
         block = Block(1, datetime.now(), "")
 
         self.assertFalse(consensus.validate(block, nonce_false))
-
-    if __name__ == '__main__':
-        unittest.main()
