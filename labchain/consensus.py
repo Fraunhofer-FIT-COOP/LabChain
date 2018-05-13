@@ -1,11 +1,11 @@
 from datetime import datetime
-from labchain.data_types import CryptoHelper
+from labchain.cryptoHelper import CryptoHelper
 
 
 class Consensus:
 
     def __init__(self):
-        self.crypto_helper = CryptoHelper(None)
+        self.crypto_helper = CryptoHelper()
         self.difficulty = 1
         self.last_recalculation_timestamp = datetime.now()
         self.time_to_mine_blocks_threshold = 60  # Threshold to be defined
