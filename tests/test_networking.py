@@ -168,11 +168,11 @@ class SendTransactionTestCase(CommonTestCase):
         """Test Case #5"""
 
         # Given
-        self.add_peer('192.168.2.3', 6666)
+        self.add_peer('192.168.2.3')
 
         # When
         # Server gets request from Client
-        response = self.make_request('{ "jsonrpc": "2.0", method: "sendTransaction", '
+        response = self.make_request('{"jsonrpc": "2.0", method: "sendTransaction", '
                                      'params:  [{"sender": "test_sender", "receiver": "test_receiver", '
                                      '"payload": "test_payload", "signature": "test_signature"}], id: 1}')
         # Then
@@ -200,13 +200,12 @@ class SendTransactionTestCase(CommonTestCase):
         })
         self.network_interface.sendTransaction(test_transaction)
         # then
-        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        last_request_method, last_request_params = self.get_last_request('192.168.2.3', 6666)
         self.assertEqual(last_request_method, 'sendTransaction')
-        self.assertEqual(last_request_params, [{'sender': 'test_sender',
-                                                'receiver': 'test_receiver',
-                                                'payload': 'test_payload',
-                                                'signature': 'test_signature'}])
-
+        self.assert_json_equal(last_request_params, '{"sender": "test_sender", '
+                                                    '"receiver": "test_receiver", '
+                                                    '"payload": "test_payload", '
+                                                    '"signature": "test_signature"}')
 
 class SendBlockTestCase(CommonTestCase):
 
@@ -217,7 +216,7 @@ class SendBlockTestCase(CommonTestCase):
 
         # When
         # Server gets request from Client
-        response = self.make_request('{ "jsonrpc": "2.0", method: "sendBlock", '
+        response = self.make_request('{"jsonrpc": "2.0", method: "sendBlock", '
                                      'params:  [{"nr" : 2,"merkleHash" : "merkel_hash123", '
                                      '"predecessorBlock" : "pre_hash123","nonce" : 6969,"creator" : "test_creator", '
                                      '"transactions" : [{"sender": "test_sender", "receiver": "test_receiver", '
