@@ -1,5 +1,6 @@
 import json
 import random
+import time
 
 import requests
 from jsonrpc import JSONRPCResponseManager, dispatcher
@@ -71,7 +72,7 @@ class NetworkInterface:
 
     def requestBlock(self, block_id):
         """Request a single block by block ID."""
-        shuffled_peer_ips = self.__get_shuffeled_peers()
+        shuffled_peer_ips = self.__get_shuffled_peers()
         for peer_ip in shuffled_peer_ips:
             peer_port = self.peers[peer_ip]['port']
             block_data = self.json_rpc_client.send(peer_ip, peer_port, 'requestBlock', [block_id])
@@ -81,9 +82,9 @@ class NetworkInterface:
 
     def add_peer(self, ip_address, port):
         """Add a single peer to the peer list."""
-        self.peers.append({ip_address: {'port': port}})
+        self.peers.update({ip_address: {'port': port}})
 
-    def __get_shuffeled_peers(self):
+    def __get_shuffled_peers(self):
         """Retrieve a shuffled list of peer IP addresses."""
         peer_ips = self.peers.keys()
         random.shuffle(peer_ips)
@@ -116,13 +117,24 @@ class ServerNetworkInterface(NetworkInterface):
         self.port = port
 
     def exchange_peer_lists(self):
-        pass
+        new_peers = {}
+        for peer in self.peers:
+            port = self.peers[peer]['port']
+            response = self.json_rpc_client.send(peer, port, 'getPeers')
+            for new_peer in response:
+                new_peers[new_peer] = response[new_peer]['port']
+        for new_peer in new_peers:
+            self.add_peer(new_peer, new_peers[new_peer])
 
     def advertise_to_peers(self):
-        pass
+        for peer in self.peers:
+            port = self.peers[peer]['port']
+            self.json_rpc_client.send(peer, port, 'advertisePeer', [self.port])
 
     def poll_exchange_peer_lists(self, poll_interval=10):
-        pass
+        while True:
+            self.exchange_peer_lists()
+            time.sleep(poll_interval)
 
     def start_listening(self):
         """Start listening for incoming HTTP JSON-RPC calls."""
@@ -141,6 +153,8 @@ class ServerNetworkInterface(NetworkInterface):
         # insert IP address of peer if advertise peer is called
         request_body_dict = json.loads(request.data.decode())
         if request_body_dict['method'] == 'advertisePeer':
+            if 'params' not in request_body_dict:
+                request_body_dict['params'] = [6666]
             request_body_dict['params'].insert(0, request.remote_addr)
         request.data = json.dumps(request_body_dict)
 
@@ -149,10 +163,11 @@ class ServerNetworkInterface(NetworkInterface):
         return Response(response.json, mimetype='application/json')
 
     def __handle_get_peers(self):
-        return {}
+        return self.peers
 
     def __handle_advertise_peer(self, remote_address, port):
-        pass
+        self.add_peer(remote_address, port)
+        return True
 
     def __handle_send_block(self, block_data):
         pass
