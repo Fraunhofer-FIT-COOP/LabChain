@@ -1,6 +1,7 @@
 import json
 import random
 import time
+import collections
 
 import requests
 from jsonrpc import JSONRPCResponseManager, dispatcher
@@ -8,6 +9,7 @@ from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 
 from labchain.block import Block
+from labchain.transaction import Transaction
 
 
 class NodeNotAvailableException(Exception):
@@ -24,6 +26,16 @@ class TransactionDoesNotExistException(Exception):
 
 class BlockDoesNotExistException(Exception):
     pass
+
+
+def update(d, u):
+    """Recursive dictionary update"""
+    for k, v in u.items():
+        if isinstance(v, collections.Mapping):
+            d[k] = update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
 
 
 class JsonRpcClient:
@@ -73,21 +85,27 @@ class NetworkInterface:
         pass
 
     def requestTransaction(self, transaction_hash):
-        pass
+        shuffled_peer_ips = self.__get_shuffled_peers()
+        for peer_ip in shuffled_peer_ips:
+            for peer_port in self.peers[peer_ip]:
+                transaction = self.json_rpc_client.send(peer_ip, peer_port, 'requestTransaction', [transaction_hash])
+                if transaction:
+                    return Transaction.from_dict(transaction)
+        return None
 
     def requestBlock(self, block_id):
         """Request a single block by block ID."""
         shuffled_peer_ips = self.__get_shuffled_peers()
         for peer_ip in shuffled_peer_ips:
-            peer_port = self.peers[peer_ip]['port']
-            block_data = self.json_rpc_client.send(peer_ip, peer_port, 'requestBlock', [block_id])
-            if block_data:
-                return Block.from_dict(block_data)
+            for peer_port in self.peers[peer_ip]:
+                block_data = self.json_rpc_client.send(peer_ip, peer_port, 'requestBlock', [block_id])
+                if block_data:
+                    return Block.from_dict(block_data)
         return None
 
-    def add_peer(self, ip_address, port):
+    def add_peer(self, ip_address, port, info={}):
         """Add a single peer to the peer list."""
-        self.peers.update({ip_address: {'port': port}})
+        update(self.peers, {ip_address: {port: info}})
 
     def __get_shuffled_peers(self):
         """Retrieve a shuffled list of peer IP addresses."""
@@ -124,17 +142,15 @@ class ServerNetworkInterface(NetworkInterface):
     def exchange_peer_lists(self):
         new_peers = {}
         for peer in self.peers:
-            port = self.peers[peer]['port']
-            response = self.json_rpc_client.send(peer, port, 'getPeers')
-            for new_peer in response:
-                new_peers[new_peer] = response[new_peer]['port']
-        for new_peer in new_peers:
-            self.add_peer(new_peer, new_peers[new_peer])
+            for port in self.peers[peer]:
+                response = self.json_rpc_client.send(peer, port, 'getPeers')
+                update(new_peers, response)
+        self.peers = update(self.peers, new_peers)
 
     def advertise_to_peers(self):
         for peer in self.peers:
-            port = self.peers[peer]['port']
-            self.json_rpc_client.send(peer, port, 'advertisePeer', [self.port])
+            for port in self.peers[peer]:
+                self.json_rpc_client.send(peer, port, 'advertisePeer', [self.port])
 
     def poll_exchange_peer_lists(self, poll_interval=10):
         while True:
@@ -193,7 +209,10 @@ class ServerNetworkInterface(NetworkInterface):
         return block.to_dict()
 
     def __handle_request_transaction(self, transaction_hash):
-        pass
+        transaction = self.get_transaction_callback(transaction_hash)
+        if transaction:
+            return transaction
+        return None
 
 
 ClientNetworkInterface = NetworkInterface

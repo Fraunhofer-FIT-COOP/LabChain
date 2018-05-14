@@ -67,8 +67,8 @@ class CommonTestCase(TestCase):
     def get_peer_list(self):
         return self.network_interface.peers
 
-    def add_peer(self, host, port=6666):
-        self.network_interface.peers[host] = {'port': port}
+    def add_peer(self, host, port=6666, info={}):
+        self.network_interface.peers[host] = {port: info}
 
     def make_request(self, data):
         """Make a request to the node and return the response dict."""
@@ -100,7 +100,7 @@ class PeerListExchangeTestCase(CommonTestCase):
         # when
         response_data = self.make_request('{ "jsonrpc": "2.0", "method": "getPeers", "params":[], "id": 1}')
         # then
-        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", "result": {"192.168.2.3": {"port": 6666}}, "id": 1}')
+        self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", "result": {"192.168.2.3": {"6666": {}}}, "id": 1}')
 
     def test_server_test_get_peers_with_no_entries(self):
         """Test case #1a."""
@@ -115,16 +115,15 @@ class PeerListExchangeTestCase(CommonTestCase):
         response_data = self.make_request('{ "jsonrpc": "2.0", "method": "advertisePeer", "params":[6667], "id": 1}')
         # then
         self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", "result": true, "id": 1}')
-        self.assertDictEqual(self.network_interface.peers, {"1.2.3.4": {"port": 6667}})
+        self.assertDictEqual(self.network_interface.peers, {"1.2.3.4": {6667: {}}})
 
     def test_server_advertise_peer_with_no_port_param(self):
         """Test case #2a."""
         # when
         response_data = self.make_request('{ "jsonrpc": "2.0", "method": "advertisePeer", "id": 1}')
         # then
-        # print(response_data)
         self.assert_json_equal(response_data, '{ "jsonrpc": "2.0", "result": true, "id": 1}')
-        self.assertDictEqual(self.network_interface.peers, {"1.2.3.4": {"port": 6666}})
+        self.assertDictEqual(self.network_interface.peers, {"1.2.3.4": {6666: {}}})
 
     def test_client_exchange_peer_list(self):
         """Test case #3."""
@@ -132,8 +131,8 @@ class PeerListExchangeTestCase(CommonTestCase):
         self.add_peer('192.168.121.77', 6666)
         self.add_peer('192.168.100.4', 6666)
         # when
-        self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': {'192.168.2.3': {'port': 6666}}, 'id': 1})
-        self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': {'192.168.5.6': {'port': 6666}}, 'id': 1})
+        self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': {'192.168.2.3': {6666: {}}}, 'id': 1})
+        self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': {'192.168.5.6': {6666: {}}}, 'id': 1})
         self.network_interface.exchange_peer_lists()
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.121.77', 6666)
@@ -143,8 +142,8 @@ class PeerListExchangeTestCase(CommonTestCase):
         self.assertEqual(last_request_method, 'getPeers')
         self.assertFalse(last_request_params, [])
         self.assertDictEqual(self.network_interface.peers,
-                             {'192.168.2.3': {'port': 6666}, '192.168.5.6': {'port': 6666},
-                              '192.168.121.77': {'port': 6666}, '192.168.100.4': {'port': 6666}})
+                             {'192.168.2.3': {6666: {}}, '192.168.5.6': {6666: {}},
+                              '192.168.121.77': {6666: {}}, '192.168.100.4': {6666: {}}})
 
     def test_client_advertise_peer(self):
         """Test case #4."""
@@ -280,8 +279,8 @@ class RequestTransactionServerTestCase(CommonTestCase):
 
         # then
         self.assert_json_equal(response,
-                               '{ "jsonrpc": "2.0", result: {"sender": "test_sender", "receiver": "test_receiver", '
-                               '"payload": "test_payload", "signature": "test_signature"},id: 1}')
+                               '{"result": {"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"}, "id": 1,"jsonrpc": "2.0"}')
 
     def test_request_nonexistent_transaction(self):
         """test case #10 """
@@ -292,7 +291,7 @@ class RequestTransactionServerTestCase(CommonTestCase):
                             "id": 1}
         response = self.make_request(json.dumps(json_rpc_request))
         # then
-        self.assert_json_equal(response, '{ "jsonrpc": "2.0", result: null, id: 1}')
+        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": null, "id": 1}')
 
 
 class RequestTransactionClientTestCase(CommonTestCase):
@@ -311,8 +310,7 @@ class RequestTransactionClientTestCase(CommonTestCase):
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestTransaction')
-        self.assertEqual(last_request_params, [])
-
+        self.assertEqual(last_request_params, ['hash_of_transaction_#1'])
         self.assertEqual(transaction.sender, 'pubkey_of_test_sender')
         self.assertEqual(transaction.receiver, 'pubkey_of_test_receiver')
         self.assertEqual(transaction.payload, 'test_payload')
@@ -323,7 +321,7 @@ class RequestTransactionClientTestCase(CommonTestCase):
         # given
         self.add_peer('192.168.100.4', 6666)
         # when
-        self.json_rpc_client.queue_response(None)
+        self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': None, 'id': 1})
         transaction = self.network_interface.requestTransaction('non_existent_hash')
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestTransaction')
