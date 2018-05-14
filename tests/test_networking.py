@@ -324,7 +324,7 @@ class RequestTransactionClientTestCase(CommonTestCase):
         # given
         self.add_peer('192.168.100.4', 6666)
         # when
-        self.json_rpc_client.queue_response(None)
+        self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': None, 'id': 1})
         transaction = self.network_interface.requestTransaction('non_existent_hash')
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestTransaction')
