@@ -63,18 +63,11 @@ class NetworkInterface:
 
     def sendTransaction(self, transaction):
         # send the transaction to all peers
-        for peer in self.peers:
-            ip = peer
-            port = peer['port']
-            self.json_rpc_client.send(ip, port, 'sendTransaction', params=transaction.to_dict())
-
-        # for later use
-        # for ip_addr in self.peers:
-        #    for port_nr in self.peers[ip_addr]:
-        #        ip = ip_addr
-        #        port = port_nr
-        #        self.json_rpc_client.send(ip, port, 'sendTransaction')
-
+        for ip, port_dict in self.peers.items():
+            for port in port_dict.items():
+                # print('IP: ' + str(ip))
+                # print('Port: ' + str(port[1]))
+                self.json_rpc_client.send(ip, port[1], 'sendTransaction', [transaction.to_dict()])
 
     def sendBlock(self, transaction):
         pass
@@ -192,7 +185,6 @@ class ServerNetworkInterface(NetworkInterface):
         # TODO
         # check if transaction is already in a block? or still in the Tx pool.
         # Then decide to resend Tx to other nodes
-
 
     def __handle_request_block(self, block_id):
         block = self.get_block_callback(block_id)

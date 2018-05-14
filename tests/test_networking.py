@@ -204,10 +204,8 @@ class SendTransactionTestCase(CommonTestCase):
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.2.3', 6666)
         self.assertEqual(last_request_method, 'sendTransaction')
-        self.assert_json_equal(last_request_params, '{"sender": "test_sender", '
-                                                    '"receiver": "test_receiver", '
-                                                    '"payload": "test_payload", '
-                                                    '"signature": "test_signature"}')
+        self.assertEqual(last_request_params, [{"sender": "test_sender", "receiver": "test_receiver",
+                                                "payload": "test_payload", "signature": "test_signature"}])
 
 class SendBlockTestCase(CommonTestCase):
 
@@ -243,7 +241,7 @@ class SendBlockTestCase(CommonTestCase):
     def test_send_block_client_valid(self):
         """Test Case #8"""
         # Given
-        self.add_peer('192.168.2.3', 6666)
+        self.add_peer('192.168.100.4', 6666)
         now = time.time()
         test_block = Block(2, 'merkel_hash123', 'pre_hash123', 'test_creator',
                            [
