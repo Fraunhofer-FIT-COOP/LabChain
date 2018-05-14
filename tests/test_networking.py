@@ -28,7 +28,7 @@ class MockJsonRpcClient:
             self.requests[key] = []
         self.requests[key].append((method, params))
         response = self.response_queue.pop()
-        return response
+        return response['result']
 
 
 class CommonTestCase(TestCase):
