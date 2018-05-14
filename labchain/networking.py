@@ -26,6 +26,7 @@ class TransactionDoesNotExistException(Exception):
 class BlockDoesNotExistException(Exception):
     pass
 
+
 def update(d, u):
     """Recursive dictionary update"""
     for k, v in u.items():
@@ -34,6 +35,7 @@ def update(d, u):
         else:
             d[k] = v
     return d
+
 
 class JsonRpcClient:
     """Handle outgoing JSON-RPC calls."""
@@ -77,7 +79,13 @@ class NetworkInterface:
         pass
 
     def requestTransaction(self, transaction_hash):
-        pass
+        shuffled_peer_ips = self.__get_shuffled_peers()
+        for peer_ip in shuffled_peer_ips:
+            for peer_port in self.peers[peer_ip]:
+                transaction = self.json_rpc_client.send(peer_ip, peer_port, 'requestTransaction', [transaction_hash])
+                if transaction:
+                    return transaction.from_dict(transaction)
+        return None
 
     def requestBlock(self, block_id):
         """Request a single block by block ID."""
@@ -189,7 +197,10 @@ class ServerNetworkInterface(NetworkInterface):
         return block.to_dict()
 
     def __handle_request_transaction(self, transaction_hash):
-        pass
+        transaction = self.get_transaction_callback(transaction_hash)
+        if transaction:
+            return transaction
+        return None
 
 
 ClientNetworkInterface = NetworkInterface
