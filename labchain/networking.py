@@ -9,6 +9,7 @@ from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 
 from labchain.block import Block
+from labchain.transaction import Transaction
 
 
 class NodeNotAvailableException(Exception):
@@ -84,7 +85,7 @@ class NetworkInterface:
             for peer_port in self.peers[peer_ip]:
                 transaction = self.json_rpc_client.send(peer_ip, peer_port, 'requestTransaction', [transaction_hash])
                 if transaction:
-                    return transaction.from_dict(transaction)
+                    return Transaction.from_dict(transaction)
         return None
 
     def requestBlock(self, block_id):

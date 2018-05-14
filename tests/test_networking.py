@@ -28,7 +28,7 @@ class MockJsonRpcClient:
             self.requests[key] = []
         self.requests[key].append((method, params))
         response = self.response_queue.pop()
-        return response['result']
+        return response
 
 
 class CommonTestCase(TestCase):
@@ -282,8 +282,8 @@ class RequestTransactionServerTestCase(CommonTestCase):
 
         # then
         self.assert_json_equal(response,
-                               '{ "jsonrpc": "2.0", result: {"sender": "test_sender", "receiver": "test_receiver", '
-                               '"payload": "test_payload", "signature": "test_signature"},id: 1}')
+                               '{"result": {"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"}, "id": 1,"jsonrpc": "2.0"}')
 
     def test_request_nonexistent_transaction(self):
         """test case #10 """
@@ -294,7 +294,7 @@ class RequestTransactionServerTestCase(CommonTestCase):
                             "id": 1}
         response = self.make_request(json.dumps(json_rpc_request))
         # then
-        self.assert_json_equal(response, '{ "jsonrpc": "2.0", result: null, id: 1}')
+        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": null, "id": 1}')
 
 
 class RequestTransactionClientTestCase(CommonTestCase):
@@ -313,8 +313,7 @@ class RequestTransactionClientTestCase(CommonTestCase):
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestTransaction')
-        self.assertEqual(last_request_params, [])
-
+        self.assertEqual(last_request_params, ['hash_of_transaction_#1'])
         self.assertEqual(transaction.sender, 'pubkey_of_test_sender')
         self.assertEqual(transaction.receiver, 'pubkey_of_test_receiver')
         self.assertEqual(transaction.payload, 'test_payload')
