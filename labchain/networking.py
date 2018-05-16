@@ -68,7 +68,7 @@ class NetworkInterface:
     def __init__(self, json_rpc_client, initial_peers):
         """
 
-        :param initial_peers: List of IP addresses (optional with :port) of the initial peers (at least one).
+        :param initial_peers: List of IP addresses (optional with :port) of the initial peers.
         """
         self.json_rpc_client = json_rpc_client
         self.peers = initial_peers

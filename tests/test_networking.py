@@ -67,7 +67,9 @@ class CommonTestCase(TestCase):
     def get_peer_list(self):
         return self.network_interface.peers
 
-    def add_peer(self, host, port=6666, info={}):
+    def add_peer(self, host, port=6666, info=None):
+        if info is None:
+            info = {}
         self.network_interface.peers[host] = {port: info}
 
     def make_request(self, data):
@@ -303,11 +305,13 @@ class RequestTransactionClientTestCase(CommonTestCase):
         # given
         self.add_peer('192.168.100.4', 6666)
 
-        self.json_rpc_client.queue_response({
-            'sender': 'pubkey_of_test_sender',
-            'receiver': 'pubkey_of_test_receiver',
-            'payload': 'test_payload',
-            'signature': 'test_signature'})
+        self.json_rpc_client.queue_response({'jsonrpc': '2.0',
+                                             'result': {
+                                                 'sender': 'pubkey_of_test_sender',
+                                                 'receiver': 'pubkey_of_test_receiver',
+                                                 'payload': 'test_payload',
+                                                 'signature': 'test_signature'},
+                                             'id': 1})
         transaction = self.network_interface.requestTransaction('hash_of_transaction_#1')
 
         # then
