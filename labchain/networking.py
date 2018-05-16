@@ -116,7 +116,7 @@ class NetworkInterface:
             else:
                 raise BlockDoesNotExistException()
         else:
-            raise NoPeersException('No nodes available to request the transaction from')
+            raise NoPeersException('No nodes available to request the block from')
 
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""
@@ -299,14 +299,14 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __handle_request_block(self, block_id):
         block = self.get_block_callback(block_id)
-        if block is None:
-            return None
-        return block.to_dict()
+        if block:
+            return block.to_dict()
+        return None
 
     def __handle_request_transaction(self, transaction_hash):
         transaction = self.get_transaction_callback(transaction_hash)
         if transaction:
-            return transaction
+            return transaction.to_dict()
         return None
 
     def __filter_own_address(self, peers):
