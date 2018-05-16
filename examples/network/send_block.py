@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 import sys
@@ -6,6 +7,7 @@ from threading import Thread
 
 # append project dir to python path
 from labchain import networking
+from labchain.block import Block
 from labchain.transaction import Transaction
 from tests.test_account import MockCryptoHelper
 
@@ -20,13 +22,21 @@ LOG_LEVEL = logging.INFO
 # change the polling interval
 POLL_INTERVAL = 10
 
-TRANSACTIONS = {'123': Transaction('some sender', 'some_receiver', 'some_payload', 'some_signature')}
+BLOCK = Block(1, 'some_root', 'pred_hash', 'creator_id',
+              [Transaction('some sender', 'some_receiver', 'some_payload', 'some_signature')],
+              1234)
+RECEIVED_BLOCKS = {}
 
 
-def get_transaction(transaction_hash):
-    if transaction_hash in TRANSACTIONS:
-        return TRANSACTIONS[transaction_hash]
+def get_block(block_id):
+    if block_id in RECEIVED_BLOCKS:
+        return RECEIVED_BLOCKS[block_id]
     return None
+
+
+def on_block_received(received_block):
+    RECEIVED_BLOCKS[received_block.block_number] = received_block
+    logging.warning('Received block: {}'.format(received_block))
 
 
 def empty_function():
@@ -37,8 +47,8 @@ def empty_function():
 def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
-    return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
-                                  empty_function, get_transaction, port)
+    return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), on_block_received,
+                                  empty_function, get_block, empty_function, port)
 
 
 def configure_logging():
@@ -60,14 +70,6 @@ if __name__ == '__main__':
     logging.debug('Done')
 
     while True:
-        logging.warning('Requesting transaction 123')
-        transaction = interface2.requestTransaction('123')
-        logging.warning('Received transaction: {}'.format(str(transaction)))
-
-        logging.warning('Requesting transaction 456')
-        try:
-            transaction = interface2.requestTransaction('456')
-            logging.error('This statement should not be reached')
-        except TransactionDoesNotExistException:
-            logging.warning('Transaction does not exist')
+        logging.warning('Sending block: {}'.format(str(BLOCK)))
+        transaction = interface2.sendBlock(BLOCK)
         time.sleep(POLL_INTERVAL)

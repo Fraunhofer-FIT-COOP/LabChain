@@ -5,6 +5,7 @@ from threading import Thread
 
 # append project dir to python path
 from labchain import networking
+from tests.test_account import MockCryptoHelper
 
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 if project_dir not in sys.path:
@@ -26,7 +27,7 @@ def empty_function():
 def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
-    return ServerNetworkInterface(JsonRpcClient(), initial_peers, empty_function, empty_function,
+    return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
                                   empty_function, empty_function, port)
 
 

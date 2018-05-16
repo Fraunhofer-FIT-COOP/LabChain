@@ -198,7 +198,7 @@ class NetworkInterface:
 class ServerNetworkInterface(NetworkInterface):
     """Advanced network interface for additional server-to-server communication."""
 
-    def __init__(self, json_rpc_client, initial_peers,
+    def __init__(self, json_rpc_client, initial_peers, crypto_helper,
                  on_block_received_callback,
                  on_transaction_received_callback,
                  get_block_callback,
@@ -214,6 +214,7 @@ class ServerNetworkInterface(NetworkInterface):
         :param port: The port number to listen on.
         """
         super().__init__(json_rpc_client, initial_peers)
+        self.crypto_helper = crypto_helper
         self.on_block_received_callback = on_block_received_callback
         self.on_transaction_received_callback = on_transaction_received_callback
         self.get_block_callback = get_block_callback
@@ -286,16 +287,25 @@ class ServerNetworkInterface(NetworkInterface):
         return True
 
     def __handle_send_block(self, block_data):
-        self.on_block_received_callback(block_data)
-        # TODO
-        # check if block is already part of the chain or
-        # was already received. Then decide to resend block to other nodes
+        block = Block.from_dict(block_data)
+        if not self.get_block_callback(block.block_number) == block:
+            logger.debug('Broadcasting block: {}'.format(str(block)))
+            try:
+                self.sendBlock(block)
+            except NoPeersException:
+                pass
+        self.on_block_received_callback(block)
 
     def __handle_send_transaction(self, transaction_data):
-        self.on_transaction_received_callback(transaction_data)
-        # TODO
-        # check if transaction is already in a block? or still in the Tx pool?
-        # Then decide to resend Tx to other nodes
+        transaction = Transaction.from_dict(transaction_data)
+        transaction_hash = self.crypto_helper.hash(transaction.get_json())
+        if not self.get_transaction_callback(transaction_hash) == transaction:
+            logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
+            try:
+                self.sendTransaction(transaction)
+            except NoPeersException:
+                pass
+        self.on_transaction_received_callback(transaction)
 
     def __handle_request_block(self, block_id):
         block = self.get_block_callback(block_id)

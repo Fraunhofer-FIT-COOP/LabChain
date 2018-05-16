@@ -8,6 +8,7 @@ from threading import Thread
 from labchain import networking
 from labchain.block import Block
 from labchain.transaction import Transaction
+from tests.test_account import MockCryptoHelper
 
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 if project_dir not in sys.path:
@@ -40,7 +41,7 @@ def empty_function():
 def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
-    return ServerNetworkInterface(JsonRpcClient(), initial_peers, empty_function, empty_function,
+    return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
                                   get_block, empty_function, port)
 
 
@@ -59,9 +60,7 @@ if __name__ == '__main__':
     # start the web servers for receiving JSON-RPC calls
     logging.debug('Starting web server threads...')
     webserver_thread1 = Thread(name='Web Server #1', target=interface1.start_listening, args=(False,))
-    webserver_thread2 = Thread(name='Web Server #2', target=interface2.start_listening, args=(False,))
     webserver_thread1.start()
-    webserver_thread2.start()
     logging.debug('Done')
 
     while True:

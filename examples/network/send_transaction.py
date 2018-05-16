@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 import sys
@@ -20,13 +21,20 @@ LOG_LEVEL = logging.INFO
 # change the polling interval
 POLL_INTERVAL = 10
 
-TRANSACTIONS = {'123': Transaction('some sender', 'some_receiver', 'some_payload', 'some_signature')}
+TRANSACTION = Transaction('some sender', 'some_receiver', 'some_payload', 'some_signature')
+RECEIVED_TRANSACTIONS = {}
 
 
 def get_transaction(transaction_hash):
-    if transaction_hash in TRANSACTIONS:
-        return TRANSACTIONS[transaction_hash]
+    if transaction_hash in RECEIVED_TRANSACTIONS:
+        return RECEIVED_TRANSACTIONS[transaction_hash]
     return None
+
+
+def on_transaction_received(received_transaction):
+    transaction_hash = hashlib.sha256(received_transaction.get_json().encode())
+    RECEIVED_TRANSACTIONS[transaction_hash] = received_transaction
+    logging.warning('Received transaction: {}'.format(received_transaction))
 
 
 def empty_function():
@@ -37,8 +45,8 @@ def empty_function():
 def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
-    return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
-                                  empty_function, get_transaction, port)
+    return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function,
+                                  on_transaction_received, empty_function, get_transaction, port)
 
 
 def configure_logging():
@@ -60,14 +68,6 @@ if __name__ == '__main__':
     logging.debug('Done')
 
     while True:
-        logging.warning('Requesting transaction 123')
-        transaction = interface2.requestTransaction('123')
-        logging.warning('Received transaction: {}'.format(str(transaction)))
-
-        logging.warning('Requesting transaction 456')
-        try:
-            transaction = interface2.requestTransaction('456')
-            logging.error('This statement should not be reached')
-        except TransactionDoesNotExistException:
-            logging.warning('Transaction does not exist')
+        logging.warning('Sending transaction: {}'.format(str(TRANSACTION)))
+        transaction = interface2.sendTransaction(TRANSACTION)
         time.sleep(POLL_INTERVAL)
