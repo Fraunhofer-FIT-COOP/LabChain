@@ -6,7 +6,7 @@ from unittest import TestCase
 from werkzeug.test import Client
 
 from labchain.block import Block
-from labchain.networking import ServerNetworkInterface
+from labchain.networking import ServerNetworkInterface, TransactionDoesNotExistException, BlockDoesNotExistException
 from labchain.transaction import Transaction
 
 
@@ -35,7 +35,7 @@ class CommonTestCase(TestCase):
 
     def create_server_network_interface(self, json_rpc_client):
         return ServerNetworkInterface(json_rpc_client, {}, self.on_block_received,
-                                      self.on_transaction_received, self.get_block, self.get_transaction)
+                                      self.on_transaction_received, self.get_block, self.get_transaction, port=6666)
 
     def setUp(self):
         # key block ID -> value block instance
@@ -135,7 +135,7 @@ class PeerListExchangeTestCase(CommonTestCase):
         # when
         self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': {'192.168.2.3': {6666: {}}}, 'id': 1})
         self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': {'192.168.5.6': {6666: {}}}, 'id': 1})
-        self.network_interface.exchange_peer_lists()
+        self.network_interface.update_peer_lists()
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.121.77', 6666)
         self.assertEqual(last_request_method, 'getPeers')
@@ -159,10 +159,10 @@ class PeerListExchangeTestCase(CommonTestCase):
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.121.77', 6666)
         self.assertEqual(last_request_method, 'advertisePeer')
-        self.assertEqual(last_request_params, [6666])
+        self.assertEqual([6666], last_request_params)
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'advertisePeer')
-        self.assertEqual(last_request_params, [6666])
+        self.assertEqual([6666], last_request_params)
 
 
 class SendTransactionTestCase(CommonTestCase):
@@ -329,10 +329,10 @@ class RequestTransactionClientTestCase(CommonTestCase):
         self.add_peer('192.168.100.4', 6666)
         # when
         self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': None, 'id': 1})
-        transaction = self.network_interface.requestTransaction('non_existent_hash')
+        with self.assertRaises(TransactionDoesNotExistException):
+            self.network_interface.requestTransaction('non_existent_hash')
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestTransaction')
-        self.assertIsNone(transaction)
 
 
 class RequestBlockServerTestCase(CommonTestCase):
@@ -425,8 +425,8 @@ class RequestBlockClientTestCase(CommonTestCase):
         self.add_peer('192.168.100.4', 6666)
         # when
         self.json_rpc_client.queue_response({'jsonrpc': '2.0', 'result': None, 'id': 1})
-        block = self.network_interface.requestBlock(2)
+        with self.assertRaises(BlockDoesNotExistException):
+            self.network_interface.requestBlock(2)
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestBlock')
-        self.assertIsNone(block)
