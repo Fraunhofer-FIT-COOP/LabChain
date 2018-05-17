@@ -22,9 +22,9 @@ class Tests(TestCase):
         consensus.crypto_helper.hash = MagicMock(side_effect=hash_list_for_nonce_4)
         #  Block Instance
         block = Block(1, datetime.now(), "")
+        consensus.mine(block)
 
-        returned_nonce = consensus.mine(block)
-        self.assertEqual(nonce_true, returned_nonce)
+        self.assertEqual(nonce_true, block.nonce)
 
     def test_show_mine_false(self):
         #  Values Dumped
@@ -39,8 +39,9 @@ class Tests(TestCase):
         #  Block Instance
         block = Block(1, datetime.now(), "")
 
-        returned_nonce = consensus.mine(block)
-        self.assertFalse(nonce_true == returned_nonce)
+        consensus.mine(block)
+
+        self.assertFalse(nonce_true == block.nonce)
 
     def test_show_validate_true(self):
         #  Values Dumped
