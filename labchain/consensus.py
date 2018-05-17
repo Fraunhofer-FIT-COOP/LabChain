@@ -1,17 +1,19 @@
 from datetime import datetime
-from labchain.data_types import CryptoHelper
+from labchain.cryptoHelper import CryptoHelper
+import json
 
 
 class Consensus:
 
     def __init__(self):
-        self.crypto_helper = CryptoHelper(None)
+        self.crypto_helper = CryptoHelper.instance()
         self.difficulty = 1
         self.last_recalculation_timestamp = datetime.now()
         self.time_to_mine_blocks_threshold = 60  # Threshold to be defined
         self.max_diff = 12  # Threshold to be defined
         self.blocks_threshold = 60
         self.blocks_counter = 0
+        self.recalculate = 0;
 
     def __getitem__(self, item):
         pass
@@ -33,23 +35,34 @@ class Consensus:
 
     def validate(self, block, nonce):
         zeros_array = "0" * self.difficulty
-        encapsulated_block = str(block.index) + str(block.tree_hash) + str(block.pre_hash) + str(block.creator) \
-                             + str(block.nonce)
-        block_hash = self.crypto_helper.hash(encapsulated_block)  # Assumed that hash is str
+        data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
+            str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
+                'timestamp': str(block.timestamp)}
+        message = json.dumps(data)
+
+        block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
         return block_hash[:self.difficulty] == zeros_array and nonce == block.nonce
 
     def mine(self, block):
+
         self.blocks_counter += 1
         zeros_array = "0" * self.difficulty
-        encapsulated_block = str(block.index) + str(block.tree_hash) + str(block.pre_hash) + str(block.creator)\
-                             + str(block.nonce)
-        block_hash = self.crypto_helper.hash(encapsulated_block)  # nonce is zero (we need to check that)
+        data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
+            str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
+                'timestamp': str(block.timestamp)}
+        message = json.dumps(data)
+        block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
         while block_hash[:self.difficulty] != zeros_array:
             block.nonce += 1
-            encapsulated_block = (str(block.index) + str(block.tree_hash) + str(block.pre_hash) + str(block.creator)
-                                  + str(block.nonce))
-            block_hash = self.crypto_helper.hash(encapsulated_block)
-        if self.blocks_counter % self.blocks_threshold == 0:
-            self.blocks_counter = 0
-            self.difficulty = self.calculate_difficulty(datetime.now())
-        return block.nonce
+            data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
+                str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
+                    'timestamp': str(block.timestamp)}
+            message = json.dumps(data)
+            block_hash = self.crypto_helper.hash(message)
+        block.timestamp = datetime.now()
+
+    #    Code for updating the difficulty to be implemented by Blockchain component
+    #    if self.blocks_counter % self.blocks_threshold  == 0 & self.recalculate == 1:
+    #        self.blocks_counter = 0
+    #        self.recalculate = 0;
+    #        self.difficulty = self.calculate_difficulty(datetime.now())
