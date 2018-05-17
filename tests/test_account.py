@@ -3,35 +3,9 @@ import sys
 from io import StringIO
 from unittest import TestCase
 
+from labchain.block import Block
 from labchain.client import BlockchainClient, Wallet
-
-
-class MockTransaction:
-    def __init__(self, sender, receiver, payload):
-        self.sender = sender
-        self.receiver = receiver
-        self.payload = payload
-        self.signature = None
-
-    def signTransaction(self, signature):
-        self.signature = signature
-
-    def validateTransaction(self):
-        return True
-
-
-class MockBlock:
-    def __init__(self, number, merkle_tree, transactions, nonce, creator):
-        self.number = number
-        self.merkle_tree = merkle_tree
-        self.transactions = transactions
-        self.nonce = nonce
-        self.creator = creator
-
-
-class MockTransactionFactory:
-    def createTransaction(self, sender, receiver, payload):
-        return MockTransaction(sender, receiver, payload)
+from labchain.transaction import Transaction
 
 
 class MockNetworkInterface:
@@ -62,7 +36,7 @@ class MockNetworkInterface:
 
     def requestBlock(self, block_number):
         for block in self.blocks:
-            if block.number == block_number:
+            if block.block_number == block_number:
                 return block
         return None
 
@@ -124,10 +98,8 @@ class CommonTestCase(TestCase):
         self.transactions = []
         self.blocks = []
         self.mock_crypto_helper = MockCryptoHelper()
-        self.mock_transaction_factory = MockTransactionFactory()
         self.mock_network_interface = MockNetworkInterface(self.mock_crypto_helper, self.transactions, self.blocks)
-        return BlockchainClient(Wallet(self.wallet_file), self.mock_transaction_factory,
-                                self.mock_network_interface, self.mock_crypto_helper)
+        return BlockchainClient(Wallet(self.wallet_file), self.mock_network_interface, self.mock_crypto_helper)
 
     def get_raw_output(self):
         """Get the whole stdout content since the start of the test as raw string. """
@@ -476,8 +448,7 @@ class TransactionTestCase(CommonTestCase):
             Tested requirement: #200
         """
         # given
-        transaction = MockTransaction('some_sender_id', 'some_receiver_id', 'some_payload')
-        transaction.signTransaction('some_signature')
+        transaction = Transaction('some_sender_id', 'some_receiver_id', 'some_payload', 'some_signature')
         self.add_transaction(transaction)
         transaction_hash = self.mock_crypto_helper.hash_transaction(transaction)
         # when
@@ -552,10 +523,10 @@ class LoadBlockTestCase(CommonTestCase):
         # given
         transactions = []
         for i in range(5):
-            transactions.append(MockTransaction("test_sender", "test_receiver", "payload_data"))
+            transactions.append(Transaction("test_sender", "test_receiver", "payload_data"))
 
-        block0 = MockBlock(0, "merkle_tree_hash_qthq4thi4q4t", transactions, "nonce_hash", "creator_hash")
-        block1 = MockBlock(1, "merkle_tree_hash_qthq5thi4q1t", transactions, "nonce_hash", "creator_hash")
+        block0 = Block(0, "merkle_tree_hash_qthq4thi4q4t", 'pred_hash_1', "creator_hash", transactions, 123)
+        block1 = Block(1, "merkle_tree_hash_qthq5thi4q1t", 'pred_hash_2', "creator_hash", transactions, 456, )
         self.add_block(block0)
         self.add_block(block1)
 
@@ -569,31 +540,6 @@ class LoadBlockTestCase(CommonTestCase):
         # then
         self.assert_string_in_output('1')  # block number
         self.assert_string_in_output('merkle_tree_hash_qthq5thi4q1t')  # merkle tree root
-        self.assert_string_in_output('nonce_hash')  # merkle tree root
+        self.assert_string_in_output('pred_hash_2')  # predecessor hash
+        self.assert_string_in_output('456')  # nonce
         self.assert_string_in_output('creator_hash')  # block creator
-
-
-class UnnecessaryTestCase(CommonTestCase):
-    """Just for demonstration.
-
-    TODO: Remove before merging
-    """
-
-    def test_output_mock(self):
-        print("test")
-        self.assert_line_in_output('test')
-
-    def test_input_mock(self):
-        """Make sure tu make all inputs BEFORE running the actual program.
-
-        Also do not query less inputs than the code will try to read.
-        Else you will get: EOFError: EOF when reading a line
-        """
-        self.queue_input('test')
-
-        self.queue_input('test2')
-        input_str = input('Please input something')
-
-        input_str2 = input('Please input something')
-        self.assertEqual('test2', input_str2)
-        self.assertEqual('test', input_str)

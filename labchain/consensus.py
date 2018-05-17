@@ -1,12 +1,16 @@
 from datetime import datetime
 from labchain.cryptoHelper import CryptoHelper
+
 import json
+
 
 
 class Consensus:
 
     def __init__(self):
+
         self.crypto_helper = CryptoHelper.instance()
+
         self.difficulty = 1
         self.last_recalculation_timestamp = datetime.now()
         self.time_to_mine_blocks_threshold = 60  # Threshold to be defined

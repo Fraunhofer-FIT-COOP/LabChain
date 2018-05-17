@@ -7,8 +7,11 @@ from labchain.utility import Utility
 
 import json
 
+
 @Singleton
 class CryptoHelper:
+    """
+    In order to use the CryptoHelper, please use CryptoHelper.instance() """
 
     def __init__(self):
         pass
