@@ -31,10 +31,23 @@ class MockJsonRpcClient:
         return response['result']
 
 
+class MockCryptoHelper:
+    def __init__(self):
+        self.key_counter = 1
+        self.hash_counter = 1
+        self.hash_map = {}
+
+    def hash(self, message):
+        if message not in self.hash_map:
+            self.hash_map[message] = '{num:05d}'.format(num=self.hash_counter)
+            self.hash_counter += 1
+        return self.hash_map[message]
+
+
 class CommonTestCase(TestCase):
 
     def create_server_network_interface(self, json_rpc_client):
-        return ServerNetworkInterface(json_rpc_client, {}, self.on_block_received,
+        return ServerNetworkInterface(json_rpc_client, {}, MockCryptoHelper(), self.on_block_received,
                                       self.on_transaction_received, self.get_block, self.get_transaction, port=6666)
 
     def setUp(self):
@@ -169,10 +182,6 @@ class SendTransactionTestCase(CommonTestCase):
 
     def test_send_transaction_server_valid(self):
         """Test Case #5"""
-
-        # Given
-        self.add_peer('192.168.2.3')
-
         # When
         # Server gets request from Client
         response = self.make_request('{"jsonrpc": "2.0", "method": "sendTransaction", '
@@ -181,10 +190,10 @@ class SendTransactionTestCase(CommonTestCase):
         # Then
         # assert transaction
         transaction = self.received_transactions[0]
-        self.assertEqual(transaction['sender'], 'test_sender')
-        self.assertEqual(transaction['receiver'], 'test_receiver')
-        self.assertEqual(transaction['payload'], 'test_payload')
-        self.assertEqual(transaction['signature'], 'test_signature')
+        self.assertEqual(transaction.sender, 'test_sender')
+        self.assertEqual(transaction.receiver, 'test_receiver')
+        self.assertEqual(transaction.payload, 'test_payload')
+        self.assertEqual(transaction.signature, 'test_signature')
 
         # assert response
         self.assert_json_equal(response, '{"jsonrpc": "2.0", "result": null, "id": 1}')
@@ -213,32 +222,29 @@ class SendBlockTestCase(CommonTestCase):
 
     def test_send_block_server_valid(self):
         """Test Case #7"""
-        # Given
-        self.add_peer('192.168.2.3', 6666)
-
         # When
         # Server gets request from Client
         response = self.make_request('{"jsonrpc": "2.0", "method": "sendBlock", '
                                      '"params":  [{'
                                      '"nr" : 2, "merkleHash" : "merkle_hash123", '
                                      '"predecessorBlock" : "pre_hash123","nonce" : 6969, '
-                                     '"creator" : "test_creator", '
+                                     '"creator" : "test_creator", "timestamp": 0.0 , '
                                      '"transactions" : ['
                                      '{"sender": "test_sender", "receiver": "test_receiver", '
                                      '"payload": "test_payload", "signature": "test_signature"}]}], "id": 1}')
 
         # Then
         block = self.received_blocks[0]
-        self.assertEqual(block['merkleHash'], 'merkle_hash123')
-        self.assertEqual(block['predecessorBlock'], 'pre_hash123')
-        self.assertEqual(block['nonce'], 6969)
-        self.assertEqual(block['creator'], 'test_creator')
-        self.assertEqual(len(block['transactions']), 1)
-        transaction = block['transactions'][0]
-        self.assertEqual(transaction['sender'], 'test_sender')
-        self.assertEqual(transaction['receiver'], 'test_receiver')
-        self.assertEqual(transaction['payload'], 'test_payload')
-        self.assertEqual(transaction['signature'], 'test_signature')
+        self.assertEqual(block.merkle_tree_root, 'merkle_hash123')
+        self.assertEqual(block.predecessor_hash, 'pre_hash123')
+        self.assertEqual(block.nonce, 6969)
+        self.assertEqual(block.block_creator_id, 'test_creator')
+        self.assertEqual(len(block.transactions), 1)
+        transaction = block.transactions[0]
+        self.assertEqual(transaction.sender, 'test_sender')
+        self.assertEqual(transaction.receiver, 'test_receiver')
+        self.assertEqual(transaction.payload, 'test_payload')
+        self.assertEqual(transaction.signature, 'test_signature')
 
         # assert response
         self.assert_json_equal(response, '{"jsonrpc": "2.0", "result": null, "id": 1}')
@@ -274,9 +280,10 @@ class RequestTransactionServerTestCase(CommonTestCase):
         """test case #9 """
         # given
         self.add_peer('192.168.100.4', 6666)
-        self.available_transactions['hash_of_transaction_#1'] = {"sender": "test_sender", "receiver": "test_receiver",
-                                                                 "payload": "test_payload",
-                                                                 "signature": "test_signature"}
+        self.available_transactions['hash_of_transaction_#1'] = Transaction("test_sender",
+                                                                            "test_receiver",
+                                                                            "test_payload",
+                                                                            "test_signature")
         # when
         json_rpc_request = {"jsonrpc": "2.0", "method": "requestTransaction", "params": ["hash_of_transaction_#1"],
                             "id": 1}
