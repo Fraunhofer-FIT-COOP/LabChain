@@ -36,7 +36,7 @@ class MockNetworkInterface:
 
     def requestBlock(self, block_number):
         for block in self.blocks:
-            if block.block_number == block_number:
+            if block.block_id == block_number:
                 return block
         return None
 

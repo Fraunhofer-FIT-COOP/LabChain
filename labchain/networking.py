@@ -287,7 +287,7 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __handle_send_block(self, block_data):
         block = Block.from_dict(block_data)
-        if not self.get_block_callback(block.block_number) == block:
+        if not self.get_block_callback(block.block_id) == block:
             logger.debug('Broadcasting block: {}'.format(str(block)))
             try:
                 self.sendBlock(block)
