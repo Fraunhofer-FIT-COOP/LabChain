@@ -2,6 +2,8 @@ import os
 import sys
 
 # append project dir to python path
+from labchain.cryptoHelper import CryptoHelper
+
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
@@ -11,7 +13,7 @@ if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
 from labchain.client import Wallet, BlockchainClient  # noqa
-from tests.test_account import MockCryptoHelper, MockNetworkInterface  # noqa
+from tests.test_account import MockNetworkInterface  # noqa
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 WALLET_FILE_PATH = os.path.join(CONFIG_DIRECTORY, 'wallet.csv')
@@ -22,7 +24,7 @@ def create_config_directory():
 
 
 def create_client(wallet_file):
-    crypto_helper = MockCryptoHelper()
+    crypto_helper = CryptoHelper.instance()
     network_interface = MockNetworkInterface(crypto_helper, [], [])
     return BlockchainClient(Wallet(wallet_file), network_interface, crypto_helper)
 

@@ -50,7 +50,12 @@ def block_mine_timer(mine_freq, block_transactions_size, blockchain,
         next_call += (mine_freq - consensus.last_mine_time_sec)
         time.sleep(next_call - time.time())
 
+#TODO: create class and move all the callback methods to that, abort mining
 
+def on_request_transaction(self, transaction_hash):
+    #find in blockchain and txpool
+    pass
+#get transaction callback
 def on_new_transaction_received(transaction_json):
     """Callback method to pass to network"""
     #  Need to verify what is the parameter sent
@@ -95,7 +100,8 @@ def initialize_node():
 
     consensus = Consensus()
     crypto_helper = CryptoHelper()
-    networkInterface = NetworkInterface()
+    #todo: look at network examples to init network
+    #networkInterface = NetworkInterface()
     txpool = TxPool(crypto_helper_obj=crypto_helper)
 
     # Generate the node ID using host ID

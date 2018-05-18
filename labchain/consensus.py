@@ -3,6 +3,7 @@ from datetime import datetime
 
 from labchain.cryptoHelper import CryptoHelper
 
+#TODO add abort flag to mine func
 
 class Consensus:
 
@@ -37,6 +38,8 @@ class Consensus:
         return difficulty
 
     def validate(self, block, nonce):
+        # will receive 2 timestamps and number of blocks for calculating diff
+        nonce = block.nonce #TODO remove nonce in mtheod sign
         zeros_array = "0" * self.difficulty
         data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
             str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
@@ -47,7 +50,8 @@ class Consensus:
         return block_hash[:self.difficulty] == zeros_array and nonce == block.nonce
 
     def mine(self, block):
-
+        # will receive 2 timestamps and number of blocks for calculating diff
+        #
         self.blocks_counter += 1
         zeros_array = "0" * self.difficulty
         data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':

@@ -56,7 +56,7 @@ class MockCryptoHelper:
         # valid if private key is reversed public key
         return public_key == private_key[::-1]
 
-    def generatePair(self):
+    def generate_key_pair(self):
         public_key = '{num:05d}'.format(num=self.key_counter)
         # private key is the reversed public key
         private_key = public_key[::-1]

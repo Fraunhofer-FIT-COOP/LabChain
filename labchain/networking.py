@@ -212,6 +212,9 @@ class ServerNetworkInterface(NetworkInterface):
                                             Transaction instance or None.
         :param port: The port number to listen on.
         """
+        #TODO: get_block returns list
+        #TODO: blocks can be requested by hash and id
+        #TODO: get_transaction_callback : tuple with 1st element as transaction and 2nd element as block_hash
         super().__init__(json_rpc_client, initial_peers)
         self.crypto_helper = crypto_helper
         self.on_block_received_callback = on_block_received_callback
