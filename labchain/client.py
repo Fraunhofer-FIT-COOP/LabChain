@@ -390,7 +390,7 @@ class BlockchainClient:
         clear_screen()
         block = self.network_interface.requestBlock(int(input_str))
         if block is not None:
-            print('block number: ' + str(block.block_number))
+            print('block number: ' + str(block.block_id))
             print('timestamp: ' + str(block.timestamp))
             print('predecessor hash: ' + str(block.predecessor_hash))
             print('merkle tree: ' + str(block.merkle_tree_root))

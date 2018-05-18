@@ -51,5 +51,4 @@ class BootrapperTestCase(TestCase):
         # when
         self.bootstrapper.do_bootstrap(self.blockchain)
         # then
-        self.assertEqual(1, self.blockchain.add_block.call_count)
-        self.blockchain.add_block.assert_called_once_with(self.genesis_block)
+        self.assertEqual(0, self.blockchain.add_block.call_count)
