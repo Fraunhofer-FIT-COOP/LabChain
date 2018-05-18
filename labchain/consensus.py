@@ -1,8 +1,7 @@
-from datetime import datetime
-from labchain.cryptoHelper import CryptoHelper
-
 import json
+from datetime import datetime
 
+from labchain.cryptoHelper import CryptoHelper
 
 
 class Consensus:
@@ -17,7 +16,7 @@ class Consensus:
         self.max_diff = 12  # Threshold to be defined
         self.blocks_threshold = 60
         self.blocks_counter = 0
-        self.recalculate = 0;
+        self.recalculate = 0
 
     def __getitem__(self, item):
         pass
@@ -30,7 +29,7 @@ class Consensus:
 
     def calculate_difficulty(self, timestamp):
         difficulty = ((((timestamp - self.last_recalculation_timestamp).total_seconds()) /
-                           self.time_to_mine_blocks_threshold)).floor()
+                       self.time_to_mine_blocks_threshold)).floor()
         self.last_recalculation_timestamp = timestamp
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
