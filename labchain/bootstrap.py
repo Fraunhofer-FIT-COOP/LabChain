@@ -23,12 +23,4 @@ class Bootstrapper:
                     retries += 1
             except BlockDoesNotExistException:
                 break
-        if current_block_id == 0:
-            self._insert_genesis_block(blockchain)
-        blockchain.switch_to_longest_branch()
         return blockchain
-
-    @staticmethod
-    def _insert_genesis_block(blockchain):
-        genesis_block = blockchain.create_block([])
-        blockchain.add_block(genesis_block)
