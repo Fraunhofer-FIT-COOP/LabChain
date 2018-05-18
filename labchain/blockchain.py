@@ -1,232 +1,259 @@
-import hashlib
-from hashlib import __all__
+from datetime import datetime
 
-from labchain.block import Block
-from hashlib import sha256 as sha
-import json
+from labchain.block import LogicalBlock
 
 
 class BlockChain:
-    def __init__(self, consensus_obj, txpool_obj, block_creator_id):
-        """Constructor for Blockchain class.
+    def __init__(self, node_id, tolerance_value, pruning_interval,
+                 consensus_obj, txpool_obj, crypto_helper_obj):
+        """Constructor for BlockChain
 
-        Class Variables:
-            __blockchain (dict): Dictionary of blocks currently in chain
-                                 key = Hash of the block
-                                 value = Block Instance
-            __current_branch_heads (dict): Dictionary storing the block
-                                 instances currently head of branches.
-                                 key = Block instance
-                                 value = length of branch from branch point
-            __branch_point_hash (String): The hash of the block from where
-                                 branching started
+        Parameters
+        ----------
+        node_id : String
+            ID of the node running the blockchain
+        tolerance_value : Int
+            Length required by the longest chain to be switched to
+        pruning_interval : Int
+            Time given in hours till which the orphan blocks will be stored
+        consensus_obj : Instance of consensus module
+        txpool_obj : Instance of txpool module
+        crypto_helper_obj : Instance of cryptoHelper module
 
-        """
-        self.__blockchain = {}
-        self.__current_branch_heads = {}
-        self.__node_branch_head = None
-        self.__branch_point_hash = None
-        self.__consensus_obj = consensus_obj
-        self.__txpool_obj = txpool_obj
-        self.__block_creator_id = block_creator_id
-
-    def get_computed_hash(self, block):
-
-        """
-        Get sha256 hash of a block
-        :param self:
-        :param block:
-        :return hashed string of a block:
-        """
-
-        # we must make sure the dictionary is ordered , otherwise we will get inconsistent hashes
-
-        block_string = json.dump(block, sort_keys=True).encode()
-        return hashlib.sha256(block_string).hexdigest()
-
-    def save_blockchain(self):
-        block_chain = self.__blockchain
-        _block1 = Block()
-        _block1.__block_number = 1
-        _block1.__merkle_tree_root = hashlib.sha256(1).hexdigest()
-        _block1.__predecessor_hash = hashlib.sha256(2).hexdigest()
-        _block1.__nonce = 2
-        _block1.__block_creator_id = "10"
-        _block1.__transactions = [{"From": "Farhad", "To": "Ali"}]
-
-        _block2 = Block()
-        _block2.__block_number = 2
-        _block2.__merkle_tree_root = hashlib.sha256(2).hexdigest()
-        _block2.__predecessor_hash = hashlib.sha256(3).hexdigest()
-        _block2.__nonce = 3
-        _block2.__block_creator_id = "13"
-        _block2.__transactions = [{"From": "Owais", "To": "Ahmed"}]
-        block_chain[self.get_computed_hash(_block1)] = _block1
-        block_chain[self.get_computed_hash(_block2)] = _block2
-
-        with open('resources\data.json', 'w') as fp:
-            json.dump(block_chain, fp, sort_keys=True, indent=4)
-
-
-    def add_block(self, our_own_block=False, block=None):
-        """Adds a block to the blockchain.
-        Need to validate block first before adding.
-
-        Args:
-            our_own_block (Boolean): True if we Block was created by us.
-                                     False if Block received from other node.
-            block (Block): The Block instance we wish to add to the chain
-
-        Returns:
-            Boolean: True for successful addition of block to the chain
+        Attributes
+        ----------
+        _node_id : String
+            ID of the node running the blockchain
+        _blockchain : Dictionary
+            Dictionary of blocks in our blockchain
+            key = block hash, value = LogicalBlock instance
+        _orphan_blocks : Dictionary
+            Dictionary of blocks whose predecessor block is not in our chain
+            key = predecessor block hash, value = LogicalBlock instance
+        _current_branch_heads : List
+            List of the block hashes, which are branch heads maintained by the node
+        _node_branch_head : Hash value
+            Hash value of the branch head this node is following
+        _furthest_branching_point : Dictionary
+            Information about the point where earliest branching happened in chain
+            key = block instance of branching point, value = position in the chain
+        _tolerance_level : Int
+            Length required by the longest chain to be switched to
+        _pruning_interval : Int
+            Number of seconds orphan blocks are stored before being deleted
+        _consensus : Instance of the consensus module
+        _txpool : Instance of the txpool module
+        _crypto_helper : Instance of cryptoHelper module
 
         """
-        if not isinstance(block, Block):
+
+        self._node_id = node_id
+        self._blockchain = {}
+        self._orphan_blocks = {}
+        self._current_branch_heads = []
+        self._node_branch_head = None
+        self._furthest_branching_point = {"block": None, "position": float("inf")}
+        self._tolerance_level = tolerance_value
+        self._pruning_interval = pruning_interval * 3600
+        self._consensus = consensus_obj
+        self._txpool = txpool_obj
+        self._crypto_helper = crypto_helper_obj
+
+        # Create the very first Block, add it to Blockchain
+        # This should be part of the bootstrap/initial node only
+        _first_block = LogicalBlock(block_id=1, crypto_helper_obj=crypto_helper_obj)
+        _first_block.set_block_pos(0)
+        _first_block_hash = _first_block.get_computed_hash()
+        self._blockchain[_first_block_hash] = _first_block
+        self._node_branch_head = _first_block_hash
+        self._current_branch_heads = [_first_block_hash, ]
+
+    def add_block(self, block):
+        """Finds correct position and adds the new block to the chain.
+        If block predecessor not found in chain, stores block as an orphan.
+
+        Parameters
+        ----------
+        block : LogicalBlock instance
+            The block instance to be added to the chain.
+
+        Returns
+        -------
+        Boolean
+            Returns True if block is saved as orphan or in the chain.
+            Return False if block validation fails and it is deleted.
+
+        """
+
+        if not block.validate_block():
+            if block.is_block_ours(self._node_id):
+                _txns = block.transactions
+                self._txpool.return_transactions_to_pool(_txns)
             del block
             return False
 
-        if not self.validate_block(block):
-            if our_own_block:
-                _txns = block.get_transcations()
-                self.__txpool_obj.return_transactions_to_pool(_txns)
-            del block
-            return False
+        _prev_hash = block.predecessor_hash
+        _curr_block_hash = block.get_computed_hash()
+        _curr_block = block
 
-        _prev_hash = block.get_predecessor_hash()
-        if not our_own_block:
-            # Check if predecessor block is there in our blockchain head
-            if _prev_hash not in self.__blockchain:
-                # have to somehow call nodes to get blockchain, needs discussion
-                del block
-                return False
-            _prev_block = self.__blockchain[_prev_hash]
-            if _prev_block not in self.__current_branch_heads:
-                # We have missed some block updates from node
-                # need to get them, needs discussion.
-                del block
-                return False
+        if _prev_hash in self._blockchain:
+            _prev_block = self._blockchain.get(_prev_hash)
+            _prev_block_pos = _prev_block.get_block_pos()
 
-        _prev_block = self.__blockchain[_prev_hash]
-        _branch_length = self.__current_branch_heads.pop(_prev_block)
-        self.__current_branch_heads[block] = _branch_length + 1
+            if _prev_hash in self._current_branch_heads:
+                self._current_branch_heads.remove(_prev_hash)
+            else:
+                if _prev_block_pos < self._furthest_branching_point["position"]:
+                    self._furthest_branching_point["position"] = _prev_block_pos
+                    self._furthest_branching_point["block"] = _prev_block
 
-        _block_hash = None  # TBD: compute hash over here
-        self.__blockchain[_block_hash] = block
-        self.switch_to_longest_branch()
+            _curr_block.set_block_pos(_prev_block_pos + 1)
+            self._blockchain[_curr_block_hash] = _curr_block
+            self._current_branch_heads.append(_curr_block_hash)
 
-    def validate_block(self, block):
-        """Validate the block by checking -
-           1. Checking the transaction signatures in the block
-           2. Checking the Merkle Tree correctness
-           3. Checking the Block Hash with given Nonce to see if it
-              satisfies the configured number of zeroes.
+            if _curr_block.is_block_ours(self._node_id):
+                self._node_branch_head = _curr_block_hash
 
-        Returns:
-            Boolean: True for successful validation, False otherwise
+            # Remove transactions covered by the block from our TxPool
+            self._txpool.remove_transactions(_curr_block.transactions)
 
-        """
-        block_valid = False
-        #  validate signatures
-        transactions = block.get_transcations()
-        #  this can be optimized
-        for t in transactions:
-            if not t.validate_signature():
-                break
+            # Check recursively if blocks are parent to some orphans
+            _parent_hash = _curr_block_hash
+            _parent_block = _curr_block
+            while _parent_hash in self._orphan_blocks:
+                _block = self._orphan_blocks[_parent_hash]
+                self._txpool.remove_transactions(_block.transactions)
+                _this_block_hash = _block.get_computed_hash()
+                _block.set_block_pos(_parent_block.get_block_pos() + 1)
+                self._blockchain[_this_block_hash] = _block
+                _parent_hash = _this_block_hash
+                _parent_block = _block
+
         else:
-            block_valid = True
+            # Put block in orphan pool, query predecessor block
+            self._orphan_blocks[_prev_hash] = _curr_block
+            self.request_block_from_neighbour(_prev_hash)
 
-        #  validate_merkle_tree
-        if not block_valid:
-            return False
-
-        #  validate nonce
-        block_valid = self.__consensus_obj.validate_block(block)
-
-        return block_valid
+        self.switch_to_longest_branch()
+        return True
 
     def create_block(self, transactions):
-        """Create a new Block for mining.
+        """Creates a new LogicalBlock instance.
 
-        Args:
-            transactions (List): Transactions to add to the block
+        Parameters
+        ----------
+        transactions : List
+            Transactions to be associated with the block
 
-        Returns:
-            Boolean: created block object
+        Returns
+        -------
+        new_block : LogicalBlock instance
+            The New Block created from the transactions given
 
         """
-        #  get block nunber
-        block_num = (self.__blockchain[self.__node_branch_head]).__block_number + 1
-        merkle_tree_root = self.compute_merkle_root(transactions)
-        block = Block(block_num, merkle_tree_root, self.__node_branch_head, self.__block_creator_id, transactions)
-        return block
+
+        _curr_head = self._blockchain[self._node_branch_head]
+        _new_block_id = _curr_head.block_id + 1
+        new_block = LogicalBlock(block_id=_new_block_id,
+                                 predecessor_hash=self._node_branch_head,
+                                 block_creator_id=self._node_id,
+                                 transactions=transactions,
+                                 consensus_obj=self._consensus,
+                                 crypto_helper_obj=self._crypto_helper)
+        return new_block
 
     def switch_to_longest_branch(self):
-        """Called after each block addition to the branch, to check if
-        branching (if present) has been resolved.
+        """Functionality to switch to the longest chain among all the
+        chains currently maintained by blockchain.
+        Switches only if the length of one of the chains is more than
+        the tolerance level defined.
 
         """
 
-        if len(self.__current_branch_heads) <= 1:
-            # No branching occured yet, nothing to do here
+        if len(self._current_branch_heads) == 1:
+            # No Branching happened yet, nothing to do here
             return
 
-        # Branch to switch to.
+        _check_point_pos = self._furthest_branching_point['position']
+        _check_point = self._furthest_branching_point['block']
+        _check_point_hash = _check_point.get_computed_hash()
+
+        _max_len = 0
         _max_head = None
-
-        # Every branch will have length 1, but if some branch has
-        # length more than 1 it is a potential longest branch.
-        _max_length = 1
-
-        for (_head, _length) in self.__current_branch_heads.items():
-            if _length > _max_length:
+        for _branch_head_hash in self._current_branch_heads:
+            _head = self._blockchain.get(_branch_head_hash)
+            _path_len = _head.get_block_pos() - _check_point_pos
+            if _path_len > _max_len:
+                _max_len = _path_len
                 _max_head = _head
-                _max_length = _length
 
-        if _max_head:
-            self.__current_branch_heads.pop(_max_head)
-            for (_block, _length) in self.__current_branch_heads.items():
-                __prev_block_hash = None
-                _curr_block = _block
-                while self.__branch_point_hash != __prev_block_hash:
-                    _prev_block_hash = _curr_block.get_predecessor_hash()
-                    _curr_block.return_transactions()
-                    del _curr_block
-                    _curr_block = self.__blockchain[_prev_block_hash]
-            self.__current_branch_heads = {_max_head: 0, }
-            self.__branch_point_hash = None
+        if _max_len > self._tolerance_level:
+            _new_head_hash = _max_head.get_computed_hash()
 
+            # Save all block hashes between furthest branch and head in max chain
+            _b_hash = _new_head_hash
+            _longest_chain = []
+            while _b_hash != _check_point_hash:
+                _longest_chain.append(_b_hash)
+                _b = self._blockchain.get(_b_hash)
+                _b_hash = _b.predecessor_hash
+            _longest_chain.append(_check_point_hash)
 
-    def merkle_root(self, hashes):
+            # Remove all other branches
+            self._current_branch_heads.remove(_new_head_hash)
+            for _head in self._current_branch_heads:
+                _b_hash = _head
+                while _b_hash not in _longest_chain:
+                    _b = self._blockchain.pop(_b_hash)
+                    if _b.is_block_ours(self._node_id):
+                        _txns = _b.get_transcations()
+                        self._txpool.return_transactions_to_pool(_txns)
+                    _b_hash = _b.predecessor_hash
+                    del _b
+
+            self._current_branch_heads = [_new_head_hash, ]
+            self._node_branch_head = _new_head_hash
+            self._furthest_branching_point = {"block": None, "position": float("inf")}
+
+    def prune_orphans(self):
+        _curr_time = datetime.now()
+        for _hash in self._orphan_blocks:
+            _block = self._orphan_blocks[_hash]
+            _block_creation_time = datetime.fromtimestamp(_block.timestamp)
+            _time_passed = (_curr_time - _block_creation_time).total_seconds()
+            if _time_passed >= self._pruning_interval:
+                self._orphan_blocks.pop(_hash)
+                del _block
+
+    def send_block_to_neighbour(self, requested_block_hash):
+        """Sends the Block information requested by any neighbour.
+
+        Parameters
+        ----------
+        requested_block_hash : Hash
+            Hash value of the block requested.
+
+        Returns
+        -------
+        block_info : Json structure
+            The Json of Block which was requested
+            None if Block was not found in node's chain.
+
         """
-        Recursively calls itself and calculate hash of two consecutive
-        hashes till it gets one last hash
 
-        :param hashes: hashes of all transactions
-        :return:one hash of all hashes
+        block_info = None
+        _req_block = self._blockchain.get(requested_block_hash, None)
+        if _req_block:
+            block_info = _req_block.get_json()
+        return block_info
+
+    def request_block_from_neighbour(self, requested_block_hash):
+        """Requests a block from other nodes connected with.
+
+        Parameters
+        ----------
+        requested_block_hash : Hash
+            Hash of the block requested by the node.
+
         """
-        sub_tree = []
-        for i in range(0, len(hashes), 2):
-            """If not the last element"""
-            if i + 1 < len(hashes):
-                """Concatenate the hashes and calculate their hash"""
-                value = str(hashes[i]+hashes[i+1]).encode('utf-8')
-                hash = sha(value).hexdigest()
-            else:
-                hash = hashes[i]
-            sub_tree.append(hash)
-        if len(sub_tree) == 1:
-            return sub_tree[0]
-        else:
-            return self.merkle_root(sub_tree)
-
-
-    def compute_merkle_root(self, txns):
-        """
-        Computes hash of all transactions and call merkle root
-
-        :param txns:list of all transactions
-        :return:one hash of all the transactions
-        """
-        for i,tx in enumerate(txns):
-            txns[i] = sha(tx.encode('utf-8')).hexdigest()
-        return self.merkle_root(txns)
+        pass
