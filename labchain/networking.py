@@ -1,8 +1,8 @@
+import collections
 import json
 import logging
 import random
 import time
-import collections
 from copy import deepcopy
 from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
 
@@ -135,11 +135,11 @@ class NetworkInterface:
             for port, info in port_dict.items():
                 self.add_peer(ip, port, info)
 
-    def __get_shuffled_peers(self):
+    def __get_shuffled_dict_items(self, dictionary):
         """Retrieve a shuffled list of peer IP addresses."""
-        peer_ips = list(self.peers.keys())
-        random.shuffle(peer_ips)
-        return peer_ips
+        dict_list = list(dictionary.items())
+        random.shuffle(dict_list)
+        return dict_list
 
     def _bulk_send(self, method, params=None, return_on_first_success=False):
         """
@@ -155,8 +155,7 @@ class NetworkInterface:
         responses = []
         # copy to prevent problems with concurrency
         peers = deepcopy(self.peers)
-        shuffled_peer_ips = self.__get_shuffled_peers()
-        for peer_ip in shuffled_peer_ips:
+        for peer_ip, port_map in self.__get_shuffled_dict_items(peers):
             for peer_port in peers[peer_ip]:
                 try:
                     response = self._send(peer_ip, peer_port, method, params)
