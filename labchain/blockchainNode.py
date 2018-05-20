@@ -53,10 +53,6 @@ class BlockChainNode:
             Args:
                 mine_freq (integer): periodicity of mining in seconds
                 block_transactions_size (integer): max transactions in a block
-                blockchain_obj:
-                txpool_obj:
-                consensus_obj:
-
         """
         next_call = time.time()
         while True:
