@@ -1,15 +1,15 @@
 import unittest
 
+from labchain.cryptoHelper import CryptoHelper
 from labchain.txpool import TxPool
 from labchain.transaction import Transaction
-from mock.cryptoHelper import CryptoHelper
 
 
 class TxPoolTestCase(unittest.TestCase):
     """Class of testcases for the TxPool module"""
 
     def setUp(self):
-        crypto_helper_obj = CryptoHelper()
+        crypto_helper_obj = CryptoHelper.instance()
         self._txPoolObj = TxPool(crypto_helper_obj)
         self._txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "a"))
         self._txPoolObj.add_transaction_if_not_exist(Transaction("s", "r", "b"))
