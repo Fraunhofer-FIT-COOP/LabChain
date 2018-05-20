@@ -75,8 +75,26 @@ class BlockChain:
         pass
 
     def get_block_by_hash(self, block_hash):
-        #TODO: return a block corresponding to hash
-        pass
+        """Sends the Block information requested by any neighbour.
+
+        Parameters
+        ----------
+        block_hash : Hash
+            Hash value of the block requested.
+
+        Returns
+        -------
+        block_info : Json structure
+            The Json of Block which was requested
+            None if Block was not found in node's chain.
+
+        """
+
+        block_info = None
+        _req_block = self._blockchain.get(block_hash, None)
+        if _req_block:
+            block_info = _req_block.get_json()
+        return block_info
 
     def get_transaction(self, transaction_hash):
         # TODO: return a transaction from main branch
@@ -245,28 +263,6 @@ class BlockChain:
             if _time_passed >= self._pruning_interval:
                 self._orphan_blocks.pop(_hash)
                 del _block
-
-    def send_block_to_neighbour(self, requested_block_hash):
-        """Sends the Block information requested by any neighbour.
-
-        Parameters
-        ----------
-        requested_block_hash : Hash
-            Hash value of the block requested.
-
-        Returns
-        -------
-        block_info : Json structure
-            The Json of Block which was requested
-            None if Block was not found in node's chain.
-
-        """
-
-        block_info = None
-        _req_block = self._blockchain.get(requested_block_hash, None)
-        if _req_block:
-            block_info = _req_block.get_json()
-        return block_info
 
     def request_block_from_neighbour(self, requested_block_hash):
         """Requests a block from other nodes connected with.
