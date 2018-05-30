@@ -14,8 +14,7 @@ project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,
 if project_dir not in sys.path:
     sys.path.append(project_dir)
 
-from labchain.networking import ServerNetworkInterface, JsonRpcClient, TransactionDoesNotExistException, \
-    BlockDoesNotExistException  # noqa
+from labchain.networking import ServerNetworkInterface, JsonRpcClient, BlockDoesNotExistException  # noqa
 
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO
@@ -29,8 +28,8 @@ BLOCKS = {1: Block(1, 'some_root', 'pred_hash', 'creator_id',
 
 def get_block(block_id):
     if int(block_id) in BLOCKS:
-        return BLOCKS[block_id]
-    return None
+        return [BLOCKS[block_id]]
+    return []
 
 
 def empty_function():
@@ -42,7 +41,7 @@ def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
     return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
-                                  get_block, empty_function, port)
+                                  get_block, empty_function, empty_function, port)
 
 
 def configure_logging():
@@ -65,12 +64,12 @@ if __name__ == '__main__':
 
     while True:
         logging.warning('Requesting block 1')
-        block = interface2.requestBlock(1)
-        logging.warning('Received block: {}'.format(str(block)))
+        blocks = interface2.requestBlock(1)
+        logging.warning('Received block: {}'.format(str(blocks[0])))
 
         logging.warning('Requesting block 2')
         try:
-            block = interface2.requestBlock(2)
+            blocks = interface2.requestBlock(2)
             logging.error('This statement should not be reached')
         except BlockDoesNotExistException:
             logging.warning('Block does not exist')
