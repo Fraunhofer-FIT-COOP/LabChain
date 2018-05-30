@@ -281,10 +281,11 @@ class RequestTransactionServerTestCase(CommonTestCase):
         """test case #9 """
         # given
         self.add_peer('192.168.100.4', 6666)
-        self.available_transactions['hash_of_transaction_#1'] = Transaction("test_sender",
+        self.available_transactions['hash_of_transaction_#1'] = (Transaction("test_sender",
                                                                             "test_receiver",
                                                                             "test_payload",
-                                                                            "test_signature")
+                                                                             "test_signature"),
+                                                                 'hash_of_transaction_#1')
         # when
         json_rpc_request = {"jsonrpc": "2.0", "method": "requestTransaction", "params": ["hash_of_transaction_#1"],
                             "id": 1}
