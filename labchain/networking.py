@@ -214,7 +214,7 @@ class ServerNetworkInterface(NetworkInterface):
         """
         #TODO: get_block returns list
         #TODO: blocks can be requested by hash and id
-        #TODO: get_transaction_callback : tuple with 1st element as transaction and 2nd element as block_hash
+        # fixed TODO: get_transaction_callback : tuple with 1st element as transaction and 2nd element as block_hash
         super().__init__(json_rpc_client, initial_peers)
         self.crypto_helper = crypto_helper
         self.on_block_received_callback = on_block_received_callback
@@ -301,7 +301,7 @@ class ServerNetworkInterface(NetworkInterface):
     def __handle_send_transaction(self, transaction_data):
         transaction = Transaction.from_dict(transaction_data)
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
-        if not self.get_transaction_callback(transaction_hash) == transaction:
+        if not self.get_transaction_callback(transaction_hash)[0] == transaction:
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
             try:
                 self.sendTransaction(transaction)
@@ -316,7 +316,7 @@ class ServerNetworkInterface(NetworkInterface):
         return None
 
     def __handle_request_transaction(self, transaction_hash):
-        transaction = self.get_transaction_callback(transaction_hash)
+        transaction = self.get_transaction_callback(transaction_hash)[0]
         if transaction:
             return transaction.to_dict()
         return None
