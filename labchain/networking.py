@@ -201,6 +201,7 @@ class ServerNetworkInterface(NetworkInterface):
                  on_block_received_callback,
                  on_transaction_received_callback,
                  get_block_callback,
+                 get_block_by_hash_callback,
                  get_transaction_callback, port=8080):
         """
         :param json_rpc_client: A JsonRpcClient instance.
@@ -212,14 +213,15 @@ class ServerNetworkInterface(NetworkInterface):
                                             Transaction instance or None.
         :param port: The port number to listen on.
         """
-        #TODO: get_block returns list
-        #TODO: blocks can be requested by hash and id
+        # TODO: get_block returns list
+        # fixed TODO: blocks can be requested by hash and id
         # fixed TODO: get_transaction_callback : tuple with 1st element as transaction and 2nd element as block_hash
         super().__init__(json_rpc_client, initial_peers)
         self.crypto_helper = crypto_helper
         self.on_block_received_callback = on_block_received_callback
         self.on_transaction_received_callback = on_transaction_received_callback
         self.get_block_callback = get_block_callback
+        self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
         self.port = int(port)
 
@@ -301,7 +303,8 @@ class ServerNetworkInterface(NetworkInterface):
     def __handle_send_transaction(self, transaction_data):
         transaction = Transaction.from_dict(transaction_data)
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
-        if not self.get_transaction_callback(transaction_hash)[0] == transaction:
+        if self.get_transaction_callback(transaction_hash) and not self.get_transaction_callback(transaction_hash)[
+                                                                       0] == transaction:
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
             try:
                 self.sendTransaction(transaction)
@@ -309,16 +312,19 @@ class ServerNetworkInterface(NetworkInterface):
                 pass
         self.on_transaction_received_callback(transaction)
 
-    def __handle_request_block(self, block_id):
-        block = self.get_block_callback(block_id)
+    def __handle_request_block(self, block_id, block_hash=None):
+        if block_id:
+            block = self.get_block_callback(block_id)
+        elif block_hash:
+            block = self.get_block_by_hash_callback(block_hash)
         if block:
             return block.to_dict()
         return None
 
     def __handle_request_transaction(self, transaction_hash):
-        transaction = self.get_transaction_callback(transaction_hash)[0]
+        transaction = self.get_transaction_callback(transaction_hash)
         if transaction:
-            return transaction.to_dict()
+            return transaction[0].to_dict()
         return None
 
     def __filter_own_address(self, peers):
