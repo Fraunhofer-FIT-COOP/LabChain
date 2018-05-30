@@ -70,13 +70,13 @@ class CommonTestCase(TestCase):
 
     def get_block(self, block_id):
         if block_id in self.available_blocks:
-            return self.available_blocks[block_id]
-        return None
+            return [self.available_blocks[block_id]]
+        return []
 
     def get_transaction(self, transaction_hash):
         if transaction_hash in self.available_transactions:
-            return self.available_transactions[transaction_hash]
-        return None
+            return self.available_transactions[transaction_hash], 'test_block_hash'
+        return None, None
 
     def get_peer_list(self):
         return self.network_interface.peers
@@ -281,11 +281,10 @@ class RequestTransactionServerTestCase(CommonTestCase):
         """test case #9 """
         # given
         self.add_peer('192.168.100.4', 6666)
-        self.available_transactions['hash_of_transaction_#1'] = (Transaction("test_sender",
+        self.available_transactions['hash_of_transaction_#1'] = Transaction("test_sender",
                                                                             "test_receiver",
                                                                             "test_payload",
-                                                                             "test_signature"),
-                                                                 'hash_of_transaction_#1')
+                                                                            "test_signature")
         # when
         json_rpc_request = {"jsonrpc": "2.0", "method": "requestTransaction", "params": ["hash_of_transaction_#1"],
                             "id": 1}
@@ -293,8 +292,8 @@ class RequestTransactionServerTestCase(CommonTestCase):
 
         # then
         self.assert_json_equal(response,
-                               '{"result": {"sender": "test_sender", "receiver": "test_receiver", '
-                               '"payload": "test_payload", "signature": "test_signature"}, "id": 1,"jsonrpc": "2.0"}')
+                               '{"result": [{"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"}, "test_block_hash"], "id": 1,"jsonrpc": "2.0"}')
 
     def test_request_nonexistent_transaction(self):
         """test case #10 """
@@ -315,13 +314,13 @@ class RequestTransactionClientTestCase(CommonTestCase):
         self.add_peer('192.168.100.4', 6666)
 
         self.json_rpc_client.queue_response({'jsonrpc': '2.0',
-                                             'result': {
+                                             'result': [{
                                                  'sender': 'pubkey_of_test_sender',
                                                  'receiver': 'pubkey_of_test_receiver',
                                                  'payload': 'test_payload',
-                                                 'signature': 'test_signature'},
+                                                 'signature': 'test_signature'}, 'test_block_hash'],
                                              'id': 1})
-        transaction = self.network_interface.requestTransaction('hash_of_transaction_#1')
+        transaction, block_hash = self.network_interface.requestTransaction('hash_of_transaction_#1')
 
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
@@ -356,12 +355,12 @@ class RequestBlockServerTestCase(CommonTestCase):
                             "id": 1}
         response = self.make_request(json.dumps(json_rpc_request))
         # then
-        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": {"nr": 2, "timestamp": 1337.0, '
+        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": [{"nr": 2, "timestamp": 1337.0, '
                                          '"merkleHash" : "test_merkle_hash", '
                                          '"predecessorBlock" : "test_pred_block_hash", "nonce" : 5, '
                                          '"creator" : "test_creator", "transactions" : '
                                          '[{"sender": "test_sender", "receiver": "test_receiver", '
-                                         '"payload": "test_payload", "signature": "test_signature"}]}, "id":1}'
+                                         '"payload": "test_payload", "signature": "test_signature"}]}], "id":1}'
                                )
 
     def test_request_block_with_no_predecessor(self):
@@ -375,12 +374,12 @@ class RequestBlockServerTestCase(CommonTestCase):
                             "id": 1}
         response = self.make_request(json.dumps(json_rpc_request))
         # then
-        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": {"nr": 2, "timestamp": 1337.0, '
+        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": [{"nr": 2, "timestamp": 1337.0, '
                                          '"merkleHash" : "test_merkle_hash", '
                                          '"predecessorBlock" : null, "nonce" : 5, '
                                          '"creator" : "test_creator", "transactions" : '
                                          '[{"sender": "test_sender", "receiver": "test_receiver", '
-                                         '"payload": "test_payload", "signature": "test_signature"}]}, "id":1}'
+                                         '"payload": "test_payload", "signature": "test_signature"}]}], "id":1}'
                                )
 
     def request_nonexisting_block(self):
@@ -401,18 +400,22 @@ class RequestBlockClientTestCase(CommonTestCase):
         # when
         self.json_rpc_client.queue_response({
             'jsonrpc': '2.0',
-            'result': {
-                'nr': 2,
-                'merkleHash': 'test_merkle_hash',
-                'predecessorBlock': None,
-                'nonce': 5,
-                'creator': 'test_creator',
-                'timestamp': 1337.0,
-                'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
-                                  'signature': 'test_signature'}]},
+            'result': [
+                {
+                    'nr': 2,
+                    'merkleHash': 'test_merkle_hash',
+                    'predecessorBlock': None,
+                    'nonce': 5,
+                    'creator': 'test_creator',
+                    'timestamp': 1337.0,
+                    'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
+                                      'signature': 'test_signature'}]
+                }
+            ],
             'id': 1
         })
-        block = self.network_interface.requestBlock(2)
+        blocks = self.network_interface.requestBlock(2)
+        block = blocks[0]
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestBlock')

@@ -98,18 +98,34 @@ class NetworkInterface:
             raise NoPeersException('No nodes available to send the block to')
 
     def requestTransaction(self, transaction_hash):
+        """Returns the tuple (transaction, block hash of transaction)."""
         responses = self._bulk_send('requestTransaction', [transaction_hash], return_on_first_success=True)
         if responses:
             if responses[0]:
-                return Transaction.from_dict(responses[0])
+                transaction, block_hash = responses[0]
+                return Transaction.from_dict(transaction), block_hash
             else:
                 raise TransactionDoesNotExistException()
         else:
             raise NoPeersException('No nodes available to request the transaction from')
 
     def requestBlock(self, block_id):
-        """Request a single block by block ID."""
+        """Request a single block by block ID.
+
+        Returns a list, because multiple blocks might have the same ID.
+        """
         responses = self._bulk_send('requestBlock', [block_id], return_on_first_success=True)
+        if responses:
+            if responses[0]:
+                return [Block.from_dict(block_data) for block_data in responses[0]]
+            else:
+                raise BlockDoesNotExistException()
+        else:
+            raise NoPeersException('No nodes available to request the block from')
+
+    def requestBlockByHash(self, block_hash):
+        """Request a single block by block its hash value."""
+        responses = self._bulk_send('requestBlockByHash', [block_hash], return_on_first_success=True)
         if responses:
             if responses[0]:
                 return Block.from_dict(responses[0])
@@ -266,6 +282,7 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['sendBlock'] = self.__handle_send_block
         dispatcher['sendTransaction'] = self.__handle_send_transaction
         dispatcher['requestBlock'] = self.__handle_request_block
+        dispatcher['requestBlockByHash'] = self.__handle_request_block_by_hash
         dispatcher['requestTransaction'] = self.__handle_request_transaction
 
         # insert IP address of peer if advertise peer is called
@@ -292,7 +309,7 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __handle_send_block(self, block_data):
         block = Block.from_dict(block_data)
-        if not self.get_block_callback(block.block_id) == block:
+        if block not in self.get_block_callback(block.block_id):
             logger.debug('Broadcasting block: {}'.format(str(block)))
             try:
                 self.sendBlock(block)
@@ -303,8 +320,8 @@ class ServerNetworkInterface(NetworkInterface):
     def __handle_send_transaction(self, transaction_data):
         transaction = Transaction.from_dict(transaction_data)
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
-        if self.get_transaction_callback(transaction_hash) and not self.get_transaction_callback(transaction_hash)[
-                                                                       0] == transaction:
+        transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
+        if not transaction_in_pool == transaction:
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
             try:
                 self.sendTransaction(transaction)
@@ -312,19 +329,22 @@ class ServerNetworkInterface(NetworkInterface):
                 pass
         self.on_transaction_received_callback(transaction)
 
-    def __handle_request_block(self, block_id, block_hash=None):
-        if block_id:
-            block = self.get_block_callback(block_id)
-        elif block_hash:
-            block = self.get_block_by_hash_callback(block_hash)
+    def __handle_request_block(self, block_id):
+        blocks = self.get_block_callback(block_id)
+        if blocks:
+            return [block.to_dict() for block in blocks]
+        return []
+
+    def __handle_request_block_by_hash(self, block_hash):
+        block = self.get_block_by_hash_callback(block_hash)
         if block:
             return block.to_dict()
-        return None
+        return []
 
     def __handle_request_transaction(self, transaction_hash):
-        transaction = self.get_transaction_callback(transaction_hash)
+        transaction, block_hash = self.get_transaction_callback(transaction_hash)
         if transaction:
-            return transaction[0].to_dict()
+            return (transaction.to_dict(), block_hash)
         return None
 
     def __filter_own_address(self, peers):
