@@ -54,9 +54,10 @@ class Transaction:
         self.signature = crypto_helper.sign(private_key, data)
 
     def __eq__(self, other):
-        """compare transactions
-        1) compare properties"""
-        pass
+        return (self.sender == other.sender and
+            self.receiver == other.receiver and
+            self.payload == other.payload and
+            self.signature == other.signature)
 
     def validate_transaction(self, crypto_helper):
         """
