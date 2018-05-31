@@ -60,7 +60,8 @@ class BlockChainNode:
             if self.consensus_obj.last_mine_time_sec >= mine_freq:
                 transactions = self.txpool_obj.get_transactions(block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
-                self.consensus_obj.mine(block)
+                _timestamp2, _timestamp1, _num_of_blocks= self.blockchain_obj.calculate_diff()
+                self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks)
                 # have to check if other node already created a block
                 self.blockchain_obj.add_block(block)
 
