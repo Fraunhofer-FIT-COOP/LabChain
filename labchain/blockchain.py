@@ -162,7 +162,7 @@ class BlockChain:
 
         # if there is only one block in the chain
         if _earliest_timestamp is None:
-            return None
+            return _latest_timestamp, _latest_timestamp, _number_of_blocks
         return _latest_timestamp, _earliest_timestamp, _number_of_blocks
 
     def add_block(self, block):
