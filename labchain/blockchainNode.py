@@ -69,19 +69,18 @@ class BlockChainNode:
 
     # TODO: abort mining 1) when equal block or 2)
 
-    # TODO
     def on_get_transaction(self, transaction_hash):
-        # find in blockchain and txpool
-        pass
+        transaction_from_blockchain = self.blockchain_obj.get_transaction(transaction_hash)
+        transaction_from_txpool = self.txpool_obj.get_transaction_by_hash(transaction_hash)
+        return transaction_from_blockchain + transaction_from_txpool
 
     def on_new_transaction_received(self, transaction):
         """Callback method to pass to network"""
         return self.txpool_obj.add_transaction_if_not_exist(transaction)
 
-    # TODO
     def on_new_block_received(self, block):
-        """Callback method to pass to network, call add block method in blockchain"""
-        pass
+        """Callback method to pass to network, call add block method in block chain"""
+        return self.blockchain_obj.add_block(block)
 
     # TODO
     def on_new_block_created(self):
