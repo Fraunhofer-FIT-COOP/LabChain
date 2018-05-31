@@ -126,12 +126,11 @@ class BlockChain:
         pass
 
     def calculate_diff(self):
-        """Sends the timestamps of latest and nth block and number of blocks
+        """Sends the timestamps of latest and nth last block and number of blocks
         between that time
 
         Returns
         -------
-        None if there is only one node in chain
 
         number_of_blocks: Integer
             Total number of blocks fetched from config or available in chain
@@ -148,7 +147,8 @@ class BlockChain:
 
         # setting hash of the second last block
         _hash = _last_block['predecessorBlock']
-        _earliest_timestamp = None
+        # if there is only one block
+        _earliest_timestamp = _latest_timestamp
         _number_of_blocks = 1
         # looping over last min_blocks to get the timestamp of the earliest block
         while _number_of_blocks < _min_blocks:
@@ -160,9 +160,6 @@ class BlockChain:
             _hash = _block['predecessorBlock']
             _number_of_blocks = _number_of_blocks + 1
 
-        # if there is only one block in the chain
-        if _earliest_timestamp is None:
-            return _latest_timestamp, _latest_timestamp, _number_of_blocks
         return _latest_timestamp, _earliest_timestamp, _number_of_blocks
 
     def add_block(self, block):
