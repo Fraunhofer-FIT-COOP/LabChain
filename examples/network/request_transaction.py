@@ -25,8 +25,8 @@ TRANSACTIONS = {'123': Transaction('some sender', 'some_receiver', 'some_payload
 
 def get_transaction(transaction_hash):
     if transaction_hash in TRANSACTIONS:
-        return TRANSACTIONS[transaction_hash]
-    return None
+        return TRANSACTIONS[transaction_hash], 'fake_block_hash'
+    return None, None
 
 
 def empty_function():
@@ -38,7 +38,7 @@ def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
     return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
-                                  empty_function, get_transaction, port)
+                                  empty_function, empty_function, get_transaction, port)
 
 
 def configure_logging():
@@ -61,12 +61,12 @@ if __name__ == '__main__':
 
     while True:
         logging.warning('Requesting transaction 123')
-        transaction = interface2.requestTransaction('123')
+        transaction, block_hash = interface2.requestTransaction('123')
         logging.warning('Received transaction: {}'.format(str(transaction)))
 
         logging.warning('Requesting transaction 456')
         try:
-            transaction = interface2.requestTransaction('456')
+            transaction, block_hash = interface2.requestTransaction('456')
             logging.error('This statement should not be reached')
         except TransactionDoesNotExistException:
             logging.warning('Transaction does not exist')

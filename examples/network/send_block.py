@@ -1,4 +1,3 @@
-import hashlib
 import logging
 import os
 import sys
@@ -15,7 +14,7 @@ project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,
 if project_dir not in sys.path:
     sys.path.append(project_dir)
 
-from labchain.networking import ServerNetworkInterface, JsonRpcClient, TransactionDoesNotExistException  # noqa
+from labchain.networking import ServerNetworkInterface, JsonRpcClient  # noqa
 
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO
@@ -30,12 +29,12 @@ RECEIVED_BLOCKS = {}
 
 def get_block(block_id):
     if block_id in RECEIVED_BLOCKS:
-        return RECEIVED_BLOCKS[block_id]
-    return None
+        return [RECEIVED_BLOCKS[block_id]]
+    return []
 
 
 def on_block_received(received_block):
-    RECEIVED_BLOCKS[received_block.block_number] = received_block
+    RECEIVED_BLOCKS[received_block.block_id] = received_block
     logging.warning('Received block: {}'.format(received_block))
 
 
@@ -48,7 +47,7 @@ def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
     return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), on_block_received,
-                                  empty_function, get_block, empty_function, port)
+                                  empty_function, get_block, empty_function, empty_function, port)
 
 
 def configure_logging():
@@ -71,5 +70,5 @@ if __name__ == '__main__':
 
     while True:
         logging.warning('Sending block: {}'.format(str(BLOCK)))
-        transaction = interface2.sendBlock(BLOCK)
+        interface2.sendBlock(BLOCK)
         time.sleep(POLL_INTERVAL)

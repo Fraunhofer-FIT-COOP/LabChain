@@ -14,7 +14,7 @@ project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,
 if project_dir not in sys.path:
     sys.path.append(project_dir)
 
-from labchain.networking import ServerNetworkInterface, JsonRpcClient, TransactionDoesNotExistException  # noqa
+from labchain.networking import ServerNetworkInterface, JsonRpcClient  # noqa
 
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO
@@ -27,8 +27,8 @@ RECEIVED_TRANSACTIONS = {}
 
 def get_transaction(transaction_hash):
     if transaction_hash in RECEIVED_TRANSACTIONS:
-        return RECEIVED_TRANSACTIONS[transaction_hash]
-    return None
+        return RECEIVED_TRANSACTIONS[transaction_hash], 'fake_block_hash'
+    return None, None
 
 
 def on_transaction_received(received_transaction):
@@ -46,7 +46,7 @@ def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
     return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function,
-                                  on_transaction_received, empty_function, get_transaction, port)
+                                  on_transaction_received, empty_function, empty_function, get_transaction, port)
 
 
 def configure_logging():
@@ -69,5 +69,5 @@ if __name__ == '__main__':
 
     while True:
         logging.warning('Sending transaction: {}'.format(str(TRANSACTION)))
-        transaction = interface2.sendTransaction(TRANSACTION)
+        interface2.sendTransaction(TRANSACTION)
         time.sleep(POLL_INTERVAL)
