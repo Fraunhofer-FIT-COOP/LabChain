@@ -1,7 +1,14 @@
-from datetime import datetime
+import configparser
+import logging
+import json
+import sys
 
+from datetime import datetime
 from labchain.block import LogicalBlock
 
+NODE_CONFIG_FILE = 'resources/node_configuration.ini'
+# change to DEBUG to see more output
+LOG_LEVEL = logging.INFO
 
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
@@ -70,6 +77,23 @@ class BlockChain:
         self._node_branch_head = _first_block_hash
         self._current_branch_heads = [_first_block_hash, ]
 
+        self.config = None
+        try:
+            self.config = configparser.ConfigParser()
+            self.config.read(NODE_CONFIG_FILE)
+        except Exception:
+            logging.error('Node Configuration file is corrupt or non-existent, exiting node startup.... \n')
+            sys.exit(0)
+
+    def get_config_int(self, section, option, fallback=None):
+        try:
+            value = self.config.getint(section=section,
+                                       option=option,
+                                       fallback=fallback)
+            return value
+        except Exception:
+            logging.error("Error reading from config")
+
     def get_block(self, block_id):
         #TODO: return a list of blocks from all branches
         pass
@@ -102,10 +126,44 @@ class BlockChain:
         pass
 
     def calculate_diff(self):
-        """Calculate the nth block and timestamps"""
-        #TODO:get last nth block its time stamp and time stamp og last block
-        #returns tuple(n, time1, timen)
-        pass
+        """Sends the timestamps of latest and nth block and number of blocks
+        between that time
+
+        Returns
+        -------
+        None if there is only one node in chain
+
+        number_of_blocks: Integer
+            Total number of blocks fetched from config or available in chain
+        earliest_timestamp: timestamp
+        latest_timestamp: timestamp
+        """
+        _min_blocks = self.get_config_int(section='MINING',
+                                          option='NUM_OF_BLOCKS_FOR_DIFFICULTY')
+        _hash = self._node_branch_head
+
+        # getting timestamp of the last block added in chain
+        _last_block = json.loads(self.get_block_by_hash(_hash))
+        _latest_timestamp = _last_block['timestamp']
+
+        # setting hash of the second last block
+        _hash = _last_block['predecessorBlock']
+        _earliest_timestamp = None
+        _number_of_blocks = 1
+        # looping over last min_blocks to get the timestamp of the earliest block
+        while _number_of_blocks < _min_blocks:
+            _json_block = self.get_block_by_hash(_hash)
+            if _json_block is None:
+                break
+            _block = json.loads(_json_block)
+            _earliest_timestamp = _block['timestamp']
+            _hash = _block['predecessorBlock']
+            _number_of_blocks = _number_of_blocks + 1
+
+        # if there is only one block in the chain
+        if _earliest_timestamp is None:
+            return None
+        return _number_of_blocks, _earliest_timestamp, _latest_timestamp
 
     def add_block(self, block):
         """Finds correct position and adds the new block to the chain.
