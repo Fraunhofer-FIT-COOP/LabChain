@@ -8,7 +8,7 @@ from labchain.transaction import Transaction
 class Block(object):
     def __init__(self, block_id=None,
                  merkle_tree_root=None, predecessor_hash=None, block_creator_id=None,
-                 transactions=[], nonce=None, timestamp=time.time()):
+                 transactions=[], nonce=0, timestamp=time.time()):
         """Constructor for Block, placeholder for Block information.
 
         Parameters
@@ -49,8 +49,10 @@ class Block(object):
             'predecessorBlock': self.__predecessor_hash,
             'nonce': self.nonce,
             'creator': self.__block_creator_id,
-            'transactions': [transaction.get_json() for transaction in self.__transactions]
+            'transactions': [transaction.to_dict() for transaction in self.__transactions]
         }
+
+    #TODO: method to return block headers for block hash
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
@@ -96,6 +98,12 @@ class Block(object):
         """Returns timestamp of the block"""
 
         return self.timestamp
+
+    #TODO: block or logical block?
+    def __eq__(self, other):
+        """compare blocks
+        1) compare all properties"""
+        pass
 
 
 class LogicalBlock(Block):
@@ -196,7 +204,7 @@ class LogicalBlock(Block):
         # Validate Transaction signatures
         transactions = self.__transactions
         for t in transactions:
-            if not self._crypto_helper.validate_signature(t):
+            if not t.validate_signature(self._crypto_helper):
                 return False
 
         # Validate Merkle Tree correctness
@@ -204,7 +212,7 @@ class LogicalBlock(Block):
             return False
 
         #  validate nonce
-        block_valid = self._consensus.validate_block(self)
+        #block_valid = self._consensus.validate(self, block, )
 
         return block_valid
 

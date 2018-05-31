@@ -1,7 +1,7 @@
-from datetime import datetime
-from labchain.cryptoHelper import CryptoHelper
-
 import json
+from datetime import datetime
+
+from labchain.cryptoHelper import CryptoHelper
 
 
 class Consensus:
@@ -12,6 +12,7 @@ class Consensus:
         self.difficulty = 1
         self.max_diff = 12  # Threshold to be defined
         self.kill_mine = 0
+
 
     def __getitem__(self, item):
         pass
@@ -25,11 +26,14 @@ class Consensus:
     def calculate_difficulty(self, timestamp1, timestamp2, num_of_blocks):
         difficulty = ((((timestamp2 - timestamp1).total_seconds()) /
                        num_of_blocks)).floor()
+
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
         self.difficulty = self.max_diff - difficulty
 
     def validate(self, block, nonce):
+        # will receive 2 timestamps and number of blocks for calculating diff
+        nonce = block.nonce #TODO remove nonce in mtheod sign
         zeros_array = "0" * self.difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
