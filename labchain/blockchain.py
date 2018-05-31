@@ -180,8 +180,11 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
-        # TODO: convertz to logical block
-        if not block.validate_block():
+        # TODO: convertz to logical
+        _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
+            self.calculate_diff()
+        if not block.validate_block(_latest_timestamp, _earliest_timestamp,
+                                    _num_of_blocks):
             if block.is_block_ours(self._node_id):
                 _txns = block.transactions
                 self._txpool.return_transactions_to_pool(_txns)

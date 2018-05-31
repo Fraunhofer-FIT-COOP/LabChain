@@ -187,7 +187,8 @@ class LogicalBlock(Block):
 
         return self._crypto_helper.hash(self.get_json())
 
-    def validate_block(self):
+    def validate_block(self, _latest_timestamp, _earliest_timestamp,
+                       _num_of_blocks):
         """Validate the block by checking -
            1. The transaction signatures in the block
            2. The Merkle Tree correctness
@@ -212,7 +213,9 @@ class LogicalBlock(Block):
             return False
 
         #  validate nonce
-        #block_valid = self._consensus.validate(self, block, )
+        block_valid = self._consensus.validate(self, _latest_timestamp,
+                                               _earliest_timestamp,
+                                               _num_of_blocks)
 
         return block_valid
 
