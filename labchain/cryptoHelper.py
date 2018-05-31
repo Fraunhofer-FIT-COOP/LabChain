@@ -1,6 +1,7 @@
 from Crypto.PublicKey import ECC
 from Crypto.Signature import DSS
 from Crypto.Hash import SHA256
+from base64 import b64encode, b64decode
 
 from labchain.singleton import Singleton
 from labchain.utility import Utility
@@ -26,6 +27,7 @@ class CryptoHelper:
         h = self.__hash(payload)                                        # Hash the payload
         signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')     # Get the signature object
         signature = signer.sign(h)                                      # Sign the hash
+        signature = b64encode(signature).decode('utf-8')
         return signature
 
     def validate(self, pub_key, payload, signature):
@@ -39,6 +41,7 @@ class CryptoHelper:
         h = self.__hash(payload)                            # Hash the payload
         public_key = ECC.import_key(pub_key)                # Get the public key object using public key string
         verifier = DSS.new(public_key, 'fips-186-3')        # Create a signature object
+        signature = b64decode(signature.encode('utf-8'))
 
         try:
             verifier.verify(h, signature)                   # Check if the signature is verified
