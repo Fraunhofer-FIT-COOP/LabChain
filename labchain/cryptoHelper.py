@@ -61,7 +61,11 @@ class CryptoHelper:
         return private_key, public_key
 
     def __hash(self, payload):
-        message = payload.encode()          # Encode string for hashing
+        try:
+            real_payload = self.__unpack_payload(payload)   # Get the real payload to be hashed
+        except ValueError:
+            raise ValueError('Payload is not json')
+        message = real_payload.encode()          # Encode string for hashing
         message_hash = SHA256.new(message)  # Hash using SHA256 scheme
         return message_hash
 
@@ -71,12 +75,7 @@ class CryptoHelper:
         Hashes the given data.
         :param payload: Data to be hashed in JSON format.
         :return hash: SHA256 hash of the given data in hex representation. """
-
-        try:
-            real_payload = self.__unpack_payload(payload)   # Get the real payload to be hashed
-        except ValueError:
-            raise ValueError('Payload is not json')
-        hash_object = self.__hash(real_payload)             # Hash the payload
+        hash_object = self.__hash(payload)             # Hash the payload
         return hash_object.hexdigest()                      # Return hex representation of the hash
 
     def __unpack_payload(self, payload):

@@ -61,12 +61,33 @@ class BlockChain:
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
-        _first_block = LogicalBlock(block_id=1, crypto_helper_obj=crypto_helper_obj)
+        # TODO: genesis block has id 0, implemet genesis if not done#
+        # already changed bid from 1 to 0
+        _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj)
         _first_block.set_block_pos(0)
         _first_block_hash = _first_block.get_computed_hash()
         self._blockchain[_first_block_hash] = _first_block
         self._node_branch_head = _first_block_hash
         self._current_branch_heads = [_first_block_hash, ]
+
+    def get_block(self, block_id):
+        #TODO: return a list of blocks from all branches
+        pass
+
+    def get_block_by_hash(self, block_hash):
+        #TODO: return a block corresponding to hash
+        pass
+
+    def get_transaction(self, transaction_hash):
+        # TODO: return a transaction from main branch
+        """tuple with 1st element as transaction and 2nd element as block_hash"""
+        pass
+
+    def calculate_diff(self):
+        """Calculate the nth block and timestamps"""
+        #TODO:get last nth block its time stamp and time stamp og last block
+        #returns tuple(n, time1, timen)
+        pass
 
     def add_block(self, block):
         """Finds correct position and adds the new block to the chain.
@@ -84,7 +105,7 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
-
+        #TODO: convertz to logical block
         if not block.validate_block():
             if block.is_block_ours(self._node_id):
                 _txns = block.transactions

@@ -1,4 +1,5 @@
 import os
+from base64 import b64encode, b64decode
 from collections import OrderedDict
 
 from labchain.transaction import Transaction
@@ -21,6 +22,8 @@ LABCHAIN_LOGO = """
 
 LABCHAIN_LOGO_LIST = LABCHAIN_LOGO.splitlines()
 
+
+# TODO: reflect network component changes
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -62,6 +65,8 @@ class Wallet:
         result = {}
         for line in csv_string.splitlines():
             label, public_key, private_key = line.split(';', 2)
+            private_key = b64decode(private_key.encode('utf-8')).decode('ascii')
+            public_key = b64decode(public_key.encode('utf-8')).decode('ascii')
             result[label] = (public_key, private_key)
         return result
 
@@ -70,6 +75,8 @@ class Wallet:
         result = ''
         for label, key_tuple in dictionary.items():
             public_key, private_key = key_tuple
+            private_key = b64encode(private_key.encode('ascii')).decode('utf-8')
+            public_key = b64encode(public_key.encode('ascii')).decode('utf-8')
             result += label + ';' + public_key + ';' + private_key + os.linesep
         return result
 
@@ -199,8 +206,8 @@ class TransactionWizard:
         for counter, key in enumerate(wallet_list, 1):
             print()
             print(str(counter) + u':\t' + str(key[0]))
-            print(u'\tPrivate Key: ' + str(key[1]))
-            print(u'\tPublic Key: ' + str(key[2]))
+            print(u'\tPrivate Key: ' + str(key[2]))
+            print(u'\tPublic Key: ' + str(key[1]))
             print()
 
         user_input = input('Please choose a sender account (by number) or press enter to return: ')
@@ -271,10 +278,9 @@ class TransactionWizard:
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
-            signature = self.crypto_helper.sign(private_key,
-                                                str(public_key) + str(chosen_receiver) + str(chosen_payload))
+            new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload))
+            new_transaction.sign_transaction(self.crypto_helper, private_key)
 
-            new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload), signature)
             self.network_interface.sendTransaction(new_transaction)
 
             print('Transaction successfully created!')
@@ -341,7 +347,7 @@ class BlockchainClient:
             print('Name should be unique!')
             print('Address <' + label + '> already exists')
         else:
-            pr_key, pub_key = self.crypto_helper.generatePair()
+            pr_key, pub_key = self.crypto_helper.generate_key_pair()
             self.wallet[label] = (pub_key, pr_key)
             print('New address <' + label + '> created.')
         input('Press any key to go back to the main menu!')
@@ -390,7 +396,7 @@ class BlockchainClient:
         clear_screen()
         block = self.network_interface.requestBlock(int(input_str))
         if block is not None:
-            print('block number: ' + str(block.block_number))
+            print('block number: ' + str(block.block_id))
             print('timestamp: ' + str(block.timestamp))
             print('predecessor hash: ' + str(block.predecessor_hash))
             print('merkle tree: ' + str(block.merkle_tree_root))
