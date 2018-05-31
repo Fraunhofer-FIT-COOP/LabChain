@@ -10,9 +10,10 @@ NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO
 
+
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
-                 consensus_obj, txpool_obj, crypto_helper_obj):
+                 consensus_obj, txpool_obj, crypto_helper_obj, send_block_callback):
         """Constructor for BlockChain
 
         Parameters
@@ -65,6 +66,7 @@ class BlockChain:
         self._consensus = consensus_obj
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
+        self._send_block_callback = send_block_callback
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -95,7 +97,7 @@ class BlockChain:
             logging.error("Error reading from config")
 
     def get_block(self, block_id):
-        #TODO: return a list of blocks from all branches
+        # TODO: return a list of blocks from all branches
         pass
 
     def get_block_by_hash(self, block_hash):
@@ -178,7 +180,7 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
-        #TODO: convertz to logical block
+        # TODO: convertz to logical block
         if not block.validate_block():
             if block.is_block_ours(self._node_id):
                 _txns = block.transactions
@@ -329,3 +331,7 @@ class BlockChain:
 
         """
         pass
+
+    def send_block_to_neighbour(self, block):
+        block_json = block.get_json()
+        self.send_block_callback(block_json)

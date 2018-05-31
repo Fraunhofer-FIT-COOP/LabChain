@@ -86,7 +86,7 @@ class BlockChainNode:
         return self.blockchain_obj.add_block(lblock)
 
     # TODO
-    def on_new_block_created(self):
+    def on_new_block_created(self, json):
         """When a new block is mined, send the block to other nodes via network"""
         pass
 
@@ -144,7 +144,8 @@ class BlockChainNode:
                                                option='TIME_TO_PRUNE')
         self.blockchain_obj = BlockChain(node_id=node_id, tolerance_value=tolerance_value,
                                          pruning_interval=pruning_interval, consensus_obj=self.consensus_obj,
-                                         txpool_obj=self.txpool_obj, crypto_helper_obj=self.crypto_helper_obj)
+                                         txpool_obj=self.txpool_obj, crypto_helper_obj=self.crypto_helper_obj,
+                                         send_block_callback=self.on_new_block_created)
 
         """init network interface"""
         intial_peer_list = json.loads(self.get_config_string(section='NETWORK',
