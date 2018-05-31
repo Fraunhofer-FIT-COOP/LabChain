@@ -48,7 +48,7 @@ class CommonTestCase(TestCase):
 
     def create_server_network_interface(self, json_rpc_client):
         return ServerNetworkInterface(json_rpc_client, {}, MockCryptoHelper(), self.on_block_received,
-                                      self.on_transaction_received, self.get_block, self.get_block,
+                                      self.on_transaction_received, self.get_block, self.get_block_by_hash,
                                       self.get_transaction, port=6666)
 
     def setUp(self):
@@ -72,6 +72,12 @@ class CommonTestCase(TestCase):
         if block_id in self.available_blocks:
             return [self.available_blocks[block_id]]
         return []
+
+    def get_block_by_hash(self, block_hash):
+        for block_id in self.available_blocks:
+            if self.available_blocks[block_id].merkle_tree_root == block_hash:
+                return self.available_blocks[block_id]
+        return None
 
     def get_transaction(self, transaction_hash):
         if transaction_hash in self.available_transactions:
@@ -363,6 +369,25 @@ class RequestBlockServerTestCase(CommonTestCase):
                                          '"payload": "test_payload", "signature": "test_signature"}]}], "id":1}'
                                )
 
+    def test_request_block_by_hash(self):
+        """Test case #13a."""
+        # given
+        self.available_blocks[2] = Block(2, 'test_merkle_hash', 'test_pred_block_hash', 'test_creator', [
+            Transaction('test_sender', 'test_receiver', 'test_payload', 'test_signature')
+        ], nonce=5, timestamp=1337.0)
+        # when
+        json_rpc_request = {"jsonrpc": "2.0", "method": "requestBlockByHash", "params": ['test_merkle_hash'],
+                            "id": 1}
+        response = self.make_request(json.dumps(json_rpc_request))
+        # then
+        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": {"nr": 2, "timestamp": 1337.0, '
+                                         '"merkleHash" : "test_merkle_hash", '
+                                         '"predecessorBlock" : "test_pred_block_hash", "nonce" : 5, '
+                                         '"creator" : "test_creator", "transactions" : '
+                                         '[{"sender": "test_sender", "receiver": "test_receiver", '
+                                         '"payload": "test_payload", "signature": "test_signature"}]}, "id":1}'
+                               )
+
     def test_request_block_with_no_predecessor(self):
         """Test case #14."""
         # given
@@ -420,6 +445,44 @@ class RequestBlockClientTestCase(CommonTestCase):
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestBlock')
         self.assertEqual(last_request_params, [2])
+        self.assertEqual(block.merkle_tree_root, 'test_merkle_hash')
+        self.assertEqual(block.predecessor_hash, None)
+        self.assertEqual(block.nonce, 5)
+        self.assertEqual(block.block_creator_id, 'test_creator')
+        self.assertEqual(len(block.transactions), 1)
+        transaction = block.transactions[0]
+        self.assertEqual(transaction.sender, 'test_sender')
+        self.assertEqual(transaction.receiver, 'test_receiver')
+        self.assertEqual(transaction.payload, 'test_payload')
+        self.assertEqual(transaction.signature, 'test_signature')
+
+    def test_request_block_by_hash(self):
+        """Test case #16a."""
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        # when
+        self.json_rpc_client.queue_response({
+            'jsonrpc': '2.0',
+            'result': [
+                {
+                    'nr': 2,
+                    'merkleHash': 'test_merkle_hash',
+                    'predecessorBlock': None,
+                    'nonce': 5,
+                    'creator': 'test_creator',
+                    'timestamp': 1337.0,
+                    'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
+                                      'signature': 'test_signature'}]
+                }
+            ],
+            'id': 1
+        })
+        block = self.network_interface.requestBlockByHash('test merkle_hash')
+        # then
+        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        self.assertEqual(last_request_method, 'requestBlockByHash')
+        self.assertEqual(last_request_params, ['test merkle_hash'])
+        self.assertEqual(block.block_id, 2)
         self.assertEqual(block.merkle_tree_root, 'test_merkle_hash')
         self.assertEqual(block.predecessor_hash, None)
         self.assertEqual(block.nonce, 5)

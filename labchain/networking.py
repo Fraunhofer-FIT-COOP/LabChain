@@ -124,11 +124,11 @@ class NetworkInterface:
             raise NoPeersException('No nodes available to request the block from')
 
     def requestBlockByHash(self, block_hash):
-        """Request a single block by block its hash value."""
+        """Request a single block by its hash value."""
         responses = self._bulk_send('requestBlockByHash', [block_hash], return_on_first_success=True)
         if responses:
             if responses[0]:
-                return Block.from_dict(responses[0])
+                return Block.from_dict(responses[0][0])
             else:
                 raise BlockDoesNotExistException()
         else:
