@@ -6,6 +6,7 @@ import threading
 import time
 import uuid
 
+from labchain.block import LogicalBlock
 from labchain.bootstrap import Bootstrapper
 from labchain.consensus import Consensus
 from labchain.cryptoHelper import CryptoHelper
@@ -60,7 +61,7 @@ class BlockChainNode:
             if self.consensus_obj.last_mine_time_sec >= mine_freq:
                 transactions = self.txpool_obj.get_transactions(block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
-                _timestamp2, _timestamp1, _num_of_blocks= self.blockchain_obj.calculate_diff()
+                _timestamp2, _timestamp1, _num_of_blocks = self.blockchain_obj.calculate_diff()
                 self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks)
                 # have to check if other node already created a block
                 self.blockchain_obj.add_block(block)
@@ -81,7 +82,8 @@ class BlockChainNode:
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""
-        return self.blockchain_obj.add_block(block)
+        lblock = LogicalBlock(block)
+        return self.blockchain_obj.add_block(lblock)
 
     # TODO
     def on_new_block_created(self):
@@ -145,8 +147,8 @@ class BlockChainNode:
                                          txpool_obj=self.txpool_obj, crypto_helper_obj=self.crypto_helper_obj)
 
         """init network interface"""
-        intial_peer_list = json.loads(self.get_config_s(section='NETWORK',
-                                                        option='PEER_LIST'))
+        intial_peer_list = json.loads(self.get_config_string(section='NETWORK',
+                                                             option='PEER_LIST'))
         network_port = self.get_config_int(section='NETWORK',
                                            option='PORT')
         self.network_interface = self.create_network_interface(network_port, initial_peers=intial_peer_list)
