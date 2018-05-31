@@ -22,23 +22,23 @@ class Consensus:
     def __iter__(self):
         pass
 
-    def calculate_difficulty(self, timestamp1, timestamp2, num_of_blocks):
-        difficulty = ((((timestamp2 - timestamp1).total_seconds()) /
-                       num_of_blocks)).floor()
+    def calculate_difficulty(self, latest_timestamp, earliest_timestamp, num_of_blocks):
+        difficulty = int((((latest_timestamp - earliest_timestamp).total_seconds()) / num_of_blocks))
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
         self.difficulty = self.max_diff - difficulty
 
-    def validate(self, block, nonce):
+    def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
+        self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
         zeros_array = "0" * self.difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
-
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
-        return block_hash[:self.difficulty] == zeros_array and nonce == block.nonce
+        return block_hash[:self.difficulty] == zeros_array
 
-    def mine(self, block):
+    def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
+        self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
         zeros_array = "0" * self.difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}

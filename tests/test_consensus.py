@@ -21,7 +21,7 @@ class Tests(TestCase):
         consensus.crypto_helper.hash = MagicMock(side_effect=hash_list_for_nonce_4)
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
-        consensus.mine(block)
+        consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1)
 
         self.assertEqual(nonce_true, block.nonce)
 
@@ -38,7 +38,7 @@ class Tests(TestCase):
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
 
-        consensus.mine(block)
+        consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1)
 
         self.assertFalse(nonce_true == block.nonce)
 
@@ -54,7 +54,7 @@ class Tests(TestCase):
         block = Block(1, None, None, None, [], 0, datetime.now())
         block.nonce = nonce_true
 
-        self.assertTrue(consensus.validate(block, nonce_true))
+        self.assertTrue(consensus.validate(block,  datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1))
 
     def test_show_validate_false(self):
         #  Values Dumped
@@ -66,5 +66,5 @@ class Tests(TestCase):
         consensus.crypto_helper.hash = MagicMock(return_value=hash_false)
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
-
-        self.assertFalse(consensus.validate(block, nonce_false))
+        block.nonce = nonce_false
+        self.assertFalse(consensus.validate(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1))
