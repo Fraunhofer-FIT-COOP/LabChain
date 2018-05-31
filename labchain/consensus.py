@@ -4,7 +4,6 @@ from labchain.cryptoHelper import CryptoHelper
 import json
 
 
-
 class Consensus:
 
     def __init__(self):
@@ -32,9 +31,8 @@ class Consensus:
 
     def validate(self, block, nonce):
         zeros_array = "0" * self.difficulty
-        data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
-            str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
-                'timestamp': str(block.timestamp)}
+        data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
 
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
@@ -42,9 +40,8 @@ class Consensus:
 
     def mine(self, block):
         zeros_array = "0" * self.difficulty
-        data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
-            str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
-                'timestamp': str(block.timestamp)}
+        data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
         while block_hash[:self.difficulty] != zeros_array:
@@ -52,9 +49,8 @@ class Consensus:
                 self.kill_mine = 0
                 break
             block.nonce += 1
-            data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
-                str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
-                    'timestamp': str(block.timestamp)}
+            data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
+                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
             message = json.dumps(data)
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = datetime.now()
