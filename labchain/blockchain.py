@@ -212,15 +212,11 @@ class BlockChain:
             if _curr_block.is_block_ours(self._node_id):
                 self._node_branch_head = _curr_block_hash
 
-            # Remove transactions covered by the block from our TxPool
-            self._txpool.remove_transactions(_curr_block.transactions)
-
             # Check recursively if blocks are parent to some orphans
             _parent_hash = _curr_block_hash
             _parent_block = _curr_block
             while _parent_hash in self._orphan_blocks:
                 _block = self._orphan_blocks[_parent_hash]
-                self._txpool.remove_transactions(_block.transactions)
                 _this_block_hash = _block.get_computed_hash()
                 _block.set_block_pos(_parent_block.get_block_pos() + 1)
                 self._blockchain[_this_block_hash] = _block
