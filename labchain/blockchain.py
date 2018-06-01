@@ -69,7 +69,6 @@ class BlockChain:
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
-        # TODO: genesis block has id 0, implemet genesis if not done#
         # already changed bid from 1 to 0
         _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj)
         _first_block.set_block_pos(0)
@@ -123,10 +122,10 @@ class BlockChain:
 
     def get_transaction(self, transaction_hash):
         """tuple with 1st element as transaction and 2nd element as block_hash"""
-        for _hash , _block in self.blockchain.items():
+        for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
-                if transaction_hash == _txn.transaction_hash
+                if transaction_hash == _txn.transaction_hash:
                     return (_txn, _hash)
         else:
             return None
@@ -184,7 +183,6 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
-        # TODO: convertz to logical
         _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,
