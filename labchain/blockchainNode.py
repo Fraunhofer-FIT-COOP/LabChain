@@ -66,7 +66,7 @@ class BlockChainNode:
                 # have to check if other node already created a block
                 if self.blockchain_obj.add_block(block):
                     self.on_new_block_created(block.get_json())
-
+            # TODO: consensus has removed variable last_mine_time_sec, need it
             next_call += (mine_freq - self.consensus_obj.last_mine_time_sec)
             time.sleep(next_call - time.time())
 
