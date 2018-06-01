@@ -52,7 +52,13 @@ class Block(object):
             'transactions': [transaction.to_dict() for transaction in self.__transactions]
         }
 
-    # TODO: method to return block headers for block hash
+    def to_json_headers(self):
+        """Returns block headers data as a dictionary."""
+        return json.dumps({'nr': self.__block_id,
+                           'merkleHash': self.__merkle_tree_root,
+                           'predecessorBlock': self.__predecessor_hash,
+                           'nonce': self.nonce,
+                           'creator': self.__block_creator_id,})
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
@@ -103,7 +109,13 @@ class Block(object):
     def __eq__(self, other):
         """compare blocks
         1) compare all properties"""
-        pass
+        return all([self.__block_id == other.block_id,
+                    self.timestamp == other.timestamp,
+                    self.__transactions == other.transactions,
+                    self.__merkle_tree_root == other.merkle_tree_root,
+                    self.__predecessor_hash == other.predecessor_hash,
+                    self.nonce == other.nonce,
+                    self.__block_creator_id == other.block_creator_id])
 
 
 class LogicalBlock(Block):
@@ -146,8 +158,8 @@ class LogicalBlock(Block):
                                            transactions=transactions, nonce=nonce,
                                            timestamp=timestamp)
         self._length_in_chain = None
-        if not self._merkle_tree_root:
-            self._merkle_tree_root = self.compute_merkle_root()
+        if not self.__merkle_tree_root:
+            self.__merkle_tree_root = self.compute_merkle_root()
         self._consensus = consensus_obj
         self._crypto_helper = crypto_helper_obj
 
@@ -186,7 +198,7 @@ class LogicalBlock(Block):
     def get_computed_hash(self):
         """Gets the hash for the entire block"""
 
-        return self._crypto_helper.hash(self.get_json())
+        return self._crypto_helper.hash(self.to_json_headers())
 
     @staticmethod
     def from_block(block):
