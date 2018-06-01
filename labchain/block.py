@@ -52,7 +52,7 @@ class Block(object):
             'transactions': [transaction.to_dict() for transaction in self.__transactions]
         }
 
-    #TODO: method to return block headers for block hash
+    # TODO: method to return block headers for block hash
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
@@ -99,7 +99,7 @@ class Block(object):
 
         return self.timestamp
 
-    #TODO: block or logical block?
+    # TODO: block or logical block?
     def __eq__(self, other):
         """compare blocks
         1) compare all properties"""
@@ -109,7 +109,7 @@ class Block(object):
 class LogicalBlock(Block):
     def __init__(self, block_id=None, transactions=[], predecessor_hash=None,
                  block_creator_id=None, merkle_tree_root=None,
-                 consensus_obj=None, crypto_helper_obj=None):
+                 consensus_obj=None, crypto_helper_obj=None, nonce=0, timestamp=time.time()):
         """Constructor for LogicalBlock, derives properties from the
         placeholder class Block.
 
@@ -143,7 +143,8 @@ class LogicalBlock(Block):
                                            merkle_tree_root=merkle_tree_root,
                                            predecessor_hash=predecessor_hash,
                                            block_creator_id=block_creator_id,
-                                           transactions=transactions,)
+                                           transactions=transactions, nonce=nonce,
+                                           timestamp=timestamp)
         self._length_in_chain = None
         if not self._merkle_tree_root:
             self._merkle_tree_root = self.compute_merkle_root()
@@ -186,6 +187,29 @@ class LogicalBlock(Block):
         """Gets the hash for the entire block"""
 
         return self._crypto_helper.hash(self.get_json())
+
+    @staticmethod
+    def from_block(block):
+        """Instantiate LogicalBlock from Block"""
+        return LogicalBlock.from_dict(block.to_dict())
+
+    @staticmethod
+    def from_json(json_data):
+        """Deserialize a JSON string to a Block instance."""
+        data_dict = json.loads(json_data)
+        return LogicalBlock.from_dict(data_dict)
+
+    @staticmethod
+    def from_dict(data_dict):
+        """Instantiate a LogicalBlock from a data dictionary."""
+        return LogicalBlock(block_id=data_dict['nr'], merkle_tree_root=data_dict['merkleHash'],
+                            predecessor_hash=data_dict['predecessorBlock'], block_creator_id=data_dict['creator'],
+                            transactions=[Transaction.from_dict(transaction_dict) for transaction_dict in
+                                          data_dict['transactions']],
+                            nonce=data_dict['nonce'], timestamp=data_dict['timestamp'])
+
+    def get_block_obj(self):
+        return Block.from_json(super().get_json())
 
     def validate_block(self, _latest_timestamp, _earliest_timestamp,
                        _num_of_blocks):

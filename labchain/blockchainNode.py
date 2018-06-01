@@ -64,7 +64,8 @@ class BlockChainNode:
                 _timestamp2, _timestamp1, _num_of_blocks = self.blockchain_obj.calculate_diff()
                 self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks)
                 # have to check if other node already created a block
-                self.blockchain_obj.add_block(block)
+                if self.blockchain_obj.add_block(block):
+                    self.on_new_block_created(block.get_json())
 
             next_call += (mine_freq - self.consensus_obj.last_mine_time_sec)
             time.sleep(next_call - time.time())
@@ -82,20 +83,19 @@ class BlockChainNode:
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""
-        lblock = LogicalBlock(block)
+        lblock = LogicalBlock.from_block(block)
         return self.blockchain_obj.add_block(lblock)
 
-    # TODO
-    def on_new_block_created(self, json):
+    def on_new_block_created(self, lblock):
         """When a new block is mined, send the block to other nodes via network"""
+        block = lblock.get_block_obj()
+        self.network_interface.sendBlock(block)
         pass
 
-    # TODO
-    def on_get_block_by_hash(self):
+    def on_get_block_by_hash(self, hash):
         """callback method for get block"""
-        pass
+        return self.blockchain_obj.get_block_by_hash(hash)
 
-    # TODO
     def on_get_block_by_id(self):
         """callback method for get block"""
         pass

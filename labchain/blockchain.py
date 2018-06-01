@@ -13,7 +13,7 @@ LOG_LEVEL = logging.INFO
 
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
-                 consensus_obj, txpool_obj, crypto_helper_obj, send_block_callback):
+                 consensus_obj, txpool_obj, crypto_helper_obj):
         """Constructor for BlockChain
 
         Parameters
@@ -66,7 +66,6 @@ class BlockChain:
         self._consensus = consensus_obj
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
-        self._send_block_callback = send_block_callback
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -334,7 +333,3 @@ class BlockChain:
 
         """
         pass
-
-    def send_block_to_neighbour(self, block):
-        block_json = block.get_json()
-        self.send_block_callback(block_json)
