@@ -122,9 +122,14 @@ class BlockChain:
         return block_info
 
     def get_transaction(self, transaction_hash):
-        # TODO: return a transaction from main branch
         """tuple with 1st element as transaction and 2nd element as block_hash"""
-        pass
+        for _hash , _block in self.blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if transaction_hash == _txn.transaction_hash
+                    return (_txn, _hash)
+        else:
+            return None
 
     def calculate_diff(self):
         """Sends the timestamps of latest and nth last block and number of blocks
