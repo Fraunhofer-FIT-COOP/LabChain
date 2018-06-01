@@ -73,9 +73,10 @@ class BlockChainNode:
     # TODO: abort mining 1) when equal block or 2)
 
     def on_get_transaction(self, transaction_hash):
-        transaction_from_blockchain = self.blockchain_obj.get_transaction(transaction_hash)
-        transaction_from_txpool = self.txpool_obj.get_transaction_by_hash(transaction_hash)
-        return transaction_from_blockchain + transaction_from_txpool
+        transaction_tuple = self.blockchain_obj.get_transaction(transaction_hash)
+        if not transaction_tuple:
+            transaction_tuple = self.txpool_obj.get_transaction_by_hash(transaction_hash)
+        return transaction_tuple
 
     def on_new_transaction_received(self, transaction):
         """Callback method to pass to network"""
