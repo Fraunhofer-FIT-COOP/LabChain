@@ -3,21 +3,16 @@ from datetime import datetime
 
 from labchain.cryptoHelper import CryptoHelper
 
-#TODO add abort flag to mine func
 
 class Consensus:
 
     def __init__(self):
 
         self.crypto_helper = CryptoHelper.instance()
-
         self.difficulty = 1
-        self.last_recalculation_timestamp = datetime.now()
-        self.time_to_mine_blocks_threshold = 60  # Threshold to be defined
         self.max_diff = 12  # Threshold to be defined
-        self.blocks_threshold = 60
-        self.blocks_counter = 0
-        self.recalculate = 0
+        self.kill_mine = 0
+
 
     def __getitem__(self, item):
         pass
@@ -28,42 +23,38 @@ class Consensus:
     def __iter__(self):
         pass
 
-    def calculate_difficulty(self, timestamp):
-        difficulty = ((((timestamp - self.last_recalculation_timestamp).total_seconds()) /
-                       self.time_to_mine_blocks_threshold)).floor()
-        self.last_recalculation_timestamp = timestamp
+    def calculate_difficulty(self, latest_timestamp, earliest_timestamp, num_of_blocks):
+        difficulty = int((((latest_timestamp - earliest_timestamp).total_seconds()) / num_of_blocks))
+
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
-        difficulty = self.max_diff - difficulty
-        return difficulty
+        self.difficulty = self.max_diff - difficulty
 
-    def validate(self, block, nonce):
-        # will receive 2 timestamps and number of blocks for calculating diff
-        nonce = block.nonce #TODO remove nonce in mtheod sign
+    def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
+        self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
+
         zeros_array = "0" * self.difficulty
-        data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
-            str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
-                'timestamp': str(block.timestamp)}
+        data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
-
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
-        return block_hash[:self.difficulty] == zeros_array and nonce == block.nonce
+        return block_hash[:self.difficulty] == zeros_array
 
-    def mine(self, block):
-        # will receive 2 timestamps and number of blocks for calculating diff
-        #
-        self.blocks_counter += 1
+    def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
+        self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
+
         zeros_array = "0" * self.difficulty
-        data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
-            str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
-                'timestamp': str(block.timestamp)}
+        data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
         while block_hash[:self.difficulty] != zeros_array:
+            if self.kill_mine == 1:
+                self.kill_mine = 0
+                break
             block.nonce += 1
-            data = {'index': str(block.index), 'tree_hash': str(block.tree_hash), 'pre_hash':
-                str(block.pre_hash), 'creator': str(block.creator), 'nonce': str(block.nonce),
-                    'timestamp': str(block.timestamp)}
+            data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
+                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
             message = json.dumps(data)
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = datetime.now()
