@@ -24,7 +24,7 @@ class TxPool:
         """tuple with 1st element as transaction and 2nd element as block_hash"""
         for transaction in self._transactions:
             if transaction.transaction_hash == transaction_hash:
-                return transaction, None
+                return (transaction, None)
         return None, None
 
     def get_transactions(self, count):
