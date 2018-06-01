@@ -10,6 +10,7 @@ class Transaction:
         self.__receiver = receiver
         self.__payload = payload
         self.__signature = signature
+        self.__transaction_hash = None
 
     def to_dict(self):
         """Convert own data to a dictionary."""
@@ -35,9 +36,6 @@ class Transaction:
         """Instantiate a Transaction from a data dictionary."""
         return Transaction(data_dict['sender'], data_dict['receiver'],
                            data_dict['payload'], data_dict['signature'])
-    #TODO: safe remove
-    def get_keys(self):
-        private_key, public_key = self._Crypto_Helper.generate_key_pair()
 
     def sign_transaction(self, crypto_helper, private_key):
         """
@@ -54,10 +52,7 @@ class Transaction:
         self.signature = crypto_helper.sign(private_key, data)
 
     def __eq__(self, other):
-        return (self.sender == other.sender and
-            self.receiver == other.receiver and
-            self.payload == other.payload and
-            self.signature == other.signature)
+        return (self.sender == other.sender and self.receiver == other.receiver and self.payload == other.payload and self.signature == other.signature)
 
     def validate_transaction(self, crypto_helper):
         """
@@ -97,3 +92,13 @@ class Transaction:
         if self.__signature:
             raise ValueError('signature is already set')
         self.__signature = signature
+
+    @property
+    def transaction_hash(self):
+        return self.__transaction_hash
+
+    @transaction_hash.setter
+    def transaction_hash(self, transaction_hash):
+        if self.__transaction_hash:
+            raise ValueError('transaction_hash is already set')
+        self.__transaction_hash = transaction_hash

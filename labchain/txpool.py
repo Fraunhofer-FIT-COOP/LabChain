@@ -21,9 +21,11 @@ class TxPool:
         return self._transactions.pop()
 
     def get_transaction_by_hash(self, transaction_hash):
-        #TODO : search pool for transaction with given hash
         """tuple with 1st element as transaction and 2nd element as block_hash"""
-        pass
+        for transaction in self._transactions:
+            if transaction.transaction_hash == transaction_hash:
+                return (transaction, None)
+        return None, None
 
     def get_transactions(self, count):
         transactions = self._transactions[:count]
@@ -40,6 +42,9 @@ class TxPool:
         if isinstance(transaction, Transaction):
             if transaction not in self._transactions and \
                     transaction.validate_transaction(self._crypto_helper):
+                if not transaction.transaction_hash:
+                    hash_val = self._crypto_helper.hash(transaction.get_json())
+                    transaction.transaction_hash(hash_val)
                 self._transactions.append(transaction)
                 return True
             else:
@@ -54,4 +59,3 @@ class TxPool:
         for transaction in transactions:
             status = status and self.add_transaction_if_not_exist(transaction)
         return status
-

@@ -79,6 +79,14 @@ class BlockChainComponent(unittest.TestCase):
         # after branch switching the length of the block should be same
         self.assertEqual(prev_block_length, after_block_length, "Block is deleted")
 
+    def test_calculate_diff(self):
+        # blocks added in setup
+        blocks, t1, t2 = self.blockchain.calculate_diff()
+        self.assertIsNotNone(blocks)
+        self.assertIsNotNone(t1)
+        self.assertIsNotNone(t2)
+
+
     def test_create_block(self):
         # creating new block based on given transaction list
         new_block = self.blockchain.create_block([self.transaction2, self.transaction4])

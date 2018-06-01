@@ -14,7 +14,3 @@ class NetworkInterface:
 
     def on_transaction_block(self):
         return
-
-
-
-
