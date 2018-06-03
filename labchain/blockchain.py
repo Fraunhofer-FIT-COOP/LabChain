@@ -83,9 +83,40 @@ class BlockChain:
         self._current_branch_heads = [_first_block_hash, ]
 
 
-    def get_block(self, block_id):
-        # TODO: return a list of blocks from all branches
-        pass
+    def get_block_range(self, range_start, range_end=None):
+        """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
+        Chain followed by this node is the one traversed.
+        range_start or range_end are block hashes
+        if range_end is not specified, all blocks till end of chain are returned
+        if chain couldn't be traveresed at some point we have bigger bugs in code
+        if range_start or range_end is not found in chain, returns None
+        """
+
+        if not range_end:
+            range_end = self._node_branch_head
+        _b_hash = range_end
+
+        if any([range_start not in self._blockchain,
+                range_end not in self._blockchain]):
+            return None
+
+        blocks_range = []
+        while _b_hash != range_start:
+            _b = self._blockchain.get(_b_hash)
+            _b_hash = _b.predecessor_hash
+            blocks_range.append(_b)
+        blocks_range.append(self._blockchain.get(_b_hash))
+
+        return blocks_range
+
+
+    def get_block_by_id(self, block_id):
+        """Returns the block if found in blockchain, else returns None"""
+        for _ , _block in self._blockchain.items():
+            if _block.block_id == block_id:
+                return _block
+        else:
+            return None
 
     def get_block_by_hash(self, block_hash):
         """Sends the Block information requested by any neighbour.
