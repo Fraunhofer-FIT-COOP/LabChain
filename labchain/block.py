@@ -6,8 +6,8 @@ from labchain.transaction import Transaction
 
 
 class Block(object):
-    def __init__(self, block_id=None,
-                 merkle_tree_root=None, predecessor_hash=None, block_creator_id=None,
+    def __init__(self, block_id=None, merkle_tree_root=None,
+                 predecessor_hash=None, block_creator_id=None,
                  transactions=[], nonce=0, timestamp=time.time()):
         """Constructor for Block, placeholder for Block information.
 
@@ -32,33 +32,33 @@ class Block(object):
         Same as the parameters
 
         """
-        self.__block_id = block_id
-        self.timestamp = timestamp
-        self.__transactions = transactions
-        self.__merkle_tree_root = merkle_tree_root
-        self.__predecessor_hash = predecessor_hash
-        self.nonce = nonce
-        self.__block_creator_id = block_creator_id
+        self._block_id = block_id
+        self._timestamp = timestamp
+        self._transactions = transactions
+        self._merkle_tree_root = merkle_tree_root
+        self._predecessor_hash = predecessor_hash
+        self._nonce = nonce
+        self._block_creator_id = block_creator_id
 
     def to_dict(self):
         """Returns block data as a dictionary."""
         return {
-            'nr': self.__block_id,
-            'timestamp': self.timestamp,
-            'merkleHash': self.__merkle_tree_root,
-            'predecessorBlock': self.__predecessor_hash,
-            'nonce': self.nonce,
-            'creator': self.__block_creator_id,
-            'transactions': [transaction.to_dict() for transaction in self.__transactions]
+            'nr': self._block_id,
+            'timestamp': self._timestamp,
+            'merkleHash': self._merkle_tree_root,
+            'predecessorBlock': self._predecessor_hash,
+            'nonce': self._nonce,
+            'creator': self._block_creator_id,
+            'transactions': [transaction.to_dict() for transaction in self._transactions]
         }
 
     def to_json_headers(self):
         """Returns block headers data as a dictionary."""
-        return json.dumps({'nr': self.__block_id,
-                           'merkleHash': self.__merkle_tree_root,
-                           'predecessorBlock': self.__predecessor_hash,
-                           'nonce': self.nonce,
-                           'creator': self.__block_creator_id,})
+        return json.dumps({'nr': self._block_id,
+                           'merkleHash': self._merkle_tree_root,
+                           'predecessorBlock': self._predecessor_hash,
+                           'nonce': self._nonce,
+                           'creator': self._block_creator_id,})
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
@@ -73,55 +73,62 @@ class Block(object):
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a Block from a data dictionary."""
-        return Block(data_dict['nr'], data_dict['merkleHash'], data_dict['predecessorBlock'], data_dict['creator'],
-                     [Transaction.from_dict(transaction_dict) for transaction_dict in data_dict['transactions']],
-                     data_dict['nonce'], data_dict['timestamp'])
+        return Block(block_id=data_dict['nr'],
+                     merkle_tree_root=data_dict['merkleHash'],
+                     predecessor_hash=data_dict['predecessorBlock'],
+                     block_creator_id=data_dict['creator'],
+                     transactions=[Transaction.from_dict(transaction_dict) \
+                                   for transaction_dict in data_dict['transactions']],
+                     nonce=data_dict['nonce'],
+                     timestamp=data_dict['timestamp'])
 
     def __str__(self):
         return str(self.to_dict())
 
     @property
     def block_id(self):
-        return self.__block_id
+        return self._block_id
 
     @property
     def merkle_tree_root(self):
-        return self.__merkle_tree_root
+        return self._merkle_tree_root
 
     @property
     def predecessor_hash(self):
-        return self.__predecessor_hash
+        return self._predecessor_hash
 
     @property
     def block_creator_id(self):
-        return self.__block_creator_id
+        return self._block_creator_id
 
     @property
     def transactions(self):
-        return self.__transactions
+        return self._transactions
 
-    def get_timestamp(self):
-        """Returns timestamp of the block"""
+    @property
+    def timestamp(self):
+        return self._timestamp
 
-        return self.timestamp
+    @property
+    def nonce(self):
+        return self._nonce
 
-    # TODO: block or logical block?
     def __eq__(self, other):
         """compare blocks
         1) compare all properties"""
-        return all([self.__block_id == other.block_id,
-                    self.timestamp == other.timestamp,
-                    self.__transactions == other.transactions,
-                    self.__merkle_tree_root == other.merkle_tree_root,
-                    self.__predecessor_hash == other.predecessor_hash,
-                    self.nonce == other.nonce,
-                    self.__block_creator_id == other.block_creator_id])
+        return all([self._block_id == other.block_id,
+                    self._timestamp == other.timestamp,
+                    self._transactions == other.transactions,
+                    self._merkle_tree_root == other.merkle_tree_root,
+                    self._predecessor_hash == other.predecessor_hash,
+                    self._nonce == other.nonce,
+                    self._block_creator_id == other.block_creator_id])
 
 
 class LogicalBlock(Block):
     def __init__(self, block_id=None, transactions=[], predecessor_hash=None,
-                 block_creator_id=None, merkle_tree_root=None,
-                 consensus_obj=None, crypto_helper_obj=None, nonce=0, timestamp=time.time()):
+                 block_creator_id=None, merkle_tree_root=None, nonce=0,
+                 timestamp=time.time(), consensus_obj=None, crypto_helper_obj=None):
         """Constructor for LogicalBlock, derives properties from the
         placeholder class Block.
 
@@ -158,8 +165,8 @@ class LogicalBlock(Block):
                                            transactions=transactions, nonce=nonce,
                                            timestamp=timestamp)
         self._length_in_chain = None
-        if not self.__merkle_tree_root:
-            self.__merkle_tree_root = self.compute_merkle_root()
+        if not self._merkle_tree_root:
+            self._merkle_tree_root = self.compute_merkle_root()
         self._consensus = consensus_obj
         self._crypto_helper = crypto_helper_obj
 
@@ -178,12 +185,12 @@ class LogicalBlock(Block):
 
         """
 
-        return self.__block_creator_id == node_id
+        return self._block_creator_id == node_id
 
     def set_block_nonce(self, value):
         """Sets the nonce value for the block"""
 
-        self.nonce = value
+        self._nonce = value
 
     def get_block_pos(self):
         """Returns position at which block resides in the chain"""
@@ -214,14 +221,17 @@ class LogicalBlock(Block):
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a LogicalBlock from a data dictionary."""
-        return LogicalBlock(block_id=data_dict['nr'], merkle_tree_root=data_dict['merkleHash'],
-                            predecessor_hash=data_dict['predecessorBlock'], block_creator_id=data_dict['creator'],
-                            transactions=[Transaction.from_dict(transaction_dict) for transaction_dict in
-                                          data_dict['transactions']],
-                            nonce=data_dict['nonce'], timestamp=data_dict['timestamp'])
+        return LogicalBlock(block_id=data_dict['nr'],
+                            merkle_tree_root=data_dict['merkleHash'],
+                            predecessor_hash=data_dict['predecessorBlock'],
+                            block_creator_id=data_dict['creator'],
+                            transactions=[Transaction.from_dict(transaction_dict) \
+                                          for transaction_dict in data_dict['transactions']],
+                            nonce=data_dict['nonce'],
+                            timestamp=data_dict['timestamp'])
 
     def get_block_obj(self):
-        return Block.from_json(super().get_json())
+        return Block.from_json(super(LogicalBlock, self).get_json())
 
     def validate_block(self, _latest_timestamp, _earliest_timestamp,
                        _num_of_blocks):
@@ -239,13 +249,13 @@ class LogicalBlock(Block):
         """
 
         # Validate Transaction signatures
-        transactions = self.__transactions
+        transactions = self._transactions
         for t in transactions:
             if not t.validate_signature(self._crypto_helper):
                 return False
 
         # Validate Merkle Tree correctness
-        if self.compute_merkle_root() != self.__merkle_tree_root:
+        if self.compute_merkle_root() != self._merkle_tree_root:
             return False
 
         #  validate nonce
@@ -284,6 +294,6 @@ class LogicalBlock(Block):
                 return _merkle_root(sub_tree)
 
         txn_hash = []
-        for tx in self.__transactions:
+        for tx in self._transactions:
             txn_hash.append(hashlib.sha256(tx.encode('utf-8')).hexdigest())
         return _merkle_root(txn_hash)

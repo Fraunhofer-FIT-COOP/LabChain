@@ -7,12 +7,16 @@ import time
 import uuid
 
 from labchain.block import LogicalBlock
+from labchain.blockchain import BlockChain
 from labchain.bootstrap import Bootstrapper
+from labchain.configReader import ConfigReader
+from labchain.configReader import ConfigReaderException
 from labchain.consensus import Consensus
 from labchain.cryptoHelper import CryptoHelper
+from labchain.networking import ServerNetworkInterface
+from labchain.networking import JsonRpcClient
 from labchain.txpool import TxPool
-from labchain.blockchain import BlockChain
-from labchain.networking import ServerNetworkInterface, JsonRpcClient
+
 
 NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 # change to DEBUG to see more output
@@ -33,12 +37,12 @@ class BlockChainNode:
         self.polling_thread = None
         self.initialize_components()
 
-        self.config = None
+        self.config_reader = None
         try:
-            self.config = configparser.ConfigParser()
-            self.config.read(NODE_CONFIG_FILE)
-        except Exception:
-            logging.error('Node Configuration file is corrupt or non-existent, exiting node startup.... \n')
+            self.config_reader = ConfigReader(NODE_CONFIG_FILE)
+        except ConfigReaderException as e:
+            logging.error(str(e))
+            logging.error("Exiting Node startup ..!! \n")
             sys.exit(0)
 
     def schedule_orphans_killing(self, interval):
@@ -91,7 +95,6 @@ class BlockChainNode:
         """When a new block is mined, send the block to other nodes via network"""
         block = lblock.get_block_obj()
         self.network_interface.sendBlock(block)
-        pass
 
     def on_get_block_by_hash(self, hash):
         """callback method for get block"""
@@ -109,24 +112,6 @@ class BlockChainNode:
                                       self.on_new_transaction_received,
                                       self.on_get_block_by_id, self.on_get_transaction, port)
 
-    def get_config_int(self, section, option, fallback=None):
-        try:
-            value = self.config.getint(section=section,
-                                       option=option,
-                                       fallback=fallback)
-            return value
-        except Exception:
-            logging.error("Error reading from config")
-
-    def get_config_string(self, section, option, fallback=None):
-        try:
-            value = self.config.get(section=section,
-                                    option=option,
-                                    fallback=fallback)
-            return value
-        except Exception:
-            logging.error("Error reading from config")
-
     def initialize_components(self):
         """ Initialize every componenent of the node"""
 
@@ -139,20 +124,40 @@ class BlockChainNode:
         node_uuid = str(uuid.uuid1())
         node_id = node_uuid[node_uuid.rfind('-') + 1:]
 
-        tolerance_value = self.get_config_int(section='BLOCK_CHAIN',
-                                              option='TOLERANCE_LEVEL')
-        pruning_interval = self.get_config_int(section='BLOCK_CHAIN',
-                                               option='TIME_TO_PRUNE')
+        # Read all configurations to be used
+        try:
+            tolerance_value = self.config_reader.get_config(section='BLOCK_CHAIN',
+                                                            option='TOLERANCE_LEVEL')
+            pruning_interval = self.config_reader.get_config(section='BLOCK_CHAIN',
+                                                             option='TIME_TO_PRUNE')
+            network_port = self.config_reader.get_config(section='NETWORK',
+                                                         option='PORT')
+            initial_peers = self.config_reader.get_config(section='NETWORK',
+                                                          option='PEER_LIST')
+            pool_interval = self.config_reader.get_config(section='NETWORK',
+                                                          option='POOLING_INTERVAL_SEC')
+            mine_freq = self.config_reader.get_config(section='MINING',
+                                                      option='MINE_SCHEDULING_FREQUENCY_SEC')
+            num_of_transactions = self.config_reader.get_config(section='MINING',
+                                                                option='BLOCK_TRANSACTION_SIZE')
+            min_blocks = self.config_reader.get_config(section='MINING',
+                                                       option='NUM_OF_BLOCKS_FOR_DIFFICULTY')
+        except ConfigReaderException as e:
+            logging.error(str(e))
+            logging.error("Exiting Node startup ..!! \n")
+            sys.exit(0)
+
         self.blockchain_obj = BlockChain(node_id=node_id, tolerance_value=tolerance_value,
-                                         pruning_interval=pruning_interval, consensus_obj=self.consensus_obj,
-                                         txpool_obj=self.txpool_obj, crypto_helper_obj=self.crypto_helper_obj)
+                                         pruning_interval=pruning_interval,
+                                         consensus_obj=self.consensus_obj,
+                                         txpool_obj=self.txpool_obj,
+                                         crypto_helper_obj=self.crypto_helper_obj,
+                                         min_blocks_for_difficulty=min_blocks)
 
         """init network interface"""
-        intial_peer_list = json.loads(self.get_config_string(section='NETWORK',
-                                                             option='PEER_LIST'))
-        network_port = self.get_config_int(section='NETWORK',
-                                           option='PORT')
-        self.network_interface = self.create_network_interface(network_port, initial_peers=intial_peer_list)
+        intial_peer_list = json.loads(initial_peers)
+        self.network_interface = self.create_network_interface(network_port,
+                                                               initial_peers=intial_peer_list)
 
         # start the web servers for receiving JSON-RPC calls
         logging.debug('Starting web server thread...')
@@ -164,8 +169,6 @@ class BlockChainNode:
 
         # start the polling threads
         logging.debug('Starting polling threads...')
-        pool_interval = self.get_config_int(section='NETWORK',
-                                            option='POOLING_INTERVAL_SEC')
         self.polling_thread = threading.Thread(name='Polling',
                                                target=self.network_interface.poll_update_peer_lists,
                                                args=(pool_interval,))
@@ -178,11 +181,6 @@ class BlockChainNode:
 
         """init mining"""
         # start the scheduler for mining
-        mine_freq = self.get_config_int(section='MINING',
-                                        option='MINE_SCHEDULING_FREQUENCY_SEC')
-        num_of_transactions = self.get_config_int(section='MINING',
-                                                  option='BLOCK_TRANSACTION_SIZE')
-
         self.mine_thread = threading.Thread(target=self.block_mine_timer,
                                             kwargs=dict(mine_freq=mine_freq,
                                                         num_of_transactions=num_of_transactions))

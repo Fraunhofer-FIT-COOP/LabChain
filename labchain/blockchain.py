@@ -1,19 +1,24 @@
-import configparser
+from datetime import datetime
 import logging
 import json
 import sys
 
-from datetime import datetime
 from labchain.block import LogicalBlock
+
 
 NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO
 
 
+class BlockChainStartupFailed(Exception):
+    pass
+
+
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
-                 consensus_obj, txpool_obj, crypto_helper_obj):
+                 consensus_obj, txpool_obj, crypto_helper_obj,
+                 min_blocks_for_difficulty):
         """Constructor for BlockChain
 
         Parameters
@@ -66,10 +71,10 @@ class BlockChain:
         self._consensus = consensus_obj
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
+        self._min_blocks = min_blocks_for_difficulty
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
-        # already changed bid from 1 to 0
         _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj)
         _first_block.set_block_pos(0)
         _first_block_hash = _first_block.get_computed_hash()
@@ -77,26 +82,41 @@ class BlockChain:
         self._node_branch_head = _first_block_hash
         self._current_branch_heads = [_first_block_hash, ]
 
-        self.config = None
-        try:
-            self.config = configparser.ConfigParser()
-            self.config.read(NODE_CONFIG_FILE)
-        except Exception:
-            logging.error('Node Configuration file is corrupt or non-existent, exiting node startup.... \n')
-            sys.exit(0)
 
-    def get_config_int(self, section, option, fallback=None):
-        try:
-            value = self.config.getint(section=section,
-                                       option=option,
-                                       fallback=fallback)
-            return value
-        except Exception:
-            logging.error("Error reading from config")
+    def get_block_range(self, range_start, range_end=None):
+        """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
+        Chain followed by this node is the one traversed.
+        range_start or range_end are block hashes
+        if range_end is not specified, all blocks till end of chain are returned
+        if chain couldn't be traveresed at some point we have bigger bugs in code
+        if range_start or range_end is not found in chain, returns None
+        """
 
-    def get_block(self, block_id):
-        # TODO: return a list of blocks from all branches
-        pass
+        if not range_end:
+            range_end = self._node_branch_head
+        _b_hash = range_end
+
+        if any([range_start not in self._blockchain,
+                range_end not in self._blockchain]):
+            return None
+
+        blocks_range = []
+        while _b_hash != range_start:
+            _b = self._blockchain.get(_b_hash)
+            _b_hash = _b.predecessor_hash
+            blocks_range.append(_b)
+        blocks_range.append(self._blockchain.get(_b_hash))
+
+        return blocks_range
+
+
+    def get_block_by_id(self, block_id):
+        """Returns the block if found in blockchain, else returns None"""
+        for _ , _block in self._blockchain.items():
+            if _block.block_id == block_id:
+                return _block
+        else:
+            return None
 
     def get_block_by_hash(self, block_hash):
         """Sends the Block information requested by any neighbour.
@@ -142,8 +162,6 @@ class BlockChain:
         earliest_timestamp: timestamp
         latest_timestamp: timestamp
         """
-        _min_blocks = self.get_config_int(section='MINING',
-                                          option='NUM_OF_BLOCKS_FOR_DIFFICULTY')
         _hash = self._node_branch_head
 
         # getting timestamp of the last block added in chain
@@ -156,7 +174,7 @@ class BlockChain:
         _earliest_timestamp = _latest_timestamp
         _number_of_blocks = 1
         # looping over last min_blocks to get the timestamp of the earliest block
-        while _number_of_blocks < _min_blocks:
+        while _number_of_blocks < self._min_blocks:
             _json_block = self.get_block_by_hash(_hash)
             if _json_block is None:
                 break
