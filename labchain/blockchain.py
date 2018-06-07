@@ -5,7 +5,6 @@ import sys
 
 from labchain.block import LogicalBlock
 
-
 NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO
@@ -72,6 +71,7 @@ class BlockChain:
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
         self._min_blocks = min_blocks_for_difficulty
+        self._active_mine_block = None
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -81,7 +81,6 @@ class BlockChain:
         self._blockchain[_first_block_hash] = _first_block
         self._node_branch_head = _first_block_hash
         self._current_branch_heads = [_first_block_hash, ]
-
 
     def get_block_range(self, range_start, range_end=None):
         """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
@@ -109,10 +108,9 @@ class BlockChain:
 
         return blocks_range
 
-
     def get_block_by_id(self, block_id):
         """Returns the block if found in blockchain, else returns None"""
-        for _ , _block in self._blockchain.items():
+        for _, _block in self._blockchain.items():
             if _block.block_id == block_id:
                 return _block
         else:
@@ -249,6 +247,10 @@ class BlockChain:
             self._orphan_blocks[_prev_hash] = _curr_block
             self.request_block_from_neighbour(_prev_hash)
 
+        # kill mine check
+        if block.is_block_ours(self._node_id):
+            self.check_block_in_mining(block)
+
         self.switch_to_longest_branch()
         return True
 
@@ -350,3 +352,13 @@ class BlockChain:
 
         """
         pass
+
+    def active_mine_block_update(self, block):
+        self._active_mine_block = block
+
+    def check_block_in_mining(self, block):
+        if self._active_mine_block is not None:
+            if block.mine_equality(self._active_mine_block):
+                self._consensus.kill_mine = 1
+                unmined_transactions = list(set(self._active_mine_block).difference(set(block.transactions)))
+                self._txpool.return_transactions_to_pool(unmined_transactions)

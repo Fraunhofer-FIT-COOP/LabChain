@@ -13,7 +13,6 @@ class Consensus:
         self.max_diff = 12  # Threshold to be defined
         self.kill_mine = 0
 
-
     def __getitem__(self, item):
         pass
 
@@ -29,6 +28,8 @@ class Consensus:
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
         self.difficulty = self.max_diff - difficulty
+        # global difficulty should not be updated, instead return difficulty,
+        # because if validate is called during mining, it would update difficulty
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
@@ -51,13 +52,16 @@ class Consensus:
         while block_hash[:self.difficulty] != zeros_array:
             if self.kill_mine == 1:
                 self.kill_mine = 0
-                break
+                # need a boolean return to check if mine got killed
+                return False
             block.nonce += 1
             data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
                 str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
             message = json.dumps(data)
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = datetime.now()
+        # need a boolean return to check if mine got killed
+        return True
 
     #    Code for updating the difficulty to be implemented by Blockchain component
     #    if self.blocks_counter % self.blocks_threshold  == 0 & self.recalculate == 1:
