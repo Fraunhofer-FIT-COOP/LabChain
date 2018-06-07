@@ -1,4 +1,3 @@
-import configparser
 import json
 import logging
 import sys
@@ -62,19 +61,21 @@ class BlockChainNode:
         next_call = time.time()
         while True:
             # check the last call of mine from consensus component
-            if self.consensus_obj.last_mine_time_sec >= mine_freq:
+            if next_call - self.consensus_obj.last_mine_time_sec >= mine_freq:
                 transactions = self.txpool_obj.get_transactions(block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
+                self.blockchain_obj.active_mine_block_update(block)
                 _timestamp2, _timestamp1, _num_of_blocks = self.blockchain_obj.calculate_diff()
-                self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks)
-                # have to check if other node already created a block
-                if self.blockchain_obj.add_block(block):
-                    self.on_new_block_created(block.get_json())
-            # TODO: consensus has removed variable last_mine_time_sec, need it
-            next_call += (mine_freq - self.consensus_obj.last_mine_time_sec)
-            time.sleep(next_call - time.time())
-
-    # TODO: abort mining 1) when equal block or 2)
+                if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks):
+                    # have to check if other node already created a block
+                    if self.blockchain_obj.add_block(block):
+                        self.on_new_block_created(block.get_json())
+            self.blockchain_obj.active_mine_block_update(None)
+            delay_time = (next_call + mine_freq) - (time.time() - self.consensus_obj.last_mine_time_sec)
+            if delay_time < 0:
+                delay_time = 1
+            time.sleep(delay_time)
+            next_call = time.time()
 
     def on_get_transaction(self, transaction_hash):
         transaction_tuple = self.blockchain_obj.get_transaction(transaction_hash)
@@ -103,6 +104,15 @@ class BlockChainNode:
     def on_get_block_by_id(self):
         """callback method for get block"""
         pass
+
+    def on_get_blocks_by_range(self, range_start, range_end=None):
+        """callback method for get blocks by range"""
+        list_block_json = []
+        lblock_list = self.blockchain_obj.get_block_range(range_start, range_end)
+        if lblock_list is not None:
+            for lblock in lblock_list:
+                list_block_json.append(lblock.get_json())
+        return list_block_json
 
     def create_network_interface(self, port, initial_peers=None):
         if initial_peers is None:

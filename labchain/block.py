@@ -58,7 +58,7 @@ class Block(object):
                            'merkleHash': self._merkle_tree_root,
                            'predecessorBlock': self._predecessor_hash,
                            'nonce': self._nonce,
-                           'creator': self._block_creator_id,})
+                           'creator': self._block_creator_id, })
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
@@ -77,7 +77,7 @@ class Block(object):
                      merkle_tree_root=data_dict['merkleHash'],
                      predecessor_hash=data_dict['predecessorBlock'],
                      block_creator_id=data_dict['creator'],
-                     transactions=[Transaction.from_dict(transaction_dict) \
+                     transactions=[Transaction.from_dict(transaction_dict)
                                    for transaction_dict in data_dict['transactions']],
                      nonce=data_dict['nonce'],
                      timestamp=data_dict['timestamp'])
@@ -116,13 +116,21 @@ class Block(object):
     def __eq__(self, other):
         """compare blocks
         1) compare all properties"""
-        return all([self._block_id == other.block_id,
-                    self._timestamp == other.timestamp,
-                    self._transactions == other.transactions,
-                    self._merkle_tree_root == other.merkle_tree_root,
-                    self._predecessor_hash == other.predecessor_hash,
-                    self._nonce == other.nonce,
-                    self._block_creator_id == other.block_creator_id])
+        if isinstance(other, Block) or isinstance(other, LogicalBlock):
+            return all([self._block_id == other.block_id,
+                        self._timestamp == other.timestamp,
+                        self._transactions == other.transactions,
+                        self._merkle_tree_root == other.merkle_tree_root,
+                        self._predecessor_hash == other.predecessor_hash,
+                        self._nonce == other.nonce,
+                        self._block_creator_id == other.block_creator_id])
+        else:
+            return False
+
+    def mine_equality(self, other):
+        if isinstance(other, Block) or isinstance(other, LogicalBlock):
+            return any([self._block_id == other.block_id,
+                        any(t in self._transactions for t in other.transactions)])
 
 
 class LogicalBlock(Block):
@@ -225,7 +233,7 @@ class LogicalBlock(Block):
                             merkle_tree_root=data_dict['merkleHash'],
                             predecessor_hash=data_dict['predecessorBlock'],
                             block_creator_id=data_dict['creator'],
-                            transactions=[Transaction.from_dict(transaction_dict) \
+                            transactions=[Transaction.from_dict(transaction_dict)
                                           for transaction_dict in data_dict['transactions']],
                             nonce=data_dict['nonce'],
                             timestamp=data_dict['timestamp'])
