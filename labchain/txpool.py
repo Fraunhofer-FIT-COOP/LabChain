@@ -44,7 +44,7 @@ class TxPool:
                     transaction.validate_transaction(self._crypto_helper):
                 if not transaction.transaction_hash:
                     hash_val = self._crypto_helper.hash(transaction.get_json())
-                    transaction.transaction_hash(hash_val)
+                    transaction.transaction_hash = hash_val
                 self._transactions.append(transaction)
                 return True
             else:

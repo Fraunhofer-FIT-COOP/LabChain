@@ -99,11 +99,13 @@ class BlockChainNode:
 
     def on_get_block_by_hash(self, hash):
         """callback method for get block"""
-        return self.blockchain_obj.get_block_by_hash(hash)
+        lblock = self.blockchain_obj.get_block_by_hash(hash)
+        return lblock.get_json()
 
-    def on_get_block_by_id(self):
+    def on_get_block_by_id(self, block_id):
         """callback method for get block"""
-        pass
+        lblock = self.blockchain_obj.get_block_by_id(block_id)
+        return lblock.get_json()
 
     def on_get_blocks_by_range(self, range_start, range_end=None):
         """callback method for get blocks by range"""

@@ -1,3 +1,6 @@
+import time
+
+
 class CryptoHelper:
 
     def __init__(self):
@@ -5,3 +8,6 @@ class CryptoHelper:
 
     def validate(self, sender, data, signature):
         return True
+
+    def hash(self, json):
+        return str(time.time())
