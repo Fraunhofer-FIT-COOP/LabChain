@@ -107,9 +107,15 @@ class BlockChainNode:
         """callback method for get block"""
         return self.blockchain_obj.get_block_by_id(block_id)
 
-    def on_get_blocks_by_range(self, range_start, range_end=None):
+    def on_get_blocks_by_range(self, range_start=None, range_end=None):
         """callback method for get blocks by range"""
         return self.blockchain_obj.get_block_range(range_start, range_end)
+
+    def request_block_by_hash(self, hash):
+        return self.network_interface.requestBlockByHash(hash)
+
+    def request_block_by_id(self, block_id):
+        return self.network_interface.requestBlock(block_id)
 
     def create_network_interface(self, port, initial_peers=None):
         if initial_peers is None:
@@ -163,7 +169,9 @@ class BlockChainNode:
                                          consensus_obj=self.consensus_obj,
                                          txpool_obj=self.txpool_obj,
                                          crypto_helper_obj=self.crypto_helper_obj,
-                                         min_blocks_for_difficulty=min_blocks)
+                                         min_blocks_for_difficulty=min_blocks,
+                                         request_block_callback=self.request_block_by_id,
+                                         request_block_hash_callback=self.request_block_by_hash)
 
         """init network interface"""
         intial_peer_list = json.loads(initial_peers)
@@ -194,7 +202,7 @@ class BlockChainNode:
         # start the scheduler for mining
         self.mine_thread = threading.Thread(target=self.block_mine_timer,
                                             kwargs=dict(mine_freq=mine_freq,
-                                                        num_of_transactions=num_of_transactions))
+                                                        block_transactions_size=num_of_transactions))
         self.mine_thread.start()
 
         self.orphan_killer = threading.Thread(target=self.schedule_orphans_killing,

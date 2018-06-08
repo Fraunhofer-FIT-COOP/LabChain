@@ -17,7 +17,8 @@ class BlockChainStartupFailed(Exception):
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
-                 min_blocks_for_difficulty):
+                 min_blocks_for_difficulty, request_block_callback,
+                 request_block_hash_callback):
         """Constructor for BlockChain
 
         Parameters
@@ -72,17 +73,19 @@ class BlockChain:
         self._crypto_helper = crypto_helper_obj
         self._min_blocks = min_blocks_for_difficulty
         self._active_mine_block = None
+        self._request_block = request_block_callback
+        self._request_block_hash = request_block_hash_callback
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj)
         _first_block.set_block_pos(0)
-        _first_block_hash = _first_block.get_computed_hash()
-        self._blockchain[_first_block_hash] = _first_block
-        self._node_branch_head = _first_block_hash
-        self._current_branch_heads = [_first_block_hash, ]
+        self._first_block_hash = _first_block.get_computed_hash()
+        self._blockchain[self._first_block_hash] = _first_block
+        self._node_branch_head = self._first_block_hash
+        self._current_branch_heads = [self._first_block_hash, ]
 
-    def get_block_range(self, range_start, range_end=None):
+    def get_block_range(self, range_start=None, range_end=None):
         """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
         Chain followed by this node is the one traversed.
         range_start or range_end are block hashes
@@ -90,7 +93,8 @@ class BlockChain:
         if chain couldn't be traveresed at some point we have bigger bugs in code
         if range_start or range_end is not found in chain, returns None
         """
-
+        if not range_start:
+            range_start = self._first_block_hash
         if not range_end:
             range_end = self._node_branch_head
         _b_hash = range_end
@@ -351,7 +355,8 @@ class BlockChain:
             Hash of the block requested by the node.
 
         """
-        pass
+        block = self._request_block_hash(requested_block_hash)
+        return LogicalBlock.from_block(block)
 
     def active_mine_block_update(self, block):
         self._active_mine_block = block
@@ -360,5 +365,6 @@ class BlockChain:
         if self._active_mine_block is not None:
             if block.mine_equality(self._active_mine_block):
                 self._consensus.kill_mine = 1
-                unmined_transactions = list(set(self._active_mine_block.transactions).difference(set(block.transactions)))
+                unmined_transactions = list(
+                    set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions)

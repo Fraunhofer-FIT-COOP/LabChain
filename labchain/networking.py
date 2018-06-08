@@ -145,7 +145,7 @@ class NetworkInterface:
         res = []
         if responses:
             if len(responses) > 0:
-                for block in responses:
+                for block in responses[0]:
                     res.append(Block.from_dict(block))
             else:
                 raise NoBlockExistsInRange()
