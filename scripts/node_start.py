@@ -14,12 +14,9 @@ if parent_dir not in sys.path:
 if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), '../labchain/resources/node_configuration.ini')
-
-"""
-def create_config_directory():
-    os.makedirs(CONFIG_DIRECTORY, exist_ok=True)
-"""
+CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,
+                                           'labchain', 'resources',
+                                           'node_configuration.ini'))
 
 
 def create_node(node_port, peer_list):

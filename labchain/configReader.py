@@ -1,6 +1,8 @@
 import configparser
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class ConfigReaderException(Exception):
     def __init__(self, msg):
@@ -18,7 +20,7 @@ class ConfigReader:
                 raise ConfigReaderException("Node Configuration file is non-existent")
         except ConfigReaderException:
             raise
-        except Exception as e:
+        except Exception:
             raise ConfigReaderException("Node Configuration file is corrupt")
 
     def get_config(self, section, option, fallback=None):
@@ -37,14 +39,14 @@ class ConfigReader:
                                                     format(opt=option, sec=section))
                 return value
             else:
-                logging.error("Error reading Config : option {opt} missing "
-                              "in section {sec}".format(opt=option, sec=section))
+                logger.error("Error reading Config : option {opt} missing "
+                             "in section {sec}".format(opt=option, sec=section))
         else:
-            logging.error("Error reading Config : section {sec} missing".
-                          format(sec=section))
+            logger.error("Error reading Config : section {sec} missing".
+                         format(sec=section))
         if fallback:
-            logging.info("Default value {d} being returned for option "
-                         "{opt} in section {sec}".format(opt=option, sec=section, d=fallback))
+            logger.info("Default value {d} being returned for option "
+                        "{opt} in section {sec}".format(opt=option, sec=section, d=fallback))
             return fallback
         else:
             raise ConfigReaderException("No Fallback defined for configuration "

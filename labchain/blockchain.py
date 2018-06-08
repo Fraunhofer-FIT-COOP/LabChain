@@ -1,14 +1,12 @@
 from datetime import datetime
 import logging
 import json
+from pprint import pformat
 import sys
 
 from labchain.block import LogicalBlock, Block
 
-NODE_CONFIG_FILE = 'resources/node_configuration.ini'
-# change to DEBUG to see more output
-LOG_LEVEL = logging.INFO
-
+logger = logging.getLogger(__name__)
 
 class BlockChainStartupFailed(Exception):
     pass
@@ -59,7 +57,7 @@ class BlockChain:
         _crypto_helper : Instance of cryptoHelper module
 
         """
-        logging.debug("Block chain initialization")
+        logger.debug("Block chain initialization")
         self._node_id = node_id
         self._blockchain = {}
         self._orphan_blocks = {}
@@ -82,9 +80,13 @@ class BlockChain:
         _first_block.set_block_pos(0)
         self._first_block_hash = _first_block.get_computed_hash()
         self._blockchain[self._first_block_hash] = _first_block
+
+        logger.debug("Added Genesis block --- \n {b} \n".\
+                     format(b=pformat(json.loads(_first_block.get_json()))))
+
         self._node_branch_head = self._first_block_hash
         self._current_branch_heads = [self._first_block_hash, ]
-        logging.debug("Block chain initialized")
+        logger.debug("BlockChain initialized with genesis block")
 
     def get_block_range(self, range_start=None, range_end=None):
         """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
@@ -204,9 +206,8 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
-        logging.debug("add block " + str(block.get_json()))
         if not isinstance(block, LogicalBlock):
-            logging.debug("converting to l block ")
+            logger.debug("converting to l block ")
             block = LogicalBlock.from_block(block, self._consensus)
 
         _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
@@ -260,8 +261,11 @@ class BlockChain:
         # kill mine check
         if block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
-        logging.debug("add block done. blockchain length is " + str(len(self._blockchain.items())))
-        logging.debug("current branch heads = " + str(self._current_branch_heads))
+
+        logger.debug("Added new block --- \n {b} \n".\
+                     format(b=pformat(json.loads(block.get_json()))))
+
+        logger.debug("current branch heads = " + str(self._current_branch_heads))
         self.switch_to_longest_branch()
         return True
 
@@ -363,7 +367,7 @@ class BlockChain:
 
         """
         block = self._request_block_hash(requested_block_hash)
-        return LogicalBlock.from_block(block)
+        return LogicalBlock.from_block(block, self._consensus)
 
     def active_mine_block_update(self, block):
         self._active_mine_block = block
