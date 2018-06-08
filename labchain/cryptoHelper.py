@@ -25,9 +25,9 @@ class CryptoHelper:
         :param payload: JSON of the data to be signed.
         :return signature: signature in binary string format."""
 
-        h = self.__hash(payload)                                        # Hash the payload
-        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')     # Get the signature object
-        signature = signer.sign(h)                                      # Sign the hash
+        h = self.__hash(payload)  # Hash the payload
+        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')  # Get the signature object
+        signature = signer.sign(h)  # Sign the hash
         signature = b64encode(signature).decode('utf-8')
         logging.debug('Cryptohelper signed.')
         return signature
@@ -40,13 +40,13 @@ class CryptoHelper:
         :param signature: Signature in binary string that was produced for the given data.
         :return result: True if signature and data pair matches, false otherwise."""
 
-        h = self.__hash(payload)                            # Hash the payload
-        public_key = ECC.import_key(pub_key)                # Get the public key object using public key string
-        verifier = DSS.new(public_key, 'fips-186-3')        # Create a signature object
+        h = self.__hash(payload)  # Hash the payload
+        public_key = ECC.import_key(pub_key)  # Get the public key object using public key string
+        verifier = DSS.new(public_key, 'fips-186-3')  # Create a signature object
         signature = b64decode(signature.encode('utf-8'))
 
         try:
-            verifier.verify(h, signature)                   # Check if the signature is verified
+            verifier.verify(h, signature)  # Check if the signature is verified
             result = True
             logging.debug('Cryptohelper verified.')
 
@@ -62,30 +62,29 @@ class CryptoHelper:
         :return private_key: Private key in string format.
         :return public_key: Corresponding public key in string format."""
 
-        key = ECC.generate(curve='P-256')                       # Create ECC key object
-        private_key = key.export_key(format='PEM')              # Get the string of private key
+        key = ECC.generate(curve='P-256')  # Create ECC key object
+        private_key = key.export_key(format='PEM')  # Get the string of private key
         public_key = key.public_key().export_key(format='PEM')  # Get the string of public key
         logging.debug('Cryptohelper created a new key pair.')
         return private_key, public_key
 
     def __hash(self, payload):
         try:
-            real_payload = self.__unpack_payload(payload)   # Get the real payload to be hashed
+            real_payload = self.__unpack_payload(payload)  # Get the real payload to be hashed
         except ValueError:
             raise ValueError('Payload is not json')
-        message = real_payload.encode()          # Encode string for hashing
+        message = real_payload.encode()  # Encode string for hashing
         message_hash = SHA256.new(message)  # Hash using SHA256 scheme
-        logging.debug('Cryptohelper hashed.')
+        # logging.debug('Cryptohelper hashed.')
         return message_hash
-
 
     def hash(self, payload):
         """
         Hashes the given data.
         :param payload: Data to be hashed in JSON format.
         :return hash: SHA256 hash of the given data in hex representation. """
-        hash_object = self.__hash(payload)             # Hash the payload
-        return hash_object.hexdigest()                      # Return hex representation of the hash
+        hash_object = self.__hash(payload)  # Hash the payload
+        return hash_object.hexdigest()  # Return hex representation of the hash
 
     def __unpack_payload(self, payload):
 

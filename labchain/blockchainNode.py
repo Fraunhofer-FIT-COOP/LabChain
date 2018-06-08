@@ -63,7 +63,6 @@ class BlockChainNode:
         next_call = time.time()
         while True:
             # check the last call of mine from consensus component
-            logging.debug("next call " + str(next_call) + " last mine " + str(self.consensus_obj.last_mine_time_sec) + " mine_freq" + str(mine_freq))
             if next_call - self.consensus_obj.last_mine_time_sec >= mine_freq:
                 logging.debug("Start mining")
                 transactions = self.txpool_obj.get_transactions(block_transactions_size)
@@ -75,11 +74,9 @@ class BlockChainNode:
                     # have to check if other node already created a block
                     logging.debug("Mining successful")
                     if self.blockchain_obj.add_block(block):
-                        self.on_new_block_created(block.get_json())
+                        self.on_new_block_created(block)
             self.blockchain_obj.active_mine_block_update(None)
             delay_time = time.time() - (next_call + mine_freq) - (time.time() - self.consensus_obj.last_mine_time_sec)
-            logging.debug("next call " + str(next_call) + " last mine " + str(self.consensus_obj.last_mine_time_sec) + " mine_freq" + str(mine_freq))
-
             if delay_time < 0:
                 delay_time = 1
             logging.debug("Mining Thread sleep for " + str(delay_time) + " sec")

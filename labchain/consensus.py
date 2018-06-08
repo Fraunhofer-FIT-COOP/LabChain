@@ -9,7 +9,7 @@ class Consensus:
     def __init__(self):
 
         self.crypto_helper = CryptoHelper.instance()
-        self.max_diff = 12  # Threshold to be defined
+        self.max_diff = 3  # Threshold to be defined
         self.kill_mine = 0
         self.last_mine_time_sec = time.time()
 
@@ -40,7 +40,7 @@ class Consensus:
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
-        logging.debug('#INFO:Consensus-> Block: ' + block.block_id + 'is validated')
+        logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + 'is validated')
         return block_hash[:difficulty] == zeros_array
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
@@ -56,19 +56,19 @@ class Consensus:
             if self.kill_mine == 1:
                 self.kill_mine = 0
                 # need a boolean return to check if mine got killed
-                logging.debug('#INFO:Consensus-> Block: ' + block.block_id + ' mining process has been killed')
+                logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' mining process has been killed')
                 return False
             block.nonce += 1
             counter = counter + 1
-            if counter%1000 == 0:
-                logging.debug('#INFO:Consensus-> Block: ' + block.block_id + ' is in mining process')
+            if counter % 10000 == 0:
+                logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is in mining process')
             data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
+                    str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
             message = json.dumps(data)
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = time.time()
         self.last_mine_time_sec = start_time
-        logging.debug('#INFO:Consensus-> Block: ' + block.block_id + 'is mined successfully')
+        logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + 'is mined successfully')
         # need a boolean return to check if mine got killed
         return True
 

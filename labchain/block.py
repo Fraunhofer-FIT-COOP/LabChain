@@ -109,6 +109,10 @@ class Block(object):
     def timestamp(self):
         return self._timestamp
 
+    @timestamp.setter
+    def timestamp(self, timestamp):
+        self._timestamp = timestamp
+
     @property
     def nonce(self):
         return self._nonce
