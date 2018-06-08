@@ -160,8 +160,8 @@ class NetworkInterface:
         if ip_address in self.peers and port in self.peers[ip_address] and info == self.peers[ip_address][port]:
             logger.info('Peer {}:{} unchanged. Skipping...'.format(ip_address, str(port)))
             return
-        logger.info('Peer {}:{} added/updated'.format(ip_address, str(port)))
-        update(self.peers, {ip_address: {int(port): info}})
+        logger.info('Peer {}:{} added/updated'.format(str(ip_address), str(port)))
+        update(self.peers, {str(ip_address): {str(port): info}})
         logger.debug('My peers are now: {}'.format(str(self.peers)))
 
     def _add_peer_bulk(self, peer_dict):
