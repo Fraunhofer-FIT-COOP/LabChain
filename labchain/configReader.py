@@ -16,7 +16,7 @@ class ConfigReader:
         try:
             if not self.config.read(file_path):
                 raise ConfigReaderException("Node Configuration file is non-existent")
-        except Exception:
+        except Exception as e:
             raise ConfigReaderException("Node Configuration file is corrupt")
 
     def get_config(self, section, option, fallback=None):

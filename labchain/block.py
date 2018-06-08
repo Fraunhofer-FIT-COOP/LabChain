@@ -220,9 +220,9 @@ class LogicalBlock(Block):
         return self._crypto_helper.hash(self.to_json_headers())
 
     @staticmethod
-    def from_block(block):
+    def from_block(block, consensus_obj):
         """Instantiate LogicalBlock from Block"""
-        return LogicalBlock.from_dict(block.to_dict())
+        return LogicalBlock.from_dict(block.to_dict(), consensus_obj)
 
     @staticmethod
     def from_json(json_data):
@@ -231,7 +231,7 @@ class LogicalBlock(Block):
         return LogicalBlock.from_dict(data_dict)
 
     @staticmethod
-    def from_dict(data_dict):
+    def from_dict(data_dict, consesnus_obj=None):
         """Instantiate a LogicalBlock from a data dictionary."""
         return LogicalBlock(block_id=data_dict['nr'],
                             merkle_tree_root=data_dict['merkleHash'],
@@ -240,7 +240,8 @@ class LogicalBlock(Block):
                             transactions=[Transaction.from_dict(transaction_dict)
                                           for transaction_dict in data_dict['transactions']],
                             nonce=data_dict['nonce'],
-                            timestamp=data_dict['timestamp'])
+                            timestamp=data_dict['timestamp'],
+                            consensus_obj=consesnus_obj)
 
     def get_block_obj(self):
         return Block.from_json(super(LogicalBlock, self).get_json())
