@@ -34,15 +34,17 @@ class BlockChainNode:
         self.network_interface = None
         self.webserver_thread = None
         self.polling_thread = None
-        self.initialize_components()
 
         self.config_reader = None
         try:
             self.config_reader = ConfigReader(NODE_CONFIG_FILE)
+            logging.info("read config file")
         except ConfigReaderException as e:
             logging.error(str(e))
             logging.error("Exiting Node startup ..!! \n")
             sys.exit(0)
+
+        self.initialize_components()
 
     def schedule_orphans_killing(self, interval):
         while True:
@@ -99,22 +101,15 @@ class BlockChainNode:
 
     def on_get_block_by_hash(self, hash):
         """callback method for get block"""
-        lblock = self.blockchain_obj.get_block_by_hash(hash)
-        return lblock.get_json()
+        return self.blockchain_obj.get_block_by_hash(hash)
 
     def on_get_block_by_id(self, block_id):
         """callback method for get block"""
-        lblock = self.blockchain_obj.get_block_by_id(block_id)
-        return lblock.get_json()
+        return self.blockchain_obj.get_block_by_id(block_id)
 
     def on_get_blocks_by_range(self, range_start, range_end=None):
         """callback method for get blocks by range"""
-        list_block_json = []
-        lblock_list = self.blockchain_obj.get_block_range(range_start, range_end)
-        if lblock_list is not None:
-            for lblock in lblock_list:
-                list_block_json.append(lblock.get_json())
-        return list_block_json
+        return self.blockchain_obj.get_block_range(range_start, range_end)
 
     def create_network_interface(self, port, initial_peers=None):
         if initial_peers is None:
@@ -122,7 +117,11 @@ class BlockChainNode:
         return ServerNetworkInterface(JsonRpcClient(), initial_peers, self.crypto_helper_obj,
                                       self.on_new_block_received,
                                       self.on_new_transaction_received,
-                                      self.on_get_block_by_id, self.on_get_transaction, port)
+                                      self.on_get_block_by_id,
+                                      self.on_get_block_by_hash,
+                                      self.on_get_transaction,
+                                      self.on_get_blocks_by_range,
+                                      port)
 
     def initialize_components(self):
         """ Initialize every componenent of the node"""

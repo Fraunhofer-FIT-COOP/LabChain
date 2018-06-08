@@ -360,5 +360,5 @@ class BlockChain:
         if self._active_mine_block is not None:
             if block.mine_equality(self._active_mine_block):
                 self._consensus.kill_mine = 1
-                unmined_transactions = list(set(self._active_mine_block).difference(set(block.transactions)))
+                unmined_transactions = list(set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions)
