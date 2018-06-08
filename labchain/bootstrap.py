@@ -16,7 +16,7 @@ class Bootstrapper:
         while True:
             try:
                 blocks = self.network_interface.requestBlocksByHashRange()
-            except NoPeersException:
+            except (NoPeersException, BlockDoesNotExistException):
                 return blockchain
             for block in blocks:
                 blockchain.add_block(block)
