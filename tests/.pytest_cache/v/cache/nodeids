@@ -1,0 +1,7 @@
+[
+  "test_txpool.py::TxPoolTestCase::test_add_transaction",
+  "test_txpool.py::TxPoolTestCase::test_get_transactions",
+  "test_txpool.py::TxPoolTestCase::test_remove_transaction",
+  "test_txpool.py::TxPoolTestCase::test_return_transactions_to_pool",
+  "test_txpool.py::TxPoolTestCase::test_singleton"
+]

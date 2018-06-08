@@ -1,11 +1,23 @@
 from datetime import datetime
+import logging
+import json
+import sys
 
 from labchain.block import LogicalBlock
+
+NODE_CONFIG_FILE = 'resources/node_configuration.ini'
+# change to DEBUG to see more output
+LOG_LEVEL = logging.INFO
+
+
+class BlockChainStartupFailed(Exception):
+    pass
 
 
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
-                 consensus_obj, txpool_obj, crypto_helper_obj):
+                 consensus_obj, txpool_obj, crypto_helper_obj,
+                 min_blocks_for_difficulty):
         """Constructor for BlockChain
 
         Parameters
@@ -58,11 +70,11 @@ class BlockChain:
         self._consensus = consensus_obj
         self._txpool = txpool_obj
         self._crypto_helper = crypto_helper_obj
+        self._min_blocks = min_blocks_for_difficulty
+        self._active_mine_block = None
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
-        # TODO: genesis block has id 0, implemet genesis if not done#
-        # already changed bid from 1 to 0
         _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj)
         _first_block.set_block_pos(0)
         _first_block_hash = _first_block.get_computed_hash()
@@ -70,24 +82,106 @@ class BlockChain:
         self._node_branch_head = _first_block_hash
         self._current_branch_heads = [_first_block_hash, ]
 
-    def get_block(self, block_id):
-        #TODO: return a list of blocks from all branches
-        pass
+    def get_block_range(self, range_start, range_end=None):
+        """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
+        Chain followed by this node is the one traversed.
+        range_start or range_end are block hashes
+        if range_end is not specified, all blocks till end of chain are returned
+        if chain couldn't be traveresed at some point we have bigger bugs in code
+        if range_start or range_end is not found in chain, returns None
+        """
+
+        if not range_end:
+            range_end = self._node_branch_head
+        _b_hash = range_end
+
+        if any([range_start not in self._blockchain,
+                range_end not in self._blockchain]):
+            return None
+
+        blocks_range = []
+        while _b_hash != range_start:
+            _b = self._blockchain.get(_b_hash)
+            _b_hash = _b.predecessor_hash
+            blocks_range.append(_b)
+        blocks_range.append(self._blockchain.get(_b_hash))
+
+        return blocks_range
+
+    def get_block_by_id(self, block_id):
+        """Returns the block if found in blockchain, else returns None"""
+        for _, _block in self._blockchain.items():
+            if _block.block_id == block_id:
+                return _block
+        else:
+            return None
 
     def get_block_by_hash(self, block_hash):
-        #TODO: return a block corresponding to hash
-        pass
+        """Sends the Block information requested by any neighbour.
+
+        Parameters
+        ----------
+        block_hash : Hash
+            Hash value of the block requested.
+
+        Returns
+        -------
+        block_info : Json structure
+            The Json of Block which was requested
+            None if Block was not found in node's chain.
+
+        """
+
+        block_info = None
+        _req_block = self._blockchain.get(block_hash, None)
+        if _req_block:
+            block_info = _req_block.get_json()
+        return block_info
 
     def get_transaction(self, transaction_hash):
-        # TODO: return a transaction from main branch
         """tuple with 1st element as transaction and 2nd element as block_hash"""
-        pass
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if transaction_hash == _txn.transaction_hash:
+                    return (_txn, _hash)
+        else:
+            return None
 
     def calculate_diff(self):
-        """Calculate the nth block and timestamps"""
-        #TODO:get last nth block its time stamp and time stamp og last block
-        #returns tuple(n, time1, timen)
-        pass
+        """Sends the timestamps of latest and nth last block and number of blocks
+        between that time
+
+        Returns
+        -------
+
+        number_of_blocks: Integer
+            Total number of blocks fetched from config or available in chain
+        earliest_timestamp: timestamp
+        latest_timestamp: timestamp
+        """
+        _hash = self._node_branch_head
+
+        # getting timestamp of the last block added in chain
+        _last_block = json.loads(self.get_block_by_hash(_hash))
+        _latest_timestamp = _last_block['timestamp']
+
+        # setting hash of the second last block
+        _hash = _last_block['predecessorBlock']
+        # if there is only one block
+        _earliest_timestamp = _latest_timestamp
+        _number_of_blocks = 1
+        # looping over last min_blocks to get the timestamp of the earliest block
+        while _number_of_blocks < self._min_blocks:
+            _json_block = self.get_block_by_hash(_hash)
+            if _json_block is None:
+                break
+            _block = json.loads(_json_block)
+            _earliest_timestamp = _block['timestamp']
+            _hash = _block['predecessorBlock']
+            _number_of_blocks = _number_of_blocks + 1
+
+        return _latest_timestamp, _earliest_timestamp, _number_of_blocks
 
     def add_block(self, block):
         """Finds correct position and adds the new block to the chain.
@@ -105,8 +199,10 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
-        #TODO: convertz to logical block
-        if not block.validate_block():
+        _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
+            self.calculate_diff()
+        if not block.validate_block(_latest_timestamp, _earliest_timestamp,
+                                    _num_of_blocks):
             if block.is_block_ours(self._node_id):
                 _txns = block.transactions
                 self._txpool.return_transactions_to_pool(_txns)
@@ -135,15 +231,11 @@ class BlockChain:
             if _curr_block.is_block_ours(self._node_id):
                 self._node_branch_head = _curr_block_hash
 
-            # Remove transactions covered by the block from our TxPool
-            self._txpool.remove_transactions(_curr_block.transactions)
-
             # Check recursively if blocks are parent to some orphans
             _parent_hash = _curr_block_hash
             _parent_block = _curr_block
             while _parent_hash in self._orphan_blocks:
                 _block = self._orphan_blocks[_parent_hash]
-                self._txpool.remove_transactions(_block.transactions)
                 _this_block_hash = _block.get_computed_hash()
                 _block.set_block_pos(_parent_block.get_block_pos() + 1)
                 self._blockchain[_this_block_hash] = _block
@@ -154,6 +246,10 @@ class BlockChain:
             # Put block in orphan pool, query predecessor block
             self._orphan_blocks[_prev_hash] = _curr_block
             self.request_block_from_neighbour(_prev_hash)
+
+        # kill mine check
+        if block.is_block_ours(self._node_id):
+            self.check_block_in_mining(block)
 
         self.switch_to_longest_branch()
         return True
@@ -246,28 +342,6 @@ class BlockChain:
                 self._orphan_blocks.pop(_hash)
                 del _block
 
-    def send_block_to_neighbour(self, requested_block_hash):
-        """Sends the Block information requested by any neighbour.
-
-        Parameters
-        ----------
-        requested_block_hash : Hash
-            Hash value of the block requested.
-
-        Returns
-        -------
-        block_info : Json structure
-            The Json of Block which was requested
-            None if Block was not found in node's chain.
-
-        """
-
-        block_info = None
-        _req_block = self._blockchain.get(requested_block_hash, None)
-        if _req_block:
-            block_info = _req_block.get_json()
-        return block_info
-
     def request_block_from_neighbour(self, requested_block_hash):
         """Requests a block from other nodes connected with.
 
@@ -278,3 +352,13 @@ class BlockChain:
 
         """
         pass
+
+    def active_mine_block_update(self, block):
+        self._active_mine_block = block
+
+    def check_block_in_mining(self, block):
+        if self._active_mine_block is not None:
+            if block.mine_equality(self._active_mine_block):
+                self._consensus.kill_mine = 1
+                unmined_transactions = list(set(self._active_mine_block).difference(set(block.transactions)))
+                self._txpool.return_transactions_to_pool(unmined_transactions)

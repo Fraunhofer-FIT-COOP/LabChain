@@ -8,4 +8,3 @@ class Consensus:
 
     def validate(self, block):
         return True
-

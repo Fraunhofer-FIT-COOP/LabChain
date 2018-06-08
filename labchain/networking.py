@@ -35,6 +35,10 @@ class BlockDoesNotExistException(Exception):
     pass
 
 
+class NoBlockExistsInRange(Exception):
+    pass
+
+
 def update(d, u):
     """Recursive dictionary update"""
     for k, v in u.items():
@@ -134,6 +138,21 @@ class NetworkInterface:
         else:
             raise NoPeersException('No nodes available to request the block from')
 
+    def requestBlocksByHashRange(self, block_start_hash=None, block_end_hash=None):
+        """Request a single block by its hash value."""
+        responses = self._bulk_send('requestBlocksByHashRange', [block_start_hash, block_end_hash],
+                                    return_on_first_success=True)
+        res = []
+        if responses:
+            if len(responses) > 0:
+                for block in responses:
+                    res.append(Block.from_dict(block))
+            else:
+                raise NoBlockExistsInRange()
+        else:
+            raise NoPeersException('No nodes available to request the block from')
+        return res
+
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""
         if info is None:
@@ -218,7 +237,8 @@ class ServerNetworkInterface(NetworkInterface):
                  on_transaction_received_callback,
                  get_block_callback,
                  get_block_by_hash_callback,
-                 get_transaction_callback, port=8080):
+                 get_transaction_callback,
+                 get_blocks_by_hash_range, port=8080):
         """
         :param json_rpc_client: A JsonRpcClient instance.
         :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
@@ -239,6 +259,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_callback = get_block_callback
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
+        self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
         self.port = int(port)
 
     def update_peer_lists(self):
@@ -284,6 +305,7 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestBlock'] = self.__handle_request_block
         dispatcher['requestBlockByHash'] = self.__handle_request_block_by_hash
         dispatcher['requestTransaction'] = self.__handle_request_transaction
+        dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
 
         # insert IP address of peer if advertise peer is called
         try:
@@ -338,13 +360,20 @@ class ServerNetworkInterface(NetworkInterface):
     def __handle_request_block_by_hash(self, block_hash):
         block = self.get_block_by_hash_callback(block_hash)
         if block:
+            # TODO why block to dict? which type is block?
             return block.to_dict()
+        return []
+
+    def __handle_request_blocks_by_hash_range(self, block_hash_start_hash=None, block_hash_end_hash=None):
+        blocks = self.get_blocks_by_hash_range_callback(block_hash_start_hash, block_hash_end_hash)
+        if blocks:
+            return [block.to_dict() for block in blocks]
         return []
 
     def __handle_request_transaction(self, transaction_hash):
         transaction, block_hash = self.get_transaction_callback(transaction_hash)
         if transaction:
-            return (transaction.to_dict(), block_hash)
+            return transaction.to_dict(), block_hash
         return None
 
     def __filter_own_address(self, peers):
