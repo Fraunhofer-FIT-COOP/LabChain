@@ -1,5 +1,4 @@
-from labchain.networking import BlockDoesNotExistException, NoPeersException
-from labchain.networking import BlockchainInitFailed
+from labchain.networking import NoPeersException, NoBlockExistsInRange, BlockchainInitFailed
 
 
 class Bootstrapper:
@@ -16,7 +15,7 @@ class Bootstrapper:
         while True:
             try:
                 blocks = self.network_interface.requestBlocksByHashRange()
-            except (NoPeersException, BlockDoesNotExistException):
+            except (NoPeersException, NoBlockExistsInRange):
                 return blockchain
             for block in blocks:
                 blockchain.add_block(block)
