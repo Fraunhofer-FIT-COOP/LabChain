@@ -115,7 +115,11 @@ class BlockChainNode:
         return ServerNetworkInterface(JsonRpcClient(), initial_peers, self.crypto_helper_obj,
                                       self.on_new_block_received,
                                       self.on_new_transaction_received,
-                                      self.on_get_block_by_id, self.on_get_transaction, port)
+                                      self.on_get_block_by_id,
+                                      self.on_get_block_by_hash,
+                                      self.on_get_transaction,
+                                      self.on_get_blocks_by_range,
+                                      port)
 
     def initialize_components(self):
         """ Initialize every componenent of the node"""
