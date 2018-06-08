@@ -5,15 +5,14 @@ import threading
 import time
 import uuid
 
-from labchain.block import LogicalBlock
 from labchain.blockchain import BlockChain
 from labchain.bootstrap import Bootstrapper
 from labchain.configReader import ConfigReader
 from labchain.configReader import ConfigReaderException
 from labchain.consensus import Consensus
 from labchain.cryptoHelper import CryptoHelper
-from labchain.networking import ServerNetworkInterface
 from labchain.networking import JsonRpcClient
+from labchain.networking import ServerNetworkInterface, NoPeersException
 from labchain.txpool import TxPool
 
 # change to DEBUG to see more output
@@ -100,7 +99,10 @@ class BlockChainNode:
     def on_new_block_created(self, lblock):
         """When a new block is mined, send the block to other nodes via network"""
         block = lblock.get_block_obj()
-        self.network_interface.sendBlock(block)
+        try:
+            self.network_interface.sendBlock(block)
+        except NoPeersException:
+            logging.warning('Block #' + str(block.block_id) + ' could not be sent to any peer')
 
     def on_get_block_by_hash(self, hash):
         """callback method for get block"""
