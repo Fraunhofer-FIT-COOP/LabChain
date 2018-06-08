@@ -2,6 +2,7 @@ import time
 import hashlib
 import json
 
+from labchain.cryptoHelper import CryptoHelper
 from labchain.transaction import Transaction
 
 
@@ -184,7 +185,7 @@ class LogicalBlock(Block):
         if not self._merkle_tree_root:
             self._merkle_tree_root = self.compute_merkle_root()
         self._consensus = consensus_obj
-        self._crypto_helper = crypto_helper_obj
+        self._crypto_helper = CryptoHelper.instance()
 
     def is_block_ours(self, node_id):
         """Checks to see if the block was created by the node ID specified.

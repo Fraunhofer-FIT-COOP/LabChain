@@ -9,7 +9,7 @@ class Consensus:
     def __init__(self):
 
         self.crypto_helper = CryptoHelper.instance()
-        self.max_diff = 3  # Threshold to be defined
+        self.max_diff = 4  # Threshold to be defined
         self.kill_mine = 0
         self.last_mine_time_sec = time.time()
 
@@ -34,7 +34,7 @@ class Consensus:
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
-
+        logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
         zeros_array = "0" * difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
@@ -45,6 +45,8 @@ class Consensus:
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
+        logging.debug('#INFO: mine Difficulty: ' + str(difficulty))
+
         start_time = time.time()
         zeros_array = "0" * difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
