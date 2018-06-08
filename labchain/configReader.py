@@ -26,10 +26,13 @@ class ConfigReader:
                                         option=option)
                 if value.isdigit():
                     value = int(value)
-                if not value:
-                    raise ConfigReaderException("No value defined for configuration "
-                                                "option {opt} in section {sec}".
-                                                format(sec=section, opt=option))
+                elif not value:
+                    if fallback:
+                        value = fallback
+                    else:
+                        raise ConfigReaderException("Option {opt} in section {sec} "
+                                                    "defined without any value".\
+                                                    format(opt=option, sec=section))
                 return value
             else:
                 logging.error("Error reading Config : option {opt} missing "

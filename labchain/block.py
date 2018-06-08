@@ -1,6 +1,6 @@
 import time
-import hashlib
 import json
+from hashlib import sha256 as sha
 
 from labchain.cryptoHelper import CryptoHelper
 from labchain.transaction import Transaction
@@ -299,8 +299,9 @@ class LogicalBlock(Block):
                 # If not the last element
                 if i + 1 < len(hashes):
                     # Concatenate the hashes and calculate their hash
-                    value = str(hashes[i] + hashes[i + 1]).encode('utf-8')
-                    hash = hashlib.sha256(value).hexdigest()
+                    value = str(hashes[i] + hashes[i + 1]).encode(
+                        'UTF-8')
+                    hash = sha(value).hexdigest()
                 else:
                     hash = hashes[i]
                 sub_tree.append(hash)
@@ -311,7 +312,7 @@ class LogicalBlock(Block):
             else:
                 return _merkle_root(sub_tree)
 
-        txn_hash = []
-        for tx in self._transactions:
-            txn_hash.append(hashlib.sha256(tx.encode('utf-8')).hexdigest())
-        return _merkle_root(txn_hash)
+        txn_hashes = []
+        for t in self._transactions:
+            txn_hashes.append(self._crypto_helper.hash(json.dumps(t)))
+        return _merkle_root(txn_hashes)
