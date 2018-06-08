@@ -35,3 +35,10 @@ Run the following to install all dependencies:
 pip install -r requirements.txt
 
 ```
+
+# Run the Node
+
+```
+cd scripts
+python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
+```
