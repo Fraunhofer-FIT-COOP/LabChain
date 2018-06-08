@@ -16,6 +16,8 @@ class ConfigReader:
         try:
             if not self.config.read(file_path):
                 raise ConfigReaderException("Node Configuration file is non-existent")
+        except ConfigReaderException:
+            raise
         except Exception as e:
             raise ConfigReaderException("Node Configuration file is corrupt")
 
