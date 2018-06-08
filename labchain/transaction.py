@@ -52,7 +52,10 @@ class Transaction:
         self.signature = crypto_helper.sign(private_key, data)
 
     def __eq__(self, other):
-        return (self.sender == other.sender and self.receiver == other.receiver and self.payload == other.payload and self.signature == other.signature)
+        if not other:
+            return None
+        return self.sender == other.sender and self.receiver == other.receiver and self.payload == other.payload \
+               and self.signature == other.signature
 
     def validate_transaction(self, crypto_helper):
         """
