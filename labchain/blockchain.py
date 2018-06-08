@@ -3,7 +3,7 @@ import logging
 import json
 import sys
 
-from labchain.block import LogicalBlock
+from labchain.block import LogicalBlock, Block
 
 NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 # change to DEBUG to see more output
@@ -203,6 +203,8 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
+        if not isinstance(block, LogicalBlock):
+            block = LogicalBlock.from_block(block, self._consensus)
         _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,

@@ -28,8 +28,7 @@ class Bootstrapper:
             except NoBlockExistsInRange:
                 continue
             for block in blocks:
-                lblock = LogicalBlock.from_block(block)
-                blockchain.add_block(lblock)
+                blockchain.add_block(block)
             if blocks:
                 break
 

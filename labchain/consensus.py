@@ -23,7 +23,7 @@ class Consensus:
         pass
 
     def calculate_difficulty(self, latest_timestamp, earliest_timestamp, num_of_blocks):
-        difficulty = int((((latest_timestamp - earliest_timestamp).total_seconds()) / num_of_blocks))
+        difficulty = int(((latest_timestamp - earliest_timestamp) / num_of_blocks))
 
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1

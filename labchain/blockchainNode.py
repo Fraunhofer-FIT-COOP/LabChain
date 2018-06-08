@@ -90,8 +90,7 @@ class BlockChainNode:
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""
-        lblock = LogicalBlock.from_block(block)
-        return self.blockchain_obj.add_block(lblock)
+        return self.blockchain_obj.add_block(block)
 
     def on_new_block_created(self, lblock):
         """When a new block is mined, send the block to other nodes via network"""
