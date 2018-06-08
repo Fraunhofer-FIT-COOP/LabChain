@@ -27,10 +27,6 @@ class NoPeersException(Exception):
     pass
 
 
-class BlockchainInitFailed(Exception):
-    pass
-
-
 class TransactionDoesNotExistException(Exception):
     pass
 

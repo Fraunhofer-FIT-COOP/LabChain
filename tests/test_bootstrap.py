@@ -1,9 +1,8 @@
 from unittest import TestCase
 from unittest.mock import patch, MagicMock, call
 
-from labchain.bootstrap import Bootstrapper
-from labchain.networking import BlockDoesNotExistException
-from labchain.networking import BlockchainInitFailed
+from labchain.bootstrap import Bootstrapper, BlockchainInitFailed
+
 
 class BootrapperTestCase(TestCase):
 
@@ -25,18 +24,7 @@ class BootrapperTestCase(TestCase):
         self.block2 = block2
         self.genesis_block = genesis_block
 
-    def _return_two_blocks_then_fail(self, block_id):
-        if block_id == 0:
-            return self.block1
-        elif block_id == 1:
-            return self.block2
-        else:
-            raise BlockDoesNotExistException()
-
-    def _fail_immediately(self, block_id):
-        raise BlockDoesNotExistException()
-
-    def _return_two_blocks_range_case(self):
+    def _return_two_blocks(self):
         return [self.block1, self.block2]
 
     def _return_no_blocks_range_case(self):
@@ -44,7 +32,7 @@ class BootrapperTestCase(TestCase):
 
     def test_bootstrap_with_existing_blocks(self):
         # given
-        self.network_interface.requestBlock = MagicMock(side_effect=self._return_two_blocks_then_fail)
+        self.network_interface.requestBlocksByHashRange = MagicMock(side_effect=self._return_two_blocks)
         # when
         self.bootstrapper.do_bootstrap(self.blockchain)
         # then
@@ -53,23 +41,7 @@ class BootrapperTestCase(TestCase):
 
     def test_bootstrap_with_no_blocks(self):
         # given
-        self.network_interface.requestBlock = MagicMock(side_effect=self._fail_immediately)
-        # when
-        self.bootstrapper.do_bootstrap(self.blockchain)
-        # then
-        self.assertEqual(0, self.blockchain.add_block.call_count)
-
-    def test_bootstrap_with_existing_blocks_range_case(self):
-        # given
-        self.network_interface.requestBlocksByHashRange = MagicMock(side_effect=self._return_two_blocks_range_case)
-        # when
-        self.bootstrapper.do_bootstrap_by_hash_range(self.blockchain)
-        # then
-        self.assertEqual(2, self.blockchain.add_block.call_count)
-        self.blockchain.add_block.assert_has_calls([call(self.block1), call(self.block2)], any_order=False)
-
-    def test_bootstrap_with_no_blocks_range_case(self):
-        # given
         self.network_interface.requestBlocksByHashRange = MagicMock(side_effect=self._return_no_blocks_range_case)
         # then
-        self.assertRaises(BlockchainInitFailed, self.bootstrapper.do_bootstrap_by_hash_range, [self.blockchain])
+        with self.assertRaises(BlockchainInitFailed):
+            self.bootstrapper.do_bootstrap(self.blockchain)

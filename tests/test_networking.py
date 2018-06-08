@@ -74,7 +74,7 @@ class CommonTestCase(TestCase):
         return []
 
     def get_blocks_by_hash_range(self, start_hash=None, end_hash=None):
-        pass
+        return [block for block in self.available_blocks.values()]
 
     def get_block_by_hash(self, block_hash):
         for block_id in self.available_blocks:
@@ -419,6 +419,25 @@ class RequestBlockServerTestCase(CommonTestCase):
         response = self.make_request(json.dumps(json_rpc_request))
         # then
         self.assert_json_equal(response, '{"jsonrpc": "2.0", "result": null, id: 1}')
+
+    def test_request_blocks_by_hash_range(self):
+        """Test case #13."""
+        # given
+        self.available_blocks[2] = Block(2, 'test_merkle_hash', 'test_pred_block_hash', 'test_creator', [
+            Transaction('test_sender', 'test_receiver', 'test_payload', 'test_signature')
+        ], nonce=5, timestamp=1337.0)
+        # when
+        json_rpc_request = {"jsonrpc": "2.0", "method": "requestBlocksByHashRange", "params": [],
+                            "id": 1}
+        response = self.make_request(json.dumps(json_rpc_request))
+        # then
+        self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": [{"nr": 2, "timestamp": 1337.0, '
+                                         '"merkleHash" : "test_merkle_hash", '
+                                         '"predecessorBlock" : "test_pred_block_hash", "nonce" : 5, '
+                                         '"creator" : "test_creator", "transactions" : '
+                                         '[{"sender": "test_sender", "receiver": "test_receiver", '
+                                         '"payload": "test_payload", "signature": "test_signature"}]}], "id":1}'
+                               )
 
 
 class RequestBlockClientTestCase(CommonTestCase):
