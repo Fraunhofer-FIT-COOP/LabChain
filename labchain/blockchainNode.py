@@ -107,7 +107,7 @@ class BlockChainNode:
         """callback method for get block"""
         return self.blockchain_obj.get_block_by_id(block_id)
 
-    def on_get_blocks_by_range(self, range_start, range_end=None):
+    def on_get_blocks_by_range(self, range_start=None, range_end=None):
         """callback method for get blocks by range"""
         return self.blockchain_obj.get_block_range(range_start, range_end)
 
@@ -202,7 +202,7 @@ class BlockChainNode:
         # start the scheduler for mining
         self.mine_thread = threading.Thread(target=self.block_mine_timer,
                                             kwargs=dict(mine_freq=mine_freq,
-                                                        num_of_transactions=num_of_transactions))
+                                                        block_transactions_size=num_of_transactions))
         self.mine_thread.start()
 
         self.orphan_killer = threading.Thread(target=self.schedule_orphans_killing,
