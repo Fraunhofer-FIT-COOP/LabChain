@@ -34,15 +34,17 @@ class BlockChainNode:
         self.network_interface = None
         self.webserver_thread = None
         self.polling_thread = None
-        self.initialize_components()
 
         self.config_reader = None
         try:
             self.config_reader = ConfigReader(NODE_CONFIG_FILE)
+            logging.info("read config file")
         except ConfigReaderException as e:
             logging.error(str(e))
             logging.error("Exiting Node startup ..!! \n")
             sys.exit(0)
+
+        self.initialize_components()
 
     def schedule_orphans_killing(self, interval):
         while True:
