@@ -99,22 +99,15 @@ class BlockChainNode:
 
     def on_get_block_by_hash(self, hash):
         """callback method for get block"""
-        lblock = self.blockchain_obj.get_block_by_hash(hash)
-        return lblock.get_json()
+        return self.blockchain_obj.get_block_by_hash(hash)
 
     def on_get_block_by_id(self, block_id):
         """callback method for get block"""
-        lblock = self.blockchain_obj.get_block_by_id(block_id)
-        return lblock.get_json()
+        return self.blockchain_obj.get_block_by_id(block_id)
 
     def on_get_blocks_by_range(self, range_start, range_end=None):
         """callback method for get blocks by range"""
-        list_block_json = []
-        lblock_list = self.blockchain_obj.get_block_range(range_start, range_end)
-        if lblock_list is not None:
-            for lblock in lblock_list:
-                list_block_json.append(lblock.get_json())
-        return list_block_json
+        return self.blockchain_obj.get_block_range(range_start, range_end)
 
     def create_network_interface(self, port, initial_peers=None):
         if initial_peers is None:
