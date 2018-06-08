@@ -110,11 +110,11 @@ class BlockChain:
 
     def get_block_by_id(self, block_id):
         """Returns the block if found in blockchain, else returns None"""
+        block_list = []
         for _, _block in self._blockchain.items():
             if _block.block_id == block_id:
-                return _block
-        else:
-            return None
+                block_list.append(_block)
+        return block_list
 
     def get_block_by_hash(self, block_hash):
         """Sends the Block information requested by any neighbour.
