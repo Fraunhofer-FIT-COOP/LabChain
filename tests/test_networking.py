@@ -49,7 +49,7 @@ class CommonTestCase(TestCase):
     def create_server_network_interface(self, json_rpc_client):
         return ServerNetworkInterface(json_rpc_client, {}, MockCryptoHelper(), self.on_block_received,
                                       self.on_transaction_received, self.get_block, self.get_block_by_hash,
-                                      self.get_transaction, port=6666)
+                                      self.get_transaction, self.get_blocks_by_hash_range, port=6666)
 
     def setUp(self):
         # key block ID -> value block instance
@@ -72,6 +72,9 @@ class CommonTestCase(TestCase):
         if block_id in self.available_blocks:
             return [self.available_blocks[block_id]]
         return []
+
+    def get_blocks_by_hash_range(self, start_hash=None, end_hash=None):
+        pass
 
     def get_block_by_hash(self, block_hash):
         for block_id in self.available_blocks:
@@ -205,24 +208,25 @@ class SendTransactionTestCase(CommonTestCase):
         # assert response
         self.assert_json_equal(response, '{"jsonrpc": "2.0", "result": null, "id": 1}')
 
-    def test_send_transaction_client_valid(self):
-        """Test Case #6"""
-        # given
-        self.add_peer('192.168.2.3', 6666)
 
-        test_transaction = Transaction('test_sender', 'test_receiver', 'test_payload', 'test_signature')
-        # when
-        self.json_rpc_client.queue_response({
-            'jsonrpc': '2.0',
-            'result': True,
-            'id': 1
-        })
-        self.network_interface.sendTransaction(test_transaction)
-        # then
-        last_request_method, last_request_params = self.get_last_request('192.168.2.3', 6666)
-        self.assertEqual(last_request_method, 'sendTransaction')
-        self.assertEqual(last_request_params, [{"sender": "test_sender", "receiver": "test_receiver",
-                                                "payload": "test_payload", "signature": "test_signature"}])
+def test_send_transaction_client_valid(self):
+    """Test Case #6"""
+    # given
+    self.add_peer('192.168.2.3', 6666)
+
+    test_transaction = Transaction('test_sender', 'test_receiver', 'test_payload', 'test_signature')
+    # when
+    self.json_rpc_client.queue_response({
+        'jsonrpc': '2.0',
+        'result': True,
+        'id': 1
+    })
+    self.network_interface.sendTransaction(test_transaction)
+    # then
+    last_request_method, last_request_params = self.get_last_request('192.168.2.3', 6666)
+    self.assertEqual(last_request_method, 'sendTransaction')
+    self.assertEqual(last_request_params, [{"sender": "test_sender", "receiver": "test_receiver",
+                                            "payload": "test_payload", "signature": "test_signature"}])
 
 
 class SendBlockTestCase(CommonTestCase):

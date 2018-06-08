@@ -1,5 +1,7 @@
+import json
 import os
 import sys
+from base64 import b64encode
 from io import StringIO
 from unittest import TestCase
 
@@ -142,7 +144,10 @@ class CommonTestCase(TestCase):
         """
         # go to end of file
         self.wallet_file.seek(0, 2)
-        self.wallet_file.write(label + ';' + public_key + ';' + private_key + '\n')
+        self.wallet_file.write(
+            label + ';' + b64encode(public_key.encode()).decode() + ';' + b64encode(
+                private_key.encode()).decode() + '\n'
+        )
         # go to the beginning of the file
         self.wallet_file.seek(0, 0)
 
@@ -184,9 +189,9 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #170
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -253,7 +258,7 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #160
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('existing key', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -278,7 +283,7 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #160
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('existing key', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -310,9 +315,9 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #170
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -331,9 +336,9 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #170
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
-        pr_key, pub_key = self.mock_crypto_helper.generatePair()
+        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -360,7 +365,11 @@ class CreateTransactionTestCase(CommonTestCase):
         # given
         self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_456')
         self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
-        valid_signature = self.mock_crypto_helper.sign('private_111', 'public_555' + 'test_receiver' + 'test_payload')
+        valid_signature = self.mock_crypto_helper.sign('private_111', json.dumps({
+            'sender': 'public_555',
+            'receiver': 'test_receiver',
+            'payload': 'test_payload'
+        }))
         # when
         self.queue_input('2')  # go to menu 2
         self.queue_input('2')  # choose label 2
