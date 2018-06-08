@@ -206,7 +206,9 @@ class BlockChain:
         """
         logging.debug("add block " + str(block.get_json()))
         if not isinstance(block, LogicalBlock):
+            logging.debug("converting to l block ")
             block = LogicalBlock.from_block(block, self._consensus)
+
         _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,
