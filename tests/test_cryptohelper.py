@@ -1,6 +1,7 @@
 from Crypto.PublicKey import ECC
 from labchain.cryptoHelper import CryptoHelper
 from unittest import TestCase
+from base64 import b64encode, b64decode
 
 import json
 
@@ -82,9 +83,14 @@ class Tests(TestCase):
         private_key_false, public_key_false = helper.generate_key_pair()
 
         #  tamper with signature
-        signature_byte_array = bytearray(signature_true)
+
+        signature_true_bytes = b64decode(signature_true.encode('utf-8'))
+
+        signature_byte_array = bytearray(signature_true_bytes)
         signature_byte_array[0] = (signature_byte_array[0]+1)%256
-        signature_false = bytes(signature_byte_array)
+        signature_false_bytes = bytes(signature_byte_array)
+
+        signature_false = b64encode(signature_false_bytes).decode('utf-8')
 
         self.assertFalse(helper.validate(public_key, message, signature_false))
         self.assertFalse(helper.validate(public_key_false, message, signature_true))
