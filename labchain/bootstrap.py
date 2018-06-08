@@ -1,5 +1,6 @@
-from labchain.networking import BlockDoesNotExistException
+from labchain.networking import BlockDoesNotExistException, NoPeersException
 from labchain.networking import BlockchainInitFailed
+
 
 class Bootstrapper:
     """Bootstrap the blockchain from other nodes."""
@@ -31,7 +32,10 @@ class Bootstrapper:
         """Initialize a blockchain object with blocks from other nodes."""
         retries = 0
         while True:
-            blocks = self.network_interface.requestBlocksByHashRange()
+            try:
+                blocks = self.network_interface.requestBlocksByHashRange()
+            except NoPeersException:
+                return blockchain
             for block in blocks:
                 blockchain.add_block(block)
             if blocks:
