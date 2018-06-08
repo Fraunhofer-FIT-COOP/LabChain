@@ -7,6 +7,7 @@ from labchain.singleton import Singleton
 from labchain.utility import Utility
 
 import json
+import logging
 
 
 @Singleton
@@ -28,6 +29,7 @@ class CryptoHelper:
         signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')     # Get the signature object
         signature = signer.sign(h)                                      # Sign the hash
         signature = b64encode(signature).decode('utf-8')
+        logging.debug('Cryptohelper signed.')
         return signature
 
     def validate(self, pub_key, payload, signature):
@@ -46,9 +48,11 @@ class CryptoHelper:
         try:
             verifier.verify(h, signature)                   # Check if the signature is verified
             result = True
+            logging.debug('Cryptohelper verified.')
 
         except ValueError:
             result = False
+            logging.debug('Cryptohelper failed to verify.')
 
         return result
 
@@ -61,6 +65,7 @@ class CryptoHelper:
         key = ECC.generate(curve='P-256')                       # Create ECC key object
         private_key = key.export_key(format='PEM')              # Get the string of private key
         public_key = key.public_key().export_key(format='PEM')  # Get the string of public key
+        logging.debug('Cryptohelper created a new key pair.')
         return private_key, public_key
 
     def __hash(self, payload):
@@ -70,6 +75,7 @@ class CryptoHelper:
             raise ValueError('Payload is not json')
         message = real_payload.encode()          # Encode string for hashing
         message_hash = SHA256.new(message)  # Hash using SHA256 scheme
+        logging.debug('Cryptohelper hashed.')
         return message_hash
 
 
