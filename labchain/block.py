@@ -113,6 +113,10 @@ class Block(object):
     def nonce(self):
         return self._nonce
 
+    @nonce.setter
+    def nonce(self, nonce):
+        self._nonce = nonce
+
     def __eq__(self, other):
         """compare blocks
         1) compare all properties"""

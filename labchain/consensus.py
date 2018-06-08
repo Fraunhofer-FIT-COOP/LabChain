@@ -44,7 +44,7 @@ class Consensus:
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
-
+        start_time = datetime.now()
         zeros_array = "0" * difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
@@ -61,7 +61,7 @@ class Consensus:
             message = json.dumps(data)
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = datetime.now()
-        self.last_mine_time_sec = datetime.now()
+        self.last_mine_time_sec = start_time
         # need a boolean return to check if mine got killed
         return True
 
