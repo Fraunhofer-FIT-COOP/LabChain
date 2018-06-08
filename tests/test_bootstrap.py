@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock, call
 
 from labchain.bootstrap import Bootstrapper
 from labchain.networking import BlockDoesNotExistException
-
+from labchain.networking import BlockchainInitFailed
 
 class BootrapperTestCase(TestCase):
 
@@ -71,7 +71,5 @@ class BootrapperTestCase(TestCase):
     def test_bootstrap_with_no_blocks_range_case(self):
         # given
         self.network_interface.requestBlocksByHashRange = MagicMock(side_effect=self._return_no_blocks_range_case)
-        # when
-        self.bootstrapper.do_bootstrap_by_hash_range(self.blockchain)
         # then
-        self.assertEqual(0, self.blockchain.add_block.call_count)
+        self.assertRaises(BlockchainInitFailed, self.bootstrapper.do_bootstrap_by_hash_range, [self.blockchain])

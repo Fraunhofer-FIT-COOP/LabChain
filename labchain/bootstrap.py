@@ -1,5 +1,5 @@
 from labchain.networking import BlockDoesNotExistException
-
+from labchain.networking import BlockchainInitFailed
 
 class Bootstrapper:
     """Bootstrap the blockchain from other nodes."""
@@ -15,12 +15,14 @@ class Bootstrapper:
         while True:
             try:
                 retries = 0
-                while retries < self.MAX_BLOCK_REQUEST_RETRIES:
+                while True:
                     block = self.network_interface.requestBlock(current_block_id)
                     if blockchain.add_block(block):
                         current_block_id += 1
                         break
                     retries += 1
+                    if retries == self.MAX_BLOCK_REQUEST_RETRIES:
+                        raise BlockchainInitFailed()
             except BlockDoesNotExistException:
                 break
         return blockchain
@@ -28,11 +30,13 @@ class Bootstrapper:
     def do_bootstrap_by_hash_range(self, blockchain):
         """Initialize a blockchain object with blocks from other nodes."""
         retries = 0
-        while retries < self.MAX_BLOCK_REQUEST_RETRIES:
+        while True:
             blocks = self.network_interface.requestBlocksByHashRange()
             for block in blocks:
                 blockchain.add_block(block)
             if blocks:
                 break
             retries += 1
+            if retries == self.MAX_BLOCK_REQUEST_RETRIES:
+                raise BlockchainInitFailed()
         return blockchain
