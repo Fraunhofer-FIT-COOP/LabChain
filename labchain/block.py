@@ -2,6 +2,7 @@ import time
 import hashlib
 import json
 
+from labchain.cryptoHelper import CryptoHelper
 from labchain.transaction import Transaction
 
 
@@ -109,6 +110,10 @@ class Block(object):
     def timestamp(self):
         return self._timestamp
 
+    @timestamp.setter
+    def timestamp(self, timestamp):
+        self._timestamp = timestamp
+
     @property
     def nonce(self):
         return self._nonce
@@ -180,7 +185,7 @@ class LogicalBlock(Block):
         if not self._merkle_tree_root:
             self._merkle_tree_root = self.compute_merkle_root()
         self._consensus = consensus_obj
-        self._crypto_helper = crypto_helper_obj
+        self._crypto_helper = CryptoHelper.instance()
 
     def is_block_ours(self, node_id):
         """Checks to see if the block was created by the node ID specified.
@@ -220,9 +225,9 @@ class LogicalBlock(Block):
         return self._crypto_helper.hash(self.to_json_headers())
 
     @staticmethod
-    def from_block(block):
+    def from_block(block, consensus_obj):
         """Instantiate LogicalBlock from Block"""
-        return LogicalBlock.from_dict(block.to_dict())
+        return LogicalBlock.from_dict(block.to_dict(), consensus_obj)
 
     @staticmethod
     def from_json(json_data):
@@ -231,7 +236,7 @@ class LogicalBlock(Block):
         return LogicalBlock.from_dict(data_dict)
 
     @staticmethod
-    def from_dict(data_dict):
+    def from_dict(data_dict, consesnus_obj=None):
         """Instantiate a LogicalBlock from a data dictionary."""
         return LogicalBlock(block_id=data_dict['nr'],
                             merkle_tree_root=data_dict['merkleHash'],
@@ -240,7 +245,8 @@ class LogicalBlock(Block):
                             transactions=[Transaction.from_dict(transaction_dict)
                                           for transaction_dict in data_dict['transactions']],
                             nonce=data_dict['nonce'],
-                            timestamp=data_dict['timestamp'])
+                            timestamp=data_dict['timestamp'],
+                            consensus_obj=consesnus_obj)
 
     def get_block_obj(self):
         return Block.from_json(super(LogicalBlock, self).get_json())

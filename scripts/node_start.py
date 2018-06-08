@@ -35,13 +35,25 @@ def setup_logging(verbose):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='CLI node for Labchain.')
-    parser.add_argument('--node_port', default=8080, help='The port address of the Labchain node')
-    parser.add_argument('--peer_list', default='{}', help='The peer list address of the Labchain node')
+    parser.add_argument('--port', default=8080, help='The port address of the Labchain node')
+    parser.add_argument('--peers', nargs='*', default=[], help='The peer list address of the Labchain node')
     parser.add_argument('--verbose', '-v', action='store_true')
     return parser.parse_args()
 
 
+def parse_peers(peer_args):
+    result = {}
+    for peer_str in peer_args:
+        host, port = peer_str.split(':')
+        if host not in result:
+            result[host] = {}
+        result[host][port] = {}
+    return result
+
+
 if __name__ == '__main__':
+    test = sys.argv
     args = parse_args()
     setup_logging(args.verbose)
-    node = create_node(args.node_port, args.peer_list)
+    initial_peers = parse_peers(args.peers)
+    node = create_node(args.port, initial_peers)
