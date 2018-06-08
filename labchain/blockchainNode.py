@@ -75,7 +75,7 @@ class BlockChainNode:
                     if self.blockchain_obj.add_block(block):
                         self.on_new_block_created(block)
             self.blockchain_obj.active_mine_block_update(None)
-            delay_time = time.time() - (next_call + mine_freq) - (time.time() - self.consensus_obj.last_mine_time_sec)
+            delay_time = mine_freq - (time.time() - self.consensus_obj.last_mine_time_sec)
             if delay_time < 0:
                 delay_time = 1
             logging.debug("Mining Thread sleep for " + str(delay_time) + " sec")
