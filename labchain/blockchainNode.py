@@ -179,7 +179,7 @@ class BlockChainNode:
 
         logging.info("Initialize web server")
         """init network interface"""
-        intial_peer_list = json.loads(self.initial_peers)
+        intial_peer_list = self.initial_peers
         if not intial_peer_list:
             intial_peer_list = json.loads(initial_peers_from_config)
             self.initial_peers = initial_peers_from_config
