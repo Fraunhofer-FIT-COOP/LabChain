@@ -528,3 +528,43 @@ class RequestBlockClientTestCase(CommonTestCase):
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'requestBlock')
+
+    def test_request_block_by_range(self):
+        """Test case #17."""
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        # when
+        self.json_rpc_client.queue_response({
+            'jsonrpc': '2.0',
+            'result': [
+                {
+                    'nr': 2,
+                    'merkleHash': 'test_merkle_hash',
+                    'predecessorBlock': None,
+                    'nonce': 5,
+                    'creator': 'test_creator',
+                    'timestamp': 1337.0,
+                    'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
+                                      'signature': 'test_signature'}]
+                }
+            ],
+            'id': 1
+        })
+        blocks = self.network_interface.requestBlocksByHashRange('test merkle_hash')
+        # then
+        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        self.assertEqual(last_request_method, 'requestBlocksByHashRange')
+        self.assertEqual(last_request_params, ['test merkle_hash', None])
+        self.assertEqual(len(blocks), 1)
+        block = blocks[0]
+        self.assertEqual(block.block_id, 2)
+        self.assertEqual(block.merkle_tree_root, 'test_merkle_hash')
+        self.assertEqual(block.predecessor_hash, None)
+        self.assertEqual(block.nonce, 5)
+        self.assertEqual(block.block_creator_id, 'test_creator')
+        self.assertEqual(len(block.transactions), 1)
+        transaction = block.transactions[0]
+        self.assertEqual(transaction.sender, 'test_sender')
+        self.assertEqual(transaction.receiver, 'test_receiver')
+        self.assertEqual(transaction.payload, 'test_payload')
+        self.assertEqual(transaction.signature, 'test_signature')
