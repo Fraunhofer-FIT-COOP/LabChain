@@ -1,4 +1,8 @@
-from labchain.networking import NoPeersException, NoBlockExistsInRange, BlockchainInitFailed
+from labchain.networking import NoPeersException, NoBlockExistsInRange
+
+
+class BlockchainInitFailed(Exception):
+    pass
 
 
 class Bootstrapper:
@@ -13,6 +17,9 @@ class Bootstrapper:
         """Initialize a blockchain object with blocks from other nodes."""
         retries = 0
         while True:
+            if retries == self.MAX_BLOCK_REQUEST_RETRIES:
+                raise BlockchainInitFailed()
+            retries += 1
             try:
                 blocks = self.network_interface.requestBlocksByHashRange()
             except NoPeersException:
@@ -23,7 +30,5 @@ class Bootstrapper:
                 blockchain.add_block(block)
             if blocks:
                 break
-            retries += 1
-            if retries == self.MAX_BLOCK_REQUEST_RETRIES:
-                raise BlockchainInitFailed()
+
         return blockchain
