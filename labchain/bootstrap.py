@@ -1,3 +1,4 @@
+from labchain.block import LogicalBlock
 from labchain.networking import NoPeersException, NoBlockExistsInRange
 
 
@@ -27,7 +28,8 @@ class Bootstrapper:
             except NoBlockExistsInRange:
                 continue
             for block in blocks:
-                blockchain.add_block(block)
+                lblock = LogicalBlock.from_block(block)
+                blockchain.add_block(lblock)
             if blocks:
                 break
 

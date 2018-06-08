@@ -16,15 +16,13 @@ from labchain.networking import ServerNetworkInterface
 from labchain.networking import JsonRpcClient
 from labchain.txpool import TxPool
 
-
-NODE_CONFIG_FILE = 'resources/node_configuration.ini'
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO
 
 
 class BlockChainNode:
 
-    def __init__(self):
+    def __init__(self, config_file_path, node_port=None, peer_list=None):
         self.consensus_obj = None
         self.crypto_helper_obj = None
         self.blockchain_obj = None
@@ -34,10 +32,11 @@ class BlockChainNode:
         self.network_interface = None
         self.webserver_thread = None
         self.polling_thread = None
-
+        self.network_port = node_port
+        self.initial_peers = peer_list
         self.config_reader = None
         try:
-            self.config_reader = ConfigReader(NODE_CONFIG_FILE)
+            self.config_reader = ConfigReader(config_file_path)
             logging.info("read config file")
         except ConfigReaderException as e:
             logging.error(str(e))
@@ -147,10 +146,11 @@ class BlockChainNode:
                                                             option='TOLERANCE_LEVEL')
             pruning_interval = self.config_reader.get_config(section='BLOCK_CHAIN',
                                                              option='TIME_TO_PRUNE')
-            network_port = self.config_reader.get_config(section='NETWORK',
-                                                         option='PORT')
-            initial_peers = self.config_reader.get_config(section='NETWORK',
-                                                          option='PEER_LIST')
+            if not self.network_port:
+                self.network_port = self.config_reader.get_config(section='NETWORK',
+                                                                  option='PORT')
+            initial_peers_from_config = self.config_reader.get_config(section='NETWORK',
+                                                                      option='PEER_LIST')
             pool_interval = self.config_reader.get_config(section='NETWORK',
                                                           option='POOLING_INTERVAL_SEC')
             mine_freq = self.config_reader.get_config(section='MINING',
@@ -174,8 +174,11 @@ class BlockChainNode:
                                          request_block_hash_callback=self.request_block_by_hash)
 
         """init network interface"""
-        intial_peer_list = json.loads(initial_peers)
-        self.network_interface = self.create_network_interface(network_port,
+        intial_peer_list = json.loads(self.initial_peers)
+        if not intial_peer_list:
+            intial_peer_list = json.loads(initial_peers_from_config)
+            self.initial_peers = initial_peers_from_config
+        self.network_interface = self.create_network_interface(self.network_port,
                                                                initial_peers=intial_peer_list)
 
         # start the web servers for receiving JSON-RPC calls
@@ -209,13 +212,3 @@ class BlockChainNode:
                                               kwargs=dict(interval=pruning_interval))
 
         self.orphan_killer.start()
-
-
-def configure_logging():
-    logging.basicConfig(level=logging.WARNING, format='%(threadName)s: %(message)s')
-    logging.getLogger(BlockChainNode.__name__).setLevel(LOG_LEVEL)
-
-
-if __name__ == '__main__':
-    configure_logging()
-    blockchain_node = BlockChainNode()
