@@ -17,7 +17,8 @@ class BlockChainStartupFailed(Exception):
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
-                 min_blocks_for_difficulty):
+                 min_blocks_for_difficulty, request_block_callback,
+                 request_block_hash_callback):
         """Constructor for BlockChain
 
         Parameters
@@ -72,6 +73,8 @@ class BlockChain:
         self._crypto_helper = crypto_helper_obj
         self._min_blocks = min_blocks_for_difficulty
         self._active_mine_block = None
+        self._request_block = request_block_callback
+        self._request_block_hash = request_block_hash_callback
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -351,7 +354,8 @@ class BlockChain:
             Hash of the block requested by the node.
 
         """
-        pass
+        block = self._request_block_hash(requested_block_hash)
+        return LogicalBlock.from_block(block)
 
     def active_mine_block_update(self, block):
         self._active_mine_block = block
@@ -360,5 +364,6 @@ class BlockChain:
         if self._active_mine_block is not None:
             if block.mine_equality(self._active_mine_block):
                 self._consensus.kill_mine = 1
-                unmined_transactions = list(set(self._active_mine_block.transactions).difference(set(block.transactions)))
+                unmined_transactions = list(
+                    set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions)
