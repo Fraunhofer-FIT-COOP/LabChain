@@ -17,6 +17,7 @@ from labchain.txpool import TxPool
 
 logger = logging.getLogger(__name__)
 
+
 class BlockChainNode:
 
     def __init__(self, config_file_path, node_port=None, peer_list=None):
@@ -140,7 +141,9 @@ class BlockChainNode:
         """init blockchain"""
         # Generate the node ID using host ID
         node_uuid = str(uuid.uuid1())
-        node_id = node_uuid[node_uuid.rfind('-') + 1:]
+        # node_id = node_uuid[node_uuid.rfind('-') + 1:]
+        node_id = node_uuid
+        logger.info("Creator id " + str(node_id))
 
         # Read all configurations to be used
         try:

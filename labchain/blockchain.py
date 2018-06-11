@@ -2,14 +2,10 @@ from datetime import datetime
 import logging
 import json
 from pprint import pformat
-import sys
 
 from labchain.block import LogicalBlock, Block
 
 logger = logging.getLogger(__name__)
-
-class BlockChainStartupFailed(Exception):
-    pass
 
 
 class BlockChain:
@@ -81,7 +77,7 @@ class BlockChain:
         self._first_block_hash = _first_block.get_computed_hash()
         self._blockchain[self._first_block_hash] = _first_block
 
-        logger.debug("Added Genesis block --- \n {b} \n".\
+        logger.debug("Added Genesis block --- \n {b} \n".
                      format(b=pformat(json.loads(_first_block.get_json()))))
 
         self._node_branch_head = self._first_block_hash
@@ -210,6 +206,9 @@ class BlockChain:
             logger.debug("converting to l block ")
             block = LogicalBlock.from_block(block, self._consensus)
 
+        if block.get_computed_hash() in self._blockchain:
+            return False
+
         _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,
@@ -239,7 +238,9 @@ class BlockChain:
             self._blockchain[_curr_block_hash] = _curr_block
             self._current_branch_heads.append(_curr_block_hash)
 
-            if _curr_block.is_block_ours(self._node_id):
+            if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):
+                self._node_branch_head = _curr_block_hash
+            elif len(self._current_branch_heads) == 1:
                 self._node_branch_head = _curr_block_hash
 
             # Check recursively if blocks are parent to some orphans
@@ -259,10 +260,10 @@ class BlockChain:
             self.request_block_from_neighbour(_prev_hash)
 
         # kill mine check
-        if block.is_block_ours(self._node_id):
+        if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
-        logger.debug("Added new block --- \n {b} \n".\
+        logger.debug("Added new block --- \n " + str(block.get_computed_hash()) + "\n {b} \n".
                      format(b=pformat(json.loads(block.get_json()))))
 
         logger.debug("current branch heads = " + str(self._current_branch_heads))
@@ -338,7 +339,7 @@ class BlockChain:
                 while _b_hash not in _longest_chain:
                     _b = self._blockchain.pop(_b_hash)
                     if _b.is_block_ours(self._node_id):
-                        _txns = _b.get_transcations()
+                        _txns = _b.transactions
                         self._txpool.return_transactions_to_pool(_txns)
                     _b_hash = _b.predecessor_hash
                     del _b
@@ -373,8 +374,10 @@ class BlockChain:
         self._active_mine_block = block
 
     def check_block_in_mining(self, block):
+        logger.info("Kill mine check")
         if self._active_mine_block is not None:
             if block.mine_equality(self._active_mine_block):
+                logger.info("Kill mine equality true")
                 self._consensus.kill_mine = 1
                 unmined_transactions = list(
                     set(self._active_mine_block.transactions).difference(set(block.transactions)))
