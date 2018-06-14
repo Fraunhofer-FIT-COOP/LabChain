@@ -5,6 +5,7 @@ import threading
 import time
 import uuid
 
+from labchain.block import Block
 from labchain.blockchain import BlockChain
 from labchain.bootstrap import Bootstrapper
 from labchain.configReader import ConfigReader
@@ -105,7 +106,10 @@ class BlockChainNode:
 
     def on_get_block_by_hash(self, hash):
         """callback method for get block"""
-        return self.blockchain_obj.get_block_by_hash(hash)
+        block_data = self.blockchain_obj.get_block_by_hash(hash)
+        if block_data:
+            return Block.from_json(block_data)
+        return None
 
     def on_get_block_by_id(self, block_id):
         """callback method for get block"""
@@ -192,8 +196,7 @@ class BlockChainNode:
         # start the web servers for receiving JSON-RPC calls
         logger.debug('Starting web server thread...')
         self.webserver_thread = threading.Thread(name='Web Server',
-                                                 target=self.network_interface.start_listening,
-                                                 args=(False,))
+                                                 target=self.network_interface.start_listening)
         self.webserver_thread.start()
 
         # start the polling threads
