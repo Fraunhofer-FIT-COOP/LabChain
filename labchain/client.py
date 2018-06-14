@@ -1,7 +1,7 @@
 import os
-from base64 import b64encode, b64decode
 from collections import OrderedDict
 
+from labchain.networking import TransactionDoesNotExistException, BlockDoesNotExistException
 from labchain.transaction import Transaction
 
 LABCHAIN_LOGO = """
@@ -22,8 +22,6 @@ LABCHAIN_LOGO = """
 
 LABCHAIN_LOGO_LIST = LABCHAIN_LOGO.splitlines()
 
-
-# TODO: reflect network component changes
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -274,6 +272,7 @@ class TransactionWizard:
 
             new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
+            transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
 
             self.network_interface.sendTransaction(new_transaction)
 
@@ -282,6 +281,7 @@ class TransactionWizard:
             print(u'Sender: ' + public_key)
             print(u'Receiver: ' + str(chosen_receiver))
             print(u'Payload: ' + str(chosen_payload))
+            print(u'Hash: ' + str(transaction_hash))
             print()
 
         # case: wallet is empty
@@ -302,10 +302,14 @@ class BlockchainClient:
             '2': ('Create new address', self.__create_new_address, []),
             '3': ('Delete address', self.__delete_address, [])
         }, 'Please select a value: ', 'Exit Wallet Menu')
+        self.load_block_menu = Menu(['Load Block'], {
+            '1': ('Load by number', self.__load_block, [False]),
+            '2': ('Load by hash', self.__load_block, [True])
+        }, 'Please select a value: ', 'Exit Load Block Menu')
         self.main_menu = Menu(LABCHAIN_LOGO_LIST + ['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction', self.__create_transaction, []),
-            '3': ('Load Block', self.__load_block, []),
+            '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Load Transaction', self.__load_transaction, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
@@ -365,7 +369,7 @@ class BlockchainClient:
             delete_menu.show()
         input('Press any key to go back to the main menu!')
 
-    def __load_block(self):
+    def __load_block(self, by_hash=False):
         def str_represents_int(string):
             try:
                 int(string)
@@ -374,31 +378,44 @@ class BlockchainClient:
                 return False
 
         def read_blockchain_number():
-            return input('Please input the block number you are looking for (Blocks are numbered starting at zero)!')
+            if by_hash:
+                return input('Please input the block hash you are looking for: ')
+            else:
+                return input(
+                    'Please input the block number you are looking for (Blocks are numbered starting at zero): ')
 
         clear_screen()
         input_str = read_blockchain_number()
 
-        while not str_represents_int(input_str) or not int(input_str) >= 0:
-            if input_str == '':
-                # show main menu
-                return
-            print("Invalid Input. Numbers starting from 0 are allowed.")
-            print()
-            input_str = read_blockchain_number()
+        if not by_hash:
+            while not str_represents_int(input_str) or not int(input_str) >= 0:
+                if input_str == '':
+                    # show main menu
+                    return
+                print("Invalid Input. Numbers starting from 0 are allowed.")
+                print()
+                input_str = read_blockchain_number()
 
         clear_screen()
-        block = self.network_interface.requestBlock(int(input_str))
-        if block is not None:
-            print('block number: ' + str(block.block_id))
-            print('timestamp: ' + str(block.timestamp))
-            print('predecessor hash: ' + str(block.predecessor_hash))
-            print('merkle tree: ' + str(block.merkle_tree_root))
-            print('transactions: ' + ', '.join([str(transaction) for transaction in block.transactions]))
-            print('nonce: ' + str(block.nonce))
-            print('creator: ' + str(block.block_creator_id))
-        else:
+        try:
+            if by_hash:
+                blocks = [self.network_interface.requestBlockByHash(input_str)]
+            else:
+                blocks = self.network_interface.requestBlock(int(input_str))
+        except BlockDoesNotExistException:
+            blocks = []
+        if not blocks:
             print('There is no block with the given number.')
+        else:
+            for block in blocks:
+                if block is not None:
+                    print('block number: ' + str(block.block_id))
+                    print('timestamp: ' + str(block.timestamp))
+                    print('predecessor hash: ' + str(block.predecessor_hash))
+                    print('merkle tree: ' + str(block.merkle_tree_root))
+                    print('transactions: ' + ', '.join([str(transaction) for transaction in block.transactions]))
+                    print('nonce: ' + str(block.nonce))
+                    print('creator: ' + str(block.block_creator_id))
 
         print()
         input('Press any key to go back to the main menu!')
@@ -407,7 +424,10 @@ class BlockchainClient:
         """Prompt the user for a transaction hash and display the transaction details."""
         clear_screen()
         transaction_hash = input('Please enter a transaction hash: ')
-        transaction = self.network_interface.requestTransaction(transaction_hash)
+        try:
+            transaction, block_hash = self.network_interface.requestTransaction(transaction_hash)
+        except TransactionDoesNotExistException:
+            transaction = None
 
         clear_screen()
         if not transaction:
@@ -417,6 +437,7 @@ class BlockchainClient:
             print('Receiver ID: {}'.format(transaction.receiver))
             print('Payload: {}'.format(transaction.payload))
             print('Signature: {}'.format(transaction.signature))
+            print('Block Hash: {}'.format(block_hash))
         print()
         # wait for any input before returning to menu
         input('Press enter to continue...')

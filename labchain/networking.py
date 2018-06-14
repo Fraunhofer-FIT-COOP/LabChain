@@ -2,6 +2,7 @@ import collections
 import json
 import logging
 import random
+import socket
 import time
 from copy import deepcopy
 from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
@@ -13,6 +14,7 @@ from werkzeug.wrappers import Request, Response
 
 from labchain.block import Block
 from labchain.transaction import Transaction
+from labchain.utility import Utility
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +89,10 @@ class NetworkInterface:
         :param initial_peers: List of IP addresses (optional with :port) of the initial peers.
         """
         self.json_rpc_client = json_rpc_client
-        self.peers = initial_peers
+        self.peers = {}
+        for ip_address, port_map in initial_peers.items():
+            for port, info in port_map.items():
+                self.add_peer(ip_address, port, info)
 
     def sendTransaction(self, transaction):
         # send the transaction to all peers
@@ -132,7 +137,7 @@ class NetworkInterface:
         responses = self._bulk_send('requestBlockByHash', [block_hash], return_on_first_success=True)
         if responses:
             if responses[0]:
-                return Block.from_dict(responses[0][0])
+                return Block.from_dict(responses[0])
             else:
                 raise BlockDoesNotExistException()
         else:
@@ -155,6 +160,8 @@ class NetworkInterface:
 
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""
+        if not Utility.is_valid_ipv4(ip_address) and not Utility.is_valid_ipv6(ip_address):
+            ip_address = self.__resolve_hostname(ip_address)
         if info is None:
             info = {}
         if ip_address in self.peers and port in self.peers[ip_address] and info == self.peers[ip_address][port]:
@@ -228,6 +235,10 @@ class NetworkInterface:
             if not self.peers[host]:
                 del self.peers[host]
 
+    @staticmethod
+    def __resolve_hostname(ip_address):
+        return socket.gethostbyname(ip_address)
+
 
 class ServerNetworkInterface(NetworkInterface):
     """Advanced network interface for additional server-to-server communication."""
@@ -249,9 +260,6 @@ class ServerNetworkInterface(NetworkInterface):
                                             Transaction instance or None.
         :param port: The port number to listen on.
         """
-        # TODO: get_block returns list
-        # fixed TODO: blocks can be requested by hash and id
-        # fixed TODO: get_transaction_callback : tuple with 1st element as transaction and 2nd element as block_hash
         super().__init__(json_rpc_client, initial_peers)
         self.crypto_helper = crypto_helper
         self.on_block_received_callback = on_block_received_callback
@@ -343,13 +351,13 @@ class ServerNetworkInterface(NetworkInterface):
         transaction = Transaction.from_dict(transaction_data)
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
         transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
+        self.on_transaction_received_callback(transaction)
         if not transaction_in_pool == transaction:
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
             try:
                 self.sendTransaction(transaction)
             except NoPeersException:
                 pass
-        self.on_transaction_received_callback(transaction)
 
     def __handle_request_block(self, block_id):
         blocks = self.get_block_callback(block_id)
