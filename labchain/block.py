@@ -182,10 +182,10 @@ class LogicalBlock(Block):
                                            transactions=transactions, nonce=nonce,
                                            timestamp=timestamp)
         self._length_in_chain = None
+        self._crypto_helper = CryptoHelper.instance()
+        self._consensus = consensus_obj
         if not self._merkle_tree_root:
             self._merkle_tree_root = self.compute_merkle_root()
-        self._consensus = consensus_obj
-        self._crypto_helper = CryptoHelper.instance()
 
     def is_block_ours(self, node_id):
         """Checks to see if the block was created by the node ID specified.
@@ -314,5 +314,5 @@ class LogicalBlock(Block):
 
         txn_hashes = []
         for t in self._transactions:
-            txn_hashes.append(self._crypto_helper.hash(json.dumps(t)))
+            txn_hashes.append(self._crypto_helper.hash(t.get_json()))
         return _merkle_root(txn_hashes)
