@@ -66,11 +66,13 @@ class BlockChainNode:
                 self.blockchain_obj.active_mine_block_update(block)
                 _timestamp2, _timestamp1, _num_of_blocks = self.blockchain_obj.calculate_diff()
                 logger.debug("Created new block, try to mine")
+                st = time.time()
                 if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks):
                     # have to check if other node already created a block
                     logger.debug("Mining was successful for new block")
                     if self.blockchain_obj.add_block(block):
                         self.on_new_block_created(block)
+                logger.debug("Time to mine block is " + str(time.time() - st) + " seconds.")
             self.blockchain_obj.active_mine_block_update(None)
             delay_time = mine_freq - (time.time() - self.consensus_obj.last_mine_time_sec)
             if delay_time < 0:
