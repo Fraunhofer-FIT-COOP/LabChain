@@ -1,7 +1,6 @@
 from datetime import datetime
 import logging
 import json
-from pprint import pformat
 
 from labchain.block import LogicalBlock, Block
 
@@ -78,7 +77,7 @@ class BlockChain:
         self._blockchain[self._first_block_hash] = _first_block
 
         logger.debug("Added Genesis block --- \n {b} \n".
-                     format(b=pformat(json.loads(_first_block.get_json()))))
+                     format(b=str(_first_block)))
 
         self._node_branch_head = self._first_block_hash
         self._current_branch_heads = [self._first_block_hash, ]
@@ -203,7 +202,7 @@ class BlockChain:
 
         """
         if not isinstance(block, LogicalBlock):
-            logger.debug("converting to l block ")
+            logger.debug("Converting block to logical block ")
             block = LogicalBlock.from_block(block, self._consensus)
 
         if block.get_computed_hash() in self._blockchain:
@@ -213,7 +212,11 @@ class BlockChain:
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,
                                     _num_of_blocks):
+            logger.debug("The block received is not valid, discarding this block -- \n {b}".\
+                         format(b=str(block)))
             if block.is_block_ours(self._node_id):
+                logger.debug("Since this block is ours, returning the "
+                             "transactions back to transaction pool")
                 _txns = block.transactions
                 self._txpool.return_transactions_to_pool(_txns)
             del block
@@ -238,9 +241,14 @@ class BlockChain:
             self._blockchain[_curr_block_hash] = _curr_block
             self._current_branch_heads.append(_curr_block_hash)
 
+            """
             if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):
                 self._node_branch_head = _curr_block_hash
             elif len(self._current_branch_heads) == 1:
+                self._node_branch_head = _curr_block_hash
+            """
+            if _prev_hash == self._node_branch_head:
+                logger.debug("Branch head updated for node {}".format(self._node_id))
                 self._node_branch_head = _curr_block_hash
 
             # Check recursively if blocks are parent to some orphans
@@ -256,6 +264,7 @@ class BlockChain:
 
         else:
             # Put block in orphan pool, query predecessor block
+            logger.debug("Block has been put to orphan pool, since predecessor was not found")
             self._orphan_blocks[_prev_hash] = _curr_block
             self.request_block_from_neighbour(_prev_hash)
 
@@ -263,10 +272,15 @@ class BlockChain:
         if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
-        logger.debug("Added new block --- \n " + str(block.get_computed_hash()) + "\n {b} \n".
-                     format(b=pformat(json.loads(block.get_json()))))
+        logger.debug("Added new block --- \n {h} \n {b} \n".
+                     format(h=str(block.get_computed_hash()), b=str(block)))
 
-        logger.debug("current branch heads = " + str(self._current_branch_heads))
+        logger.debug("Number of branches currently branch heads = {}"
+                     " \n Branches -- \n".format(len(self._current_branch_heads)))
+        i = 0
+        for branch in self._current_branch_heads:
+            logger.debug("Branch {} : {}".format(i + 1, branch))
+            i += 1
         self.switch_to_longest_branch()
         return True
 
@@ -321,6 +335,7 @@ class BlockChain:
                 _max_head = _head
 
         if _max_len > self._tolerance_level:
+            logger.debug("Past Tolerance level, branch switching took place")
             _new_head_hash = _max_head.get_computed_hash()
 
             # Save all block hashes between furthest branch and head in max chain
@@ -347,6 +362,8 @@ class BlockChain:
             self._current_branch_heads = [_new_head_hash, ]
             self._node_branch_head = _new_head_hash
             self._furthest_branching_point = {"block": None, "position": float("inf")}
+            logger.debug("Branch switching successful, new node branch head : {}".
+                         format(self._node_branch_head))
 
     def prune_orphans(self):
         _curr_time = datetime.now()

@@ -1,6 +1,7 @@
 import time
 import json
 from hashlib import sha256 as sha
+from pprint import pformat
 
 from labchain.cryptoHelper import CryptoHelper
 from labchain.transaction import Transaction
@@ -84,7 +85,7 @@ class Block(object):
                      timestamp=data_dict['timestamp'])
 
     def __str__(self):
-        return str(self.to_dict())
+        return pformat(self.to_dict())
 
     @property
     def block_id(self):
