@@ -270,7 +270,7 @@ class LogicalBlock(Block):
         # Validate Transaction signatures
         transactions = self._transactions
         for t in transactions:
-            if not t.validate_signature(self._crypto_helper):
+            if not t.validate_transaction(self._crypto_helper):
                 return False
 
         # Validate Merkle Tree correctness

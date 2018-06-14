@@ -42,3 +42,12 @@ pip install -r requirements.txt
 cd scripts
 python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 ```
+
+`-v` and `-vv` set the log level to INFO or DEBUG.
+
+# Run the Client
+
+```
+cd scripts
+python client-cli.py <node-ip> <node-port>
+```

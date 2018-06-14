@@ -145,8 +145,7 @@ class CommonTestCase(TestCase):
         # go to end of file
         self.wallet_file.seek(0, 2)
         self.wallet_file.write(
-            label + ';' + b64encode(public_key.encode()).decode() + ';' + b64encode(
-                private_key.encode()).decode() + '\n'
+            label + ';' + public_key + ';' + private_key + '\n'
         )
         # go to the beginning of the file
         self.wallet_file.seek(0, 0)

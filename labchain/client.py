@@ -65,8 +65,6 @@ class Wallet:
         result = {}
         for line in csv_string.splitlines():
             label, public_key, private_key = line.split(';', 2)
-            private_key = b64decode(private_key.encode('utf-8')).decode('ascii')
-            public_key = b64decode(public_key.encode('utf-8')).decode('ascii')
             result[label] = (public_key, private_key)
         return result
 
@@ -75,8 +73,6 @@ class Wallet:
         result = ''
         for label, key_tuple in dictionary.items():
             public_key, private_key = key_tuple
-            private_key = b64encode(private_key.encode('ascii')).decode('utf-8')
-            public_key = b64encode(public_key.encode('ascii')).decode('utf-8')
             result += label + ';' + public_key + ';' + private_key + os.linesep
         return result
 
@@ -186,8 +182,6 @@ class TransactionWizard:
 
     @staticmethod
     def __validate_receiver_input(usr_input):
-        print(usr_input)
-        print(u'len(usr_input)' + str(len(usr_input)))
         if len(usr_input) > 0:
             return True
         else:

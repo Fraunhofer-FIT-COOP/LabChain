@@ -25,6 +25,7 @@ class CryptoHelper:
         :param payload: JSON of the data to be signed.
         :return signature: signature in binary string format."""
 
+        private_key = b64decode(private_key).decode()
         h = self.__hash(payload)  # Hash the payload
         signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')  # Get the signature object
         signature = signer.sign(h)  # Sign the hash
@@ -40,6 +41,7 @@ class CryptoHelper:
         :param signature: Signature in binary string that was produced for the given data.
         :return result: True if signature and data pair matches, false otherwise."""
 
+        pub_key = b64decode(pub_key).decode()
         h = self.__hash(payload)  # Hash the payload
         public_key = ECC.import_key(pub_key)  # Get the public key object using public key string
         verifier = DSS.new(public_key, 'fips-186-3')  # Create a signature object
@@ -66,7 +68,7 @@ class CryptoHelper:
         private_key = key.export_key(format='PEM')  # Get the string of private key
         public_key = key.public_key().export_key(format='PEM')  # Get the string of public key
         logging.debug('Cryptohelper created a new key pair.')
-        return private_key, public_key
+        return b64encode(private_key.encode()), b64encode(public_key.encode())
 
     def __hash(self, payload):
         try:

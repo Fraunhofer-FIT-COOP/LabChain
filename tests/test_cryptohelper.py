@@ -1,9 +1,10 @@
-from Crypto.PublicKey import ECC
-from labchain.cryptoHelper import CryptoHelper
-from unittest import TestCase
-from base64 import b64encode, b64decode
-
 import json
+from base64 import b64encode, b64decode
+from unittest import TestCase
+
+from Crypto.PublicKey import ECC
+
+from labchain.cryptoHelper import CryptoHelper
 
 
 class Tests(TestCase):
@@ -87,7 +88,7 @@ class Tests(TestCase):
         signature_true_bytes = b64decode(signature_true.encode('utf-8'))
 
         signature_byte_array = bytearray(signature_true_bytes)
-        signature_byte_array[0] = (signature_byte_array[0]+1)%256
+        signature_byte_array[0] = (signature_byte_array[0] + 1) % 256
         signature_false_bytes = bytes(signature_byte_array)
 
         signature_false = b64encode(signature_false_bytes).decode('utf-8')
@@ -99,6 +100,8 @@ class Tests(TestCase):
     def test_key_pairs_match(self):
         helper = CryptoHelper.instance()
         private_key, public_key = helper.generate_key_pair()
+        private_key = b64decode(private_key).decode()
+        public_key = b64decode(public_key).decode()
         key = ECC.import_key(private_key)
         public_key_true = key.public_key().export_key(format='PEM')
         self.assertEqual(public_key_true, public_key)

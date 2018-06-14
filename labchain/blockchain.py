@@ -212,7 +212,7 @@ class BlockChain:
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,
                                     _num_of_blocks):
-            logger.debug("The block received is not valid, discarding this block -- \n {b}".\
+            logger.debug("The block received is not valid, discarding this block -- \n {b}".
                          format(b=str(block)))
             if block.is_block_ours(self._node_id):
                 logger.debug("Since this block is ours, returning the "
@@ -272,7 +272,7 @@ class BlockChain:
         if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
-        logger.debug("Added new block --- \n {h} \n {b} \n".
+        logger.info("Added new block --- \n {h} \n {b} \n".
                      format(h=str(block.get_computed_hash()), b=str(block)))
 
         logger.debug("Number of branches currently branch heads = {}"

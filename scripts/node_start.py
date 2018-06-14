@@ -23,9 +23,11 @@ def create_node(node_port, peer_list):
     return BlockChainNode(CONFIG_FILE, node_port, peer_list)
 
 
-def setup_logging(verbose):
-    if verbose:
+def setup_logging(verbose, very_verbose):
+    if very_verbose:
         logging.basicConfig(level=logging.DEBUG)
+    elif verbose:
+        logging.basicConfig(level=logging.INFO)
     else:
         logging.basicConfig(level=logging.WARNING)
 
@@ -35,6 +37,7 @@ def parse_args():
     parser.add_argument('--port', default=8080, help='The port address of the Labchain node')
     parser.add_argument('--peers', nargs='*', default=[], help='The peer list address of the Labchain node')
     parser.add_argument('--verbose', '-v', action='store_true')
+    parser.add_argument('--very-verbose', '-vv', action='store_true')
     return parser.parse_args()
 
 
@@ -51,6 +54,6 @@ def parse_peers(peer_args):
 if __name__ == '__main__':
     test = sys.argv
     args = parse_args()
-    setup_logging(args.verbose)
+    setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
     node = create_node(args.port, initial_peers)

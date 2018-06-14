@@ -161,7 +161,7 @@ class NetworkInterface:
             logger.info('Peer {}:{} unchanged. Skipping...'.format(ip_address, str(port)))
             return
         logger.info('Peer {}:{} added/updated'.format(str(ip_address), str(port)))
-        update(self.peers, {str(ip_address): {str(port): info}})
+        update(self.peers, {str(ip_address): {int(port): info}})
         logger.debug('My peers are now: {}'.format(str(self.peers)))
 
     def _add_peer_bulk(self, peer_dict):
@@ -360,7 +360,6 @@ class ServerNetworkInterface(NetworkInterface):
     def __handle_request_block_by_hash(self, block_hash):
         block = self.get_block_by_hash_callback(block_hash)
         if block:
-            # TODO why block to dict? which type is block?
             return block.to_dict()
         return []
 
