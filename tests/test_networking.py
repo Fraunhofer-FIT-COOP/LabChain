@@ -486,7 +486,7 @@ class RequestBlockClientTestCase(CommonTestCase):
         # when
         self.json_rpc_client.queue_response({
             'jsonrpc': '2.0',
-            'result': [
+            'result':
                 {
                     'nr': 2,
                     'merkleHash': 'test_merkle_hash',
@@ -496,8 +496,7 @@ class RequestBlockClientTestCase(CommonTestCase):
                     'timestamp': 1337.0,
                     'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
                                       'signature': 'test_signature'}]
-                }
-            ],
+                },
             'id': 1
         })
         block = self.network_interface.requestBlockByHash('test merkle_hash')
