@@ -31,9 +31,11 @@ def create_client(wallet_file, node_ip, node_port):
     return BlockchainClient(Wallet(wallet_file), network_interface, crypto_helper)
 
 
-def setup_logging(verbose):
-    if verbose:
+def setup_logging(verbose, very_verbose):
+    if very_verbose:
         logging.basicConfig(level=logging.DEBUG)
+    elif verbose:
+        logging.basicConfig(level=logging.INFO)
     else:
         logging.basicConfig(level=logging.WARNING)
 
@@ -43,12 +45,13 @@ def parse_args():
     parser.add_argument('node_ip', help='The IP address of the Labchain node')
     parser.add_argument('node_port', help='The port address of the Labchain node')
     parser.add_argument('--verbose', '-v', action='store_true')
+    parser.add_argument('--very-verbose', '-vv', action='store_true')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
-    setup_logging(args.verbose)
+    setup_logging(args.verbose, args.very_verbose)
     create_config_directory()
     if os.path.exists(WALLET_FILE_PATH):
         file_mode = 'r+'

@@ -340,13 +340,16 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __handle_send_block(self, block_data):
         block = Block.from_dict(block_data)
+        self.on_block_received_callback(block)
         if block not in self.get_block_callback(block.block_id):
             logger.debug('Broadcasting block: {}'.format(str(block)))
-            try:
-                self.sendBlock(block)
-            except NoPeersException:
-                pass
-        self.on_block_received_callback(block)
+            self._call_threaded(self.__send_block_safe, block)
+
+    def __send_block_safe(self, block):
+        try:
+            self.sendBlock(block)
+        except NoPeersException:
+            pass
 
     def __handle_send_transaction(self, transaction_data):
         transaction = Transaction.from_dict(transaction_data)

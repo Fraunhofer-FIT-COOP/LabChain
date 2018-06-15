@@ -51,3 +51,5 @@ python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 cd scripts
 python client-cli.py <node-ip> <node-port>
 ```
+
+`-v` and `-vv` set the log level to INFO or DEBUG.
