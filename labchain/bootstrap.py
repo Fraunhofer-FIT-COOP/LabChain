@@ -1,4 +1,8 @@
+import logging
+
 from labchain.networking import NoPeersException, NoBlockExistsInRange
+
+logger = logging.getLogger(__name__)
 
 
 class BlockchainInitFailed(Exception):
@@ -23,10 +27,12 @@ class Bootstrapper:
             try:
                 blocks = self.network_interface.requestBlocksByHashRange()
             except NoPeersException:
+                logger.info('No peers available for bootstrapping. Starting from scratch...')
                 return blockchain
             except NoBlockExistsInRange:
                 continue
             # traverse reverse because the first block is the last element and vice versa
+            logger.info('Received {} blocks from peers. Adding them now...'.format(len(blocks)))
             for block in reversed(blocks):
                 blockchain.add_block(block)
             if blocks:

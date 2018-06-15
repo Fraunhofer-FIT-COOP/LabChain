@@ -206,7 +206,7 @@ class BlockChainNode:
                                                args=(pool_interval,))
         self.polling_thread.start()
 
-        logger.debug("Starting bootstrap...")
+        logger.info("Starting bootstrap...")
         """Bootstrap the blockchain node"""
         bootstrapper = Bootstrapper(self.network_interface)
         bootstrapper.do_bootstrap(self.blockchain_obj)
