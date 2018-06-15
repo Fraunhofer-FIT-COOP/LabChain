@@ -120,7 +120,10 @@ class BlockChainNode:
         return self.blockchain_obj.get_block_range(range_start, range_end)
 
     def request_block_by_hash(self, hash):
-        return self.network_interface.requestBlockByHash(hash)
+        try:
+            return self.network_interface.requestBlockByHash(hash)
+        except:
+            return None
 
     def request_block_by_id(self, block_id):
         return self.network_interface.requestBlock(block_id)

@@ -390,7 +390,8 @@ class BlockChain:
 
         """
         block = self._request_block_hash(requested_block_hash)
-        return LogicalBlock.from_block(block, self._consensus)
+        if block:
+            return LogicalBlock.from_block(block, self._consensus)
 
     def active_mine_block_update(self, block):
         self._active_mine_block = block
