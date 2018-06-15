@@ -37,7 +37,7 @@ class BootrapperTestCase(TestCase):
         self.bootstrapper.do_bootstrap(self.blockchain)
         # then
         self.assertEqual(2, self.blockchain.add_block.call_count)
-        self.blockchain.add_block.assert_has_calls([call(self.block1), call(self.block2)], any_order=False)
+        self.blockchain.add_block.assert_has_calls([call(self.block2), call(self.block1)], any_order=False)
 
     def test_bootstrap_with_no_blocks(self):
         # given
