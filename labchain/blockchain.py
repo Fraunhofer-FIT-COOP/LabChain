@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import json
+from labchain.transaction import NoHashError
 
 from labchain.block import LogicalBlock, Block
 
@@ -400,6 +401,18 @@ class BlockChain:
             if block.mine_equality(self._active_mine_block):
                 logger.info("Kill mine equality true")
                 self._consensus.kill_mine = 1
-                unmined_transactions = list(
-                    set(self._active_mine_block.transactions).difference(set(block.transactions)))
+                try:
+                    unmined_transactions = list(
+                        set(self._active_mine_block.transactions).difference(set(block.transactions)))
+                except (TypeError, NoHashError):
+                    for t in self._active_mine_block.transactions:
+                        if not t.transaction_hash:
+                            thash = self._crypto_helper.hash(t.get_json())
+                            t.transaction_hash = thash
+                    for t in block.transactions:
+                        if not t.transaction_hash:
+                            thash = self._crypto_helper.hash(t.get_json())
+                            t.transaction_hash = thash
+                    unmined_transactions = list(
+                        set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions)

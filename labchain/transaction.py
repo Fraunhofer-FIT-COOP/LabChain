@@ -105,3 +105,14 @@ class Transaction:
         if self.__transaction_hash:
             raise ValueError('transaction_hash is already set')
         self.__transaction_hash = transaction_hash
+
+    def __hash__(self):
+        if self.__transaction_hash:
+            return self.__transaction_hash
+        else:
+            raise NoHashError("Transaction has no hash")
+
+
+class NoHashError(Exception):
+    def __init__(self, message):
+        super.__init__(message)
