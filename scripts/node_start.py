@@ -9,6 +9,7 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
+from labchain.utility import Utility  # noqa
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -58,4 +59,5 @@ if __name__ == '__main__':
     args = parse_args()
     setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
+    Utility.print_labchain_logo()
     node = create_node(args.port, initial_peers)
