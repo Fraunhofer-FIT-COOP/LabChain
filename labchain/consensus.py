@@ -59,7 +59,7 @@ class Consensus:
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
-        logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is validated')
+        logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is validated with result ' + str(block_hash[:difficulty] == zeros_array) + ' with hash: ' + str(block_hash))
         return block_hash[:difficulty] == zeros_array
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
