@@ -108,7 +108,7 @@ class Transaction:
 
     def __hash__(self):
         if self.__transaction_hash:
-            return self.__transaction_hash
+            return int(self.__transaction_hash, 16)
         else:
             raise NoHashError("Transaction has no hash")
 

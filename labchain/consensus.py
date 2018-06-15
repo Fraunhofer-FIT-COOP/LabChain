@@ -1,7 +1,10 @@
 import json
 import math
+import sys
 import time
 import logging
+from random import randint
+
 from labchain.cryptoHelper import CryptoHelper
 
 
@@ -15,7 +18,8 @@ class Consensus:
         self.last_mine_time_sec = time.time()
         self.avg_time_to_mine = 120
         self.min_diff = 1
-        self.factor = 100
+        self.factor = 300
+        self.d = 1
 
     def __getitem__(self, item):
         pass
@@ -50,9 +54,10 @@ class Consensus:
         # because if validate is called during mining, it would update difficulty
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
-        difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
-        # difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
-
+        if self.d == 2:
+            difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
+        else:
+            difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
         logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
         zeros_array = "0" * difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
@@ -64,8 +69,10 @@ class Consensus:
         return block_hash[:difficulty] == zeros_array
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
-        difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
-        # difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
+        if self.d == 2:
+            difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
+        else:
+            difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
 
         logging.debug('#INFO: mine Difficulty: ' + str(difficulty))
 
@@ -75,7 +82,8 @@ class Consensus:
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
-        counter = block.nonce
+        counter = 0
+        block.nonce = randint(0, sys.maxsize)
         while block_hash[:difficulty] != zeros_array:
             if self.kill_mine == 1:
                 self.kill_mine = 0

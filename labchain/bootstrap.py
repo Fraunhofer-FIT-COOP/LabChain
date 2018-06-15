@@ -36,7 +36,6 @@ class Bootstrapper:
             logger.info('Received {} blocks from peers. Adding them now...'.format(len(blocks)))
             for block in reversed(blocks):
                 blockchain.add_block(block)
-            if blocks:
-                break
+            break
 
         return blockchain

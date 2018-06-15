@@ -257,7 +257,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_callback,
                  get_block_by_hash_callback,
                  get_transaction_callback,
-                 get_blocks_by_hash_range, port=8080):
+                 get_blocks_by_hash_range, port=8080, block_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
         :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
@@ -277,6 +277,8 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_transaction_callback = get_transaction_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
         self.port = int(port)
+        self.block_cache = []
+        self.block_cache_size = block_cache_size
 
     def update_peer_lists(self):
         """Get new peer lists from all peers."""
@@ -347,8 +349,12 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __handle_send_block(self, block_data):
         block = Block.from_dict(block_data)
+        block_initially_in_chain = block in self.get_block_callback(block.block_id)
         self.on_block_received_callback(block)
         if block not in self.get_block_callback(block.block_id):
+            # if still not in chain, the bock must be invalid
+            self.__add_block_to_cache(block)
+        if not block_initially_in_chain and not self.__block_in_cache(block):
             logger.debug('Broadcasting block: {}'.format(str(block)))
             self._call_threaded(self.__send_block_safe, [block])
 
@@ -432,6 +438,15 @@ class ServerNetworkInterface(NetworkInterface):
     def _call_threaded(func, args):
         thread = Thread(target=func, args=args)
         thread.start()
+
+    def __add_block_to_cache(self, block):
+        if not self.__block_in_cache(block):
+            self.block_cache.append(block)
+        if len(self.block_cache) > self.block_cache_size:
+            self.block_cache.pop(0)
+
+    def __block_in_cache(self, block):
+        return block in self.block_cache
 
 
 ClientNetworkInterface = NetworkInterface
