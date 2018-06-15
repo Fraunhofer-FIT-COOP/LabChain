@@ -85,7 +85,7 @@ class JsonRpcClient:
         try:
             return response['result']
         except KeyError:
-            raise UnexpectedResponseException('Unexpected response: {}'.format(response))
+            raise UnexpectedResponseException('Unexpected response from {}: {}'.format(url, response))
 
 
 class NetworkInterface:
