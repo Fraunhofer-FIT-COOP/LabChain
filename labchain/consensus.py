@@ -78,7 +78,8 @@ class Consensus:
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
-        counter = randint(0, sys.maxsize)
+        counter = 0
+        block.nonce = randint(0, sys.maxsize)
         while block_hash[:difficulty] != zeros_array:
             if self.kill_mine == 1:
                 self.kill_mine = 0
