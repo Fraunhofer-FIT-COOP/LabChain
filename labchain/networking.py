@@ -42,6 +42,10 @@ class NoBlockExistsInRange(Exception):
     pass
 
 
+class UnexpectedResponseException(Exception):
+    pass
+
+
 def update(d, u):
     """Recursive dictionary update"""
     for k, v in u.items():
@@ -78,7 +82,10 @@ class JsonRpcClient:
             raise NodeNotAvailableException(str(e))
         logger.debug('Received response {} from {}'.format(response, url))
         self.id_counter += 1
-        return response['result']
+        try:
+            return response['result']
+        except KeyError:
+            raise UnexpectedResponseException('Unexpected response: {}'.format(response))
 
 
 class NetworkInterface:
