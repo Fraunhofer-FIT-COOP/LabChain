@@ -104,11 +104,11 @@ class Transaction:
     def transaction_hash(self, transaction_hash):
         if self.__transaction_hash:
             raise ValueError('transaction_hash is already set')
-        self.__transaction_hash = int(transaction_hash, 16)
+        self.__transaction_hash = transaction_hash
 
     def __hash__(self):
         if self.__transaction_hash:
-            return self.__transaction_hash
+            return int(self.__transaction_hash, 16)
         else:
             raise NoHashError("Transaction has no hash")
 

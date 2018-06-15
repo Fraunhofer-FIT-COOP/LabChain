@@ -13,13 +13,13 @@ class Consensus:
     def __init__(self):
 
         self.crypto_helper = CryptoHelper.instance()
-        self.max_diff = 8  # Threshold to be defined
+        self.max_diff = 5  # Threshold to be defined
         self.kill_mine = 0
         self.last_mine_time_sec = time.time()
         self.avg_time_to_mine = 120
         self.min_diff = 1
         self.factor = 300
-        self.d = 2
+        self.d = 1
 
     def __getitem__(self, item):
         pass
