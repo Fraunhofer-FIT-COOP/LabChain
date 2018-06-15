@@ -13,12 +13,13 @@ class Consensus:
     def __init__(self):
 
         self.crypto_helper = CryptoHelper.instance()
-        self.max_diff = 5  # Threshold to be defined
+        self.max_diff = 8  # Threshold to be defined
         self.kill_mine = 0
         self.last_mine_time_sec = time.time()
         self.avg_time_to_mine = 120
         self.min_diff = 1
-        self.factor = 100
+        self.factor = 300
+        self.d = 2
 
     def __getitem__(self, item):
         pass
@@ -53,9 +54,10 @@ class Consensus:
         # because if validate is called during mining, it would update difficulty
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
-        difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
-        # difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
-
+        if self.d == 2:
+            difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
+        else:
+            difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
         logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
         zeros_array = "0" * difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
@@ -67,8 +69,10 @@ class Consensus:
         return block_hash[:difficulty] == zeros_array
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
-        difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
-        # difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
+        if self.d == 2:
+            difficulty = self.calculate_difficulty_2(latest_timestamp, earliest_timestamp, num_of_blocks)
+        else:
+            difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
 
         logging.debug('#INFO: mine Difficulty: ' + str(difficulty))
 
