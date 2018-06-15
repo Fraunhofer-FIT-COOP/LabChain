@@ -30,7 +30,8 @@ class Bootstrapper:
                 logger.info('No peers available for bootstrapping. Starting from scratch...')
                 return blockchain
             except NoBlockExistsInRange:
-                continue
+                logger.info('No blocks have been mined yet. Starting from scratch...')
+                return blockchain
             # traverse reverse because the first block is the last element and vice versa
             logger.info('Received {} blocks from peers. Adding them now...'.format(len(blocks)))
             for block in reversed(blocks):
