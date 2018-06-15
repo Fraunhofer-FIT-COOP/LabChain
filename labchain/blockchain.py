@@ -149,7 +149,7 @@ class BlockChain:
                 if transaction_hash == _txn.transaction_hash:
                     return (_txn, _hash)
         else:
-            return None
+            return None, None
 
     def calculate_diff(self):
         """Sends the timestamps of latest and nth last block and number of blocks
