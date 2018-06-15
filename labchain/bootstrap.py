@@ -1,4 +1,3 @@
-from labchain.block import LogicalBlock
 from labchain.networking import NoPeersException, NoBlockExistsInRange
 
 
@@ -27,7 +26,8 @@ class Bootstrapper:
                 return blockchain
             except NoBlockExistsInRange:
                 continue
-            for block in blocks:
+            # traverse reverse because the first block is the last element and vice versa
+            for block in reversed(blocks):
                 blockchain.add_block(block)
             if blocks:
                 break

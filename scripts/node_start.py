@@ -3,12 +3,12 @@ import logging
 import os
 import sys
 
-# append project dir to python path
-from labchain.blockchainNode import BlockChainNode
-
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
+
+# append project dir to python path
+from labchain.blockchainNode import BlockChainNode  # noqa
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:

@@ -6,6 +6,7 @@ import socket
 import time
 from copy import deepcopy
 from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
+from threading import Thread
 
 import requests
 from jsonrpc import JSONRPCResponseManager, dispatcher
@@ -165,7 +166,7 @@ class NetworkInterface:
         if info is None:
             info = {}
         if ip_address in self.peers and port in self.peers[ip_address] and info == self.peers[ip_address][port]:
-            logger.info('Peer {}:{} unchanged. Skipping...'.format(ip_address, str(port)))
+            logger.debug('Peer {}:{} unchanged. Skipping...'.format(ip_address, str(port)))
             return
         logger.info('Peer {}:{} added/updated'.format(str(ip_address), str(port)))
         update(self.peers, {str(ip_address): {int(port): info}})
@@ -279,23 +280,23 @@ class ServerNetworkInterface(NetworkInterface):
             response = self.__filter_own_address(response)
             self._add_peer_bulk(response)
         self.peers = update(self.peers, new_peers)
-        logger.debug('My peers are now: {}'.format(str(self.peers)))
+        logger.info('My peers are now: {}'.format(str(self.peers)))
 
     def advertise_to_peers(self):
         """Ask peers to become part of their peer list."""
         if not self.peers:
             logger.warning('Cannot advertise: No peers in peer list!')
             return
-        logger.info('Advertising myself to peers...')
+        logger.debug('Advertising myself to peers...')
         self._bulk_send('advertisePeer', [self.port])
 
     def poll_update_peer_lists(self, poll_interval=10):
         logger.info('Start polling for peer lists...')
         while True:
-            logger.info('Performing next peer list polling iteration...')
+            logger.debug('Performing next peer list polling iteration...')
             self.update_peer_lists()
             self.advertise_to_peers()
-            logger.info('Peer list polling done. Waiting for {} seconds.'.format(poll_interval))
+            logger.debug('Peer list polling done. Waiting for {} seconds.'.format(poll_interval))
             time.sleep(poll_interval)
 
     def start_listening(self, threaded=True):
@@ -355,7 +356,7 @@ class ServerNetworkInterface(NetworkInterface):
         if not transaction_in_pool == transaction:
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
             try:
-                self.sendTransaction(transaction)
+                self._call_threaded(self.sendTransaction, [transaction])
             except NoPeersException:
                 pass
 
@@ -415,6 +416,11 @@ class ServerNetworkInterface(NetworkInterface):
                 for link in addresses[AF_INET6]:
                     ip_list.append(link['addr'])
         return ip_list
+
+    @staticmethod
+    def _call_threaded(func, args):
+        thread = Thread(target=func, args=args)
+        thread.start()
 
 
 ClientNetworkInterface = NetworkInterface

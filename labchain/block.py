@@ -1,5 +1,6 @@
-import time
 import json
+import logging
+import time
 from hashlib import sha256 as sha
 from pprint import pformat
 
@@ -271,16 +272,21 @@ class LogicalBlock(Block):
         transactions = self._transactions
         for t in transactions:
             if not t.validate_transaction(self._crypto_helper):
+                logging.debug('Invalid transaction: {}'.format(t))
                 return False
 
         # Validate Merkle Tree correctness
         if self.compute_merkle_root() != self._merkle_tree_root:
+            logging.debug('Invalid merkle root: {}'.format(t))
             return False
 
         #  validate nonce
         block_valid = self._consensus.validate(self, _latest_timestamp,
                                                _earliest_timestamp,
                                                _num_of_blocks)
+
+        if not block_valid:
+            logging.debug('Invalid block: {}'.format(self))
 
         return block_valid
 
