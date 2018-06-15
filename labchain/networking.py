@@ -85,7 +85,7 @@ class JsonRpcClient:
         try:
             return response['result']
         except KeyError:
-            raise UnexpectedResponseException('Unexpected response: {}'.format(response))
+            raise UnexpectedResponseException('Unexpected response from {}: {}'.format(url, response))
 
 
 class NetworkInterface:
@@ -350,7 +350,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.on_block_received_callback(block)
         if block not in self.get_block_callback(block.block_id):
             logger.debug('Broadcasting block: {}'.format(str(block)))
-            self._call_threaded(self.__send_block_safe, block)
+            self._call_threaded(self.__send_block_safe, [block])
 
     def __send_block_safe(self, block):
         try:
