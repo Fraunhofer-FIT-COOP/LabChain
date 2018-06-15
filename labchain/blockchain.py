@@ -71,7 +71,7 @@ class BlockChain:
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
-        _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj)
+        _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj, timestamp=0)
         _first_block.set_block_pos(0)
         self._first_block_hash = _first_block.get_computed_hash()
         self._blockchain[self._first_block_hash] = _first_block
