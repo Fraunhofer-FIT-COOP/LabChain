@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-from base64 import b64encode
 from io import StringIO
 from unittest import TestCase
 
@@ -34,13 +33,14 @@ class MockNetworkInterface:
     def requestTransaction(self, hash):
         for transaction in self.transactions:
             if self.crypto_helper.hash_transaction(transaction) == hash:
-                return transaction
+                return transaction, 'test_hash'
+        return None, None
 
     def requestBlock(self, block_number):
         for block in self.blocks:
             if block.block_id == block_number:
-                return block
-        return None
+                return [block]
+        return []
 
 
 class MockCryptoHelper:
@@ -495,14 +495,17 @@ class LoadBlockTestCase(CommonTestCase):
         #     blockchain is empty -> nothing to setup
         # when
         self.queue_input('3')
+        self.queue_input('1')
+        self.queue_input('1')
         self.queue_input('')  # press enter
+        self.queue_input('3')
         # at this point the main menu is shown
         self.queue_input('5')  # exit blockchain client
         self.client.main()
         # then
         # check if submenu 3 was printed
         self.assert_string_in_output(
-            'Please input the block number you are looking for (Blocks are numbered starting at zero)!')
+            'Please input the block number you are looking for (Blocks are numbered starting at zero)')
         # check if main menu is shown
         self.assert_string_in_output('Main menu')
 
@@ -516,7 +519,9 @@ class LoadBlockTestCase(CommonTestCase):
         # when
         self.queue_input('3')
         self.queue_input('1')
+        self.queue_input('1')
         self.queue_input('')  # press enter
+        self.queue_input('3')
         self.queue_input('5')
         self.client.main()
 
@@ -541,7 +546,9 @@ class LoadBlockTestCase(CommonTestCase):
         # when
         self.queue_input('3')
         self.queue_input('1')
+        self.queue_input('1')
         self.queue_input('')  # press enter
+        self.queue_input('3')
         self.queue_input('5')
         self.client.main()
 
