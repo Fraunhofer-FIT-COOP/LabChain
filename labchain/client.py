@@ -62,8 +62,11 @@ class Wallet:
     def __csv_to_dict(csv_string):
         result = {}
         for line in csv_string.splitlines():
-            label, public_key, private_key = line.split(';', 2)
-            result[label] = (public_key, private_key)
+            try:
+                label, public_key, private_key = line.split(';', 2)
+                result[label] = (public_key, private_key)
+            except ValueError:
+                pass
         return result
 
     @staticmethod
