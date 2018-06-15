@@ -68,7 +68,7 @@ class CryptoHelper:
         private_key = key.export_key(format='PEM')  # Get the string of private key
         public_key = key.public_key().export_key(format='PEM')  # Get the string of public key
         logging.debug('Cryptohelper created a new key pair.')
-        return b64encode(private_key.encode()), b64encode(public_key.encode())
+        return b64encode(private_key.encode()).decode(), b64encode(public_key.encode()).decode()
 
     def __hash(self, payload):
         try:
