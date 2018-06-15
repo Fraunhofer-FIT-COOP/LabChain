@@ -106,8 +106,8 @@ class BlockChain:
             _b = self._blockchain.get(_b_hash)
             _b_hash = _b.predecessor_hash
             blocks_range.append(_b)
-        blocks_range.append(self._blockchain.get(_b_hash))
-
+        if not _b_hash == self._first_block_hash:
+            blocks_range.append(self._blockchain.get(_b_hash))
         return blocks_range
 
     def get_block_by_id(self, block_id):
