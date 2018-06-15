@@ -257,7 +257,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_callback,
                  get_block_by_hash_callback,
                  get_transaction_callback,
-                 get_blocks_by_hash_range, port=8080, block_cache_size=1000):
+                 get_blocks_by_hash_range, port=8080, block_cache_size=1000, transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
         :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
@@ -279,6 +279,8 @@ class ServerNetworkInterface(NetworkInterface):
         self.port = int(port)
         self.block_cache = []
         self.block_cache_size = block_cache_size
+        self.transaction_cache = []
+        self.transaction_cache_size = transaction_cache_size
 
     def update_peer_lists(self):
         """Get new peer lists from all peers."""
@@ -357,6 +359,8 @@ class ServerNetworkInterface(NetworkInterface):
         if not block_initially_in_chain and not self.__block_in_cache(block):
             logger.debug('Broadcasting block: {}'.format(str(block)))
             self._call_threaded(self.__send_block_safe, [block])
+        else:
+            logger.debug('Block already present. Skipping propagation: {}'.format(block))
 
     def __send_block_safe(self, block):
         try:
@@ -369,7 +373,10 @@ class ServerNetworkInterface(NetworkInterface):
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
         transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
         self.on_transaction_received_callback(transaction)
-        if not transaction_in_pool == transaction:
+        if not self.get_transaction_callback(transaction_hash)[0]:
+            # if transaction still not present, it must have been delined
+            self.__add_transaction_to_cache(transaction)
+        if not transaction_in_pool == transaction and not self.__transaction_in_cache(transaction):
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
             logger.debug('Broadcasting transaction hash: ' + str(transaction_hash))
             try:
@@ -447,6 +454,15 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __block_in_cache(self, block):
         return block in self.block_cache
+
+    def __add_transaction_to_cache(self, transaction):
+        if not self.__transaction_in_cache(transaction):
+            self.transaction_cache.append(transaction)
+        if len(self.transaction_cache) > self.transaction_cache_size:
+            self.transaction_cache.pop(0)
+
+    def __transaction_in_cache(self, transaction):
+        return transaction in self.transaction_cache
 
 
 ClientNetworkInterface = NetworkInterface
