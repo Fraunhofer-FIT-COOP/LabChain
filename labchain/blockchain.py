@@ -166,6 +166,8 @@ class BlockChain:
 
         # getting timestamp of the last block added in chain
         _last_block = json.loads(self.get_block_by_hash(_hash))
+        if _last_block["nr"] == 0:
+            return 0, 0, 1
         _latest_timestamp = _last_block['timestamp']
 
         # setting hash of the second last block
@@ -179,10 +181,12 @@ class BlockChain:
             if _json_block is None:
                 break
             _block = json.loads(_json_block)
+            _id = _block["nr"]
+            if _id == 0:
+                break
             _earliest_timestamp = _block['timestamp']
             _hash = _block['predecessorBlock']
             _number_of_blocks = _number_of_blocks + 1
-
         return _latest_timestamp, _earliest_timestamp, _number_of_blocks
 
     def add_block(self, block):
