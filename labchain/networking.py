@@ -358,7 +358,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.on_transaction_received_callback(transaction)
         if not transaction_in_pool == transaction:
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
-            logger.debug('Broadcasting transaction Hash: ' + str(transaction_hash))
+            logger.debug('Broadcasting transaction hash: ' + str(transaction_hash))
             try:
                 self._call_threaded(self.sendTransaction, [transaction])
             except NoPeersException:
