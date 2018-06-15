@@ -353,7 +353,7 @@ class BlockChain:
             _longest_chain.append(_check_point_hash)
 
             # Remove all other branches
-            self._current_branch_heads.remove(_new_head_hash)
+            #self._current_branch_heads.remove(_new_head_hash)
             for _head in self._current_branch_heads:
                 _b_hash = _head
                 while _b_hash not in _longest_chain:
