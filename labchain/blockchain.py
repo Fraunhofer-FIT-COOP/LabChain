@@ -1,9 +1,10 @@
-from datetime import datetime
-import logging
 import json
-from labchain.transaction import NoHashError
+import logging
+from datetime import datetime
 
-from labchain.block import LogicalBlock, Block
+from labchain import event
+from labchain.block import LogicalBlock
+from labchain.transaction import NoHashError
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
                  min_blocks_for_difficulty, request_block_callback,
-                 request_block_hash_callback):
+                 request_block_hash_callback, event_bus):
         """Constructor for BlockChain
 
         Parameters
@@ -55,6 +56,7 @@ class BlockChain:
         """
         logger.debug("Block chain initialization")
         self._node_id = node_id
+        self.event_bus = event_bus
         self._blockchain = {}
         self._orphan_blocks = {}
         self._current_branch_heads = []
@@ -83,6 +85,7 @@ class BlockChain:
         self._node_branch_head = self._first_block_hash
         self._current_branch_heads = [self._first_block_hash, ]
         logger.debug("BlockChain initialized with genesis block")
+        self.event_bus.fire(event.EVENT_BLOCKCHAIN_INITIALIZED, self)
 
     def get_block_range(self, range_start=None, range_end=None):
         """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
@@ -277,8 +280,9 @@ class BlockChain:
         if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
+        self.event_bus.fire(event.EVENT_BLOCK_ADDED, self)
         logger.info("Added new block --- \n {h} \n {b} \n".
-                     format(h=str(block.get_computed_hash()), b=str(block)))
+                    format(h=str(block.get_computed_hash()), b=str(block)))
 
         logger.debug("Number of branches currently branch heads = {}"
                      " \n Branches -- \n".format(len(self._current_branch_heads)))
@@ -353,7 +357,7 @@ class BlockChain:
             _longest_chain.append(_check_point_hash)
 
             # Remove all other branches
-            #self._current_branch_heads.remove(_new_head_hash)
+            # self._current_branch_heads.remove(_new_head_hash)
             for _head in self._current_branch_heads:
                 _b_hash = _head
                 while _b_hash not in _longest_chain:
