@@ -55,7 +55,7 @@ def parse_args():
     parser.add_argument('--plot', '-p', action='store_true')
     parser.add_argument('--plot-dir', default=DEFAULT_PLOT_DIRECTORY,
                         help='Enable plotting graphics to the specified dir')
-    parser.add_argument('--plot-auto_open', action='store_true', help='Open plot as soon as it is created')
+    parser.add_argument('--plot-auto-open', action='store_true', help='Open plot as soon as it is created')
     return parser.parse_args()
 
 
