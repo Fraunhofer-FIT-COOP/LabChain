@@ -113,6 +113,24 @@ class DashBoardDB:
                                    (num_of_nodes,))
         self.close_connection()
 
+    def change_min_mining_time(self, min_mining_time):
+        self.create_connection()
+        self.conn.cursor().execute("UPDATE blockChainStatus SET minMiningTime = ? WHERE id = 1;",
+                                   (min_mining_time,))
+        self.close_connection()
+
+    def change_max_mining_time(self, max_mining_time):
+        self.create_connection()
+        self.conn.cursor().execute("UPDATE blockChainStatus SET maxMiningTime = ? WHERE id = 1;",
+                                   (max_mining_time,))
+        self.close_connection()
+
+    def change_avg_mining_time(self, avg_mining_time):
+        self.create_connection()
+        self.conn.cursor().execute("UPDATE blockChainStatus SET averageMiningTime = ? WHERE id = 1;",
+                                   (avg_mining_time,))
+        self.close_connection()
+
     def get_mining_status_init(self):
         cur = self.conn.cursor()
         cur.execute("SELECT miningStatus FROM blockChainStatus  WHERE id = 1;")
@@ -125,6 +143,76 @@ class DashBoardDB:
         self.create_connection()
         cur = self.conn.cursor()
         cur.execute("SELECT miningStatus FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_num_of_nodes(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT nodesConnected FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_current_diff(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT currentDifficulty FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_num_of_transactions(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT numberOfTransactions FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_block_chain_length(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT blockChainLength FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_min_mining_time(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT minMiningTime FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_max_mining_time(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT maxMiningTime FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_avg_mining_time(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT averageMiningTime FROM blockChainStatus  WHERE id = 1;")
         result = cur.fetchone()
         if result is not None:
             result = result[0]
