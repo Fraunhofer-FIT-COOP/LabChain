@@ -4,6 +4,7 @@ import sys
 import time
 import logging
 from random import randint
+from labchain.dashboardDB import DashBoardDB
 
 from labchain.cryptoHelper import CryptoHelper
 
@@ -16,6 +17,12 @@ class Consensus:
         self.max_diff = 5  # Threshold to be defined
         self.kill_mine = 0
         self.last_mine_time_sec = time.time()
+        self.min_mining_time = time.time()
+        self.max_mining_time = 0
+        self.avg_mining_time = 0
+        self.dash_board_db = DashBoardDB.instance()
+        self.avg_helper = 0
+        self.num_of_mined_blocks = 0
 
     def __getitem__(self, item):
         pass
@@ -31,6 +38,7 @@ class Consensus:
 
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
+        self.dash_board_db.change_current_diff(self.max_diff - difficulty)
         return self.max_diff - difficulty
 
         # global difficulty should not be updated, instead return difficulty,
@@ -48,6 +56,11 @@ class Consensus:
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is validated with result ' + str(
             block_hash[:difficulty] == zeros_array) + ' with hash: ' + str(block_hash))
         return block_hash[:difficulty] == zeros_array
+
+    def update_db(self):
+        self.dash_board_db.change_min_mining_time((int)(self.min_mining_time))
+        self.dash_board_db.change_max_mining_time((int)(self.max_mining_time))
+        self.dash_board_db.change_avg_mining_time((int)(self.avg_mining_time))
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
@@ -78,6 +91,15 @@ class Consensus:
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = time.time()
         self.last_mine_time_sec = start_time
+        time_diff = time.time() - start_time
+        if time_diff < self.min_mining_time:
+            self.min_mining_time = time_diff
+        if time_diff > self.max_mining_time:
+            self.max_mining_time = time_diff
+        self.num_of_mined_blocks = self.num_of_mined_blocks + 1
+        self.avg_mining_time = (self.avg_helper + time_diff) / self.num_of_mined_blocks
+        self.avg_helper = self.avg_helper + time_diff
+        self.update_db()
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is mined successfully')
         # need a boolean return to check if mine got killed
         return True
