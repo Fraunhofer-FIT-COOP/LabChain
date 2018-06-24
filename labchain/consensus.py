@@ -100,6 +100,7 @@ class Consensus:
         self.avg_mining_time = (self.avg_helper + time_diff) / self.num_of_mined_blocks
         self.avg_helper = self.avg_helper + time_diff
         self.update_db()
+        self.dash_board_db.add_block(block)
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is mined successfully')
         # need a boolean return to check if mine got killed
         return True

@@ -77,7 +77,6 @@ class BlockChainNode:
                         if self.blockchain_obj.add_block(block):
                             self.on_new_block_created(block)
                             # adding the block mined to dashboard
-                            self.dash_board_db.add_block(block)
                     logger.debug("Time to mine block is " + str(time.time() - st) + " seconds.")
             self.blockchain_obj.active_mine_block_update(None)
             delay_time = mine_freq - (time.time() - self.consensus_obj.last_mine_time_sec)
