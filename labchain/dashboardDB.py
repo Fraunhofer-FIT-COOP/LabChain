@@ -32,9 +32,9 @@ class DashBoardDB:
                                                 numberOfTransactions integer NOT NULL,
                                                 currentDifficulty integer NOT NULL,
                                                 nodesConnected integer NOT NULL,
-                                                minMiningTime text NOT NULL,
-                                                maxMiningTime text NOT NULL,
-                                                averageMiningTime text NOT NULL,
+                                                minMiningTime integer NOT NULL,
+                                                maxMiningTime integer NOT NULL,
+                                                averageMiningTime integer NOT NULL,
                                                 miningStatus integer NOT NULL
                                             ); """
         self.create_connection()
