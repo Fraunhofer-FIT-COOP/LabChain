@@ -9,6 +9,7 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
+from labchain.dashboardDB import DashBoardDB # noga
 from labchain.utility import Utility  # noqa
 
 # set TERM environment variable if not set
@@ -22,6 +23,10 @@ CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,
 
 def create_node(node_port, peer_list):
     return BlockChainNode(CONFIG_FILE, node_port, peer_list)
+
+
+def create_dashboard_db():
+    DashBoardDB.instance()
 
 
 def setup_logging(verbose, very_verbose):
@@ -61,3 +66,4 @@ if __name__ == '__main__':
     initial_peers = parse_peers(args.peers)
     Utility.print_labchain_logo()
     node = create_node(args.port, initial_peers)
+    create_dashboard_db()
