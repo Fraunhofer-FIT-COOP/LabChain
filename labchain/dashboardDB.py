@@ -29,6 +29,7 @@ class DashBoardDB:
         self.sql_create_block_chain_status_table = """ CREATE TABLE IF NOT EXISTS blockChainStatus(
                                                 id integer PRIMARY KEY AUTOINCREMENT,
                                                 blockChainLength integer NOT NULL,
+                                                numberOfBlocks integer NOT NULL,
                                                 numberOfTransactions integer NOT NULL,
                                                 currentDifficulty integer NOT NULL,
                                                 nodesConnected integer NOT NULL,
@@ -73,10 +74,10 @@ class DashBoardDB:
             print(e)
 
     def initialise_block_chain_status(self):
-        values = (0, 0, 1, 1, '', '', '', 1)
-        self.conn.cursor().execute("insert into blockChainStatus(blockChainLength,numberOfTransactions,"
+        values = (0, 1, 0, 1, 1, '', '', '', 1)
+        self.conn.cursor().execute("insert into blockChainStatus(blockChainLength,numberOfBlocks,numberOfTransactions,"
                                    "currentDifficulty,nodesConnected,minMiningTime,maxMiningTime"
-                                   ",averageMiningTime,miningStatus) values (?,?,?,?,?,?,?,?)", values)
+                                   ",averageMiningTime,miningStatus) values (?,?,?,?,?,?,?,?,?)", values)
 
     def add_block(self, block):
         self.create_connection()
@@ -93,6 +94,11 @@ class DashBoardDB:
     def change_block_chain_length(self, new_length):
         self.create_connection()
         self.conn.cursor().execute("UPDATE blockChainStatus SET blockChainLength = ? WHERE id = 1;", (new_length,))
+        self.close_connection()
+
+    def change_num_of_blocks(self, num_of_blocks):
+        self.create_connection()
+        self.conn.cursor().execute("UPDATE blockChainStatus SET numberOfBlocks = ? WHERE id = 1;", (num_of_blocks,))
         self.close_connection()
 
     def change_num_of_transactions(self, num_of_transactions):
@@ -183,6 +189,16 @@ class DashBoardDB:
         self.create_connection()
         cur = self.conn.cursor()
         cur.execute("SELECT blockChainLength FROM blockChainStatus  WHERE id = 1;")
+        result = cur.fetchone()
+        if result is not None:
+            result = result[0]
+        self.close_connection()
+        return result
+
+    def get_num_of_blocks(self):
+        self.create_connection()
+        cur = self.conn.cursor()
+        cur.execute("SELECT numberOfBlocks FROM blockChainStatus  WHERE id = 1;")
         result = cur.fetchone()
         if result is not None:
             result = result[0]

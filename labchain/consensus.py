@@ -23,6 +23,7 @@ class Consensus:
         self.dash_board_db = DashBoardDB.instance()
         self.avg_helper = 0
         self.num_of_mined_blocks = 0
+        self.num_of_transactions = 0
 
     def __getitem__(self, item):
         pass
@@ -61,6 +62,8 @@ class Consensus:
         self.dash_board_db.change_min_mining_time((int)(self.min_mining_time))
         self.dash_board_db.change_max_mining_time((int)(self.max_mining_time))
         self.dash_board_db.change_avg_mining_time((int)(self.avg_mining_time))
+        self.dash_board_db.change_num_of_blocks(self.num_of_mined_blocks)
+        self.dash_board_db.change_num_of_transactions(self.num_of_transactions)
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
@@ -97,6 +100,7 @@ class Consensus:
         if time_diff > self.max_mining_time:
             self.max_mining_time = time_diff
         self.num_of_mined_blocks = self.num_of_mined_blocks + 1
+        self.num_of_transactions = self.num_of_transactions + len(block.transactions)
         self.avg_mining_time = (self.avg_helper + time_diff) / self.num_of_mined_blocks
         self.avg_helper = self.avg_helper + time_diff
         self.update_db()

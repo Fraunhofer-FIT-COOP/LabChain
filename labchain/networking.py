@@ -292,7 +292,7 @@ class ServerNetworkInterface(NetworkInterface):
             response = self.__filter_own_address(response)
             self._add_peer_bulk(response)
         self.peers = update(self.peers, new_peers)
-        DashBoardDB.instance().change_num_of_nodes(len(self.peers))
+        DashBoardDB.instance().change_num_of_nodes(len(self.peers) + 1)
         logger.info('My peers are now: {}'.format(str(self.peers)))
 
     def advertise_to_peers(self):
