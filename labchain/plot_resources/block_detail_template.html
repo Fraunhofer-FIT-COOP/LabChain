@@ -5,67 +5,124 @@
     <title>Block </title>
 
     <link rel="stylesheet" href="bootstrap.min.css">
+
+    <style>
+        .hover:hover {
+            background-color: lightgray;
+        }
+
+        .text {
+            word-wrap: break-word;
+            padding: 5px;
+        }
+    </style>
 </head>
 <body>
 
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            Block Detail View
-        </div>
-    </div>
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark justify-content-center">
+    <a class="navbar-brand" href="#">Labchain - Block Viewer</a>
 </nav>
-<div class="container">
-    <h1>Block</h1>
 
-    <div class="row">
-        <div col-2>
+
+<div class="container">
+    <div class="row ">
+        <h1>Block</h1>
+    </div>
+
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
             Block ID
         </div>
-        <div col-10>
-            {{block_id}}
-        </div>
+        <div class="col-sm-9">
+            <div class="text"></div>{{nr}}</div>
     </div>
-    <div class="row">
-        <div col-2>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
             Block Hash
         </div>
-        <div col-10>
-            {{block_hash}}
+        <div class="col-sm-9">
+            <div class="text">{{block_hash}}</div>
         </div>
     </div>
-    <div class="row">
-        <div col-2>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
             Timestamp
         </div>
-        <div col-10>
-            {{timestamp}}
+        <div class="col-sm-9">
+            <div class="text">{{timestamp}}</div>
         </div>
     </div>
-    <div class="row">
-        <div col-2>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
             Nonce
         </div>
-        <div col-10>
-            {{nonce}}
+        <div class="col-sm-9">
+            <div class="text">{{nonce}}</div>
         </div>
     </div>
-    <div class="row">
-        <div col-2>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
             Predecessor Block Hash
         </div>
-        <div col-10>
-            {{predecessorBlock}}
+        <div class="col-sm-9">
+            <div class="text"> {{predecessorBlock}}</div>
         </div>
     </div>
-    <div class="row">
-        <div col-2>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
             Merkle Hash
         </div>
-        <div col-10>
-            {{merkleHash}}
+        <div class="col-sm-9">
+            <div class="text">{{merkleHash}}</div>
         </div>
     </div>
+
+    <br>
+    <div class="row ">
+        <h1>Contained Transactions</h1>
+    </div>
+
+    {% if transactions %}
+    {% for transaction in transactions %}
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
+            Sender
+        </div>
+        <div class="col-sm-9">
+            <div class="text"> {{transaction.sender}}</div>
+        </div>
+    </div>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
+            Receiver
+        </div>
+        <div class="col-sm-9">
+            <div class="text"> {{transaction.receiver}}</div>
+        </div>
+    </div>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
+            Payload
+        </div>
+        <div class="col-sm-9">
+            <div class="text">{{transaction.payload}}</div>
+        </div>
+    </div>
+    <div class="row hover">
+        <div class="col-sm-3 text-secondary">
+            Signature
+        </div>
+        <div class="col-sm-9">
+            <div class="text">{{transaction.signature}}</div>
+        </div>
+    </div>
+    <hr>
+    {% endfor %}
+    {% else %}
+    <div class="row ">
+        <span class="text-danger">block does not contain transactions</span>
+    </div>
+    {% endif %}
 
 </div>
 </body>

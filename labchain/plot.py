@@ -3,6 +3,7 @@ import logging
 import os
 import pprint
 import time
+import shutil
 
 import plotly
 import plotly.graph_objs as go
@@ -20,6 +21,20 @@ class BlockchainPlotter:
             os.makedirs(plot_dir)
         self.plot_dir = os.path.realpath(plot_dir)
         self.plot_auto_open = plot_auto_open
+
+        # clear plot directory, create folder for block detail pages and copy .css files into it
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        for root, dirs, files in os.walk(plot_dir, topdown=False):
+            for f in files:
+                to_delete = os.path.join(root, f)
+                os.remove(to_delete)
+            for dir in dirs:
+                os.rmdir(os.path.join(root, dir))
+        # TODO time.sleep dirty fix
+        time.sleep(1)
+        os.mkdir(os.path.join(plot_dir, 'block_detail_pages'))
+        shutil.copy(os.path.join(current_dir, 'plot_resources', 'bootstrap.min.css'),
+                    os.path.join(plot_dir, 'block_detail_pages', 'bootstrap.min.css'))
 
     def plot_blockchain(self, event_data):
         logger.debug('Plotting blockchain into dir {}'.format(self.plot_dir))
@@ -165,14 +180,20 @@ class BlockchainPlotter:
             loader=PackageLoader('labchain', 'plot_resources'),
             autoescape=select_autoescape(['html', 'xml'])
         )
-
         block_hash = block.get_computed_hash()
         template_data = block.to_dict()
         template_data['block_hash'] = block_hash
+        template_data['transactions'] = []
+        for transaction in block.transactions:
+            template_data['transactions'].append(transaction.to_dict())
+
+        # used for jinja2
+        if len(template_data['transactions']) == 0:
+            template_data['transactions'] = None
 
         template = env.get_template('block_detail_template.html')
         rendered_html = template.render(template_data)
-        f = open(os.path.join(self.plot_dir, str(block.block_id) + '.html'), 'w')
+        f = open(os.path.join(self.plot_dir, 'block_detail_pages', str(block.block_id) + '.html'), 'w')
         f.write(rendered_html)
         f.close()
 
