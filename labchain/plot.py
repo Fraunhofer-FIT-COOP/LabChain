@@ -32,9 +32,9 @@ class BlockchainPlotter:
                 os.rmdir(os.path.join(root, dir))
         # TODO time.sleep dirty fix
         time.sleep(1)
-        os.mkdir(os.path.join(plot_dir, 'block_detail_pages'))
+        os.mkdir(os.path.join(plot_dir, 'blocks'))
         shutil.copy(os.path.join(current_dir, 'plot_resources', 'bootstrap.min.css'),
-                    os.path.join(plot_dir, 'block_detail_pages', 'bootstrap.min.css'))
+                    os.path.join(plot_dir, 'blocks', 'bootstrap.min.css'))
 
     def plot_blockchain(self, event_data):
         logger.debug('Plotting blockchain into dir {}'.format(self.plot_dir))
@@ -193,7 +193,7 @@ class BlockchainPlotter:
 
         template = env.get_template('block_detail_template.html')
         rendered_html = template.render(template_data)
-        f = open(os.path.join(self.plot_dir, 'block_detail_pages', str(block.block_id) + '.html'), 'w')
+        f = open(os.path.join(self.plot_dir, 'blocks', block_hash + '.html'), 'w')
         f.write(rendered_html)
         f.close()
 
