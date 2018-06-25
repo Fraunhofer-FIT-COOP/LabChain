@@ -7,6 +7,8 @@ import time
 import plotly
 import plotly.graph_objs as go
 
+from jinja2 import Environment, PackageLoader, select_autoescape
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,11 +21,11 @@ class BlockchainPlotter:
         self.plot_dir = os.path.realpath(plot_dir)
         self.plot_auto_open = plot_auto_open
 
-    def plot_blockchain(self, blockchain):
+    def plot_blockchain(self, event_data):
         logger.debug('Plotting blockchain into dir {}'.format(self.plot_dir))
         # only print if more blocks than the genesis block are present
-        if len(blockchain._blockchain) > 1:
-            self.__generate_plot(blockchain)
+        if len(event_data['block_chain']._blockchain) > 1:
+            self.__generate_plot(event_data['block_chain'])
 
     @staticmethod
     def __block_label(block):
@@ -156,6 +158,23 @@ class BlockchainPlotter:
                                     frames=go.Frames(self.data_series))
         plotly.offline.plot(animated_figure, filename=os.path.join(self.plot_dir, 'animated.html'),
                             auto_open=False)
+
+    def generate_block_detail_page(self, event_data):
+        block = event_data['block']
+        env = Environment(
+            loader=PackageLoader('labchain', 'plot_resources'),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+
+        block_hash = block.get_computed_hash()
+        template_data = block.to_dict()
+        template_data['block_hash'] = block_hash
+
+        template = env.get_template('block_detail_template.html')
+        rendered_html = template.render(template_data)
+        f = open(os.path.join(self.plot_dir, str(block.block_id) + '.html'), 'w')
+        f.write(rendered_html)
+        f.close()
 
     @staticmethod
     def __get_formatted_datetime():

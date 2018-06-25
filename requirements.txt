@@ -5,3 +5,4 @@ netifaces==0.10.7
 pycryptodome==3.6.1
 werkzeug
 plotly==2.7.0
+Jinja2==2.10

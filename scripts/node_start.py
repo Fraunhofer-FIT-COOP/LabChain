@@ -26,12 +26,13 @@ CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_port, peer_list, plot_dir=None, plot_auto_open = False):
+def create_node(node_port, peer_list, plot_dir=None, plot_auto_open=False):
     event_bus = EventBus()
     if plot_dir:
         plotter = BlockchainPlotter(plot_dir, plot_auto_open)
         event_bus.register(event.EVENT_BLOCKCHAIN_INITIALIZED, plotter.plot_blockchain)
         event_bus.register(event.EVENT_BLOCK_ADDED, plotter.plot_blockchain)
+        event_bus.register(event.EVENT_BLOCK_ADDED, plotter.generate_block_detail_page)
     return BlockChainNode(CONFIG_FILE, event_bus, node_port, peer_list)
 
 

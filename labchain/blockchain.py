@@ -280,7 +280,7 @@ class BlockChain:
         if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
-        self.event_bus.fire(event.EVENT_BLOCK_ADDED, self)
+        self.event_bus.fire(event.EVENT_BLOCK_ADDED, {'block_chain': self, 'block': block})
         logger.info("Added new block --- \n {h} \n {b} \n".
                     format(h=str(block.get_computed_hash()), b=str(block)))
 
