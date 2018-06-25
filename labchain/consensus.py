@@ -40,6 +40,7 @@ class Consensus:
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
         self.dash_board_db.change_current_diff(self.max_diff - difficulty)
+        self.dash_board_db.retrieve_status_from_db()
         return self.max_diff - difficulty
 
         # global difficulty should not be updated, instead return difficulty,
@@ -64,6 +65,8 @@ class Consensus:
         self.dash_board_db.change_avg_mining_time((int)(self.avg_mining_time))
         self.dash_board_db.change_num_of_blocks(self.num_of_mined_blocks)
         self.dash_board_db.change_num_of_transactions(self.num_of_transactions)
+        self.dash_board_db.retrieve_status_from_db()
+
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)

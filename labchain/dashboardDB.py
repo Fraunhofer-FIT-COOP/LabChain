@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Error
 from labchain.singleton import Singleton
 import logging
+import paho.mqtt.publish as publish
 
 logger = logging.getLogger(__name__)
 
@@ -234,3 +235,15 @@ class DashBoardDB:
             result = result[0]
         self.close_connection()
         return result
+
+    def retrieve_status_from_db(self):
+        stat = ''
+        stat += str(self.get_block_chain_length()) + ','
+        stat += str(self.get_num_of_blocks()) + ','
+        stat += str(self.get_num_of_transactions()) + ','
+        stat += str(self.get_current_diff()) + ','
+        stat += str(self.get_num_of_nodes()) + ','
+        stat += str(self.get_min_mining_time()) + ','
+        stat += str(self.get_max_mining_time()) + ','
+        stat += str(self.get_avg_mining_time())
+        publish.single("bc_status", stat, hostname="localhost", port=1883)

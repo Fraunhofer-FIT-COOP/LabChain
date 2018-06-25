@@ -1,30 +1,24 @@
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
+import paho.mqtt.client as mqtt
 
-app = dash.Dash()
 
-app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
+def on_connect(client, userdata, flags, rc):
+    client.subscribe("mine")
 
-app.layout = html.Div(children=[
-    html.H1(children='Labchain My Dashboard', style={'textAlign': 'center'}),
 
-    html.Button(children='Start Mining', id='mine-button'),
+def on_message(client, userdata, msg):
+    mine_flag = msg.payload #TODO what to do with mining flag?
+    print('Mine status changed to: {}'.format(str(mine_flag, 'utf-8')))
 
-    html.Div(children='Current status: ', style={'textAlign': 'center'}),
 
-    dcc.Graph(
-        id='example-graph',
-        figure={
-            'data': [
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'scatter', 'name': 'Difficulty'}
-            ],
-            'layout': {
-                'title': 'Change of Difficulty'
-            }
-        }
-    )
-])
+def node_app():
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.connect('localhost', 1883, 60)
+
+    client.loop_forever()
+
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    node_app()

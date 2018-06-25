@@ -45,6 +45,15 @@ python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
 
+# Run the Node Dashboard
+
+```
+cd node-dashboard-app
+node-red dash-app.js
+```
+
+`--port port_number` if the given port is busy.
+
 # Run the Client
 
 ```
