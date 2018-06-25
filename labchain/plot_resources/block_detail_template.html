@@ -83,47 +83,49 @@
     </div>
 
     {% if transactions %}
-    {% for transaction in transactions %}
-    <div class="row hover">
-        <div class="col-sm-3 text-secondary">
-            Sender
-        </div>
-        <div class="col-sm-9">
-            <div class="text"> {{transaction.sender}}</div>
-        </div>
-    </div>
-    <div class="row hover">
-        <div class="col-sm-3 text-secondary">
-            Receiver
-        </div>
-        <div class="col-sm-9">
-            <div class="text"> {{transaction.receiver}}</div>
-        </div>
-    </div>
-    <div class="row hover">
-        <div class="col-sm-3 text-secondary">
-            Payload
-        </div>
-        <div class="col-sm-9">
-            <div class="text">{{transaction.payload}}</div>
-        </div>
-    </div>
-    <div class="row hover">
-        <div class="col-sm-3 text-secondary">
-            Signature
-        </div>
-        <div class="col-sm-9">
-            <div class="text">{{transaction.signature}}</div>
-        </div>
-    </div>
-    <hr>
+        {% for transaction in transactions %}
+            <div class="row hover">
+                <div class="col-sm-3 text-secondary">
+                    Sender
+                </div>
+                <div class="col-sm-9">
+                    <div class="text"> {{transaction.sender}}</div>
+                </div>
+            </div>
+            <div class="row hover">
+                <div class="col-sm-3 text-secondary">
+                    Receiver
+                </div>
+                <div class="col-sm-9">
+                    <div class="text"> {{transaction.receiver}}</div>
+                </div>
+            </div>
+            <div class="row hover">
+                <div class="col-sm-3 text-secondary">
+                    Payload
+                </div>
+                <div class="col-sm-9">
+                    <div class="text">{{transaction.payload}}</div>
+                </div>
+            </div>
+            <div class="row hover">
+                <div class="col-sm-3 text-secondary">
+                    Signature
+                </div>
+                <div class="col-sm-9">
+                    <div class="text">{{transaction.signature}}</div>
+                </div>
+            </div>
+            {% if loop.last %}
+            {% else %}
+                <hr>
+            {% endif %}
     {% endfor %}
     {% else %}
-    <div class="row ">
-        <span class="text-danger">block does not contain transactions</span>
-    </div>
+        <div class="row ">
+            <span class="text-danger">block does not contain transactions</span>
+        </div>
     {% endif %}
-
 </div>
 </body>
 </html>
