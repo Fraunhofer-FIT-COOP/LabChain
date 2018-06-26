@@ -7,7 +7,30 @@ from random import randint
 from labchain.dashboardDB import DashBoardDB
 
 from labchain.cryptoHelper import CryptoHelper
+import paho.mqtt.client as mqtt
+from labchain.dashboardDB import DashBoardDB
+import _thread
 
+
+def run_mqtt(consensus):
+
+
+    def on_connect(client, userdata, flags, rc):
+        client.subscribe("mine")
+
+    def on_message(client, userdata, msg):
+        if str(msg.payload, 'utf-8') == '1':
+            DashBoardDB.instance().retrieve_status_from_db()
+            print('SENT INITIAL STATUS OF DB')
+        else:
+            consensus.kill_mine = 0 if str(msg.payload, 'utf-8') == 'true' else 1
+            print('Mine status changed to: {}'.format(consensus.kill_mine))
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect('localhost', 1883, 60)
+    client.loop_forever()
 
 class Consensus:
 
@@ -24,6 +47,11 @@ class Consensus:
         self.avg_helper = 0
         self.num_of_mined_blocks = 0
         self.num_of_transactions = 0
+
+        try:
+            _thread.start_new_thread(run_mqtt, (self,))
+        except:
+            logging.debug('Error: unable to start thread')
 
     def __getitem__(self, item):
         pass
