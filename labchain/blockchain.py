@@ -1,8 +1,9 @@
 from datetime import datetime
 import logging
 import json
-from labchain.transaction import NoHashError
 
+from labchain.db import Db
+from labchain.transaction import NoHashError
 from labchain.block import LogicalBlock, Block
 
 logger = logging.getLogger(__name__)
@@ -69,6 +70,8 @@ class BlockChain:
         self._active_mine_block = None
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
+
+        self.db = Db('blockchaindb.sqlite')
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -147,7 +150,7 @@ class BlockChain:
             _txns = _block.transactions
             for _txn in _txns:
                 if transaction_hash == _txn.transaction_hash:
-                    return (_txn, _hash)
+                    return _txn, _hash
         else:
             return None, None
 
@@ -353,7 +356,7 @@ class BlockChain:
             _longest_chain.append(_check_point_hash)
 
             # Remove all other branches
-            #self._current_branch_heads.remove(_new_head_hash)
+            # self._current_branch_heads.remove(_new_head_hash)
             for _head in self._current_branch_heads:
                 _b_hash = _head
                 while _b_hash not in _longest_chain:
@@ -417,3 +420,8 @@ class BlockChain:
                     unmined_transactions = list(
                         set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions)
+
+    def save_blockchain_in_db(self):
+        logger.info("Saving the whole blockchain in sqlite db")
+        # need to call save_block method here
+        # self.db.save_block()
