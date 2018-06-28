@@ -69,7 +69,7 @@
             Predecessor Block Hash
         </div>
         <div class="col-sm-9">
-            <div class="text"> {{predecessorBlock}}</div>
+            <div class="text"> <a href="{{predecessorBlock}}.html">{{predecessorBlock}}</a></div>
         </div>
     </div>
     <div class="row hover">
@@ -127,7 +127,7 @@
     {% endfor %}
     {% else %}
         <div class="row ">
-            <span class="text-danger">block does not contain transactions</span>
+            <span class="text-danger">Block does not contain transactions</span>
         </div>
     {% endif %}
 </div>
