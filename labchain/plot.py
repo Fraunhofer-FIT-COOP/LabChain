@@ -125,7 +125,7 @@ class BlockchainPlotter:
             'xanchor': 'left',
             'currentvalue': {
                 'font': {'size': 20},
-                'prefix': 'Test_prefix;',
+                'prefix': 'Block insertion#',
                 'visible': True,
                 'xanchor': 'right'
             },
@@ -143,6 +143,7 @@ class BlockchainPlotter:
         for step_nr in range(len(self.data_series)):
             # print('stap_nr: ' + str(step_nr))
             slider_step = {'args': [
+                [self.data_series[step_nr]],
                 {'frame': {'duration': 300, 'redraw': False},
                  'mode': 'immediate',
                  'transition': {'duration': 300}}],
@@ -184,7 +185,7 @@ class BlockchainPlotter:
                                                    type="category",
                                                    autorange=True,
                                                    categoryorder="category descending"),
-                                    sliders=[sliders_dict]),
+                                        sliders=[sliders_dict]),
                                     frames=go.Frames(self.data_series))
 
         div = plotly.offline.plot(animated_figure, output_type='div',
