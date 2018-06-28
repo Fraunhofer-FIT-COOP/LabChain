@@ -31,8 +31,8 @@ class BlockchainPlotter:
         # TODO time.sleep dirty fix
         time.sleep(1)
         os.mkdir(os.path.join(plot_dir, 'blocks'))
-        shutil.copy(os.path.join(current_dir, 'plot_resources', 'bootstrap.min.css'),
-                    os.path.join(plot_dir, 'blocks', 'bootstrap.min.css'))
+        shutil.copy(os.path.join(current_dir, 'resources', 'plot', 'bootstrap.min.css'),
+                    os.path.join(plot_dir, 'bootstrap.min.css'))
 
     def plot_blockchain(self, event_data):
         logger.debug('Plotting blockchain into dir {}'.format(self.plot_dir))
@@ -65,9 +65,15 @@ class BlockchainPlotter:
             x=[],
             y=[],
             text=[],
+            ids=[],
             mode='markers+text',
             marker=dict(
-                size=20,
+                size=30,
+                symbol='square',
+                line=dict(
+                    color='rgb(0, 0, 0)',
+                    width=1,
+                )
             ),
             hoverinfo='text')
 
@@ -96,6 +102,7 @@ class BlockchainPlotter:
                 node_trace['x'].append(x1)
                 node_trace['y'].append(y1)
                 node_trace['text'].append(block.block_id)
+                node_trace['ids'].append(block.get_computed_hash())
 
                 if previous_block:
                     x0, y0 = self.__timestamp_to_datetime(previous_block.timestamp), previous_block_branch_name
@@ -107,7 +114,8 @@ class BlockchainPlotter:
                         # draw first visible block because the loop ends here
                         node_trace['x'].append(x0)
                         node_trace['y'].append(y0)
-                        node_trace['text'].append(block.block_id)
+                        node_trace['text'].append(previous_block.block_id)
+                        node_trace['ids'].append(previous_block.get_computed_hash())
 
             branch_number += 1
 
@@ -128,29 +136,6 @@ class BlockchainPlotter:
             'y': 0,
             'steps': []
         }
-
-        snapshot_figure = go.Figure(data=[edge_trace, node_trace],
-                                    layout=go.Layout(
-                                        title='Blockchain state at {} from node {}'.format(
-                                            self.__get_formatted_datetime(),
-                                            blockchain._node_id),
-                                        titlefont=dict(size=16),
-                                        showlegend=False,
-                                        hovermode='closest',
-                                        # margin=dict(b=20, l=5, r=5, t=40),
-                                        annotations=[],
-                                        xaxis=dict(showgrid=False,
-                                                   zeroline=False,
-                                                   autorange=True,
-                                                   showticklabels=True),
-                                        yaxis=dict(showgrid=False,
-                                                   zeroline=False,
-                                                   showticklabels=True,
-                                                   type="category",
-                                                   autorange=True,
-                                                   categoryorder="category descending")))
-        plotly.offline.plot(snapshot_figure, filename=os.path.join(self.plot_dir, '{}.html'.format(time.time())),
-                            auto_open=self.plot_auto_open)
 
         self.data_series.append({'data': [edge_trace, node_trace]})
         greatest_range = [min(node_trace['x']), max(node_trace['x'])]
@@ -195,7 +180,7 @@ class BlockchainPlotter:
 
         # create step for each frame in animated_figure
         for step_nr in range(len(animated_figure['frames'])):
-            print('stap_nr: ' + str(step_nr))
+            # print('stap_nr: ' + str(step_nr))
             slider_step = {'args': [
                 {'frame': {'duration': 300, 'redraw': False},
                  'mode': 'immediate',
@@ -204,31 +189,43 @@ class BlockchainPlotter:
                 'method': 'animate'}
             sliders_dict['steps'].append(slider_step)
 
-        plotly.offline.plot(animated_figure, filename=os.path.join(self.plot_dir, 'animated.html'),
-                            auto_open=False)
+        div = plotly.offline.plot(animated_figure, output_type='div',
+                                  filename=os.path.join(self.plot_dir, 'animated.html'),
+                                  auto_open=False)
+        env = self._get_jinja_environment()
+        template = env.get_template('block_overview_template.html')
+        rendered_html = template.render({
+            'plotly_div': div
+        })
+        with open(os.path.join(self.plot_dir, 'index.html'), 'w') as f:
+            f.write(rendered_html)
 
     def generate_block_detail_page(self, event_data):
-        block = event_data['block']
+        if 'block' in event_data:
+            block = event_data['block']
+            env = self._get_jinja_environment()
+            block_hash = block.get_computed_hash()
+            template_data = block.to_dict()
+            template_data['block_hash'] = block_hash
+            template_data['transactions'] = []
+            for transaction in block.transactions:
+                template_data['transactions'].append(transaction.to_dict())
+
+            # used for jinja2
+            if len(template_data['transactions']) == 0:
+                template_data['transactions'] = None
+
+            template = env.get_template('block_detail_template.html')
+            rendered_html = template.render(template_data)
+            with open(os.path.join(self.plot_dir, 'blocks', block_hash + '.html'), 'w') as f:
+                f.write(rendered_html)
+
+    def _get_jinja_environment(self):
         env = Environment(
-            loader=PackageLoader('labchain', 'plot_resources'),
+            loader=PackageLoader('labchain', 'resources/plot'),
             autoescape=select_autoescape(['html', 'xml'])
         )
-        block_hash = block.get_computed_hash()
-        template_data = block.to_dict()
-        template_data['block_hash'] = block_hash
-        template_data['transactions'] = []
-        for transaction in block.transactions:
-            template_data['transactions'].append(transaction.to_dict())
-
-        # used for jinja2
-        if len(template_data['transactions']) == 0:
-            template_data['transactions'] = None
-
-        template = env.get_template('block_detail_template.html')
-        rendered_html = template.render(template_data)
-        f = open(os.path.join(self.plot_dir, 'blocks', block_hash + '.html'), 'w')
-        f.write(rendered_html)
-        f.close()
+        return env
 
     @staticmethod
     def __get_formatted_datetime():

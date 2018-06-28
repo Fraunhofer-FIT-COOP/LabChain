@@ -85,7 +85,7 @@ class BlockChain:
         self._node_branch_head = self._first_block_hash
         self._current_branch_heads = [self._first_block_hash, ]
         logger.debug("BlockChain initialized with genesis block")
-        self.event_bus.fire(event.EVENT_BLOCKCHAIN_INITIALIZED, self)
+        self.event_bus.fire(event.EVENT_BLOCKCHAIN_INITIALIZED, {'block_chain': self})
 
     def get_block_range(self, range_start=None, range_end=None):
         """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
