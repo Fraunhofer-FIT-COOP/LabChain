@@ -71,7 +71,7 @@ class BlockChain:
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
 
-        self.db = Db('blockchaindb.sqlite')
+        self.db = Db()
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -92,7 +92,7 @@ class BlockChain:
         Chain followed by this node is the one traversed.
         range_start or range_end are block hashes
         if range_end is not specified, all blocks till end of chain are returned
-        if chain couldn't be traveresed at some point we have bigger bugs in code
+        if chain couldn't be traversed at some point we have bigger bugs in code
         if range_start or range_end is not found in chain, returns None
         """
         if not range_start:
