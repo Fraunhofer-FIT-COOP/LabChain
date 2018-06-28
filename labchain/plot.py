@@ -111,6 +111,24 @@ class BlockchainPlotter:
 
             branch_number += 1
 
+        sliders_dict = {
+            'active': 0,
+            'yanchor': 'top',
+            'xanchor': 'left',
+            'currentvalue': {
+                'font': {'size': 20},
+                'prefix': 'Test_prefix;',
+                'visible': True,
+                'xanchor': 'right'
+            },
+            'transition': {'duration': 300, 'easing': 'cubic-in-out'},
+            'pad': {'b': 10, 't': 50},
+            'len': 0.9,
+            'x': 0.1,
+            'y': 0,
+            'steps': []
+        }
+
         snapshot_figure = go.Figure(data=[edge_trace, node_trace],
                                     layout=go.Layout(
                                         title='Blockchain state at {} from node {}'.format(
@@ -154,6 +172,7 @@ class BlockchainPlotter:
                                                                        'transition': {'duration': 0}}]},
                                                                   ]},
                                                      ],
+
                                         showlegend=False,
                                         hovermode='closest',
                                         # margin=dict(b=20, l=5, r=5, t=40),
@@ -171,6 +190,20 @@ class BlockchainPlotter:
                                                    autorange=True,
                                                    categoryorder="category descending")),
                                     frames=go.Frames(self.data_series))
+
+        animated_figure['layout']['sliders'] = [sliders_dict]
+
+        # create step for each frame in animated_figure
+        for step_nr in range(len(animated_figure['frames'])):
+            print('stap_nr: ' + str(step_nr))
+            slider_step = {'args': [
+                {'frame': {'duration': 300, 'redraw': False},
+                 'mode': 'immediate',
+                 'transition': {'duration': 300}}],
+                'label': str(step_nr),
+                'method': 'animate'}
+            sliders_dict['steps'].append(slider_step)
+
         plotly.offline.plot(animated_figure, filename=os.path.join(self.plot_dir, 'animated.html'),
                             auto_open=False)
 
