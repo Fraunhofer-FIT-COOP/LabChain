@@ -436,7 +436,7 @@ class ServerNetworkInterface(NetworkInterface):
         ip_list = []
         for interface in interfaces():
             addresses = ifaddresses(interface)
-            if AF_INET in addresses:
+            if AF_INET6 in addresses:
                 for link in addresses[AF_INET6]:
                     ip_list.append(link['addr'])
         return ip_list
