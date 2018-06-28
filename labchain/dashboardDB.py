@@ -81,6 +81,7 @@ class DashBoardDB:
                                    ",averageMiningTime,miningStatus) values (?,?,?,?,?,?,?,?,?)", values)
 
     def add_block(self, block):
+        self.retrieve_last_mined_block(block.block_id, len(block.transactions), block.block_creator_id[-4:])
         self.create_connection()
         block_values = (block.block_id, len(block.transactions), block.block_creator_id[-4:])
         self.conn.cursor().execute("insert into blocks(id,numOfTransactions,creator) values (?,?,?)", block_values)
@@ -91,6 +92,7 @@ class DashBoardDB:
                                        trans_values)
         self.close_connection()
         logger.debug('#INFO:DashBoardDB-> Block: ' + str(block.block_id) + 'added to the db.')
+        self.retrieve_last_mined_block(block.block_id, len(block.transactions), block.block_creator_id[-4:])
 
     def change_block_chain_length(self, new_length):
         self.create_connection()
@@ -247,3 +249,11 @@ class DashBoardDB:
         stat += str(self.get_max_mining_time()) + ','
         stat += str(self.get_avg_mining_time())
         publish.single("bc_status", stat, hostname="localhost", port=1883)
+
+    def retrieve_last_mined_block(self, id, tx_number, creator):
+        block = ''
+        block += str(id) + ','
+        block += str(tx_number) + ','
+        block += str(creator)
+        publish.single("mined_block", block, hostname="localhost", port=1883)
+        print("sent data")
