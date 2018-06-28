@@ -119,13 +119,17 @@ class BlockchainPlotter:
 
             branch_number += 1
 
+        current_datetime = self.__get_formatted_datetime()
+        self.data_series.append({'data': [edge_trace, node_trace], 'name': current_datetime})
+        greatest_range = [min(node_trace['x']), max(node_trace['x'])]
+        # create step for each frame in animated_figure
         sliders_dict = {
             'active': 0,
             'yanchor': 'top',
             'xanchor': 'left',
             'currentvalue': {
                 'font': {'size': 20},
-                'prefix': 'Block insertion#',
+                'prefix': 'Block insertion at ',
                 'visible': True,
                 'xanchor': 'right'
             },
@@ -136,27 +140,28 @@ class BlockchainPlotter:
             'y': 0,
             'steps': []
         }
-
-        self.data_series.append({'data': [edge_trace, node_trace]})
-        greatest_range = [min(node_trace['x']), max(node_trace['x'])]
-        # create step for each frame in animated_figure
-        for step_nr in range(len(self.data_series)):
-            # print('stap_nr: ' + str(step_nr))
+        for frame in self.data_series:
             slider_step = {'args': [
-                [self.data_series[step_nr]],
+                [frame['name']],
                 {'frame': {'duration': 300, 'redraw': False},
                  'mode': 'immediate',
                  'transition': {'duration': 300}}],
-                'label': str(step_nr),
+                'label': frame['name'],
                 'method': 'animate'}
             sliders_dict['steps'].append(slider_step)
         animated_figure = go.Figure(data=self.data_series[0]['data'],
                                     layout=go.Layout(
                                         title='Animated Blockchain state at {} from node {}'.format(
-                                            self.__get_formatted_datetime(),
+                                            current_datetime,
                                             blockchain._node_id),
                                         titlefont=dict(size=16),
                                         updatemenus=[{'type': 'buttons',
+                                                      'x': 0.1,
+                                                      'xanchor': 'right',
+                                                      'y': 0,
+                                                      'yanchor': 'top',
+                                                      'direction': 'left',
+                                                      'pad': {'r': 10, 't': 87},
                                                       'buttons': [{'label': 'Play',
                                                                    'method': 'animate',
                                                                    'args': [None]},
@@ -188,9 +193,7 @@ class BlockchainPlotter:
                                         sliders=[sliders_dict]),
                                     frames=go.Frames(self.data_series))
 
-        div = plotly.offline.plot(animated_figure, output_type='div',
-                                  filename=os.path.join(self.plot_dir, 'animated.html'),
-                                  auto_open=False)
+        div = plotly.offline.plot(animated_figure, output_type='div')
         env = self._get_jinja_environment()
         template = env.get_template('block_overview_template.html')
         rendered_html = template.render({
