@@ -1,13 +1,11 @@
 import datetime
 import logging
 import os
-import pprint
-import time
 import shutil
+import time
 
 import plotly
 import plotly.graph_objs as go
-
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 logger = logging.getLogger(__name__)
@@ -67,7 +65,10 @@ class BlockchainPlotter:
             x=[],
             y=[],
             text=[],
-            mode='markers',
+            mode='markers+text',
+            marker=dict(
+                size=20,
+            ),
             hoverinfo='text')
 
         branch_number = 0
@@ -94,8 +95,7 @@ class BlockchainPlotter:
                 # draw block
                 node_trace['x'].append(x1)
                 node_trace['y'].append(y1)
-                block_text = pprint.pformat(block.to_dict()).replace("\n", '<br>')
-                node_trace['text'].append(block_text)
+                node_trace['text'].append(block.block_id)
 
                 if previous_block:
                     x0, y0 = self.__timestamp_to_datetime(previous_block.timestamp), previous_block_branch_name
@@ -107,8 +107,7 @@ class BlockchainPlotter:
                         # draw first visible block because the loop ends here
                         node_trace['x'].append(x0)
                         node_trace['y'].append(y0)
-                        block_text = pprint.pformat(previous_block.to_dict()).replace("\n", '<br>')
-                        node_trace['text'].append(block_text)
+                        node_trace['text'].append(block.block_id)
 
             branch_number += 1
 
@@ -124,6 +123,7 @@ class BlockchainPlotter:
                                         annotations=[],
                                         xaxis=dict(showgrid=False,
                                                    zeroline=False,
+                                                   autorange=True,
                                                    showticklabels=True),
                                         yaxis=dict(showgrid=False,
                                                    zeroline=False,
