@@ -139,6 +139,16 @@ class BlockchainPlotter:
 
         self.data_series.append({'data': [edge_trace, node_trace]})
         greatest_range = [min(node_trace['x']), max(node_trace['x'])]
+        # create step for each frame in animated_figure
+        for step_nr in range(len(self.data_series)):
+            # print('stap_nr: ' + str(step_nr))
+            slider_step = {'args': [
+                {'frame': {'duration': 300, 'redraw': False},
+                 'mode': 'immediate',
+                 'transition': {'duration': 300}}],
+                'label': str(step_nr),
+                'method': 'animate'}
+            sliders_dict['steps'].append(slider_step)
         animated_figure = go.Figure(data=self.data_series[0]['data'],
                                     layout=go.Layout(
                                         title='Animated Blockchain state at {} from node {}'.format(
@@ -173,21 +183,9 @@ class BlockchainPlotter:
                                                    showticklabels=True,
                                                    type="category",
                                                    autorange=True,
-                                                   categoryorder="category descending")),
+                                                   categoryorder="category descending"),
+                                    sliders=[sliders_dict]),
                                     frames=go.Frames(self.data_series))
-
-        animated_figure['layout']['sliders'] = [sliders_dict]
-
-        # create step for each frame in animated_figure
-        for step_nr in range(len(animated_figure['frames'])):
-            # print('stap_nr: ' + str(step_nr))
-            slider_step = {'args': [
-                {'frame': {'duration': 300, 'redraw': False},
-                 'mode': 'immediate',
-                 'transition': {'duration': 300}}],
-                'label': str(step_nr),
-                'method': 'animate'}
-            sliders_dict['steps'].append(slider_step)
 
         div = plotly.offline.plot(animated_figure, output_type='div',
                                   filename=os.path.join(self.plot_dir, 'animated.html'),
