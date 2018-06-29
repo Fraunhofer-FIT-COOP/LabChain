@@ -72,7 +72,7 @@ class BlockChain:
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
-        _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj, timestamp=0)
+        _first_block = LogicalBlock(block_id=0, timestamp=0)
         _first_block.set_block_pos(0)
         self._first_block_hash = _first_block.get_computed_hash()
         self._blockchain[self._first_block_hash] = _first_block
@@ -168,8 +168,9 @@ class BlockChain:
         # getting timestamp of the last block added in chain
         _last_block = json.loads(self.get_block_by_hash(_hash))
         if _last_block["nr"] == 0:
-            return 0, 0, 1
+            return 0, 0, 1, 1
         _latest_timestamp = _last_block['timestamp']
+        _latest_difficulty = _last_block['difficulty']
 
         # setting hash of the second last block
         _hash = _last_block['predecessorBlock']
@@ -188,7 +189,7 @@ class BlockChain:
             _earliest_timestamp = _block['timestamp']
             _hash = _block['predecessorBlock']
             _number_of_blocks = _number_of_blocks + 1
-        return _latest_timestamp, _earliest_timestamp, _number_of_blocks
+        return _latest_timestamp, _earliest_timestamp, _number_of_blocks, _latest_difficulty
 
     def add_block(self, block):
         """Finds correct position and adds the new block to the chain.
@@ -213,10 +214,10 @@ class BlockChain:
         if block.get_computed_hash() in self._blockchain:
             return False
 
-        _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
+        _latest_timestamp, _earliest_timestamp, _num_of_blocks, _latest_difficulty = \
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,
-                                    _num_of_blocks):
+                                    _num_of_blocks, _latest_difficulty):
             logger.debug("The block received is not valid, discarding this block -- \n {b}".
                          format(b=str(block)))
             if block.is_block_ours(self._node_id):
@@ -278,7 +279,7 @@ class BlockChain:
             self.check_block_in_mining(block)
 
         logger.info("Added new block --- \n {h} \n {b} \n".
-                     format(h=str(block.get_computed_hash()), b=str(block)))
+                    format(h=str(block.get_computed_hash()), b=str(block)))
 
         logger.debug("Number of branches currently branch heads = {}"
                      " \n Branches -- \n".format(len(self._current_branch_heads)))
@@ -306,12 +307,9 @@ class BlockChain:
 
         _curr_head = self._blockchain[self._node_branch_head]
         _new_block_id = _curr_head.block_id + 1
-        new_block = LogicalBlock(block_id=_new_block_id,
-                                 predecessor_hash=self._node_branch_head,
-                                 block_creator_id=self._node_id,
-                                 transactions=transactions,
-                                 consensus_obj=self._consensus,
-                                 crypto_helper_obj=self._crypto_helper)
+        new_block = LogicalBlock(block_id=_new_block_id, transactions=transactions,
+                                 predecessor_hash=self._node_branch_head, block_creator_id=self._node_id,
+                                 consensus_obj=self._consensus)
         return new_block
 
     def switch_to_longest_branch(self):
@@ -353,7 +351,7 @@ class BlockChain:
             _longest_chain.append(_check_point_hash)
 
             # Remove all other branches
-            #self._current_branch_heads.remove(_new_head_hash)
+            # self._current_branch_heads.remove(_new_head_hash)
             for _head in self._current_branch_heads:
                 _b_hash = _head
                 while _b_hash not in _longest_chain:

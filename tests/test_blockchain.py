@@ -70,10 +70,11 @@ class BlockChainComponent(unittest.TestCase):
 
     def test_calculate_diff(self):
         # blocks added in setup
-        blocks, t1, t2 = self.blockchain.calculate_diff()
+        blocks, t1, t2, diff = self.blockchain.calculate_diff()
         self.assertIsNotNone(blocks)
         self.assertIsNotNone(t1)
         self.assertIsNotNone(t2)
+        self.assertIsNotNone(diff)
 
     def test_create_block(self):
         # creating new block based on given transaction list
