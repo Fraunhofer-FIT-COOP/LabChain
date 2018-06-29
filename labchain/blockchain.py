@@ -70,8 +70,10 @@ class BlockChain:
         self._active_mine_block = None
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
-
         self.db = Db()
+
+        # Create tables if not already
+        self.db.create_tables()
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -144,6 +146,9 @@ class BlockChain:
             block_info = _req_block.get_json()
         return block_info
 
+    def reinitialize_blockchain_from_db(self):
+        return self.db.get_blockchain_from_db()
+
     def get_transaction(self, transaction_hash):
         """tuple with 1st element as transaction and 2nd element as block_hash"""
         for _hash, _block in self._blockchain.items():
@@ -193,7 +198,7 @@ class BlockChain:
             _number_of_blocks = _number_of_blocks + 1
         return _latest_timestamp, _earliest_timestamp, _number_of_blocks
 
-    def add_block(self, block):
+    def add_block(self, block, db_flag=True):
         """Finds correct position and adds the new block to the chain.
         If block predecessor not found in chain, stores block as an orphan.
 
@@ -248,6 +253,10 @@ class BlockChain:
             _curr_block.set_block_pos(_prev_block_pos + 1)
             self._blockchain[_curr_block_hash] = _curr_block
             self._current_branch_heads.append(_curr_block_hash)
+            if db_flag:
+                self.db.save_block(block)
+                print('Saved block ' + str(block.block_id) + 'to DB')
+                print(self._blockchain)
 
             """
             if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):

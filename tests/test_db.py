@@ -22,6 +22,7 @@ class DbTestCase(unittest.TestCase):
 
     def test_save_block(self):
         self.assertTrue(self.database.save_block(self.block1))
+        self.database.get_blockchain_from_db()
 
     def init_components(self):
         node_config = '../labchain/resources/node_configuration.ini'

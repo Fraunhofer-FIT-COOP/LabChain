@@ -6,6 +6,7 @@ import time
 import uuid
 
 from labchain.block import Block
+from labchain.block import LogicalBlock
 from labchain.blockchain import BlockChain
 from labchain.bootstrap import Bootstrapper
 from labchain.configReader import ConfigReader
@@ -212,6 +213,12 @@ class BlockChainNode:
         logger.info("Starting bootstrap...")
         """Bootstrap the blockchain node"""
         bootstrapper = Bootstrapper(self.network_interface)
+        blocks_from_db = self.blockchain_obj.reinitialize_blockchain_from_db()
+        if blocks_from_db is not None:
+            for block in blocks_from_db:
+                self.blockchain_obj.add_block(LogicalBlock.from_block(block, self.consensus_obj), False)
+                print('Fetched block ' + str(block.block_id) + ' from DB')
+        print(self.blockchain_obj._blockchain)
         bootstrapper.do_bootstrap(self.blockchain_obj)
 
         logger.debug("Starting mining thread...")

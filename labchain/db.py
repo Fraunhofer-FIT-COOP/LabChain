@@ -1,4 +1,6 @@
 import sqlite3
+from labchain.block import Block
+from labchain.transaction import Transaction
 
 
 class Db:
@@ -17,7 +19,7 @@ class Db:
         :return: Connection object or None
         """
         try:
-            conn = sqlite3.connect(db_file)
+            conn = sqlite3.connect(db_file, check_same_thread=False)
             return conn
         except sqlite3.Error as e:
             print(e)
@@ -27,17 +29,16 @@ class Db:
     def create_tables(self):
         # Check if table users does not exist and create it
 
-        text = 'TEXT'
-        integer = 'INTEGER'
         create_blockchain_table = 'CREATE TABLE IF NOT EXISTS ' + self.blockchain_table + \
-                                  '(block_id integer PRIMARY KEY, merkle_tree_root text NOT NULL, predecessor_' + \
-                                  'hash text NOT NULL, block_creator_id text NOT NULL, timestamp text NOT NULL)'
+                                  '(hash text PRIMARY KEY, block_id integer NOT NULL, merkle_tree_root text, ' + \
+                                  'predecessor_hash text NOT NULL, block_creator_id text NOT NULL, nonce integer ' + \
+                                  'NOT NULL, timestamp timestamp NOT NULL)'
 
         create_transactions_table = 'CREATE TABLE IF NOT EXISTS ' + self.transaction_table + \
                                     '(sender text NOT NULL, receiver text NOT NULL, payload text NOT NULL, ' + \
-                                    'signature text NOT NULL, transaction_hash text PRIMARY KEY, block_id integer ' + \
-                                    'NOT NULL, FOREIGN KEY (block_id) REFERENCES ' + self.blockchain_table + \
-                                    ' (block_id))'
+                                    'signature text NOT NULL, transaction_hash text PRIMARY KEY, block_hash text' + \
+                                    ' NOT NULL, FOREIGN KEY (block_hash) REFERENCES ' + self.blockchain_table + \
+                                    ' (hash))'
         try:
             self.cursor.execute(create_blockchain_table)
             self.cursor.execute(create_transactions_table)
@@ -45,21 +46,9 @@ class Db:
             self.conn.commit()
         except sqlite3.Error as e:
             print("Table creation error: ", e.args[0])
+            print(e)
             return False
         return True
-
-    def save_whole_block_chain(self, block_list):
-        # first iterate the block dictionary and find the block and then save it to the block chain table\
-        #  then save the transactions of the block into the transaction table with proper foreign key constraint
-        """
-        for batch insert follow the code snippet
-        users = [(name1,phone1, email1, password1),
-         (name2,phone2, email2, password2),
-         (name3,phone3, email3, password3)]
-
-        cursor.executemany(''' INSERT INTO users(name, phone, email, password) VALUES(?,?,?,?)''', users)
-        db.commit()
-        """
 
     def save_block(self, block):
         # save a single block and its correspondent transactions in the db
@@ -69,49 +58,44 @@ class Db:
                   VALUES(:name,:phone, :email, :password)''',
                   {'name':name1, 'phone':phone1, 'email':email1, 'password':password1})
         """
-        block_data = [block.block_id, block.block_creator_id, block.merkle_tree_root, block.predecessor_hash,
-                      block.timestamp]
-        insert_into_blockchain = 'INSERT INTO ' + self.blockchain_table + '(block_id, block_creator_id, ' + \
-                                 'merkle_tree_root, predecessor_hash, timestamp) VALUES (?,?,?,?,?)'
+        block_hash = block.get_computed_hash()
+        block_data = [block_hash, block.block_id, block.block_creator_id, block.merkle_tree_root,
+                      block.predecessor_hash, block.nonce, block.timestamp]
+        insert_into_blockchain = 'INSERT INTO ' + self.blockchain_table + '(hash, block_id, block_creator_id, ' + \
+                                 'merkle_tree_root, predecessor_hash, nonce, timestamp) VALUES (?,?,?,?,?,?,?)'
         insert_into_transactions = 'INSERT INTO ' + self.transaction_table + '(sender, receiver, payload, signature' + \
-                                   ', transaction_hash, block_id) VALUES (?,?,?,?,?,?)'
+                                   ', transaction_hash, block_hash) VALUES (?,?,?,?,?,?)'
 
         try:
             self.cursor.execute(insert_into_blockchain, block_data)
             for t in block.transactions:
                 self.cursor.execute(insert_into_transactions, (t.sender, t.receiver, t.payload, t.signature,
-                                    t.transaction_hash, block.block_id))
+                                    t.transaction_hash, block_hash))
             self.conn.commit()
         except sqlite3.Error as e:
             print("Error in adding block: ", e.args[0])
             return False
         return True
 
-    def retrieve_block_by_hash(self, block_hash):
-        # get the block from db by it's hash
-        """
+    def get_blockchain_from_db(self):
+        get_block = 'SELECT * from '+self.blockchain_table
+        get_transactions = 'SELECT * FROM ' + self.transaction_table + ' WHERE block_hash = ?'
 
-        :param block_hash:
-        :return: block
-        """
-        """
-        For example : 
-        user_id = 3
-        cursor.execute('''SELECT name, email, phone FROM users WHERE id=?''', (user_id,))
-        user = cursor.fetchone()
-        """
-    def retrieve_whole_block_chain_from_db(self):
-        """
-        :return: blockchain
-        """
+        self.cursor.execute(get_block)
+        blocks = []
+        blocks_db = self.cursor.fetchall()
+        if len(blocks_db) == 0:
+            return None
+        for block_db in blocks_db:
+            self.cursor.execute(get_transactions, (block_db[0],))
+            txns = []
+            txns_db = self.cursor.fetchall()
+            if len(txns_db) != 0:
+                for txn_db in txns_db:
+                    txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                    txn.transaction_hash = txn_db[4]
+                    txns.append(txn)
+            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]))
+            blocks.append(block)
+        return blocks
 
-        """
-        For fetching all the block from db follow the code snippet
-        cursor.execute('''SELECT name, email, phone FROM users''')
-        user1 = cursor.fetchone() #retrieve the first row
-        print(user1[0]) #Print the first column retrieved(user's name)
-        all_rows = cursor.fetchall()
-        for row in all_rows:
-    # row[0] returns the first column in the query (name), row[1] returns email column.
-            print('{0} : {1}, {2}'.format(row[0], row[1], row[2]))
-        """
