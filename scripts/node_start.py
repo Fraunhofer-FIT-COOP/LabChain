@@ -25,10 +25,6 @@ def create_node(node_port, peer_list):
     return BlockChainNode(CONFIG_FILE, node_port, peer_list)
 
 
-def create_dashboard_db():
-    DashBoardDB.instance()
-
-
 def setup_logging(verbose, very_verbose):
     if very_verbose:
         logging.basicConfig(level=logging.DEBUG)
@@ -66,4 +62,3 @@ if __name__ == '__main__':
     initial_peers = parse_peers(args.peers)
     Utility.print_labchain_logo()
     node = create_node(args.port, initial_peers)
-    create_dashboard_db()

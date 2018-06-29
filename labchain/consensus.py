@@ -95,7 +95,6 @@ class Consensus:
         self.dash_board_db.change_num_of_transactions(self.num_of_transactions)
         self.dash_board_db.retrieve_status_from_db()
 
-
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
 
@@ -135,11 +134,9 @@ class Consensus:
         self.avg_mining_time = (self.avg_helper + time_diff) / self.num_of_mined_blocks
         self.avg_helper = self.avg_helper + time_diff
         self.update_db()
-        self.dash_board_db.add_block(block)
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is mined successfully')
         # need a boolean return to check if mine got killed
         return True
-
     #    Code for updating the difficulty to be implemented by Blockchain component
     #    if self.blocks_counter % self.blocks_threshold  == 0 & self.recalculate == 1:
     #        self.blocks_counter = 0
