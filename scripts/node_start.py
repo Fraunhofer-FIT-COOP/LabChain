@@ -13,7 +13,7 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
-from labchain.dashboardDB import DashBoardDB # noga
+from labchain.dashboardDB import DashBoardDB
 from labchain.utility import Utility  # noqa
 
 # set TERM environment variable if not set
@@ -81,4 +81,5 @@ if __name__ == '__main__':
         plot_dir = args.plot_dir
     else:
         plot_dir = None
+    DashBoardDB.instace().set_plot_dir(plot_dir)
     node = create_node(args.port, initial_peers, plot_dir, args.plot_auto_open)

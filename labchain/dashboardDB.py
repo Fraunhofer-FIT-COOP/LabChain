@@ -1,6 +1,7 @@
 from labchain.singleton import Singleton
 import logging
 import paho.mqtt.publish as publish
+import os.path
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,11 @@ class DashBoardDB:
         self.avg_mining_time = 0
         self.mining_status = 0
         self.block_chain_memory_size = 0
+        self.plot_dir = ''
+        self.block_file_location = ''
+
+    def set_plot_dir(self, plot_dir):
+        self.plot_dir = plot_dir
 
     def change_block_chain_length(self, new_length):
         self.block_chain_length = new_length
@@ -79,6 +85,12 @@ class DashBoardDB:
 
     def get_block_chain_memory_size(self):
         return self.block_chain_memory_size
+
+    def get_block_by_hash_redirect(self, block_hash):
+        if os.path.isfile(str(self.plot_dir + block_hash + '.html')):
+            self.block_file_location = str(self.plot_dir + block_hash + '.html')
+            return True
+        return False
 
     def retrieve_status_from_db(self):
         stat = ''
