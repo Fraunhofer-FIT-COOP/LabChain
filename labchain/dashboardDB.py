@@ -92,6 +92,9 @@ class DashBoardDB:
             return True
         return False
 
+    def get_block_file_location(self):
+        return self.block_file_location
+
     def retrieve_status_from_db(self):
         stat = ''
         stat += str(self.get_block_chain_length()) + ','
