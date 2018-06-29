@@ -1,10 +1,12 @@
 import json
 import logging
 from datetime import datetime
-
 from labchain import event
-from labchain.block import LogicalBlock
+import sys
 from labchain.transaction import NoHashError
+
+from labchain.block import LogicalBlock, Block
+from labchain.dashboardDB import DashBoardDB
 
 logger = logging.getLogger(__name__)
 
@@ -233,7 +235,9 @@ class BlockChain:
         _prev_hash = block.predecessor_hash
         _curr_block_hash = block.get_computed_hash()
         _curr_block = block
-
+        DashBoardDB.instance().change_block_chain_length(self._blockchain[self._node_branch_head].block_id)
+        DashBoardDB.instance().change_block_chain_memory_size(sys.getsizeof(self._blockchain[self._node_branch_head]))
+        DashBoardDB.instance().retrieve_status_from_db()
         if _prev_hash in self._blockchain:
             _prev_block = self._blockchain.get(_prev_hash)
             _prev_block_pos = _prev_block.get_block_pos()

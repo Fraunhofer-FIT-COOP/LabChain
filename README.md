@@ -48,6 +48,15 @@ python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 `--plot-dir <directory>` lets you choose a different directory for plot output
 `--plot-auto-open` enables opening the plot in your browser whenever it is created (may become annoying)
 
+# Run the Node Dashboard
+
+```
+cd node-dashboard-app
+node-red dash-app.js
+```
+
+`--port port_number` if the given port is busy.
+
 # Run the Client
 
 ```

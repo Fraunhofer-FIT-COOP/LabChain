@@ -13,6 +13,7 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
+from labchain.dashboardDB import DashBoardDB # noga
 from labchain.utility import Utility  # noqa
 
 # set TERM environment variable if not set
