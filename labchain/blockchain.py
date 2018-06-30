@@ -1,8 +1,8 @@
 from datetime import datetime
 import logging
 import json
-from labchain.transaction import NoHashError
 
+from labchain.transaction import NoHashError
 from labchain.block import LogicalBlock, Block
 
 logger = logging.getLogger(__name__)
