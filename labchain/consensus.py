@@ -4,7 +4,6 @@ import sys
 import time
 import logging
 from random import randint
-from labchain.dashboardDB import DashBoardDB
 
 from labchain.cryptoHelper import CryptoHelper
 import paho.mqtt.client as mqtt
@@ -17,8 +16,12 @@ def run_mqtt(consensus):
 
     def on_connect(client, userdata, flags, rc):
         client.subscribe("mine")
+        client.subscribe("get_link")
 
     def on_message(client, userdata, msg):
+        if str(msg.topic) == 'get_link':
+            print("Sending link")
+            DashBoardDB.instance().send_block_link("http://facebook.com")
         if str(msg.payload, 'utf-8') == '1':
             DashBoardDB.instance().retrieve_status_from_db()
             print('SENT INITIAL STATUS OF DB')

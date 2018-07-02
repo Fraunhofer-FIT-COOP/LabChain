@@ -104,13 +104,11 @@ class DashBoardDB:
         stat += str(self.get_num_of_nodes()) + ','
         stat += str(self.get_min_mining_time()) + ','
         stat += str(self.get_max_mining_time()) + ','
-        stat += str(self.get_avg_mining_time())
+        stat += str(self.get_avg_mining_time()) + ','
+        stat += str(self.get_block_chain_memory_size())
         publish.single("bc_status", stat, hostname="localhost", port=1883)
 
-    def retrieve_last_mined_block(self, id, tx_number, creator):
-        block = ''
-        block += str(id) + ','
-        block += str(tx_number) + ','
-        block += str(creator)
-        publish.single("mined_block", block, hostname="localhost", port=1883)
-        print("sent data")
+    def send_block_link(self, blockId):
+        #TODO get file html?
+        publish.single("link_ref", blockId, hostname="localhost", port=1883)
+

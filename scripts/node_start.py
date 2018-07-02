@@ -81,5 +81,5 @@ if __name__ == '__main__':
         plot_dir = args.plot_dir
     else:
         plot_dir = None
-    DashBoardDB.instace().set_plot_dir(plot_dir)
+    DashBoardDB.instance().set_plot_dir(plot_dir)
     node = create_node(args.port, initial_peers, plot_dir, args.plot_auto_open)
