@@ -26,8 +26,13 @@ def run_mqtt(consensus):
             DashBoardDB.instance().retrieve_status_from_db()
             print('SENT INITIAL STATUS OF DB')
         else:
-            consensus.kill_mine = 0 if str(msg.payload, 'utf-8') == 'true' else 1
-            print('Mine status changed to: {}'.format(consensus.kill_mine))
+            if str(msg.payload, 'utf-8') == 'true':
+                DashBoardDB.instance().change_mining_status(1)
+                print("Turn mine on")
+            else:
+                DashBoardDB.instance().change_mining_status(1)
+                print("Turn mine off")
+
 
     client = mqtt.Client()
     client.on_connect = on_connect
