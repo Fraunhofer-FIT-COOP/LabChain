@@ -30,7 +30,7 @@ def run_mqtt(consensus):
                 DashBoardDB.instance().change_mining_status(1)
                 print("Turn mine on")
             else:
-                DashBoardDB.instance().change_mining_status(1)
+                DashBoardDB.instance().change_mining_status(0)
                 print("Turn mine off")
 
 
