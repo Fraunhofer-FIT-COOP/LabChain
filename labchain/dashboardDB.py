@@ -32,6 +32,9 @@ class DashBoardDB:
     def change_block_chain_length(self, new_length):
         self.block_chain_length = new_length
 
+    def change_mining_status(self, mining_status):
+        self.mining_status = mining_status
+
     def change_num_of_blocks(self, num_of_blocks):
         self.num_of_blocks = num_of_blocks
 
