@@ -9,6 +9,7 @@ from labchain.cryptoHelper import CryptoHelper
 import paho.mqtt.client as mqtt
 from labchain.dashboardDB import DashBoardDB
 import _thread
+import webbrowser, os
 
 
 def run_mqtt(consensus):
@@ -20,19 +21,20 @@ def run_mqtt(consensus):
 
     def on_message(client, userdata, msg):
         if str(msg.topic) == 'get_link':
-            print("Sending link")
-            DashBoardDB.instance().send_block_link("http://facebook.com")
+            if DashBoardDB.instance().get_block_by_hash_redirect(str(json.loads(str(msg.payload, 'utf-8'))['Block ID'])):
+                path = DashBoardDB.instance().get_block_file_location()
+                webbrowser.open('file://' + os.path.realpath(path))
+            else:
+                DashBoardDB.instance().send_file_error("Cannot find block info. Please check the hash.")
         if str(msg.payload, 'utf-8') == '1':
             DashBoardDB.instance().retrieve_status_from_db()
-            print('SENT INITIAL STATUS OF DB')
         else:
             if str(msg.payload, 'utf-8') == 'true':
                 DashBoardDB.instance().change_mining_status(1)
-                print("Turn mine on")
-            else:
+                logging.debug("#INFO:Dashboard-> Turned mine on.")
+            elif str(msg.payload, 'utf-8') == 'false':
                 DashBoardDB.instance().change_mining_status(0)
-                print("Turn mine off")
-
+                logging.debug("#INFO:Dashboard-> Turned mine off.")
 
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -76,7 +78,6 @@ class Consensus:
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
         self.dash_board_db.change_current_diff(self.max_diff - difficulty)
-        self.dash_board_db.retrieve_status_from_db()
         return self.max_diff - difficulty
 
         # global difficulty should not be updated, instead return difficulty,
@@ -101,7 +102,6 @@ class Consensus:
         self.dash_board_db.change_avg_mining_time((int)(self.avg_mining_time))
         self.dash_board_db.change_num_of_blocks(self.num_of_mined_blocks)
         self.dash_board_db.change_num_of_transactions(self.num_of_transactions)
-        self.dash_board_db.retrieve_status_from_db()
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks):
         difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)

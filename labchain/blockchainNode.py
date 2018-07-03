@@ -72,7 +72,6 @@ class BlockChainNode:
                 logger.debug("Created new block, try to mine")
                 st = time.time()
                 if self.dash_board_db.get_mining_status() == 1:
-                    print("Mined turned on: ", self.dash_board_db.mining_status)
                     if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks):
                         # have to check if other node already created a block
                         logger.debug("Mining was successful for new block")

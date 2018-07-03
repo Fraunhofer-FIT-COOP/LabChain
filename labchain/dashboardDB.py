@@ -90,8 +90,8 @@ class DashBoardDB:
         return self.block_chain_memory_size
 
     def get_block_by_hash_redirect(self, block_hash):
-        if os.path.isfile(str(self.plot_dir + block_hash + '.html')):
-            self.block_file_location = str(self.plot_dir + block_hash + '.html')
+        if os.path.isfile(str(self.plot_dir + '/blocks/'+ block_hash + '.html')):
+            self.block_file_location = str(self.plot_dir + '/blocks/'+ block_hash + '.html')
             return True
         return False
 
@@ -111,7 +111,6 @@ class DashBoardDB:
         stat += str(self.get_block_chain_memory_size())
         publish.single("bc_status", stat, hostname="localhost", port=1883)
 
-    def send_block_link(self, blockId):
-        #TODO get file html?
-        publish.single("link_ref", blockId, hostname="localhost", port=1883)
+    def send_file_error(self, err):
+        publish.single("link_ref", err, hostname="localhost", port=1883)
 
