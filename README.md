@@ -53,6 +53,9 @@ python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 ```
 cd node-dashboard-app
 node-red dash-app.js
+
+install node-red-dashboard palette to see the dashboard
+
 ```
 
 `--port port_number` if the given port is busy.
