@@ -6,41 +6,8 @@ import logging
 from random import randint
 
 from labchain.cryptoHelper import CryptoHelper
-import paho.mqtt.client as mqtt
 from labchain.dashboardDB import DashBoardDB
-import _thread
-import webbrowser, os
 
-
-def run_mqtt(consensus):
-
-
-    def on_connect(client, userdata, flags, rc):
-        client.subscribe("mine")
-        client.subscribe("get_link")
-
-    def on_message(client, userdata, msg):
-        if str(msg.topic) == 'get_link':
-            if DashBoardDB.instance().get_block_by_hash_redirect(str(json.loads(str(msg.payload, 'utf-8'))['Block ID'])):
-                path = DashBoardDB.instance().get_block_file_location()
-                webbrowser.open('file://' + os.path.realpath(path))
-            else:
-                DashBoardDB.instance().send_file_error("Cannot find block info. Please check the hash.")
-        if str(msg.payload, 'utf-8') == '1':
-            DashBoardDB.instance().retrieve_status_from_db()
-        else:
-            if str(msg.payload, 'utf-8') == 'true':
-                DashBoardDB.instance().change_mining_status(1)
-                logging.debug("#INFO:Dashboard-> Turned mine on.")
-            elif str(msg.payload, 'utf-8') == 'false':
-                DashBoardDB.instance().change_mining_status(0)
-                logging.debug("#INFO:Dashboard-> Turned mine off.")
-
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect('localhost', 1883, 60)
-    client.loop_forever()
 
 class Consensus:
 
@@ -58,10 +25,7 @@ class Consensus:
         self.num_of_mined_blocks = 0
         self.num_of_transactions = 0
 
-        try:
-            _thread.start_new_thread(run_mqtt, (self,))
-        except:
-            logging.debug('Error: unable to start thread')
+
 
     def __getitem__(self, item):
         pass

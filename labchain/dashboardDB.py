@@ -1,9 +1,44 @@
 from labchain.singleton import Singleton
 import logging
 import paho.mqtt.publish as publish
+import paho.mqtt.client as mqtt
 import os.path
+import _thread
+import webbrowser, os
+import json
+
 
 logger = logging.getLogger(__name__)
+
+
+def run_mqtt(dashboardDB):
+
+    def on_connect(client, userdata, flags, rc):
+        client.subscribe("mine")
+        client.subscribe("get_link")
+
+    def on_message(client, userdata, msg):
+        if str(msg.topic) == 'get_link':
+            if DashBoardDB.instance().get_block_by_hash_redirect(str(json.loads(str(msg.payload, 'utf-8'))['Block ID'])):
+                path = DashBoardDB.instance().get_block_file_location()
+                webbrowser.open('file://' + os.path.realpath(path))
+            else:
+                DashBoardDB.instance().send_file_error("Cannot find block info. Please check the hash.")
+        if str(msg.payload, 'utf-8') == '1':
+            DashBoardDB.instance().retrieve_status_from_db()
+        else:
+            if str(msg.payload, 'utf-8') == 'true':
+                DashBoardDB.instance().change_mining_status(1)
+                logging.debug("#INFO:Dashboard-> Turned mine on.")
+            elif str(msg.payload, 'utf-8') == 'false':
+                DashBoardDB.instance().change_mining_status(0)
+                logging.debug("#INFO:Dashboard-> Turned mine off.")
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect('localhost', 1883, 60)
+    client.loop_forever()
 
 
 @Singleton
@@ -25,6 +60,11 @@ class DashBoardDB:
         self.block_chain_memory_size = 0
         self.plot_dir = ''
         self.block_file_location = ''
+
+        try:
+            _thread.start_new_thread(run_mqtt,(self,))
+        except:
+            logging.debug('Error: unable to start thread')
 
     def set_plot_dir(self, plot_dir):
         self.plot_dir = plot_dir
@@ -111,6 +151,4 @@ class DashBoardDB:
         stat += str(self.get_block_chain_memory_size())
         publish.single("bc_status", stat, hostname="localhost", port=1883)
 
-    def send_file_error(self, err):
-        publish.single("link_ref", err, hostname="localhost", port=1883)
 
