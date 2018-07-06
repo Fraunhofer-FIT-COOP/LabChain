@@ -156,8 +156,8 @@ class BlockChainNode:
         """init blockchain"""
         # Generate the node ID using host ID
         node_uuid = str(uuid.uuid1())
-        # node_id = node_uuid[node_uuid.rfind('-') + 1:]
-        node_id = node_uuid
+        node_id = node_uuid[node_uuid.rfind('-') + 1:]
+        #node_id = node_uuid
         logger.info("Creator id " + str(node_id))
 
         # Read all configurations to be used
