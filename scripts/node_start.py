@@ -74,6 +74,7 @@ def parse_peers(peer_args):
         answers = myResolver.query(seed_domain, "A")
         for a in answers.rrset.items:
             host_addr = a.to_text()
+            logging.info("Adding Node peer IP {} received using DNS SEED peer discovery ... ".format(host_addr))
             if host_addr not in result:
                 result[host_addr] = {}
             result[host_addr][default_port] = {}
