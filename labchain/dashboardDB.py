@@ -27,10 +27,10 @@ def run_mqtt(dashboardDB):
         if str(msg.payload, 'utf-8') == '1':
             DashBoardDB.instance().retrieve_status_from_db()
         else:
-            if str(msg.payload, 'utf-8') == 'true':
+            if str(msg.payload, 'utf-8') == 'false':
                 DashBoardDB.instance().change_mining_status(1)
                 logging.debug("#INFO:Dashboard-> Turned mine on.")
-            elif str(msg.payload, 'utf-8') == 'false':
+            elif str(msg.payload, 'utf-8') == 'true':
                 DashBoardDB.instance().change_mining_status(0)
                 logging.debug("#INFO:Dashboard-> Turned mine off.")
 
@@ -56,7 +56,7 @@ class DashBoardDB:
         self.min_mining_time = 0
         self.max_mining_time = 0
         self.avg_mining_time = 0
-        self.mining_status = 0
+        self.mining_status = 1
         self.block_chain_memory_size = 0
         self.plot_dir = ''
         self.block_file_location = ''
