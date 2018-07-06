@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Database
+dashboard.db
+labchaindb.sqlite
+
 # Distribution / packaging
 .Python
 env/

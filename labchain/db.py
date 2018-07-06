@@ -4,7 +4,7 @@ from labchain.transaction import Transaction
 
 
 class Db:
-    def __init__(self, block_chain_db_file='../database/labchaindb.sqlite'):
+    def __init__(self, block_chain_db_file):
         # Creates or opens a file called mydb with a SQLite3 DB
         self.conn = self.create_connection(block_chain_db_file)
         self.cursor = self.conn.cursor()
@@ -32,7 +32,7 @@ class Db:
         create_blockchain_table = 'CREATE TABLE IF NOT EXISTS ' + self.blockchain_table + \
                                   '(hash text PRIMARY KEY, block_id integer NOT NULL, merkle_tree_root text, ' + \
                                   'predecessor_hash text NOT NULL, block_creator_id text NOT NULL, nonce integer ' + \
-                                  'NOT NULL, timestamp timestamp NOT NULL)'
+                                  'NOT NULL, timestamp timestamp NOT NULL, difficulty integer NOT NULL)'
 
         create_transactions_table = 'CREATE TABLE IF NOT EXISTS ' + self.transaction_table + \
                                     '(sender text NOT NULL, receiver text NOT NULL, payload text NOT NULL, ' + \
@@ -60,9 +60,9 @@ class Db:
         """
         block_hash = block.get_computed_hash()
         block_data = [block_hash, block.block_id, block.block_creator_id, block.merkle_tree_root,
-                      block.predecessor_hash, block.nonce, block.timestamp]
+                      block.predecessor_hash, block.nonce, block.timestamp, block.difficulty]
         insert_into_blockchain = 'INSERT INTO ' + self.blockchain_table + '(hash, block_id, block_creator_id, ' + \
-                                 'merkle_tree_root, predecessor_hash, nonce, timestamp) VALUES (?,?,?,?,?,?,?)'
+                                 'merkle_tree_root, predecessor_hash, nonce, timestamp, difficulty) VALUES (?,?,?,?,?,?,?,?)'
         insert_into_transactions = 'INSERT INTO ' + self.transaction_table + '(sender, receiver, payload, signature' + \
                                    ', transaction_hash, block_hash) VALUES (?,?,?,?,?,?)'
 
@@ -95,7 +95,6 @@ class Db:
                     txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                     txn.transaction_hash = txn_db[4]
                     txns.append(txn)
-            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]))
+            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6], int(block_db[7])))
             blocks.append(block)
         return blocks
-
