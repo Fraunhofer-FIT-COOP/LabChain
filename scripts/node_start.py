@@ -70,6 +70,7 @@ def parse_peers(peer_args):
         default_port = config.get_config(section="NETWORK", option="PORT", fallback=8080)
         myResolver = dns.resolver.Resolver(configure=False)
         myResolver.nameservers = [resolver]
+        myResolver.lifetime = 2
         answers = myResolver.query(seed_domain, "A")
         for a in answers.rrset.items:
             host_addr = a.to_text()
