@@ -84,7 +84,6 @@ class Db:
         if len(blocks_db) == 0:
             return None
         for block_db in blocks_db:
-            logger.info("------------1 ")
             self.cursor.execute(get_transactions, (block_db[0],))
             txns = []
             txns_db = self.cursor.fetchall()
