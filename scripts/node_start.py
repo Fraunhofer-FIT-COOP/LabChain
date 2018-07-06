@@ -1,7 +1,12 @@
 import argparse
+import dns.resolver
 import logging
 import os
 import sys
+
+from labchain import event
+from labchain.event import EventBus
+from labchain.plot import BlockchainPlotter
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if parent_dir not in sys.path:
@@ -9,6 +14,8 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
+from labchain.configReader import ConfigReader
+from labchain.configReader import ConfigReaderException
 from labchain.utility import Utility  # noqa
 
 # set TERM environment variable if not set
@@ -18,10 +25,18 @@ if 'TERM' not in os.environ:
 CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,
                                            'labchain', 'resources',
                                            'node_configuration.ini'))
+CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
+DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_port, peer_list):
-    return BlockChainNode(CONFIG_FILE, node_port, peer_list)
+def create_node(node_port, peer_list, plot_dir=None):
+    event_bus = EventBus()
+    if plot_dir:
+        plotter = BlockchainPlotter(plot_dir)
+        event_bus.register(event.EVENT_BLOCKCHAIN_INITIALIZED, plotter.plot_blockchain)
+        event_bus.register(event.EVENT_BLOCK_ADDED, plotter.plot_blockchain)
+        event_bus.register(event.EVENT_BLOCK_ADDED, plotter.generate_block_detail_page)
+    return BlockChainNode(CONFIG_FILE, event_bus, node_port, peer_list)
 
 
 def setup_logging(verbose, very_verbose):
@@ -41,11 +56,30 @@ def parse_args():
     parser.add_argument('--peers', nargs='*', default=[], help='The peer list address of the Labchain node')
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
+    parser.add_argument('--plot', '-p', action='store_true')
+    parser.add_argument('--plot-dir', default=DEFAULT_PLOT_DIRECTORY,
+                        help='Enable plotting graphics to the specified dir')
     return parser.parse_args()
 
 
 def parse_peers(peer_args):
     result = {}
+    try:
+        config = ConfigReader(CONFIG_FILE)
+        seed_domain = config.get_config(section="NETWORK", option="DNS_SEED_DOMAIN")
+        resolver = config.get_config(section="NETWORK", option="DNS_CLIENT")
+        default_port = config.get_config(section="NETWORK", option="PORT", fallback=8080)
+        myResolver = dns.resolver.Resolver(configure=False)
+        myResolver.nameservers = [resolver,]
+        answers = myResolver.query(seed_domain, "A")
+        for a in answers.rrset.items:
+            host_addr = a.to_text()
+            if host_addr not in result:
+                result[host_addr] = {}
+            result[host_addr][default_port] = {}
+    except Exception as e:
+        logging.error(str(e))
+
     for peer_str in peer_args:
         host, port = peer_str.split(':')
         if host not in result:
@@ -60,4 +94,8 @@ if __name__ == '__main__':
     setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
     Utility.print_labchain_logo()
-    node = create_node(args.port, initial_peers)
+    if args.plot:
+        plot_dir = args.plot_dir
+    else:
+        plot_dir = None
+    node = create_node(args.port, initial_peers, plot_dir)
