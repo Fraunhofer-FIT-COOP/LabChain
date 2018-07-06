@@ -11,7 +11,7 @@ from labchain.transaction import Transaction
 class Block(object):
     def __init__(self, block_id=None, merkle_tree_root=None,
                  predecessor_hash=None, block_creator_id=None,
-                 transactions=[], nonce=0, timestamp=time.time()):
+                 transactions=[], nonce=0, timestamp=time.time(), difficulty=-1):
         """Constructor for Block, placeholder for Block information.
 
         Parameters
@@ -42,6 +42,7 @@ class Block(object):
         self._predecessor_hash = predecessor_hash
         self._nonce = nonce
         self._block_creator_id = block_creator_id
+        self._difficulty = difficulty
 
     def to_dict(self):
         """Returns block data as a dictionary."""
@@ -62,7 +63,8 @@ class Block(object):
             'predecessorBlock': self._predecessor_hash,
             'nonce': self._nonce,
             'creator': self._block_creator_id,
-            'transactions': [transaction.to_dict() for transaction in self._transactions]
+            'transactions': [transaction.to_dict() for transaction in self._transactions],
+            'difficulty': self._difficulty
         }
 
     def to_json_headers(self):
@@ -71,7 +73,8 @@ class Block(object):
                            'merkleHash': self._merkle_tree_root,
                            'predecessorBlock': self._predecessor_hash,
                            'nonce': self._nonce,
-                           'creator': self._block_creator_id, })
+                           'creator': self._block_creator_id,
+                           'difficulty': self._difficulty})
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
@@ -93,7 +96,8 @@ class Block(object):
                      transactions=[Transaction.from_dict(transaction_dict)
                                    for transaction_dict in data_dict['transactions']],
                      nonce=data_dict['nonce'],
-                     timestamp=data_dict['timestamp'])
+                     timestamp=data_dict['timestamp'],
+                     difficulty=data_dict['difficulty'])
 
     def __str__(self):
         return pformat(self.to_dict())
@@ -134,6 +138,15 @@ class Block(object):
     def nonce(self, nonce):
         self._nonce = nonce
 
+    @property
+    def difficulty(self):
+        return self._difficulty
+
+    @difficulty.setter
+    def difficulty(self, difficulty):
+        if self._difficulty < 1:
+            self._difficulty = difficulty
+
     def __eq__(self, other):
         """compare blocks
         1) compare all properties"""
@@ -144,7 +157,8 @@ class Block(object):
                         self._merkle_tree_root == other.merkle_tree_root,
                         self._predecessor_hash == other.predecessor_hash,
                         self._nonce == other.nonce,
-                        self._block_creator_id == other.block_creator_id])
+                        self._block_creator_id == other.block_creator_id,
+                        self._difficulty == other._difficulty])
         else:
             return False
 
@@ -155,9 +169,8 @@ class Block(object):
 
 
 class LogicalBlock(Block):
-    def __init__(self, block_id=None, transactions=[], predecessor_hash=None,
-                 block_creator_id=None, merkle_tree_root=None, nonce=0,
-                 timestamp=time.time(), consensus_obj=None, crypto_helper_obj=None):
+    def __init__(self, block_id=None, transactions=[], predecessor_hash=None, block_creator_id=None,
+                 merkle_tree_root=None, nonce=0, timestamp=time.time(), consensus_obj=None, difficulty=-1):
         """Constructor for LogicalBlock, derives properties from the
         placeholder class Block.
 
@@ -192,7 +205,7 @@ class LogicalBlock(Block):
                                            predecessor_hash=predecessor_hash,
                                            block_creator_id=block_creator_id,
                                            transactions=transactions, nonce=nonce,
-                                           timestamp=timestamp)
+                                           timestamp=timestamp, difficulty=difficulty)
         self._length_in_chain = None
         self._crypto_helper = CryptoHelper.instance()
         self._consensus = consensus_obj
@@ -250,6 +263,7 @@ class LogicalBlock(Block):
     @staticmethod
     def from_dict(data_dict, consesnus_obj=None):
         """Instantiate a LogicalBlock from a data dictionary."""
+        
         if data_dict['transactions'] is None:
             return LogicalBlock(block_id=data_dict['nr'],
                                 merkle_tree_root=data_dict['merkleHash'],
@@ -258,6 +272,7 @@ class LogicalBlock(Block):
                                 transactions=None,
                                 nonce=data_dict['nonce'],
                                 timestamp=data_dict['timestamp'],
+                                difficulty=data_dict['difficulty'],
                                 consensus_obj=consesnus_obj)
 
         return LogicalBlock(block_id=data_dict['nr'],
@@ -267,6 +282,7 @@ class LogicalBlock(Block):
                             transactions=[Transaction.from_dict(transaction_dict)
                                           for transaction_dict in data_dict['transactions']],
                             nonce=data_dict['nonce'],
+                            difficulty=data_dict['difficulty'],
                             timestamp=data_dict['timestamp'],
                             consensus_obj=consesnus_obj)
 
@@ -274,7 +290,7 @@ class LogicalBlock(Block):
         return Block.from_json(super(LogicalBlock, self).get_json())
 
     def validate_block(self, _latest_timestamp, _earliest_timestamp,
-                       _num_of_blocks):
+                       _num_of_blocks, _prev_difficulty):
         """Validate the block by checking -
            1. The transaction signatures in the block
            2. The Merkle Tree correctness
@@ -304,7 +320,7 @@ class LogicalBlock(Block):
         #  validate nonce
         block_valid = self._consensus.validate(self, _latest_timestamp,
                                                _earliest_timestamp,
-                                               _num_of_blocks)
+                                               _num_of_blocks, _prev_difficulty)
 
         if not block_valid:
             logging.debug('Invalid block: {}'.format(self))

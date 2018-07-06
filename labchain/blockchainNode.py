@@ -22,7 +22,8 @@ logger = logging.getLogger(__name__)
 
 class BlockChainNode:
 
-    def __init__(self, config_file_path, node_port=None, peer_list=None):
+    def __init__(self, config_file_path, event_bus, node_port=None, peer_list=None):
+        self.event_bus = event_bus
         self.consensus_obj = None
         self.crypto_helper_obj = None
         self.blockchain_obj = None
@@ -66,10 +67,10 @@ class BlockChainNode:
                 transactions = self.txpool_obj.get_transactions(block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
                 self.blockchain_obj.active_mine_block_update(block)
-                _timestamp2, _timestamp1, _num_of_blocks = self.blockchain_obj.calculate_diff()
+                _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff()
                 logger.debug("Created new block, try to mine")
                 st = time.time()
-                if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks):
+                if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
                     # have to check if other node already created a block
                     logger.debug("Mining was successful for new block")
                     if self.blockchain_obj.add_block(block):
@@ -123,7 +124,7 @@ class BlockChainNode:
     def request_block_by_hash(self, hash):
         try:
             return self.network_interface.requestBlockByHash(hash)
-        except:
+        except Exception:
             return None
 
     def request_block_by_id(self, block_id):
@@ -186,7 +187,8 @@ class BlockChainNode:
                                          crypto_helper_obj=self.crypto_helper_obj,
                                          min_blocks_for_difficulty=min_blocks,
                                          request_block_callback=self.request_block_by_id,
-                                         request_block_hash_callback=self.request_block_by_hash)
+                                         request_block_hash_callback=self.request_block_by_hash,
+                                         event_bus=self.event_bus)
 
         logger.debug("Initialized web server")
         """init network interface"""

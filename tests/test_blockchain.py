@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-import unittest
 import json
+import unittest
+from unittest.mock import Mock
 
 from labchain.blockchain import BlockChain
+from labchain.configReader import ConfigReader
 from labchain.consensus import Consensus
 from labchain.cryptoHelper import CryptoHelper as crypto
 from labchain.transaction import Transaction
 from labchain.txpool import TxPool
-from labchain.configReader import ConfigReader
 
 
 class BlockChainComponent(unittest.TestCase):
@@ -71,10 +72,11 @@ class BlockChainComponent(unittest.TestCase):
 
     def test_calculate_diff(self):
         # blocks added in setup
-        blocks, t1, t2 = self.blockchain.calculate_diff()
+        blocks, t1, t2, diff = self.blockchain.calculate_diff()
         self.assertIsNotNone(blocks)
         self.assertIsNotNone(t1)
         self.assertIsNotNone(t2)
+        self.assertIsNotNone(diff)
 
     def test_create_block(self):
         # creating new block based on given transaction list
@@ -109,6 +111,8 @@ class BlockChainComponent(unittest.TestCase):
         self.crypto_helper_obj = crypto.instance()
         self.txpool = TxPool(self.crypto_helper_obj)
         self.block_list = []
+        event_bus_mock = Mock()
+        event_bus_mock.fire = Mock()
         self.blockchain = BlockChain(node_id="nodeId1", tolerance_value=tolerance,
                                      pruning_interval=pruning,
                                      consensus_obj=self.consensus,
@@ -116,7 +120,8 @@ class BlockChainComponent(unittest.TestCase):
                                      crypto_helper_obj=self.crypto_helper_obj,
                                      min_blocks_for_difficulty=min_blocks,
                                      request_block_callback=None,
-                                     request_block_hash_callback=None)
+                                     request_block_hash_callback=None,
+                                     event_bus=event_bus_mock)
 
     def create_transactions(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()
