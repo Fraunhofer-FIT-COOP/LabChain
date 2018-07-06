@@ -183,7 +183,7 @@ class Consensus:
         if b == '0':
             zeros -= 1
         zeros = 4 - zeros
-        if difficulty - (bytes_required - 1) * 4 != zeros:
+        if difficulty - (bytes_required - 1) * 4 > zeros:
             return False
         else:
             return True
