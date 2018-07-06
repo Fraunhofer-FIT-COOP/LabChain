@@ -51,6 +51,7 @@ python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 # Run the Node Dashboard
 
 ```
+install mosquitto and node-red
 cd node-dashboard-app
 node-red dash-app.js
 
