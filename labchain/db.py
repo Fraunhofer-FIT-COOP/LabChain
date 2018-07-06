@@ -95,6 +95,6 @@ class Db:
                     txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                     txn.transaction_hash = txn_db[4]
                     txns.append(txn)
-            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6], int(block_db[7])))
+            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]), int(block_db[7]))
             blocks.append(block)
         return blocks
