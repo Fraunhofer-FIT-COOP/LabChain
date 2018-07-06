@@ -26,10 +26,10 @@ CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_port, peer_list, plot_dir=None, plot_auto_open=False):
+def create_node(node_port, peer_list, plot_dir=None):
     event_bus = EventBus()
     if plot_dir:
-        plotter = BlockchainPlotter(plot_dir, plot_auto_open)
+        plotter = BlockchainPlotter(plot_dir)
         event_bus.register(event.EVENT_BLOCKCHAIN_INITIALIZED, plotter.plot_blockchain)
         event_bus.register(event.EVENT_BLOCK_ADDED, plotter.plot_blockchain)
         event_bus.register(event.EVENT_BLOCK_ADDED, plotter.generate_block_detail_page)
@@ -56,7 +56,6 @@ def parse_args():
     parser.add_argument('--plot', '-p', action='store_true')
     parser.add_argument('--plot-dir', default=DEFAULT_PLOT_DIRECTORY,
                         help='Enable plotting graphics to the specified dir')
-    parser.add_argument('--plot-auto-open', action='store_true', help='Open plot as soon as it is created')
     return parser.parse_args()
 
 
@@ -80,4 +79,4 @@ if __name__ == '__main__':
         plot_dir = args.plot_dir
     else:
         plot_dir = None
-    node = create_node(args.port, initial_peers, plot_dir, args.plot_auto_open)
+    node = create_node(args.port, initial_peers, plot_dir)

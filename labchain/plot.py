@@ -13,12 +13,11 @@ logger = logging.getLogger(__name__)
 
 class BlockchainPlotter:
 
-    def __init__(self, plot_dir, plot_auto_open):
+    def __init__(self, plot_dir):
         self.data_series = []
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
         self.plot_dir = os.path.realpath(plot_dir)
-        self.plot_auto_open = plot_auto_open
 
         # clear plot directory, create folder for block detail pages and copy .css files into it
         current_dir = os.path.dirname(os.path.abspath(__file__))
