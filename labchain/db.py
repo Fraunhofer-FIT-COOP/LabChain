@@ -32,7 +32,7 @@ class Db:
         create_blockchain_table = 'CREATE TABLE IF NOT EXISTS ' + self.blockchain_table + \
                                   '(hash text PRIMARY KEY, block_id integer NOT NULL, merkle_tree_root text, ' + \
                                   'predecessor_hash text NOT NULL, block_creator_id text NOT NULL, nonce integer ' + \
-                                  'NOT NULL, timestamp timestamp NOT NULL, difficulty integer NOT NULL)'
+                                  'NOT NULL, ts timestamp NOT NULL, difficulty integer NOT NULL)'
 
         create_transactions_table = 'CREATE TABLE IF NOT EXISTS ' + self.transaction_table + \
                                     '(sender text NOT NULL, receiver text NOT NULL, payload text NOT NULL, ' + \
@@ -52,19 +52,15 @@ class Db:
 
     def save_block(self, block):
         # save a single block and its correspondent transactions in the db
-        """
-        For example follow the code snippet
-        cursor.execute('''INSERT INTO users(name, phone, email, password)
-                  VALUES(:name,:phone, :email, :password)''',
-                  {'name':name1, 'phone':phone1, 'email':email1, 'password':password1})
-        """
         block_hash = block.get_computed_hash()
         block_data = [block_hash, block.block_id, block.block_creator_id, block.merkle_tree_root,
                       block.predecessor_hash, block.nonce, block.timestamp, block.difficulty]
-        insert_into_blockchain = 'INSERT INTO ' + self.blockchain_table + '(hash, block_id, block_creator_id, ' + \
-                                 'merkle_tree_root, predecessor_hash, nonce, timestamp, difficulty) VALUES (?,?,?,?,?,?,?,?)'
-        insert_into_transactions = 'INSERT INTO ' + self.transaction_table + '(sender, receiver, payload, signature' + \
-                                   ', transaction_hash, block_hash) VALUES (?,?,?,?,?,?)'
+        insert_into_blockchain = "INSERT INTO {table_name} (hash, block_id, block_creator_id, " \
+                                 "merkle_tree_root, predecessor_hash, nonce, ts, difficulty) VALUES (?,?,?,?,?,?,?,?)".\
+                                 format(table_name=self.blockchain_table)
+        insert_into_transactions = "INSERT INTO {table_name} (sender, receiver, payload, signature" \
+                                   ", transaction_hash, block_hash) VALUES (?,?,?,?,?,?)".\
+                                   format(table_name=self.transaction_table)
 
         try:
             self.cursor.execute(insert_into_blockchain, block_data)

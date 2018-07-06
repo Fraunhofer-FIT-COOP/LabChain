@@ -263,7 +263,6 @@ class LogicalBlock(Block):
     @staticmethod
     def from_dict(data_dict, consesnus_obj=None):
         """Instantiate a LogicalBlock from a data dictionary."""
-        
         if data_dict['transactions'] is None:
             return LogicalBlock(block_id=data_dict['nr'],
                                 merkle_tree_root=data_dict['merkleHash'],
