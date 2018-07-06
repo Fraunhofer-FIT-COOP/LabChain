@@ -1,8 +1,8 @@
 import json
+import logging
 import math
 import sys
 import time
-import logging
 from math import log
 from random import randint
 
@@ -96,6 +96,7 @@ class Consensus:
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is validated with result ' + str(
             block_hash[:difficulty] == zeros_array) + ' with hash: ' + str(block_hash))
+        logging.info(message)
         return block_hash[:difficulty] == zeros_array
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
@@ -109,12 +110,12 @@ class Consensus:
         block.difficulty = difficulty
         start_time = time.time()
         zeros_array = "0" * difficulty
+        counter = 0
+        block.nonce = randint(0, sys.maxsize)
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
-        counter = 0
-        block.nonce = randint(0, sys.maxsize)
         while block_hash[:difficulty] != zeros_array:
             if self.kill_mine == 1:
                 self.kill_mine = 0
@@ -131,9 +132,10 @@ class Consensus:
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = time.time()
         self.last_mine_time_sec = start_time
-        logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is mined successfully')
+        logging.debug('#INFO:Consensus-> Block: ' + str(block) + ' is mined successfully')
         logging.debug("hash = " + str(block_hash))
         # need a boolean return to check if mine got killed
+        logging.info(message)
         return True
 
     #    Code for updating the difficulty to be implemented by Blockchain component
