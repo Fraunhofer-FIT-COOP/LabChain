@@ -103,7 +103,8 @@ class Consensus:
         logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
         zeros_array = "0" * difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+                'difficulty': str(block.difficulty)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
         valid = self.equalZeros(block_hash, zeros_array, difficulty)
@@ -127,7 +128,8 @@ class Consensus:
         zeros_array = "0" * difficulty
         block.nonce = randint(0, sys.maxsize)
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+                'difficulty': str(block.difficulty)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
         counter = 0
@@ -142,7 +144,8 @@ class Consensus:
             if counter % 10000 == 0:
                 logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is in mining process')
             data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
+                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+                    'difficulty': str(block.difficulty)}
             message = json.dumps(data)
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = time.time()
