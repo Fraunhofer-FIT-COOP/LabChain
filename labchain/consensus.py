@@ -94,6 +94,7 @@ class Consensus:
         else:
             difficulty = self.calculate_difficulty_with_prev(latest_timestamp, earliest_timestamp, num_of_blocks,
                                                              prev_difficulty, 1)
+        self.dash_board_db.change_current_diff(difficulty)
         return difficulty
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
