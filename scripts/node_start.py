@@ -1,4 +1,5 @@
 import argparse
+import dns.resolver
 import logging
 import os
 import sys
@@ -13,6 +14,8 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
+from labchain.configReader import ConfigReader
+from labchain.configReader import ConfigReaderException
 from labchain.utility import Utility  # noqa
 
 # set TERM environment variable if not set
@@ -61,6 +64,22 @@ def parse_args():
 
 def parse_peers(peer_args):
     result = {}
+    try:
+        config = ConfigReader(CONFIG_FILE)
+        seed_domain = config.get_config(section="NETWORK", option="DNS_SEED_DOMAIN")
+        resolver = config.get_config(section="NETWORK", option="DNS_CLIENT")
+        default_port = config.get_config(section="NETWORK", option="PORT", fallback=8080)
+        myResolver = dns.resolver.Resolver(configure=False)
+        myResolver.nameservers = [resolver,]
+        answers = myResolver.query(seed_domain, "A")
+        for a in answers.rrset.items:
+            host_addr = a.to_text()
+            if host_addr not in result:
+                result[host_addr] = {}
+            result[host_addr][default_port] = {}
+    except Exception as e:
+        logging.error(str(e))
+
     for peer_str in peer_args:
         host, port = peer_str.split(':')
         if host not in result:

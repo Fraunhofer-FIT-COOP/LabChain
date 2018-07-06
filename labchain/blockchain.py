@@ -6,6 +6,7 @@ from labchain import event
 from labchain.block import LogicalBlock
 from labchain.transaction import NoHashError
 
+
 logger = logging.getLogger(__name__)
 
 
