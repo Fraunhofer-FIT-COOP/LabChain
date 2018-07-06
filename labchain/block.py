@@ -46,6 +46,16 @@ class Block(object):
 
     def to_dict(self):
         """Returns block data as a dictionary."""
+        if self._transactions is None:
+            return {
+                'nr': self._block_id,
+                'timestamp': self._timestamp,
+                'merkleHash': self._merkle_tree_root,
+                'predecessorBlock': self._predecessor_hash,
+                'nonce': self._nonce,
+                'creator': self._block_creator_id,
+                'transactions': None
+            }
         return {
             'nr': self._block_id,
             'timestamp': self._timestamp,
@@ -253,11 +263,27 @@ class LogicalBlock(Block):
     @staticmethod
     def from_dict(data_dict, consesnus_obj=None):
         """Instantiate a LogicalBlock from a data dictionary."""
-        return LogicalBlock(block_id=data_dict['nr'], transactions=[Transaction.from_dict(transaction_dict)
-                                                                    for transaction_dict in data_dict['transactions']],
-                            predecessor_hash=data_dict['predecessorBlock'], block_creator_id=data_dict['creator'],
-                            merkle_tree_root=data_dict['merkleHash'], nonce=data_dict['nonce'],
-                            timestamp=data_dict['timestamp'], difficulty=data_dict['difficulty'],
+        
+        if data_dict['transactions'] is None:
+            return LogicalBlock(block_id=data_dict['nr'],
+                                merkle_tree_root=data_dict['merkleHash'],
+                                predecessor_hash=data_dict['predecessorBlock'],
+                                block_creator_id=data_dict['creator'],
+                                transactions=None,
+                                nonce=data_dict['nonce'],
+                                timestamp=data_dict['timestamp'],
+                                difficulty=data_dict['difficulty'],
+                                consensus_obj=consesnus_obj)
+
+        return LogicalBlock(block_id=data_dict['nr'],
+                            merkle_tree_root=data_dict['merkleHash'],
+                            predecessor_hash=data_dict['predecessorBlock'],
+                            block_creator_id=data_dict['creator'],
+                            transactions=[Transaction.from_dict(transaction_dict)
+                                          for transaction_dict in data_dict['transactions']],
+                            nonce=data_dict['nonce'],
+                            difficulty=data_dict['difficulty'],
+                            timestamp=data_dict['timestamp'],
                             consensus_obj=consesnus_obj)
 
     def get_block_obj(self):
@@ -280,10 +306,11 @@ class LogicalBlock(Block):
 
         # Validate Transaction signatures
         transactions = self._transactions
-        for t in transactions:
-            if not t.validate_transaction(self._crypto_helper):
-                logging.debug('Invalid transaction: {}'.format(t))
-                return False
+        if transactions is not None:
+            for t in transactions:
+                if not t.validate_transaction(self._crypto_helper):
+                    logging.debug('Invalid transaction: {}'.format(t))
+                    return False
 
         # Validate Merkle Tree correctness
         if self.compute_merkle_root() != self._merkle_tree_root:
@@ -330,6 +357,8 @@ class LogicalBlock(Block):
                 return _merkle_root(sub_tree)
 
         txn_hashes = []
+        if self._transactions is None:
+            return None
         for t in self._transactions:
             txn_hashes.append(self._crypto_helper.hash(t.get_json()))
         return _merkle_root(txn_hashes)
