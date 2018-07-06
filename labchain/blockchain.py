@@ -73,7 +73,7 @@ class BlockChain:
         self._active_mine_block = None
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
-        self.db = Db(block_chain_db_file = 'labchain/resources/labchaindb.sqlite')
+        self.db = Db(block_chain_db_file = 'labchaindb.sqlite')
 
         # Create tables if not already
         self.db.create_tables()
