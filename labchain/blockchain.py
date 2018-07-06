@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from datetime import datetime
 import sys
 from labchain import event
@@ -56,7 +57,7 @@ class BlockChain:
         _crypto_helper : Instance of cryptoHelper module
 
         """
-        
+
         logger.debug("Block chain initialization")
         self._node_id = node_id
         self.event_bus = event_bus
@@ -74,7 +75,8 @@ class BlockChain:
         self._active_mine_block = None
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
-        self.db = Db(block_chain_db_file = 'labchain/resources/labchaindb.sqlite')
+        self.db = Db(block_chain_db_file = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                           'resources', 'labchaindb.sqlite')))
 
         # Create tables if not already
         self.db.create_tables()
