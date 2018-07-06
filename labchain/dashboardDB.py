@@ -37,7 +37,10 @@ def run_mqtt(dashboardDB):
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
-    client.connect('localhost', 1883, 60)
+    try:
+        client.connect('localhost', 1883, 60)
+    except Exception:
+        pass
     client.loop_forever()
 
 
@@ -150,6 +153,9 @@ class DashBoardDB:
         stat += str(self.get_avg_mining_time()) + ','
         stat += str(self.get_block_chain_memory_size())
         print(stat)
-        publish.single("bc_status", stat, hostname="localhost", port=1883)
+        try:
+            publish.single("bc_status", stat, hostname="localhost", port=1883)
+        except Exception:
+            pass
 
 
