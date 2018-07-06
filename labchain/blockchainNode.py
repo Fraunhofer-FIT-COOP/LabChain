@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 class BlockChainNode:
 
-    def __init__(self, config_file_path, node_port=None, peer_list=None):
+    def __init__(self, config_file_path, event_bus, node_port=None, peer_list=None):
+        self.event_bus = event_bus
         self.consensus_obj = None
         self.crypto_helper_obj = None
         self.blockchain_obj = None
@@ -185,7 +186,8 @@ class BlockChainNode:
                                          crypto_helper_obj=self.crypto_helper_obj,
                                          min_blocks_for_difficulty=min_blocks,
                                          request_block_callback=self.request_block_by_id,
-                                         request_block_hash_callback=self.request_block_by_hash)
+                                         request_block_hash_callback=self.request_block_by_hash,
+                                         event_bus=self.event_bus)
 
         logger.debug("Initialized web server")
         """init network interface"""

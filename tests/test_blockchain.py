@@ -1,15 +1,14 @@
 #!/usr/bin/env python
-import unittest
-import time
 import json
-from hashlib import sha256 as sha
+import unittest
+from unittest.mock import Mock
 
 from labchain.blockchain import BlockChain
+from labchain.configReader import ConfigReader
 from labchain.consensus import Consensus
 from labchain.cryptoHelper import CryptoHelper as crypto
 from labchain.transaction import Transaction
 from labchain.txpool import TxPool
-from labchain.configReader import ConfigReader
 
 
 class BlockChainComponent(unittest.TestCase):
@@ -108,6 +107,8 @@ class BlockChainComponent(unittest.TestCase):
         self.crypto_helper_obj = crypto.instance()
         self.txpool = TxPool(self.crypto_helper_obj)
         self.block_list = []
+        event_bus_mock = Mock()
+        event_bus_mock.fire = Mock()
         self.blockchain = BlockChain(node_id="nodeId1", tolerance_value=tolerance,
                                      pruning_interval=pruning,
                                      consensus_obj=self.consensus,
@@ -115,7 +116,8 @@ class BlockChainComponent(unittest.TestCase):
                                      crypto_helper_obj=self.crypto_helper_obj,
                                      min_blocks_for_difficulty=min_blocks,
                                      request_block_callback=None,
-                                     request_block_hash_callback=None)
+                                     request_block_hash_callback=None,
+                                     event_bus=event_bus_mock)
 
     def create_transactions(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()
