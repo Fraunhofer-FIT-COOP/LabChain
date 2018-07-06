@@ -13,12 +13,11 @@ logger = logging.getLogger(__name__)
 
 class BlockchainPlotter:
 
-    def __init__(self, plot_dir, plot_auto_open):
+    def __init__(self, plot_dir):
         self.data_series = []
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
         self.plot_dir = os.path.realpath(plot_dir)
-        self.plot_auto_open = plot_auto_open
 
         # clear plot directory, create folder for block detail pages and copy .css files into it
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -133,7 +132,7 @@ class BlockchainPlotter:
                 'visible': True,
                 'xanchor': 'right'
             },
-            'transition': {'duration': 300, 'easing': 'cubic-in-out'},
+            'transition': {'duration': 200, 'easing': 'cubic-in-out'},
             'pad': {'b': 10, 't': 50},
             'len': 0.9,
             'x': 0.1,
@@ -143,9 +142,9 @@ class BlockchainPlotter:
         for frame in self.data_series:
             slider_step = {'args': [
                 [frame['name']],
-                {'frame': {'duration': 300, 'redraw': False},
+                {'frame': {'duration': 200, 'redraw': False},
                  'mode': 'immediate',
-                 'transition': {'duration': 300}}],
+                 'transition': {'duration': 200}}],
                 'label': frame['name'],
                 'method': 'animate'}
             sliders_dict['steps'].append(slider_step)
@@ -164,7 +163,12 @@ class BlockchainPlotter:
                                                       'pad': {'r': 10, 't': 87},
                                                       'buttons': [{'label': 'Play',
                                                                    'method': 'animate',
-                                                                   'args': [None]},
+                                                                   'args': [None, {
+                                                                       'frame': {'duration': 50, 'redraw': False},
+                                                                       'fromcurrent': True,
+                                                                       'transition': {'duration': 0,
+                                                                                      'mode': 'immediate'}}],
+                                                                   },
                                                                   {'label': 'Pause',
                                                                    'method': 'animate',
                                                                    'args': [[None], {

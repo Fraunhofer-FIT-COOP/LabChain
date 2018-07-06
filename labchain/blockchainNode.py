@@ -6,6 +6,7 @@ import time
 import uuid
 
 from labchain.block import Block
+from labchain.block import LogicalBlock
 from labchain.blockchain import BlockChain
 from labchain.bootstrap import Bootstrapper
 from labchain.configReader import ConfigReader
@@ -68,16 +69,15 @@ class BlockChainNode:
                 transactions = self.txpool_obj.get_transactions(block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
                 self.blockchain_obj.active_mine_block_update(block)
-                _timestamp2, _timestamp1, _num_of_blocks = self.blockchain_obj.calculate_diff()
+                _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff()
                 logger.debug("Created new block, try to mine")
                 st = time.time()
                 if self.dash_board_db.get_mining_status() == 1:
-                    if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks):
-                        # have to check if other node already created a block
+                    if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
+                     # have to check if other node already created a block
                         logger.debug("Mining was successful for new block")
                         if self.blockchain_obj.add_block(block):
                             self.on_new_block_created(block)
-                            # adding the block mined to dashboard
                     logger.debug("Time to mine block is " + str(time.time() - st) + " seconds.")
             self.blockchain_obj.active_mine_block_update(None)
             delay_time = mine_freq - (time.time() - self.consensus_obj.last_mine_time_sec)
@@ -127,7 +127,7 @@ class BlockChainNode:
     def request_block_by_hash(self, hash):
         try:
             return self.network_interface.requestBlockByHash(hash)
-        except:
+        except Exception:
             return None
 
     def request_block_by_id(self, block_id):
@@ -219,6 +219,12 @@ class BlockChainNode:
         logger.info("Starting bootstrap...")
         """Bootstrap the blockchain node"""
         bootstrapper = Bootstrapper(self.network_interface)
+        blocks_from_db = self.blockchain_obj.reinitialize_blockchain_from_db()
+        if blocks_from_db is not None:
+            for block in blocks_from_db:
+                self.blockchain_obj.add_block(LogicalBlock.from_block(block, self.consensus_obj), False)
+                print('Fetched block ' + str(block.block_id) + ' from DB')
+        print(self.blockchain_obj._blockchain)
         bootstrapper.do_bootstrap(self.blockchain_obj)
 
         logger.debug("Starting mining thread...")

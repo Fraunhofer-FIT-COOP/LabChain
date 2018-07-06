@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 import sys
-
+import dns.resolver
 from labchain import event
 from labchain.event import EventBus
 from labchain.plot import BlockchainPlotter
@@ -14,7 +14,11 @@ if parent_dir not in sys.path:
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
 from labchain.dashboardDB import DashBoardDB
+from labchain.configReader import ConfigReader  # noqa
 from labchain.utility import Utility  # noqa
+from labchain import event  # noqa
+from labchain.event import EventBus  # noqa
+from labchain.plot import BlockchainPlotter  # noqa
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -27,10 +31,10 @@ CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_port, peer_list, plot_dir=None, plot_auto_open=False):
+def create_node(node_port, peer_list, plot_dir=None):
     event_bus = EventBus()
     if plot_dir:
-        plotter = BlockchainPlotter(plot_dir, plot_auto_open)
+        plotter = BlockchainPlotter(plot_dir)
         event_bus.register(event.EVENT_BLOCKCHAIN_INITIALIZED, plotter.plot_blockchain)
         event_bus.register(event.EVENT_BLOCK_ADDED, plotter.plot_blockchain)
         event_bus.register(event.EVENT_BLOCK_ADDED, plotter.generate_block_detail_page)
@@ -57,12 +61,27 @@ def parse_args():
     parser.add_argument('--plot', '-p', action='store_true')
     parser.add_argument('--plot-dir', default=DEFAULT_PLOT_DIRECTORY,
                         help='Enable plotting graphics to the specified dir')
-    parser.add_argument('--plot-auto-open', action='store_true', help='Open plot as soon as it is created')
     return parser.parse_args()
 
 
 def parse_peers(peer_args):
     result = {}
+    try:
+        config = ConfigReader(CONFIG_FILE)
+        seed_domain = config.get_config(section="NETWORK", option="DNS_SEED_DOMAIN")
+        resolver = config.get_config(section="NETWORK", option="DNS_CLIENT")
+        default_port = config.get_config(section="NETWORK", option="PORT", fallback=8080)
+        myResolver = dns.resolver.Resolver(configure=False)
+        myResolver.nameservers = [resolver]
+        answers = myResolver.query(seed_domain, "A")
+        for a in answers.rrset.items:
+            host_addr = a.to_text()
+            if host_addr not in result:
+                result[host_addr] = {}
+            result[host_addr][default_port] = {}
+    except Exception as e:
+        logging.error(str(e))
+
     for peer_str in peer_args:
         host, port = peer_str.split(':')
         if host not in result:
@@ -82,4 +101,4 @@ if __name__ == '__main__':
     else:
         plot_dir = None
     DashBoardDB.instance().set_plot_dir(plot_dir)
-    node = create_node(args.port, initial_peers, plot_dir, args.plot_auto_open)
+    node = create_node(args.port, initial_peers, plot_dir)

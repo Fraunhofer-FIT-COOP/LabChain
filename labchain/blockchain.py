@@ -1,11 +1,10 @@
 import json
 import logging
 from datetime import datetime
-from labchain import event
 import sys
-from labchain.transaction import NoHashError
-
+from labchain import event
 from labchain.block import LogicalBlock, Block
+from labchain.transaction import NoHashError
 from labchain.dashboardDB import DashBoardDB
 
 logger = logging.getLogger(__name__)
@@ -73,10 +72,14 @@ class BlockChain:
         self._active_mine_block = None
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
+        self.db = Db()
+
+        # Create tables if not already
+        self.db.create_tables()
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
-        _first_block = LogicalBlock(block_id=0, crypto_helper_obj=crypto_helper_obj, timestamp=0)
+        _first_block = LogicalBlock(block_id=0, timestamp=0)
         _first_block.set_block_pos(0)
         self._first_block_hash = _first_block.get_computed_hash()
         self._blockchain[self._first_block_hash] = _first_block
@@ -94,7 +97,7 @@ class BlockChain:
         Chain followed by this node is the one traversed.
         range_start or range_end are block hashes
         if range_end is not specified, all blocks till end of chain are returned
-        if chain couldn't be traveresed at some point we have bigger bugs in code
+        if chain couldn't be traversed at some point we have bigger bugs in code
         if range_start or range_end is not found in chain, returns None
         """
         if not range_start:
@@ -146,13 +149,16 @@ class BlockChain:
             block_info = _req_block.get_json()
         return block_info
 
+    def reinitialize_blockchain_from_db(self):
+        return self.db.get_blockchain_from_db()
+
     def get_transaction(self, transaction_hash):
         """tuple with 1st element as transaction and 2nd element as block_hash"""
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
                 if transaction_hash == _txn.transaction_hash:
-                    return (_txn, _hash)
+                    return _txn, _hash
         else:
             return None, None
 
@@ -173,8 +179,9 @@ class BlockChain:
         # getting timestamp of the last block added in chain
         _last_block = json.loads(self.get_block_by_hash(_hash))
         if _last_block["nr"] == 0:
-            return 0, 0, 1
+            return 0, 0, 1, 1
         _latest_timestamp = _last_block['timestamp']
+        _latest_difficulty = _last_block['difficulty']
 
         # setting hash of the second last block
         _hash = _last_block['predecessorBlock']
@@ -193,9 +200,9 @@ class BlockChain:
             _earliest_timestamp = _block['timestamp']
             _hash = _block['predecessorBlock']
             _number_of_blocks = _number_of_blocks + 1
-        return _latest_timestamp, _earliest_timestamp, _number_of_blocks
+        return _latest_timestamp, _earliest_timestamp, _number_of_blocks, _latest_difficulty
 
-    def add_block(self, block):
+    def add_block(self, block, db_flag=True):
         """Finds correct position and adds the new block to the chain.
         If block predecessor not found in chain, stores block as an orphan.
 
@@ -218,10 +225,10 @@ class BlockChain:
         if block.get_computed_hash() in self._blockchain:
             return False
 
-        _latest_timestamp, _earliest_timestamp, _num_of_blocks = \
+        _latest_timestamp, _earliest_timestamp, _num_of_blocks, _latest_difficulty = \
             self.calculate_diff()
         if not block.validate_block(_latest_timestamp, _earliest_timestamp,
-                                    _num_of_blocks):
+                                    _num_of_blocks, _latest_difficulty):
             logger.debug("The block received is not valid, discarding this block -- \n {b}".
                          format(b=str(block)))
             if block.is_block_ours(self._node_id):
@@ -250,6 +257,10 @@ class BlockChain:
             _curr_block.set_block_pos(_prev_block_pos + 1)
             self._blockchain[_curr_block_hash] = _curr_block
             self._current_branch_heads.append(_curr_block_hash)
+            if db_flag:
+                self.db.save_block(block)
+                print('Saved block ' + str(block.block_id) + 'to DB')
+                print(self._blockchain)
 
             """
             if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):
@@ -286,7 +297,6 @@ class BlockChain:
         logger.info("Added new block --- \n {h} \n {b} \n".
                     format(h=str(block.get_computed_hash()), b=str(block)))
 
-
         logger.debug("Number of branches currently branch heads = {}"
                      " \n Branches -- \n".format(len(self._current_branch_heads)))
         i = 0
@@ -316,12 +326,9 @@ class BlockChain:
 
         _curr_head = self._blockchain[self._node_branch_head]
         _new_block_id = _curr_head.block_id + 1
-        new_block = LogicalBlock(block_id=_new_block_id,
-                                 predecessor_hash=self._node_branch_head,
-                                 block_creator_id=self._node_id,
-                                 transactions=transactions,
-                                 consensus_obj=self._consensus,
-                                 crypto_helper_obj=self._crypto_helper)
+        new_block = LogicalBlock(block_id=_new_block_id, transactions=transactions,
+                                 predecessor_hash=self._node_branch_head, block_creator_id=self._node_id,
+                                 consensus_obj=self._consensus)
         return new_block
 
     def switch_to_longest_branch(self):
@@ -427,3 +434,8 @@ class BlockChain:
                     unmined_transactions = list(
                         set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions)
+
+    def save_blockchain_in_db(self):
+        logger.info("Saving the whole blockchain in sqlite db")
+        # need to call save_block method here
+        # self.db.save_block()
