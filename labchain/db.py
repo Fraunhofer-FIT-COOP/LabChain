@@ -1,6 +1,9 @@
+import logging
 import sqlite3
 from labchain.block import Block
 from labchain.transaction import Transaction
+
+logger = logging.getLogger(__name__)
 
 
 class Db:
@@ -22,8 +25,7 @@ class Db:
             conn = sqlite3.connect(db_file, check_same_thread=False)
             return conn
         except sqlite3.Error as e:
-            print(e)
-
+            logger.error(str(e))
         return None
 
     def create_tables(self):
@@ -45,8 +47,7 @@ class Db:
 
             self.conn.commit()
         except sqlite3.Error as e:
-            print("Table creation error: ", e.args[0])
-            print(e)
+            logger.error("Table creation error: "+ str(e.args[0]))
             return False
         return True
 
@@ -56,25 +57,25 @@ class Db:
         block_data = [block_hash, block.block_id, block.block_creator_id, block.merkle_tree_root,
                       block.predecessor_hash, block.nonce, block.timestamp, block.difficulty]
         insert_into_blockchain = "INSERT INTO {table_name} (hash, block_id, block_creator_id, " \
-                                 "merkle_tree_root, predecessor_hash, nonce, ts, difficulty) VALUES (?,?,?,?,?,?,?,?)".\
-                                 format(table_name=self.blockchain_table)
+                                 "merkle_tree_root, predecessor_hash, nonce, ts, difficulty) VALUES (?,?,?,?,?,?,?,?)". \
+            format(table_name=self.blockchain_table)
         insert_into_transactions = "INSERT INTO {table_name} (sender, receiver, payload, signature" \
-                                   ", transaction_hash, block_hash) VALUES (?,?,?,?,?,?)".\
-                                   format(table_name=self.transaction_table)
+                                   ", transaction_hash, block_hash) VALUES (?,?,?,?,?,?)". \
+            format(table_name=self.transaction_table)
 
         try:
             self.cursor.execute(insert_into_blockchain, block_data)
             for t in block.transactions:
                 self.cursor.execute(insert_into_transactions, (t.sender, t.receiver, t.payload, t.signature,
-                                    t.transaction_hash, block_hash))
+                                                               t.transaction_hash, block_hash))
             self.conn.commit()
         except sqlite3.Error as e:
-            print("Error in adding block: ", e.args[0])
+            logger.error("Error in adding block: " + str(e.args[0]))
             return False
         return True
 
     def get_blockchain_from_db(self):
-        get_block = 'SELECT * from '+self.blockchain_table
+        get_block = 'SELECT * from ' + self.blockchain_table
         get_transactions = 'SELECT * FROM ' + self.transaction_table + ' WHERE block_hash = ?'
 
         self.cursor.execute(get_block)
@@ -91,6 +92,7 @@ class Db:
                     txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                     txn.transaction_hash = txn_db[4]
                     txns.append(txn)
-            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]), int(block_db[7]))
+            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]),
+                          int(block_db[7]))
             blocks.append(block)
         return blocks

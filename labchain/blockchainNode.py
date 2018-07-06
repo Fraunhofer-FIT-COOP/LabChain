@@ -223,8 +223,7 @@ class BlockChainNode:
         if blocks_from_db is not None:
             for block in blocks_from_db:
                 self.blockchain_obj.add_block(LogicalBlock.from_block(block, self.consensus_obj), False)
-                print('Fetched block ' + str(block.block_id) + ' from DB')
-        print(self.blockchain_obj._blockchain)
+                logger.log('Fetched block ' + str(block.block_id) + ' from DB')
         bootstrapper.do_bootstrap(self.blockchain_obj)
 
         logger.debug("Starting mining thread...")

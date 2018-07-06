@@ -263,8 +263,7 @@ class BlockChain:
             self._current_branch_heads.append(_curr_block_hash)
             if db_flag:
                 self.db.save_block(block)
-                print('Saved block ' + str(block.block_id) + 'to DB')
-                print(self._blockchain)
+                logger.log('Saved block ' + str(block.block_id) + 'to DB')
 
             """
             if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):
