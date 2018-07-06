@@ -235,8 +235,6 @@ class BlockChain:
         _prev_hash = block.predecessor_hash
         _curr_block_hash = block.get_computed_hash()
         _curr_block = block
-        DashBoardDB.instance().change_block_chain_length(self._blockchain[self._node_branch_head].block_id)
-        DashBoardDB.instance().change_block_chain_memory_size(sys.getsizeof(self._blockchain[self._node_branch_head]))
 
         if _prev_hash in self._blockchain:
             _prev_block = self._blockchain.get(_prev_hash)
@@ -287,7 +285,7 @@ class BlockChain:
         self.event_bus.fire(event.EVENT_BLOCK_ADDED, {'block_chain': self, 'block': block})
         logger.info("Added new block --- \n {h} \n {b} \n".
                     format(h=str(block.get_computed_hash()), b=str(block)))
-        DashBoardDB.instance().retrieve_status_from_db()
+
 
         logger.debug("Number of branches currently branch heads = {}"
                      " \n Branches -- \n".format(len(self._current_branch_heads)))
@@ -296,6 +294,9 @@ class BlockChain:
             logger.debug("Branch {} : {}".format(i + 1, branch))
             i += 1
         self.switch_to_longest_branch()
+        DashBoardDB.instance().change_block_chain_length(self._blockchain[self._node_branch_head].block_id)
+        DashBoardDB.instance().change_block_chain_memory_size(sys.getsizeof(self._blockchain[self._node_branch_head]))
+        DashBoardDB.instance().retrieve_status_from_db()
         return True
 
     def create_block(self, transactions):
