@@ -81,9 +81,12 @@ class Db:
         self.cursor.execute(get_block)
         blocks = []
         blocks_db = self.cursor.fetchall()
+        logger.info("len of blocks db = "+str(len(blocks_db)))
         if len(blocks_db) == 0:
+            logger.info("return none len of blocks db ")
             return None
         for block_db in blocks_db:
+            logger.info("------------1 ")
             self.cursor.execute(get_transactions, (block_db[0],))
             txns = []
             txns_db = self.cursor.fetchall()
@@ -92,7 +95,9 @@ class Db:
                     txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                     txn.transaction_hash = txn_db[4]
                     txns.append(txn)
+            logger.info("block params =  "+str(block_db))
             block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]),
                           int(block_db[7]))
             blocks.append(block)
+            logger.info("blocks returned = "+str(blocks))
         return blocks

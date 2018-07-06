@@ -54,7 +54,8 @@ class Block(object):
                 'predecessorBlock': self._predecessor_hash,
                 'nonce': self._nonce,
                 'creator': self._block_creator_id,
-                'transactions': None
+                'transactions': [],
+                'difficulty': self._difficulty
             }
         return {
             'nr': self._block_id,
