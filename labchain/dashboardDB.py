@@ -149,6 +149,7 @@ class DashBoardDB:
         stat += str(self.get_max_mining_time()) + ','
         stat += str(self.get_avg_mining_time()) + ','
         stat += str(self.get_block_chain_memory_size())
+        print(stat)
         publish.single("bc_status", stat, hostname="localhost", port=1883)
 
 

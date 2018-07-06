@@ -3,9 +3,6 @@ import logging
 import os
 import sys
 import dns.resolver
-from labchain import event
-from labchain.event import EventBus
-from labchain.plot import BlockchainPlotter
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if parent_dir not in sys.path:

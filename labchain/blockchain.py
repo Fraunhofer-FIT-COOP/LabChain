@@ -4,6 +4,7 @@ from datetime import datetime
 import sys
 from labchain import event
 from labchain.block import LogicalBlock, Block
+from labchain.db import Db
 from labchain.transaction import NoHashError
 from labchain.dashboardDB import DashBoardDB
 
