@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import socket
 import sys
 import dns.resolver
 
@@ -72,10 +73,19 @@ def parse_peers(peer_args):
         myResolver = dns.resolver.Resolver(configure=False)
         myResolver.nameservers = [resolver]
         myResolver.lifetime = 2
+
+        # Get own private IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((resolver, 53))
+        own_ip = s.getsockname()[0]
+
         answers = myResolver.query(seed_domain, "A")
         for a in answers.rrset.items:
             host_addr = a.to_text()
-            print("Adding Node peer IP {} received using DNS SEED peer discovery ... ".format(host_addr))
+            if host_addr == own_ip:
+                logging.info("Not adding own IP to the list")
+                continue
+            logging.info("Adding Node peer IP {} received using DNS SEED peer discovery ... ".format(host_addr))
             if host_addr not in result:
                 result[host_addr] = {}
             result[host_addr][default_port] = {}
