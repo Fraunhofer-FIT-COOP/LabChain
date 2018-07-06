@@ -3,6 +3,7 @@ import logging
 import os
 from datetime import datetime
 import sys
+
 from labchain import event
 from labchain.block import LogicalBlock, Block
 from labchain.db import Db
@@ -57,7 +58,6 @@ class BlockChain:
         _crypto_helper : Instance of cryptoHelper module
 
         """
-
         logger.debug("Block chain initialization")
         self._node_id = node_id
         self.event_bus = event_bus
