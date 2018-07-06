@@ -106,12 +106,12 @@ class Consensus:
         block.difficulty = difficulty
         start_time = time.time()
         zeros_array = "0" * difficulty
-        counter = 0
         block.nonce = randint(0, sys.maxsize)
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
             str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
+        counter = 0
         while not self.equalZeros(block_hash, zeros_array, difficulty):
             if self.kill_mine == 1:
                 self.kill_mine = 0

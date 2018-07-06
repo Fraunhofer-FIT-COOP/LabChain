@@ -1,12 +1,9 @@
 import argparse
-import dns.resolver
 import logging
 import os
 import sys
 
-from labchain import event
-from labchain.event import EventBus
-from labchain.plot import BlockchainPlotter
+import dns.resolver
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if parent_dir not in sys.path:
@@ -14,9 +11,11 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
-from labchain.configReader import ConfigReader
-from labchain.configReader import ConfigReaderException
+from labchain.configReader import ConfigReader  # noqa
 from labchain.utility import Utility  # noqa
+from labchain import event  # noqa
+from labchain.event import EventBus  # noqa
+from labchain.plot import BlockchainPlotter  # noqa
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -70,7 +69,7 @@ def parse_peers(peer_args):
         resolver = config.get_config(section="NETWORK", option="DNS_CLIENT")
         default_port = config.get_config(section="NETWORK", option="PORT", fallback=8080)
         myResolver = dns.resolver.Resolver(configure=False)
-        myResolver.nameservers = [resolver,]
+        myResolver.nameservers = [resolver]
         answers = myResolver.query(seed_domain, "A")
         for a in answers.rrset.items:
             host_addr = a.to_text()
