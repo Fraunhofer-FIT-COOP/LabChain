@@ -16,6 +16,7 @@ from labchain.cryptoHelper import CryptoHelper
 from labchain.networking import JsonRpcClient
 from labchain.networking import ServerNetworkInterface, NoPeersException
 from labchain.txpool import TxPool
+from labchain.dashboardDB import DashBoardDB
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class BlockChainNode:
         self.network_port = node_port
         self.initial_peers = peer_list
         self.config_reader = None
+        self.dash_board_db = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             logger.debug("Read config file successfully!")
@@ -70,12 +72,13 @@ class BlockChainNode:
                 _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff()
                 logger.debug("Created new block, try to mine")
                 st = time.time()
-                if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
-                    # have to check if other node already created a block
-                    logger.debug("Mining was successful for new block")
-                    if self.blockchain_obj.add_block(block):
-                        self.on_new_block_created(block)
-                logger.debug("Time to mine block is " + str(time.time() - st) + " seconds.")
+                if self.dash_board_db.get_mining_status() == 1:
+                    if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
+                     # have to check if other node already created a block
+                        logger.debug("Mining was successful for new block")
+                        if self.blockchain_obj.add_block(block):
+                            self.on_new_block_created(block)
+                    logger.debug("Time to mine block is " + str(time.time() - st) + " seconds.")
             self.blockchain_obj.active_mine_block_update(None)
             delay_time = mine_freq - (time.time() - self.consensus_obj.last_mine_time_sec)
             if delay_time < 0:
@@ -147,13 +150,14 @@ class BlockChainNode:
         logger.debug("Initialized every component for the node")
         self.consensus_obj = Consensus()
         self.crypto_helper_obj = CryptoHelper.instance()
+        self.dash_board_db = DashBoardDB.instance()
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
 
         """init blockchain"""
         # Generate the node ID using host ID
         node_uuid = str(uuid.uuid1())
-        # node_id = node_uuid[node_uuid.rfind('-') + 1:]
-        node_id = node_uuid
+        node_id = node_uuid[node_uuid.rfind('-') + 1:]
+        #node_id = node_uuid
         logger.info("Creator id " + str(node_id))
 
         # Read all configurations to be used
@@ -219,8 +223,7 @@ class BlockChainNode:
         if blocks_from_db is not None:
             for block in blocks_from_db:
                 self.blockchain_obj.add_block(LogicalBlock.from_block(block, self.consensus_obj), False)
-                print('Fetched block ' + str(block.block_id) + ' from DB')
-        print(self.blockchain_obj._blockchain)
+                logger.info('Fetched block ' + str(block.block_id) + ' from DB')
         bootstrapper.do_bootstrap(self.blockchain_obj)
 
         logger.debug("Starting mining thread...")

@@ -1,11 +1,13 @@
 import json
 import logging
+import os
 from datetime import datetime
-
+import sys
+from labchain import event
+from labchain.block import LogicalBlock, Block
 from labchain.db import Db
 from labchain.transaction import NoHashError
-from labchain.block import LogicalBlock, Block
-from labchain import event
+from labchain.dashboardDB import DashBoardDB
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ class BlockChain:
         _crypto_helper : Instance of cryptoHelper module
 
         """
+
         logger.debug("Block chain initialization")
         self._node_id = node_id
         self.event_bus = event_bus
@@ -72,7 +75,8 @@ class BlockChain:
         self._active_mine_block = None
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
-        self.db = Db()
+        self.db = Db(block_chain_db_file = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                           'resources/labchaindb.sqlite')))
 
         # Create tables if not already
         self.db.create_tables()
@@ -259,8 +263,7 @@ class BlockChain:
             self._current_branch_heads.append(_curr_block_hash)
             if db_flag:
                 self.db.save_block(block)
-                print('Saved block ' + str(block.block_id) + 'to DB')
-                print(self._blockchain)
+                logger.info('Saved block ' + str(block.block_id) + 'to DB')
 
             """
             if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):
@@ -304,6 +307,9 @@ class BlockChain:
             logger.debug("Branch {} : {}".format(i + 1, branch))
             i += 1
         self.switch_to_longest_branch()
+        DashBoardDB.instance().change_block_chain_length(self._blockchain[self._node_branch_head].block_id)
+        DashBoardDB.instance().change_block_chain_memory_size(sys.getsizeof(self._blockchain[self._node_branch_head]))
+        DashBoardDB.instance().retrieve_status_from_db()
         return True
 
     def create_block(self, transactions):

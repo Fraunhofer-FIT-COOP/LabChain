@@ -1,8 +1,8 @@
 import argparse
 import logging
 import os
+import socket
 import sys
-
 import dns.resolver
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -11,6 +11,7 @@ if parent_dir not in sys.path:
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
+from labchain.dashboardDB import DashBoardDB
 from labchain.configReader import ConfigReader  # noqa
 from labchain.utility import Utility  # noqa
 from labchain import event  # noqa
@@ -68,11 +69,23 @@ def parse_peers(peer_args):
         seed_domain = config.get_config(section="NETWORK", option="DNS_SEED_DOMAIN")
         resolver = config.get_config(section="NETWORK", option="DNS_CLIENT")
         default_port = config.get_config(section="NETWORK", option="PORT", fallback=8080)
+        default_port = str(default_port)
         myResolver = dns.resolver.Resolver(configure=False)
         myResolver.nameservers = [resolver]
+        myResolver.lifetime = 2
+
+        # Get own private IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((resolver, 53))
+        own_ip = s.getsockname()[0]
+
         answers = myResolver.query(seed_domain, "A")
         for a in answers.rrset.items:
             host_addr = a.to_text()
+            if host_addr == own_ip:
+                logging.info("Not adding own IP to the list")
+                continue
+            logging.info("Adding Node peer IP {} received using DNS SEED peer discovery ... ".format(host_addr))
             if host_addr not in result:
                 result[host_addr] = {}
             result[host_addr][default_port] = {}
@@ -97,4 +110,5 @@ if __name__ == '__main__':
         plot_dir = args.plot_dir
     else:
         plot_dir = None
+    DashBoardDB.instance().set_plot_dir(plot_dir)
     node = create_node(args.port, initial_peers, plot_dir)

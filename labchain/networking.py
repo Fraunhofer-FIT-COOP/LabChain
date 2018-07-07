@@ -16,6 +16,7 @@ from werkzeug.wrappers import Request, Response
 from labchain.block import Block
 from labchain.transaction import Transaction
 from labchain.utility import Utility
+from labchain.dashboardDB import DashBoardDB
 
 logger = logging.getLogger(__name__)
 
@@ -291,6 +292,8 @@ class ServerNetworkInterface(NetworkInterface):
             response = self.__filter_own_address(response)
             self._add_peer_bulk(response)
         self.peers = update(self.peers, new_peers)
+        DashBoardDB.instance().change_num_of_nodes(len(self.peers) + 1)
+        DashBoardDB.instance().retrieve_status_from_db()
         logger.info('My peers are now: {}'.format(str(self.peers)))
 
     def advertise_to_peers(self):

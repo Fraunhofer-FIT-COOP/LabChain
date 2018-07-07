@@ -54,7 +54,8 @@ class Block(object):
                 'predecessorBlock': self._predecessor_hash,
                 'nonce': self._nonce,
                 'creator': self._block_creator_id,
-                'transactions': None
+                'transactions': [],
+                'difficulty': self._difficulty
             }
         return {
             'nr': self._block_id,
@@ -263,7 +264,6 @@ class LogicalBlock(Block):
     @staticmethod
     def from_dict(data_dict, consesnus_obj=None):
         """Instantiate a LogicalBlock from a data dictionary."""
-        
         if data_dict['transactions'] is None:
             return LogicalBlock(block_id=data_dict['nr'],
                                 merkle_tree_root=data_dict['merkleHash'],

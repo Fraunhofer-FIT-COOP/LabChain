@@ -7,6 +7,7 @@ from math import log
 from random import randint
 
 from labchain.cryptoHelper import CryptoHelper
+from labchain.dashboardDB import DashBoardDB
 
 
 class Consensus:
@@ -28,6 +29,15 @@ class Consensus:
             self.granular = False
         if self.granular:
             self.granular_factor = 4
+        self.min_mining_time = time.time()
+        self.max_mining_time = 0
+        self.avg_mining_time = 0
+        self.dash_board_db = DashBoardDB.instance()
+        self.avg_helper = 0
+        self.num_of_mined_blocks = 0
+        self.num_of_transactions = 0
+
+
 
     def __getitem__(self, item):
         pass
@@ -69,6 +79,7 @@ class Consensus:
 
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
+        self.dash_board_db.change_current_diff(self.max_diff - difficulty)
         return self.max_diff - difficulty
 
         # global difficulty should not be updated, instead return difficulty,
@@ -83,6 +94,7 @@ class Consensus:
         else:
             difficulty = self.calculate_difficulty_with_prev(latest_timestamp, earliest_timestamp, num_of_blocks,
                                                              prev_difficulty, 1)
+        self.dash_board_db.change_current_diff(difficulty)
         return difficulty
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
@@ -91,13 +103,21 @@ class Consensus:
         logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
         zeros_array = "0" * difficulty
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+                'difficulty': str(block.difficulty)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # Assumed that hash is str
         valid = self.equalZeros(block_hash, zeros_array, difficulty)
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is validated with result ' + str(
             valid) + ' with hash: ' + str(block_hash))
         return valid
+
+    def update_db(self):
+        self.dash_board_db.change_min_mining_time((int)(self.min_mining_time))
+        self.dash_board_db.change_max_mining_time((int)(self.max_mining_time))
+        self.dash_board_db.change_avg_mining_time((int)(self.avg_mining_time))
+        self.dash_board_db.change_num_of_blocks(self.num_of_mined_blocks)
+        self.dash_board_db.change_num_of_transactions(self.num_of_transactions)
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
         difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty)
@@ -108,7 +128,8 @@ class Consensus:
         zeros_array = "0" * difficulty
         block.nonce = randint(0, sys.maxsize)
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+                'difficulty': str(block.difficulty)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
         counter = 0
@@ -123,11 +144,22 @@ class Consensus:
             if counter % 10000 == 0:
                 logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is in mining process')
             data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce)}
+                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+                    'difficulty': str(block.difficulty)}
             message = json.dumps(data)
             block_hash = self.crypto_helper.hash(message)
         block.timestamp = time.time()
         self.last_mine_time_sec = start_time
+        time_diff = time.time() - start_time
+        if time_diff < self.min_mining_time:
+            self.min_mining_time = time_diff
+        if time_diff > self.max_mining_time:
+            self.max_mining_time = time_diff
+        self.num_of_mined_blocks = self.num_of_mined_blocks + 1
+        self.num_of_transactions = self.num_of_transactions + len(block.transactions)
+        self.avg_mining_time = (self.avg_helper + time_diff) / self.num_of_mined_blocks
+        self.avg_helper = self.avg_helper + time_diff
+        self.update_db()
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is mined successfully')
         logging.debug("hash = " + str(block_hash))
         # need a boolean return to check if mine got killed
@@ -151,7 +183,7 @@ class Consensus:
         if b == '0':
             zeros -= 1
         zeros = 4 - zeros
-        if difficulty - (bytes_required - 1) * 4 != zeros:
+        if difficulty - (bytes_required - 1) * 4 > zeros:
             return False
         else:
             return True
