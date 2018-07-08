@@ -1,11 +1,9 @@
 import json
 import logging
-import os
 from datetime import datetime
 import sys
 from labchain import event
 from labchain.block import LogicalBlock, Block
-from labchain.db import Db
 from labchain.transaction import NoHashError
 from labchain.dashboardDB import DashBoardDB
 
@@ -16,7 +14,7 @@ class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
                  min_blocks_for_difficulty, request_block_callback,
-                 request_block_hash_callback, event_bus):
+                 request_block_hash_callback, event_bus, db):
         """Constructor for BlockChain
 
         Parameters
@@ -75,11 +73,7 @@ class BlockChain:
         self._active_mine_block = None
         self._request_block = request_block_callback
         self._request_block_hash = request_block_hash_callback
-        self.db = Db(block_chain_db_file = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                           'resources/labchaindb.sqlite')))
-
-        # Create tables if not already
-        self.db.create_tables()
+        self.db = db
 
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
@@ -153,9 +147,6 @@ class BlockChain:
             block_info = _req_block.get_json()
         return block_info
 
-    def reinitialize_blockchain_from_db(self):
-        return self.db.get_blockchain_from_db()
-
     def get_transaction(self, transaction_hash):
         """tuple with 1st element as transaction and 2nd element as block_hash"""
         for _hash, _block in self._blockchain.items():
@@ -214,6 +205,8 @@ class BlockChain:
         ----------
         block : LogicalBlock instance
             The block instance to be added to the chain.
+        db_flag : Boolean
+            To check if provided block be added to DB or not
 
         Returns
         -------
@@ -437,8 +430,3 @@ class BlockChain:
                     unmined_transactions = list(
                         set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions)
-
-    def save_blockchain_in_db(self):
-        logger.info("Saving the whole blockchain in sqlite db")
-        # need to call save_block method here
-        # self.db.save_block()

@@ -9,24 +9,22 @@ logger = logging.getLogger(__name__)
 class Db:
     def __init__(self, block_chain_db_file):
         # Creates or opens a file called mydb with a SQLite3 DB
-        self.conn = self.create_connection(block_chain_db_file)
-        self.cursor = self.conn.cursor()
+        self.db_file = block_chain_db_file
+        self.open_connection(block_chain_db_file)
         self.blockchain_table = 'blockchain'
         self.transaction_table = 'transactions'
 
-    @staticmethod
-    def create_connection(db_file):
+    def open_connection(self, db_file):
         """ create a database connection to the SQLite database
             specified by db_file
         :param db_file: database file
         :return: Connection object or None
         """
         try:
-            conn = sqlite3.connect(db_file, check_same_thread=False)
-            return conn
+            self.conn = sqlite3.connect(db_file, check_same_thread=False)
+            self.cursor = self.conn.cursor()
         except sqlite3.Error as e:
             logger.error(str(e))
-        return None
 
     def create_tables(self):
         # Check if table users does not exist and create it
@@ -46,12 +44,14 @@ class Db:
             self.cursor.execute(create_transactions_table)
 
             self.conn.commit()
+            self.conn.close()
         except sqlite3.Error as e:
             logger.error("Table creation error: "+ str(e.args[0]))
             return False
         return True
 
     def save_block(self, block):
+        self.open_connection(self.db_file)
         # save a single block and its correspondent transactions in the db
         block_hash = block.get_computed_hash()
         block_data = [block_hash, block.block_id, block.block_creator_id, block.merkle_tree_root,
@@ -69,12 +69,14 @@ class Db:
                 self.cursor.execute(insert_into_transactions, (t.sender, t.receiver, t.payload, t.signature,
                                                                t.transaction_hash, block_hash))
             self.conn.commit()
+            self.conn.close()
         except sqlite3.Error as e:
             logger.error("Error in adding block: " + str(e.args[0]))
             return False
         return True
 
     def get_blockchain_from_db(self):
+        self.open_connection(self.db_file)
         get_block = 'SELECT * from ' + self.blockchain_table
         get_transactions = 'SELECT * FROM ' + self.transaction_table + ' WHERE block_hash = ?'
 
@@ -95,4 +97,5 @@ class Db:
             block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]),
                           int(block_db[7]))
             blocks.append(block)
+        self.conn.close()
         return blocks

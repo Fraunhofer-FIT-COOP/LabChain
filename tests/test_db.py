@@ -1,4 +1,5 @@
 import unittest
+import os
 
 from labchain.blockchain import BlockChain
 from labchain.consensus import Consensus
@@ -12,7 +13,8 @@ from labchain.db import Db
 class DbTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.database = Db()
+        self.database = Db(block_chain_db_file=os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                                            '../labchain/resources/labchaindb.sqlite')))
         self.init_components()
         self.create_transactions()
         self.create_blocks()
@@ -49,7 +51,8 @@ class DbTestCase(unittest.TestCase):
                                      crypto_helper_obj=self.crypto_helper_obj,
                                      min_blocks_for_difficulty=min_blocks,
                                      request_block_callback=None,
-                                     request_block_hash_callback=None)
+                                     request_block_hash_callback=None,
+                                     event_bus=None, db=self.database)
 
     def create_transactions(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()

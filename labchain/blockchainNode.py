@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 import uuid
+import os
 
 from labchain.block import Block
 from labchain.block import LogicalBlock
@@ -17,6 +18,7 @@ from labchain.networking import JsonRpcClient
 from labchain.networking import ServerNetworkInterface, NoPeersException
 from labchain.txpool import TxPool
 from labchain.dashboardDB import DashBoardDB
+from labchain.db import Db
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ class BlockChainNode:
         self.initial_peers = peer_list
         self.config_reader = None
         self.dash_board_db = None
+        self.db = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             logger.debug("Read config file successfully!")
@@ -145,6 +148,9 @@ class BlockChainNode:
                                       self.on_get_blocks_by_range,
                                       port)
 
+    def reinitialize_blockchain_from_db(self):
+        return self.db.get_blockchain_from_db()
+
     def initialize_components(self):
         """ Initialize every componenent of the node"""
         logger.debug("Initialized every component for the node")
@@ -152,6 +158,8 @@ class BlockChainNode:
         self.crypto_helper_obj = CryptoHelper.instance()
         self.dash_board_db = DashBoardDB.instance()
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
+        self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                                      'resources/labchaindb.sqlite')))
 
         """init blockchain"""
         # Generate the node ID using host ID
@@ -184,6 +192,9 @@ class BlockChainNode:
             logger.error("Exiting Node startup ..!! \n")
             sys.exit(0)
 
+        # Create tables if not already
+        self.db.create_tables()
+
         self.blockchain_obj = BlockChain(node_id=node_id, tolerance_value=tolerance_value,
                                          pruning_interval=pruning_interval,
                                          consensus_obj=self.consensus_obj,
@@ -192,7 +203,7 @@ class BlockChainNode:
                                          min_blocks_for_difficulty=min_blocks,
                                          request_block_callback=self.request_block_by_id,
                                          request_block_hash_callback=self.request_block_by_hash,
-                                         event_bus=self.event_bus)
+                                         event_bus=self.event_bus, db=self.db)
 
         logger.debug("Initialized web server")
         """init network interface"""
@@ -219,7 +230,7 @@ class BlockChainNode:
         logger.info("Starting bootstrap...")
         """Bootstrap the blockchain node"""
         bootstrapper = Bootstrapper(self.network_interface)
-        blocks_from_db = self.blockchain_obj.reinitialize_blockchain_from_db()
+        blocks_from_db = self.reinitialize_blockchain_from_db()
         if blocks_from_db is not None:
             for block in blocks_from_db:
                 self.blockchain_obj.add_block(LogicalBlock.from_block(block, self.consensus_obj), False)
