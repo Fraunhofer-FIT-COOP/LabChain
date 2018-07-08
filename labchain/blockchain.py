@@ -53,6 +53,7 @@ class BlockChain:
         _consensus : Instance of the consensus module
         _txpool : Instance of the txpool module
         _crypto_helper : Instance of cryptoHelper module
+        db : Instance of database object
 
         """
 
@@ -148,7 +149,8 @@ class BlockChain:
         return block_info
 
     def get_transaction(self, transaction_hash):
-        """tuple with 1st element as transaction and 2nd element as block_hash"""
+        """tuple with 1st element as transaction and 2nd element as block_hash
+        """
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
@@ -163,18 +165,22 @@ class BlockChain:
 
         Returns
         -------
-
         number_of_blocks: Integer
             Total number of blocks fetched from config or available in chain
         earliest_timestamp: timestamp
+            timestamp of the earliest block added
         latest_timestamp: timestamp
+            timestamp of the most recent block added
         """
         _hash = self._node_branch_head
-
-        # getting timestamp of the last block added in chain
         _last_block = json.loads(self.get_block_by_hash(_hash))
+
+        # if only genesis block present in chain return 0 as timestamps
+        # and 1 as difficulty
         if _last_block["nr"] == 0:
             return 0, 0, 1, 1
+
+        # getting timestamp and difficulty of the last block added in the chain
         _latest_timestamp = _last_block['timestamp']
         _latest_difficulty = _last_block['difficulty']
 
@@ -194,7 +200,7 @@ class BlockChain:
                 break
             _earliest_timestamp = _block['timestamp']
             _hash = _block['predecessorBlock']
-            _number_of_blocks = _number_of_blocks + 1
+            _number_of_blocks += 1
         return _latest_timestamp, _earliest_timestamp, _number_of_blocks, _latest_difficulty
 
     def add_block(self, block, db_flag=True):
@@ -222,10 +228,10 @@ class BlockChain:
         if block.get_computed_hash() in self._blockchain:
             return False
 
-        _latest_timestamp, _earliest_timestamp, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
             self.calculate_diff()
-        if not block.validate_block(_latest_timestamp, _earliest_timestamp,
-                                    _num_of_blocks, _latest_difficulty):
+        if not block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks,
+                                    _latest_difficulty):
             logger.debug("The block received is not valid, discarding this block -- \n {b}".
                          format(b=str(block)))
             if block.is_block_ours(self._node_id):
@@ -256,7 +262,7 @@ class BlockChain:
             self._current_branch_heads.append(_curr_block_hash)
             if db_flag:
                 self.db.save_block(block)
-                logger.info('Saved block ' + str(block.block_id) + 'to DB')
+                logger.info('Saved block nr ' + str(block.block_id) + ' to DB')
 
             """
             if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):

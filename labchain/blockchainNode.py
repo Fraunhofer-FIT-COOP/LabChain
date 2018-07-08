@@ -227,14 +227,16 @@ class BlockChainNode:
                                                args=(pool_interval,))
         self.polling_thread.start()
 
-        logger.info("Starting bootstrap...")
-        """Bootstrap the blockchain node"""
-        bootstrapper = Bootstrapper(self.network_interface)
+        logger.info("Fetching Blocks from Database if present...")
         blocks_from_db = self.reinitialize_blockchain_from_db()
         if blocks_from_db is not None:
             for block in blocks_from_db:
                 self.blockchain_obj.add_block(LogicalBlock.from_block(block, self.consensus_obj), False)
-                logger.info('Fetched block ' + str(block.block_id) + ' from DB')
+                logger.info('Fetched block nr ' + str(block.block_id) + ' from DB')
+
+        logger.info("Starting bootstrap...")
+        """Bootstrap the blockchain node"""
+        bootstrapper = Bootstrapper(self.network_interface)
         bootstrapper.do_bootstrap(self.blockchain_obj)
 
         logger.debug("Starting mining thread...")

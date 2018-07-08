@@ -328,23 +328,37 @@ class LogicalBlock(Block):
         return block_valid
 
     def compute_merkle_root(self):
-        """Computes the merkle tree root for all transactions inside the block
+        """Computes the hashes of all transaction and calls _merkle_root
 
         Returns
         -------
         Hash
             Merkle Tree root of the transactions
+            if no transactions present then return None
 
         """
 
         def _merkle_root(hashes):
+            """Takes 2 transaction's hashes; concatenate them and
+            calculate their hash
+            Recursively do this until 1 hash is left
+
+            Parameters
+            ----------
+            hashes: hashes of transactions
+
+            Returns
+            -------
+            merkle tree root; final hash of all the hashes
+                     or None if param hashes is empty
+
+            """
             sub_tree = []
             for i in range(0, len(hashes), 2):
                 # If not the last element
                 if i + 1 < len(hashes):
                     # Concatenate the hashes and calculate their hash
-                    value = str(hashes[i] + hashes[i + 1]).encode(
-                        'UTF-8')
+                    value = str(hashes[i] + hashes[i + 1]).encode('UTF-8')
                     hash = sha(value).hexdigest()
                 else:
                     hash = hashes[i]

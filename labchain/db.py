@@ -8,6 +8,20 @@ logger = logging.getLogger(__name__)
 
 class Db:
     def __init__(self, block_chain_db_file):
+        """
+        Constructor for Database
+
+        Parameters
+        ----------
+        block_chain_db_file: String
+            Location of database file
+
+        Attributes
+        ----------
+        db_file : Location of database file
+        blockchain_table: Name of blockchain table
+        transaction_table: Nmaeo of transaction table
+        """
         # Creates or opens a file called mydb with a SQLite3 DB
         self.db_file = block_chain_db_file
         self.open_connection(block_chain_db_file)
@@ -27,7 +41,12 @@ class Db:
             logger.error(str(e))
 
     def create_tables(self):
-        # Check if table users does not exist and create it
+        """Create the tables if they do no exists
+
+        Returns
+        -------
+        True if table created or already present, false if database error
+        """
 
         create_blockchain_table = 'CREATE TABLE IF NOT EXISTS ' + self.blockchain_table + \
                                   '(hash text PRIMARY KEY, block_id integer NOT NULL, merkle_tree_root text, ' + \
@@ -51,6 +70,17 @@ class Db:
         return True
 
     def save_block(self, block):
+        """Saves the block data to blockchain table and its transactions to
+        transactions table
+
+        Parameters
+        ----------
+        block: block object to be saved in database
+
+        Returns
+        -------
+        True if data saved successfully, False otherwise
+        """
         self.open_connection(self.db_file)
         # save a single block and its correspondent transactions in the db
         block_hash = block.get_computed_hash()
@@ -76,6 +106,12 @@ class Db:
         return True
 
     def get_blockchain_from_db(self):
+        """Fetch all blocks with their transactions from database
+
+        Returns
+        -------
+        List of all blocks
+        """
         self.open_connection(self.db_file)
         get_block = 'SELECT * from ' + self.blockchain_table
         get_transactions = 'SELECT * FROM ' + self.transaction_table + ' WHERE block_hash = ?'
