@@ -250,8 +250,7 @@ class BlockChain:
             if validity_level == -3:
                 logger.debug("Block has been put to orphan pool, since predecessor was not found")
                 self._orphan_blocks[_prev_hash] = _curr_block
-                #new_block = self.request_block_from_neighbour(_prev_hash)
-                #self.add_block(new_block)
+                self.request_block_from_neighbour(_prev_hash)
         else:
             if not validity_level == 0:
                 logger.debug("The block received is not valid, discarding this block -- \n {b}".
