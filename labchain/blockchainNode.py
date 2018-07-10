@@ -72,12 +72,13 @@ class BlockChainNode:
                 transactions = self.txpool_obj.get_transactions(block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
                 self.blockchain_obj.active_mine_block_update(block)
-                _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff()
+                _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff(
+                    block.predecessor_hash)
                 logger.debug("Created new block, try to mine")
                 st = time.time()
                 if self.dash_board_db.get_mining_status() == 1:
                     if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
-                     # have to check if other node already created a block
+                        # have to check if other node already created a block
                         logger.debug("Mining was successful for new block")
                         if self.blockchain_obj.add_block(block):
                             self.on_new_block_created(block)
@@ -165,7 +166,7 @@ class BlockChainNode:
         # Generate the node ID using host ID
         node_uuid = str(uuid.uuid1())
         node_id = node_uuid[node_uuid.rfind('-') + 1:]
-        #node_id = node_uuid
+        # node_id = node_uuid
         logger.info("Creator id " + str(node_id))
 
         # Read all configurations to be used

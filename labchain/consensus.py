@@ -36,8 +36,7 @@ class Consensus:
         self.avg_helper = 0
         self.num_of_mined_blocks = 0
         self.num_of_transactions = 0
-
-
+        self.avg_diff = 4
 
     def __getitem__(self, item):
         pass
@@ -51,11 +50,11 @@ class Consensus:
     def calculate_difficulty_with_prev(self, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty,
                                        bits):
         if num_of_blocks == 0 or num_of_blocks == 1:
-            return int(self.max_diff * self.granular_factor / 2)
+            return int(self.avg_diff * self.granular_factor)
 
         avg_time = (float(latest_timestamp - earliest_timestamp) / num_of_blocks)
         if avg_time == 0:
-            return int(self.max_diff * self.granular_factor / 2)
+            return int(self.avg_diff * self.granular_factor)
         logging.info("avg time = " + str(avg_time))
         ratio = self.expected_mine_freq / avg_time
         prev_max_attemps = bits * prev_difficulty
@@ -64,8 +63,8 @@ class Consensus:
 
         if partial_difficulty < self.min_diff * self.granular_factor:
             return self.min_diff * self.granular_factor
-        elif partial_difficulty > self.max_diff * self.granular_factor:
-            return self.max_diff * self.granular_factor
+        # elif partial_difficulty > self.max_diff * self.granular_factor:
+        #   return self.max_diff * self.granular_factor
 
         if partial_difficulty <= prev_difficulty:
             difficulty = int(math.floor(partial_difficulty))
@@ -128,7 +127,7 @@ class Consensus:
         zeros_array = "0" * difficulty
         block.nonce = randint(0, sys.maxsize)
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
                 'difficulty': str(block.difficulty)}
         message = json.dumps(data)
         block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
