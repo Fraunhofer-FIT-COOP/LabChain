@@ -65,6 +65,7 @@ class Consensus:
             return self.min_diff * self.granular_factor
         # elif partial_difficulty > self.max_diff * self.granular_factor:
         #   return self.max_diff * self.granular_factor
+        # 
 
         if partial_difficulty <= prev_difficulty:
             difficulty = int(math.floor(partial_difficulty))
