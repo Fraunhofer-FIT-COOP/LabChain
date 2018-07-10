@@ -239,27 +239,32 @@ class BlockChain:
         if block.get_computed_hash() in self._blockchain:
             return False
 
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
-            self.calculate_diff(block.predecessor_hash)
-        if not ([_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty] != [-1, -1, -1,
-                                                                                   -1] and block.validate_block(
-                _latest_ts, _earliest_ts, _num_of_blocks,
-                _latest_difficulty)):
-            logger.debug("The block received is not valid, discarding this block -- \n {b}".
-                         format(b=str(block)))
-            if block.is_block_ours(self._node_id):
-                logger.debug("Since this block is ours, returning the "
-                             "transactions back to transaction pool")
-                _txns = block.transactions
-                self._txpool.return_transactions_to_pool(_txns)
-            del block
-            return False
-
         _prev_hash = block.predecessor_hash
         _curr_block_hash = block.get_computed_hash()
         _curr_block = block
 
-        if _prev_hash in self._blockchain:
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
+
+        validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty)
+
+        if _prev_hash not in self._blockchain:
+            if validity_level == -3:
+                logger.debug("Block has been put to orphan pool, since predecessor was not found")
+                self._orphan_blocks[_prev_hash] = _curr_block
+                #new_block = self.request_block_from_neighbour(_prev_hash)
+                #self.add_block(new_block)
+        else:
+            if not validity_level == 0:
+                logger.debug("The block received is not valid, discarding this block -- \n {b}".
+                             format(b=str(block)))
+                if block.is_block_ours(self._node_id):
+                    logger.debug("Since this block is ours, returning the "
+                                 "transactions back to transaction pool")
+                    _txns = block.transactions
+                    self._txpool.return_transactions_to_pool(_txns)
+                del block
+                return False
+
             _prev_block = self._blockchain.get(_prev_hash)
             _prev_block_pos = _prev_block.get_block_pos()
 
@@ -277,12 +282,6 @@ class BlockChain:
                 self.db.save_block(block)
                 logger.info('Saved block nr ' + str(block.block_id) + ' to DB')
 
-            """
-            if len(self._current_branch_heads) > 1 and _curr_block.is_block_ours(self._node_id):
-                self._node_branch_head = _curr_block_hash
-            elif len(self._current_branch_heads) == 1:
-                self._node_branch_head = _curr_block_hash
-            """
             if _prev_hash == self._node_branch_head:
                 logger.debug("Branch head updated for node {}".format(self._node_id))
                 self._node_branch_head = _curr_block_hash
@@ -297,12 +296,6 @@ class BlockChain:
                 self._blockchain[_this_block_hash] = _block
                 _parent_hash = _this_block_hash
                 _parent_block = _block
-
-        else:
-            # Put block in orphan pool, query predecessor block
-            logger.debug("Block has been put to orphan pool, since predecessor was not found")
-            self._orphan_blocks[_prev_hash] = _curr_block
-            self.request_block_from_neighbour(_prev_hash)
 
         # kill mine check
         if not block.is_block_ours(self._node_id):
