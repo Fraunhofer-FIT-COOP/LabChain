@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime
 import sys
+
 from labchain import event
 from labchain.block import LogicalBlock, Block
 from labchain.transaction import NoHashError
@@ -13,8 +14,8 @@ logger = logging.getLogger(__name__)
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
-                 min_blocks_for_difficulty, request_block_callback,
-                 request_block_hash_callback, event_bus, db):
+                 min_blocks_for_difficulty,
+                 event_bus, db, q):
         """Constructor for BlockChain
 
         Parameters
@@ -54,7 +55,7 @@ class BlockChain:
         _txpool : Instance of the txpool module
         _crypto_helper : Instance of cryptoHelper module
         db : Instance of database object
-
+        q = queue to get pred blocks
         """
 
         logger.debug("Block chain initialization")
@@ -72,10 +73,8 @@ class BlockChain:
         self._crypto_helper = crypto_helper_obj
         self._min_blocks = min_blocks_for_difficulty
         self._active_mine_block = None
-        self._request_block = request_block_callback
-        self._request_block_hash = request_block_hash_callback
         self.db = db
-
+        self.q = q
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=0, timestamp=0)
@@ -410,13 +409,10 @@ class BlockChain:
 
         Parameters
         ----------
-        requested_block_hash : Hash
-            Hash of the block requested by the node.
+        add hash to request queue
 
         """
-        block = self._request_block_hash(requested_block_hash)
-        if block:
-            return LogicalBlock.from_block(block, self._consensus)
+        self.q.put(requested_block_hash)
 
     def active_mine_block_update(self, block):
         self._active_mine_block = block
