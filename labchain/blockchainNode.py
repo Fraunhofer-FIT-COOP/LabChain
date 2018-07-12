@@ -5,6 +5,7 @@ import threading
 import time
 import uuid
 import os
+from queue import Queue
 
 from labchain.block import Block
 from labchain.block import LogicalBlock
@@ -25,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 class BlockChainNode:
 
-    def __init__(self, config_file_path, event_bus, node_port=None, peer_list=None):
+    def __init__(self, config_file_path, event_bus, node_port=None,
+                 peer_list=None):
         self.event_bus = event_bus
         self.consensus_obj = None
         self.crypto_helper_obj = None
@@ -41,6 +43,7 @@ class BlockChainNode:
         self.config_reader = None
         self.dash_board_db = None
         self.db = None
+        self.rb_thread = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             logger.debug("Read config file successfully!")
@@ -50,6 +53,20 @@ class BlockChainNode:
             sys.exit(0)
 
         self.initialize_components()
+
+    def fetch_prev_blocks(self, q, interval):
+        while True:
+            while not q.empty():
+                try:
+                    prev_hash = q.get()
+                    q.task_done()
+                    new_block = self.request_block_by_hash(prev_hash)
+                    if new_block:
+                        self.blockchain_obj.add_block(new_block)
+                except Exception as e:
+                    logger.error(
+                        "Error getting block from neighbour " + str(e))
+            time.sleep(interval)
 
     def schedule_orphans_killing(self, interval):
         while True:
@@ -69,7 +86,8 @@ class BlockChainNode:
         while True:
             # check the last call of mine from consensus component
             if next_call - self.consensus_obj.last_mine_time_sec >= mine_freq:
-                transactions = self.txpool_obj.get_transactions(block_transactions_size)
+                transactions = self.txpool_obj.get_transactions(
+                    block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
                 self.blockchain_obj.active_mine_block_update(block)
                 _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff(
@@ -77,24 +95,30 @@ class BlockChainNode:
                 logger.debug("Created new block, try to mine")
                 st = time.time()
                 if self.dash_board_db.get_mining_status() == 1:
-                    if self.consensus_obj.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
+                    if self.consensus_obj.mine(block, _timestamp2, _timestamp1,
+                                               _num_of_blocks, _difficulty):
                         # have to check if other node already created a block
                         logger.debug("Mining was successful for new block")
                         if self.blockchain_obj.add_block(block):
                             self.on_new_block_created(block)
-                    logger.debug("Time to mine block is " + str(time.time() - st) + " seconds.")
+                    logger.debug("Time to mine block is " + str(
+                        time.time() - st) + " seconds.")
             self.blockchain_obj.active_mine_block_update(None)
-            delay_time = mine_freq - (time.time() - self.consensus_obj.last_mine_time_sec)
+            delay_time = mine_freq - (
+                        time.time() - self.consensus_obj.last_mine_time_sec)
             if delay_time < 0:
                 delay_time = 1
-            logger.debug("Mining Thread sleep for {t} secs".format(t=delay_time))
+            logger.debug(
+                "Mining Thread sleep for {t} secs".format(t=delay_time))
             time.sleep(delay_time)
             next_call = time.time()
 
     def on_get_transaction(self, transaction_hash):
-        transaction_tuple = self.blockchain_obj.get_transaction(transaction_hash)
+        transaction_tuple = self.blockchain_obj.get_transaction(
+            transaction_hash)
         if not transaction_tuple:
-            transaction_tuple = self.txpool_obj.get_transaction_by_hash(transaction_hash)
+            transaction_tuple = self.txpool_obj.get_transaction_by_hash(
+                transaction_hash)
         return transaction_tuple
 
     def on_new_transaction_received(self, transaction):
@@ -111,7 +135,8 @@ class BlockChainNode:
         try:
             self.network_interface.sendBlock(block)
         except NoPeersException:
-            logger.warning('Block #' + str(block.block_id) + ' could not be sent to any peer')
+            logger.warning('Block #' + str(
+                block.block_id) + ' could not be sent to any peer')
 
     def on_get_block_by_hash(self, hash):
         """callback method for get block"""
@@ -140,7 +165,8 @@ class BlockChainNode:
     def create_network_interface(self, port, initial_peers=None):
         if initial_peers is None:
             initial_peers = {}
-        return ServerNetworkInterface(JsonRpcClient(), initial_peers, self.crypto_helper_obj,
+        return ServerNetworkInterface(JsonRpcClient(), initial_peers,
+                                      self.crypto_helper_obj,
                                       self.on_new_block_received,
                                       self.on_new_transaction_received,
                                       self.on_get_block_by_id,
@@ -159,8 +185,9 @@ class BlockChainNode:
         self.crypto_helper_obj = CryptoHelper.instance()
         self.dash_board_db = DashBoardDB.instance()
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
-        self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                                      'resources/labchaindb.sqlite')))
+        self.db = Db(block_chain_db_file=os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         'resources/labchaindb.sqlite')))
 
         """init blockchain"""
         # Generate the node ID using host ID
@@ -171,21 +198,26 @@ class BlockChainNode:
 
         # Read all configurations to be used
         try:
-            tolerance_value = self.config_reader.get_config(section='BLOCK_CHAIN',
-                                                            option='TOLERANCE_LEVEL')
-            pruning_interval = self.config_reader.get_config(section='BLOCK_CHAIN',
-                                                             option='TIME_TO_PRUNE')
+            tolerance_value = self.config_reader.get_config(
+                section='BLOCK_CHAIN',
+                option='TOLERANCE_LEVEL')
+            pruning_interval = self.config_reader.get_config(
+                section='BLOCK_CHAIN',
+                option='TIME_TO_PRUNE')
             if not self.network_port:
-                self.network_port = self.config_reader.get_config(section='NETWORK',
-                                                                  option='PORT')
-            initial_peers_from_config = self.config_reader.get_config(section='NETWORK',
-                                                                      option='PEER_LIST')
+                self.network_port = self.config_reader.get_config(
+                    section='NETWORK',
+                    option='PORT')
+            initial_peers_from_config = self.config_reader.get_config(
+                section='NETWORK',
+                option='PEER_LIST')
             pool_interval = self.config_reader.get_config(section='NETWORK',
                                                           option='POOLING_INTERVAL_SEC')
             mine_freq = self.config_reader.get_config(section='MINING',
                                                       option='MINE_SCHEDULING_FREQUENCY_SEC')
-            num_of_transactions = self.config_reader.get_config(section='MINING',
-                                                                option='BLOCK_TRANSACTION_SIZE')
+            num_of_transactions = self.config_reader.get_config(
+                section='MINING',
+                option='BLOCK_TRANSACTION_SIZE')
             min_blocks = self.config_reader.get_config(section='MINING',
                                                        option='NUM_OF_BLOCKS_FOR_DIFFICULTY')
         except ConfigReaderException as e:
@@ -196,15 +228,17 @@ class BlockChainNode:
         # Create tables if not already
         self.db.create_tables()
 
-        self.blockchain_obj = BlockChain(node_id=node_id, tolerance_value=tolerance_value,
+        self.q = Queue()
+
+        self.blockchain_obj = BlockChain(node_id=node_id,
+                                         tolerance_value=tolerance_value,
                                          pruning_interval=pruning_interval,
                                          consensus_obj=self.consensus_obj,
                                          txpool_obj=self.txpool_obj,
                                          crypto_helper_obj=self.crypto_helper_obj,
                                          min_blocks_for_difficulty=min_blocks,
-                                         request_block_callback=self.request_block_by_id,
-                                         request_block_hash_callback=self.request_block_by_hash,
-                                         event_bus=self.event_bus, db=self.db)
+                                         event_bus=self.event_bus, db=self.db,
+                                         q=self.q)
 
         logger.debug("Initialized web server")
         """init network interface"""
@@ -212,8 +246,9 @@ class BlockChainNode:
         if not intial_peer_list:
             intial_peer_list = json.loads(initial_peers_from_config)
             self.initial_peers = initial_peers_from_config
-        self.network_interface = self.create_network_interface(self.network_port,
-                                                               initial_peers=intial_peer_list)
+        self.network_interface = self.create_network_interface(
+            self.network_port,
+            initial_peers=intial_peer_list)
 
         # start the web servers for receiving JSON-RPC calls
         logger.debug('Starting web server thread...')
@@ -232,13 +267,23 @@ class BlockChainNode:
         blocks_from_db = self.reinitialize_blockchain_from_db()
         if blocks_from_db is not None:
             for block in blocks_from_db:
-                self.blockchain_obj.add_block(LogicalBlock.from_block(block, self.consensus_obj), False)
-                logger.info('Fetched block nr ' + str(block.block_id) + ' from DB')
+                self.blockchain_obj.add_block(
+                    LogicalBlock.from_block(block, self.consensus_obj), False)
+                logger.info(
+                    'Fetched block nr ' + str(block.block_id) + ' from DB')
 
         logger.info("Starting bootstrap...")
         """Bootstrap the blockchain node"""
         bootstrapper = Bootstrapper(self.network_interface)
         bootstrapper.do_bootstrap(self.blockchain_obj)
+
+        logger.debug("Starting request block thread...")
+        """init rb"""
+        # start the scheduler for rb
+        self.rb_thread = threading.Thread(target=self.fetch_prev_blocks,
+                                          kwargs=dict(q=self.q,
+                                                      interval=10))
+        self.rb_thread.start()
 
         logger.debug("Starting mining thread...")
         """init mining"""
@@ -249,7 +294,8 @@ class BlockChainNode:
         self.mine_thread.start()
 
         logger.debug("Starting orphan pruning thread...")
-        self.orphan_killer = threading.Thread(target=self.schedule_orphans_killing,
-                                              kwargs=dict(interval=pruning_interval))
+        self.orphan_killer = threading.Thread(
+            target=self.schedule_orphans_killing,
+            kwargs=dict(interval=pruning_interval))
 
         self.orphan_killer.start()

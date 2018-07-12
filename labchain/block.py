@@ -310,22 +310,22 @@ class LogicalBlock(Block):
             for t in transactions:
                 if not t.validate_transaction(self._crypto_helper):
                     logging.debug('Invalid transaction: {}'.format(t))
-                    return False
+                    return -1
 
         # Validate Merkle Tree correctness
         if self.compute_merkle_root() != self._merkle_tree_root:
             logging.debug('Invalid merkle root: {}'.format(t))
-            return False
+            return -2
 
         #  validate nonce
         block_valid = self._consensus.validate(self, _latest_timestamp,
                                                _earliest_timestamp,
                                                _num_of_blocks, _prev_difficulty)
-
         if not block_valid:
             logging.debug('Invalid block: {}'.format(self))
+            return -3
 
-        return block_valid
+        return 0
 
     def compute_merkle_root(self):
         """Computes the hashes of all transaction and calls _merkle_root
