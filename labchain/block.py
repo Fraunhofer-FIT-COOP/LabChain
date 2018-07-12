@@ -1,8 +1,8 @@
+from hashlib import sha256 as sha
 import json
 import logging
-import time
-from hashlib import sha256 as sha
 from pprint import pformat
+import time
 
 from labchain.cryptoHelper import CryptoHelper
 from labchain.transaction import Transaction
@@ -11,24 +11,27 @@ from labchain.transaction import Transaction
 class Block(object):
     def __init__(self, block_id=None, merkle_tree_root=None,
                  predecessor_hash=None, block_creator_id=None,
-                 transactions=[], nonce=0, timestamp=time.time(), difficulty=-1):
+                 transactions=[], nonce=0, timestamp=time.time(),
+                 difficulty=-1):
         """Constructor for Block, placeholder for Block information.
 
         Parameters
         ----------
         block_id : Int
             ID of the block
-        timestamp : Timestamp of the block creation
-        transactions : List (Change to tuple later)
-            Transactions to be included in the block
         merkle_tree_root : Hash
             Merkle Tree Root of all transactions combined
         predecessor_hash : Hash
             Hash of the predecessor block to this block
-        nonce : Int
-            Value for which block hash satisfies criteria of HashCash
         block_creator_id : String
             ID of the node who created this block
+        transactions : List
+            Transactions to be included in the block
+        nonce : Int
+            Value for which block hash satisfies criteria of HashCash
+        timestamp : Timestamp of the block creation
+        difficulty: Int
+            Difficulty value used for the block mining
 
         Attributes
         ----------
@@ -43,20 +46,13 @@ class Block(object):
         self._nonce = nonce
         self._block_creator_id = block_creator_id
         self._difficulty = difficulty
+        self._logger = logging.getLogger(__name__)
 
     def to_dict(self):
         """Returns block data as a dictionary."""
-        if self._transactions is None:
-            return {
-                'nr': self._block_id,
-                'timestamp': self._timestamp,
-                'merkleHash': self._merkle_tree_root,
-                'predecessorBlock': self._predecessor_hash,
-                'nonce': self._nonce,
-                'creator': self._block_creator_id,
-                'transactions': [],
-                'difficulty': self._difficulty
-            }
+        _transactions = []
+        if self._transactions:
+            _transactions = self._transactions
         return {
             'nr': self._block_id,
             'timestamp': self._timestamp,
@@ -64,12 +60,12 @@ class Block(object):
             'predecessorBlock': self._predecessor_hash,
             'nonce': self._nonce,
             'creator': self._block_creator_id,
-            'transactions': [transaction.to_dict() for transaction in self._transactions],
+            'transactions': [transaction.to_dict() for transaction in _transactions],
             'difficulty': self._difficulty
         }
 
     def to_json_headers(self):
-        """Returns block headers data as a dictionary."""
+        """Returns block headers data as JSON"""
         return json.dumps({'nr': self._block_id,
                            'merkleHash': self._merkle_tree_root,
                            'predecessorBlock': self._predecessor_hash,
@@ -78,7 +74,7 @@ class Block(object):
                            'difficulty': self._difficulty})
 
     def get_json(self):
-        """Serialize this instance to a JSON string."""
+        """Returns this Block instance as a JSON string."""
         return json.dumps(self.to_dict())
 
     @staticmethod
@@ -101,6 +97,7 @@ class Block(object):
                      difficulty=data_dict['difficulty'])
 
     def __str__(self):
+        """String representation of Block object"""
         return pformat(self.to_dict())
 
     @property
@@ -149,8 +146,7 @@ class Block(object):
             self._difficulty = difficulty
 
     def __eq__(self, other):
-        """compare blocks
-        1) compare all properties"""
+        """Compare this block fields with other block"""
         if isinstance(other, Block) or isinstance(other, LogicalBlock):
             return all([self._block_id == other.block_id,
                         self._timestamp == other.timestamp,
@@ -164,14 +160,21 @@ class Block(object):
             return False
 
     def mine_equality(self, other):
+        """Compare whether two blocks are considered equal wrt Mining
+        Returns True if either the block ID of the two blocks matches
+                        or any of the transactions in the transaction set
+                        matches with others' transaction set.
+        Else returns False
+        """
         if isinstance(other, Block) or isinstance(other, LogicalBlock):
             return any([self._block_id == other.block_id,
                         any(t in self._transactions for t in other.transactions)])
 
 
 class LogicalBlock(Block):
-    def __init__(self, block_id=None, transactions=[], predecessor_hash=None, block_creator_id=None,
-                 merkle_tree_root=None, nonce=0, timestamp=time.time(), consensus_obj=None, difficulty=-1):
+    def __init__(self, block_id=None, transactions=[], predecessor_hash=None,
+                 block_creator_id=None, merkle_tree_root=None, nonce=0,
+                 timestamp=time.time(), consensus_obj=None, difficulty=-1):
         """Constructor for LogicalBlock, derives properties from the
         placeholder class Block.
 
@@ -187,26 +190,31 @@ class LogicalBlock(Block):
             ID of the node who created this block
         merkle_tree_root : Hash
             Merkle Tree Root of all transactions combined
+        nonce : Int
+            Value for which block hash satisfies criteria of HashCash
+        timestamp : Timestamp of the block creation
         consensus_obj : Instance of consensus module
-        crypto_helper_obj : Instance of cryptoHelper module
+        difficulty: Int
+            Difficulty value used for the block mining
 
         Attributes
         ----------
         _length_in_chain : Int
             Position at which it resides in the node's chain
+        _crypto_helper : Instance of the Crypto Helper Module
         _merkle_tree_root : Hash
             Merkle Tree Root of all transactions combined
         _consensus : Instance of consensus module
-        crypto_helper_obj : Instance of cryptoHelper module
 
         """
-
         super(LogicalBlock, self).__init__(block_id=block_id,
                                            merkle_tree_root=merkle_tree_root,
                                            predecessor_hash=predecessor_hash,
                                            block_creator_id=block_creator_id,
-                                           transactions=transactions, nonce=nonce,
-                                           timestamp=timestamp, difficulty=difficulty)
+                                           transactions=transactions,
+                                           nonce=nonce,
+                                           timestamp=timestamp,
+                                           difficulty=difficulty)
         self._length_in_chain = None
         self._crypto_helper = CryptoHelper.instance()
         self._consensus = consensus_obj
@@ -214,40 +222,22 @@ class LogicalBlock(Block):
             self._merkle_tree_root = self.compute_merkle_root()
 
     def is_block_ours(self, node_id):
-        """Checks to see if the block was created by the node ID specified.
-
-        Parameters
-        ----------
-        node_id : String
-            Node ID against which to check
-
-        Returns
-        -------
-        Boolean
-            True if matches, else False
+        """Checks to see if the block was created by the node ID specified
+        in the parameter.
 
         """
-
         return self._block_creator_id == node_id
-
-    def set_block_nonce(self, value):
-        """Sets the nonce value for the block"""
-
-        self._nonce = value
 
     def get_block_pos(self):
         """Returns position at which block resides in the chain"""
-
         return self._length_in_chain
 
     def set_block_pos(self, value):
         """Sets the position at which block will reside in chain"""
-
         self._length_in_chain = value
 
     def get_computed_hash(self):
         """Gets the hash for the entire block"""
-
         return self._crypto_helper.hash(self.to_json_headers())
 
     @staticmethod
@@ -264,29 +254,22 @@ class LogicalBlock(Block):
     @staticmethod
     def from_dict(data_dict, consesnus_obj=None):
         """Instantiate a LogicalBlock from a data dictionary."""
-        if data_dict['transactions'] is None:
-            return LogicalBlock(block_id=data_dict['nr'],
-                                merkle_tree_root=data_dict['merkleHash'],
-                                predecessor_hash=data_dict['predecessorBlock'],
-                                block_creator_id=data_dict['creator'],
-                                transactions=None,
-                                nonce=data_dict['nonce'],
-                                timestamp=data_dict['timestamp'],
-                                difficulty=data_dict['difficulty'],
-                                consensus_obj=consesnus_obj)
-
+        _transactions = []
+        if data_dict['transactions']:
+            _transactions = data_dict['transactions']
         return LogicalBlock(block_id=data_dict['nr'],
                             merkle_tree_root=data_dict['merkleHash'],
                             predecessor_hash=data_dict['predecessorBlock'],
                             block_creator_id=data_dict['creator'],
                             transactions=[Transaction.from_dict(transaction_dict)
-                                          for transaction_dict in data_dict['transactions']],
+                                          for transaction_dict in _transactions],
                             nonce=data_dict['nonce'],
                             difficulty=data_dict['difficulty'],
                             timestamp=data_dict['timestamp'],
                             consensus_obj=consesnus_obj)
 
     def get_block_obj(self):
+        """Convert LogicalBlock to Block"""
         return Block.from_json(super(LogicalBlock, self).get_json())
 
     def validate_block(self, _latest_timestamp, _earliest_timestamp,
@@ -299,9 +282,11 @@ class LogicalBlock(Block):
 
         Returns
         -------
-        Boolean
-            True if valid, False otherwise
-
+        Integer
+            -1 : If Check 1 failed
+            -2 : If Check 2 failed
+            -3 : If Check 3 failed
+            0 : If all Checks passed
         """
 
         # Validate Transaction signatures
@@ -309,12 +294,12 @@ class LogicalBlock(Block):
         if transactions is not None:
             for t in transactions:
                 if not t.validate_transaction(self._crypto_helper):
-                    logging.debug('Invalid transaction: {}'.format(t))
+                    self._logger.debug('Invalid transaction: {}'.format(t))
                     return -1
 
         # Validate Merkle Tree correctness
         if self.compute_merkle_root() != self._merkle_tree_root:
-            logging.debug('Invalid merkle root: {}'.format(t))
+            self._logger.debug('Invalid merkle root: {}'.format(t))
             return -2
 
         #  validate nonce
@@ -322,7 +307,7 @@ class LogicalBlock(Block):
                                                _earliest_timestamp,
                                                _num_of_blocks, _prev_difficulty)
         if not block_valid:
-            logging.debug('Invalid block: {}'.format(self))
+            self._logger.debug('Invalid block: {}'.format(self))
             return -3
 
         return 0

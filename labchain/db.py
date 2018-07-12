@@ -3,8 +3,6 @@ import sqlite3
 from labchain.block import Block
 from labchain.transaction import Transaction
 
-logger = logging.getLogger(__name__)
-
 
 class Db:
     def __init__(self, block_chain_db_file):
@@ -27,10 +25,12 @@ class Db:
         self.open_connection(block_chain_db_file)
         self.blockchain_table = 'blockchain'
         self.transaction_table = 'transactions'
+        self.logger = logging.getLogger(__name__)
 
     def open_connection(self, db_file):
-        """ create a database connection to the SQLite database
+        """Create a database connection to the SQLite database
             specified by db_file
+
         :param db_file: database file
         :return: Connection object or None
         """
@@ -38,7 +38,7 @@ class Db:
             self.conn = sqlite3.connect(db_file, check_same_thread=False)
             self.cursor = self.conn.cursor()
         except sqlite3.Error as e:
-            logger.error(str(e))
+            self.logger.error(str(e))
 
     def create_tables(self):
         """Create the tables if they do no exists
@@ -48,16 +48,19 @@ class Db:
         True if table created or already present, false if database error
         """
 
-        create_blockchain_table = 'CREATE TABLE IF NOT EXISTS ' + self.blockchain_table + \
-                                  '(hash text PRIMARY KEY, block_id integer NOT NULL, merkle_tree_root text, ' + \
-                                  'predecessor_hash text NOT NULL, block_creator_id text NOT NULL, nonce integer ' + \
-                                  'NOT NULL, ts timestamp NOT NULL, difficulty integer NOT NULL)'
+        create_blockchain_table = "CREATE TABLE IF NOT EXISTS {} " \
+            "(hash text PRIMARY KEY, block_id integer NOT NULL, " \
+            "merkle_tree_root text, predecessor_hash text NOT NULL, " \
+            "block_creator_id text NOT NULL, nonce integer NOT NULL, " \
+            "ts timestamp NOT NULL, difficulty integer NOT NULL)".\
+            format(self.blockchain_table)
 
-        create_transactions_table = 'CREATE TABLE IF NOT EXISTS ' + self.transaction_table + \
-                                    '(sender text NOT NULL, receiver text NOT NULL, payload text NOT NULL, ' + \
-                                    'signature text NOT NULL, transaction_hash text PRIMARY KEY, block_hash text' + \
-                                    ' NOT NULL, FOREIGN KEY (block_hash) REFERENCES ' + self.blockchain_table + \
-                                    ' (hash))'
+        create_transactions_table = "CREATE TABLE IF NOT EXISTS {}" \
+            "(sender text NOT NULL, receiver text NOT NULL, " \
+            "payload text NOT NULL, signature text NOT NULL, " \
+            "transaction_hash text PRIMARY KEY, block_hash text" \
+            " NOT NULL, FOREIGN KEY (block_hash) REFERENCES {}" \
+            " (hash))".format(self.transaction_table, self.blockchain_table)
         try:
             self.cursor.execute(create_blockchain_table)
             self.cursor.execute(create_transactions_table)
@@ -65,7 +68,7 @@ class Db:
             self.conn.commit()
             self.conn.close()
         except sqlite3.Error as e:
-            logger.error("Table creation error: "+ str(e.args[0]))
+            self.logger.error("Table creation error: "+ str(e.args[0]))
             return False
         return True
 
@@ -86,22 +89,23 @@ class Db:
         block_hash = block.get_computed_hash()
         block_data = [block_hash, block.block_id, block.block_creator_id, block.merkle_tree_root,
                       block.predecessor_hash, block.nonce, block.timestamp, block.difficulty]
-        insert_into_blockchain = "INSERT INTO {table_name} (hash, block_id, block_creator_id, " \
-                                 "merkle_tree_root, predecessor_hash, nonce, ts, difficulty) VALUES (?,?,?,?,?,?,?,?)". \
-            format(table_name=self.blockchain_table)
-        insert_into_transactions = "INSERT INTO {table_name} (sender, receiver, payload, signature" \
-                                   ", transaction_hash, block_hash) VALUES (?,?,?,?,?,?)". \
-            format(table_name=self.transaction_table)
+        insert_into_blockchain = "INSERT INTO {} (hash, block_id, block_creator_id, " \
+             "merkle_tree_root, predecessor_hash, nonce, ts, difficulty) " \
+             "VALUES (?,?,?,?,?,?,?,?)".format(self.blockchain_table)
+        insert_into_transactions = "INSERT INTO {} (sender, receiver, " \
+            "payload, signature, transaction_hash, block_hash) " \
+            "VALUES (?,?,?,?,?,?)".format(self.transaction_table)
 
         try:
             self.cursor.execute(insert_into_blockchain, block_data)
             for t in block.transactions:
-                self.cursor.execute(insert_into_transactions, (t.sender, t.receiver, t.payload, t.signature,
-                                                               t.transaction_hash, block_hash))
+                self.cursor.execute(insert_into_transactions,
+                                    (t.sender, t.receiver, t.payload, t.signature,
+                                     t.transaction_hash, block_hash))
             self.conn.commit()
             self.conn.close()
         except sqlite3.Error as e:
-            logger.error("Error in adding block: " + str(e.args[0]))
+            self.logger.error("Error in adding block: " + str(e.args[0]))
             return False
         return True
 
@@ -113,8 +117,8 @@ class Db:
         List of all blocks
         """
         self.open_connection(self.db_file)
-        get_block = 'SELECT * from ' + self.blockchain_table
-        get_transactions = 'SELECT * FROM ' + self.transaction_table + ' WHERE block_hash = ?'
+        get_block = "SELECT * from {}".format(self.blockchain_table)
+        get_transactions = "SELECT * FROM {} WHERE block_hash = ?".format(self.transaction_table)
 
         self.cursor.execute(get_block)
         blocks = []
