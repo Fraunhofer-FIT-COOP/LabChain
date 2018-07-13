@@ -21,11 +21,11 @@ class Db:
         transaction_table: Nmaeo of transaction table
         """
         # Creates or opens a file called mydb with a SQLite3 DB
+        self.logger = logging.getLogger(__name__)
         self.db_file = block_chain_db_file
         self.open_connection(block_chain_db_file)
         self.blockchain_table = 'blockchain'
         self.transaction_table = 'transactions'
-        self.logger = logging.getLogger(__name__)
 
     def open_connection(self, db_file):
         """Create a database connection to the SQLite database
