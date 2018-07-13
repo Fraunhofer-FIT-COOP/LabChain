@@ -50,9 +50,25 @@ class Block(object):
 
     def to_dict(self):
         """Returns block data as a dictionary."""
-        _transactions = []
-        if self._transactions:
-            _transactions = self._transactions
+        if self._transactions is None:
+            return {
+                'nr': self._block_id,
+                'timestamp': self._timestamp,
+                'merkleHash': self._merkle_tree_root,
+                'predecessorBlock': self._predecessor_hash,
+                'nonce': self._nonce,
+                'creator': self._block_creator_id,
+                'transactions': [],
+                'difficulty': self._difficulty
+            }
+        t = []
+        for transaction in self._transactions:
+            try:
+                t.append(transaction.to_dict())
+            except Exception as e:
+                logging.error("tx error = "+e)
+                raise e
+
         return {
             'nr': self._block_id,
             'timestamp': self._timestamp,
@@ -60,7 +76,7 @@ class Block(object):
             'predecessorBlock': self._predecessor_hash,
             'nonce': self._nonce,
             'creator': self._block_creator_id,
-            'transactions': [transaction.to_dict() for transaction in _transactions],
+            'transactions': t,
             'difficulty': self._difficulty
         }
 
@@ -299,7 +315,7 @@ class LogicalBlock(Block):
 
         # Validate Merkle Tree correctness
         if self.compute_merkle_root() != self._merkle_tree_root:
-            self._logger.debug('Invalid merkle root: {}'.format(t))
+            self._logger.debug('Invalid merkle root: {}'.format(self._merkle_tree_root))
             return -2
 
         #  validate nonce
