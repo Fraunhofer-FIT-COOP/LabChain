@@ -14,6 +14,18 @@ class ConfigReaderException(Exception):
 
 class ConfigReader:
     def __init__(self, file_path):
+        """Initialize ConfigReader
+
+        Parameters
+        ----------
+        file_path : String
+            The path of the config file to parse
+
+        Attributes
+        ----------
+        config : Instance of ConfigParser, has the configuration
+
+        """
         self.config = configparser.ConfigParser()
         try:
             if not self.config.read(file_path):
@@ -24,6 +36,18 @@ class ConfigReader:
             raise ConfigReaderException("Node Configuration file is corrupt")
 
     def get_config(self, section, option, fallback=None):
+        """Returns the config for the section and option as saved in the
+        configuration
+
+        Parameters
+        ----------
+        section: String
+            The name of the Section to return from
+        option: String
+            The name of the option to return
+        fallback: String/Integer
+            If option not found in section, return this value
+        """
         if self.config.has_section(section):
             if self.config.has_option(section, option):
                 value = self.config.get(section=section,

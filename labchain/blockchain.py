@@ -1,21 +1,19 @@
+from datetime import datetime
 import json
 import logging
-from datetime import datetime
 import sys
 
-from labchain import event
-from labchain.block import LogicalBlock, Block
-from labchain.transaction import NoHashError
+from labchain.block import Block
 from labchain.dashboardDB import DashBoardDB
-
-logger = logging.getLogger(__name__)
+from labchain import event
+from labchain.block import LogicalBlock
+from labchain.transaction import NoHashError
 
 
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
-                 min_blocks_for_difficulty,
-                 event_bus, db, q):
+                 min_blocks_for_difficulty, event_bus, db, q):
         """Constructor for BlockChain
 
         Parameters
@@ -29,6 +27,11 @@ class BlockChain:
         consensus_obj : Instance of consensus module
         txpool_obj : Instance of txpool module
         crypto_helper_obj : Instance of cryptoHelper module
+        min_blocks_for_difficulty : Int
+            Minimum blocks used to calculate difficulty
+        event_bus : Instance of event module
+        db : Instance of DB to save all blockchain data
+        q : Queue to push requests for missing blocks
 
         Attributes
         ----------
@@ -54,11 +57,11 @@ class BlockChain:
         _consensus : Instance of the consensus module
         _txpool : Instance of the txpool module
         _crypto_helper : Instance of cryptoHelper module
-        db : Instance of database object
-        q = queue to get pred blocks
-        """
+        _db : Instance of database object
+        _q = queue to get missing blocks
 
-        logger.debug("Block chain initialization")
+        """
+        self._logger = logging.getLogger(__name__)
         self._node_id = node_id
         self.event_bus = event_bus
         self._blockchain = {}
@@ -73,8 +76,8 @@ class BlockChain:
         self._crypto_helper = crypto_helper_obj
         self._min_blocks = min_blocks_for_difficulty
         self._active_mine_block = None
-        self.db = db
-        self.q = q
+        self._db = db
+        self._q = q
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=0, timestamp=0)
@@ -82,12 +85,12 @@ class BlockChain:
         self._first_block_hash = _first_block.get_computed_hash()
         self._blockchain[self._first_block_hash] = _first_block
 
-        logger.debug("Added Genesis block --- \n {b} \n".
+        self._logger.debug("Added Genesis block --- \n {b} \n".
                      format(b=str(_first_block)))
 
         self._node_branch_head = self._first_block_hash
         self._current_branch_heads = [self._first_block_hash, ]
-        logger.debug("BlockChain initialized with genesis block")
+        self._logger.debug("BlockChain initialized with genesis block")
         self.event_bus.fire(event.EVENT_BLOCKCHAIN_INITIALIZED, {'block_chain': self})
 
     def get_block_range(self, range_start=None, range_end=None):
@@ -148,8 +151,17 @@ class BlockChain:
         return block_info
 
     def get_transaction(self, transaction_hash):
-        """tuple with 1st element as transaction and 2nd element as block_hash
         """
+        Parameters
+        ----------
+        transaction_hash: Hash
+            Hash of transaction to search for
+        Returns
+        -------
+        Tuple
+            (Transaction obj, Block_hash)
+        """
+
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
@@ -159,8 +171,13 @@ class BlockChain:
             return None, None
 
     def calculate_diff(self, _hash=None):
-        """Sends the timestamps of latest and nth last block and number of blocks
-        between that time
+        """Sends the timestamps of given/latest and nth last block and
+        number of blocks between that time
+
+        Parameters
+        ----------
+        _hash: Hash
+            Hash of the block from where to start difficulty calculation
 
         Returns
         -------
@@ -232,7 +249,7 @@ class BlockChain:
 
         """
         if not isinstance(block, LogicalBlock):
-            logger.debug("Converting block to logical block ")
+            self._logger.debug("Converting block to logical block ")
             block = LogicalBlock.from_block(block, self._consensus)
 
         if block.get_computed_hash() in self._blockchain:
@@ -242,21 +259,25 @@ class BlockChain:
         _curr_block_hash = block.get_computed_hash()
         _curr_block = block
 
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            self.calculate_diff(block.predecessor_hash)
 
-        validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty)
+        validity_level = block.validate_block(_latest_ts, _earliest_ts,
+                                              _num_of_blocks, _latest_difficulty)
 
         if _prev_hash not in self._blockchain:
             if validity_level == -3:
-                logger.debug("Block has been put to orphan pool, since predecessor was not found")
+                self._logger.debug("Block has been put to orphan pool, "
+                                   "since predecessor was not found")
                 self._orphan_blocks[_prev_hash] = _curr_block
                 self.request_block_from_neighbour(_prev_hash)
         else:
             if not validity_level == 0:
-                logger.debug("The block received is not valid, discarding this block -- \n {b}".
-                             format(b=str(block)))
+                self._logger.debug("The block received is not valid, "
+                                   "discarding this block -- \n {b}".
+                                   format(b=str(block)))
                 if block.is_block_ours(self._node_id):
-                    logger.debug("Since this block is ours, returning the "
+                    self._logger.debug("Since this block is ours, returning the "
                                  "transactions back to transaction pool")
                     _txns = block.transactions
                     self._txpool.return_transactions_to_pool(_txns)
@@ -277,11 +298,11 @@ class BlockChain:
             self._blockchain[_curr_block_hash] = _curr_block
             self._current_branch_heads.append(_curr_block_hash)
             if db_flag:
-                self.db.save_block(block)
-                logger.info('Saved block nr ' + str(block.block_id) + ' to DB')
+                self._db.save_block(block)
+                self._logger.info('Saved block no. {} to DB'.format(block.block_id))
 
             if _prev_hash == self._node_branch_head:
-                logger.debug("Branch head updated for node {}".format(self._node_id))
+                self._logger.debug("Branch head updated for node {}".format(self._node_id))
                 self._node_branch_head = _curr_block_hash
 
             # Check recursively if blocks are parent to some orphans
@@ -299,19 +320,22 @@ class BlockChain:
         if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
-        self.event_bus.fire(event.EVENT_BLOCK_ADDED, {'block_chain': self, 'block': block})
-        logger.info("Added new block --- \n {h} \n {b} \n".
+        self.event_bus.fire(event.EVENT_BLOCK_ADDED, {'block_chain': self,
+                                                      'block': block})
+        self._logger.info("Added new block --- \n {h} \n {b} \n".
                     format(h=str(block.get_computed_hash()), b=str(block)))
 
-        logger.debug("Number of branches currently branch heads = {}"
-                     " \n Branches -- \n".format(len(self._current_branch_heads)))
+        self._logger.debug("Number of branches currently branch heads = {}"
+                           .format(len(self._current_branch_heads)))
         i = 0
         for branch in self._current_branch_heads:
-            logger.debug("Branch {} : {}".format(i + 1, branch))
+            self._logger.debug("Branch {} : {}".format(i + 1, branch))
             i += 1
         self.switch_to_longest_branch()
-        DashBoardDB.instance().change_block_chain_length(self._blockchain[self._node_branch_head].block_id)
-        DashBoardDB.instance().change_block_chain_memory_size(sys.getsizeof(self._blockchain[self._node_branch_head]))
+        DashBoardDB.instance().change_block_chain_length(
+                      self._blockchain[self._node_branch_head].block_id)
+        DashBoardDB.instance().change_block_chain_memory_size(
+                sys.getsizeof(self._blockchain[self._node_branch_head]))
         DashBoardDB.instance().retrieve_status_from_db()
         return True
 
@@ -332,8 +356,10 @@ class BlockChain:
 
         _curr_head = self._blockchain[self._node_branch_head]
         _new_block_id = _curr_head.block_id + 1
-        new_block = LogicalBlock(block_id=_new_block_id, transactions=transactions,
-                                 predecessor_hash=self._node_branch_head, block_creator_id=self._node_id,
+        new_block = LogicalBlock(block_id=_new_block_id,
+                                 transactions=transactions,
+                                 predecessor_hash=self._node_branch_head,
+                                 block_creator_id=self._node_id,
                                  consensus_obj=self._consensus)
         return new_block
 
@@ -344,7 +370,6 @@ class BlockChain:
         the tolerance level defined.
 
         """
-
         if len(self._current_branch_heads) == 1:
             # No Branching happened yet, nothing to do here
             return
@@ -363,7 +388,7 @@ class BlockChain:
                 _max_head = _head
 
         if _max_len > self._tolerance_level:
-            logger.debug("Past Tolerance level, branch switching took place")
+            self._logger.debug("Crossed Tolerance level, branch switching took place")
             _new_head_hash = _max_head.get_computed_hash()
 
             # Save all block hashes between furthest branch and head in max chain
@@ -390,10 +415,13 @@ class BlockChain:
             self._current_branch_heads = [_new_head_hash, ]
             self._node_branch_head = _new_head_hash
             self._furthest_branching_point = {"block": None, "position": float("inf")}
-            logger.debug("Branch switching successful, new node branch head : {}".
+            self._logger.debug("Branch switching successful, new node branch head : {}".
                          format(self._node_branch_head))
 
     def prune_orphans(self):
+        """Delete orphans stored in the orphan store once the pruning
+        interval as defined in config has crossed
+        """
         _curr_time = datetime.now()
         for _hash in self._orphan_blocks:
             _block = self._orphan_blocks[_hash]
@@ -411,16 +439,22 @@ class BlockChain:
         add hash to request queue
 
         """
-        self.q.put(requested_block_hash)
+        self._q.put(requested_block_hash)
 
     def active_mine_block_update(self, block):
+        """Update the info for the block being mined"""
         self._active_mine_block = block
 
     def check_block_in_mining(self, block):
-        logger.info("Kill mine check")
+        """Check the block received in parameter with the one being mined,
+        and kill if the blocks are same with respect to miningself.
+        Returns the transactions in the block, after the block is destroyed
+
+        """
+        self._logger.info("Kill mine check")
         if self._active_mine_block is not None:
             if block.mine_equality(self._active_mine_block):
-                logger.info("Kill mine equality true")
+                self._logger.info("Kill mine equality true")
                 self._consensus.kill_mine = 1
                 try:
                     unmined_transactions = list(
