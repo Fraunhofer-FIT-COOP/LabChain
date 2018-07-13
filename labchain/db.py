@@ -131,8 +131,10 @@ class Db:
                     txn.transaction_hash = txn_db[4]
                     txns.append(txn)
                 txns=[]
-            block = Block(block_db[1], txns, block_db[3], block_db[4], block_db[2], block_db[5], float(block_db[6]),
-                          int(block_db[7]))
+            block = Block(block_id=block_db[1], merkle_tree_root=block_db[2],
+                          predecessor_hash=block_db[3], block_creator_id=block_db[4],
+                          transactions=txns, nonce=block_db[5], timestamp=float(block_db[6]),
+                          difficulty=int(block_db[7]))
             blocks.append(block)
         self.conn.close()
         return blocks

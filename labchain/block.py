@@ -57,6 +57,14 @@ class Block(object):
                 'transactions': [],
                 'difficulty': self._difficulty
             }
+        t = []
+        for transaction in self._transactions:
+            try:
+                if isinstance(transaction, Transaction):
+                    t.append(transaction)
+            except Exception as e:
+                logging.error("tx error = "+e)
+                raise e
         return {
             'nr': self._block_id,
             'timestamp': self._timestamp,
@@ -64,7 +72,7 @@ class Block(object):
             'predecessorBlock': self._predecessor_hash,
             'nonce': self._nonce,
             'creator': self._block_creator_id,
-            'transactions': [transaction.to_dict() for transaction in self._transactions],
+            'transactions': t,
             'difficulty': self._difficulty
         }
 
@@ -314,7 +322,7 @@ class LogicalBlock(Block):
 
         # Validate Merkle Tree correctness
         if self.compute_merkle_root() != self._merkle_tree_root:
-            logging.debug('Invalid merkle root: {}'.format(t))
+            logging.debug('Invalid merkle root: {}'.format(self._merkle_tree_root))
             return -2
 
         #  validate nonce
