@@ -69,3 +69,10 @@ python client-cli.py <node-ip> <node-port>
 ```
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
+
+# Run using Docker
+
+```
+docker build -t labchain:latest .
+docker run --name "labchain" -p 1880:1880 -p 8080:8080 labchain:latest
+```
