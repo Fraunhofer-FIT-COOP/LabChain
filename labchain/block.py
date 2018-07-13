@@ -281,7 +281,7 @@ class LogicalBlock(Block):
                                 timestamp=data_dict['timestamp'],
                                 difficulty=data_dict['difficulty'],
                                 consensus_obj=consesnus_obj)
-        print("ddt "+str(data_dict['transactions']))
+
         return LogicalBlock(block_id=data_dict['nr'],
                             merkle_tree_root=data_dict['merkleHash'],
                             predecessor_hash=data_dict['predecessorBlock'],
