@@ -16,7 +16,7 @@ from werkzeug.wrappers import Request, Response
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 from labchain.util.utility import Utility
-from labchain.dashboardDB import DashBoardDB
+
 
 logger = logging.getLogger(__name__)
 

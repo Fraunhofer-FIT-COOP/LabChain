@@ -111,8 +111,6 @@ class BlockChainComponent(unittest.TestCase):
         self.crypto_helper_obj = crypto.instance()
         self.txpool = TxPool(self.crypto_helper_obj)
         self.block_list = []
-        event_bus_mock = Mock()
-        event_bus_mock.fire = Mock()
         self.blockchain = BlockChain(node_id="nodeId1", tolerance_value=tolerance,
                                      pruning_interval=pruning,
                                      consensus_obj=self.consensus,
@@ -120,8 +118,7 @@ class BlockChainComponent(unittest.TestCase):
                                      crypto_helper_obj=self.crypto_helper_obj,
                                      min_blocks_for_difficulty=min_blocks,
                                      request_block_callback=None,
-                                     request_block_hash_callback=None,
-                                     event_bus=event_bus_mock)
+                                     request_block_hash_callback=None)
 
     def create_transactions(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()

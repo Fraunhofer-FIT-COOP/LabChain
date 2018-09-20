@@ -6,7 +6,6 @@ import logging
 from random import randint
 
 from labchain.util.cryptoHelper import CryptoHelper
-from labchain.dashboardDB import DashBoardDB
 
 
 class Consensus:
@@ -31,7 +30,6 @@ class Consensus:
         self.min_mining_time = time.time()
         self.max_mining_time = 0
         self.avg_mining_time = 0
-        self.dash_board_db = DashBoardDB.instance()
         self.avg_helper = 0
         self.num_of_mined_blocks = 0
         self.num_of_transactions = 0
@@ -78,7 +76,6 @@ class Consensus:
 
         if difficulty >= self.max_diff:
             difficulty = self.max_diff - 1
-        self.dash_board_db.change_current_diff(self.max_diff - difficulty)
         return self.max_diff - difficulty
 
         # global difficulty should not be updated, instead return difficulty,
@@ -93,7 +90,6 @@ class Consensus:
         else:
             difficulty = self.calculate_difficulty_with_prev(latest_timestamp, earliest_timestamp, num_of_blocks,
                                                              prev_difficulty, 1)
-        self.dash_board_db.change_current_diff(difficulty)
         return difficulty
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
@@ -111,12 +107,6 @@ class Consensus:
             valid) + ' with hash: ' + str(block_hash))
         return valid
 
-    def update_db(self):
-        self.dash_board_db.change_min_mining_time((int)(self.min_mining_time))
-        self.dash_board_db.change_max_mining_time((int)(self.max_mining_time))
-        self.dash_board_db.change_avg_mining_time((int)(self.avg_mining_time))
-        self.dash_board_db.change_num_of_blocks(self.num_of_mined_blocks)
-        self.dash_board_db.change_num_of_transactions(self.num_of_transactions)
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
         difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty)
@@ -158,7 +148,6 @@ class Consensus:
         self.num_of_transactions = self.num_of_transactions + len(block.transactions)
         self.avg_mining_time = (self.avg_helper + time_diff) / self.num_of_mined_blocks
         self.avg_helper = self.avg_helper + time_diff
-        self.update_db()
         logging.debug('#INFO:Consensus-> Block: ' + str(block.block_id) + ' is mined successfully')
         logging.debug("hash = " + str(block_hash))
         # need a boolean return to check if mine got killed

@@ -52,7 +52,7 @@ class DbTestCase(unittest.TestCase):
                                      min_blocks_for_difficulty=min_blocks,
                                      request_block_callback=None,
                                      request_block_hash_callback=None,
-                                     event_bus=None, db=self.database)
+                                     db=self.database)
 
     def create_transactions(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()

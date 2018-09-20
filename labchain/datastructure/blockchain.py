@@ -3,8 +3,6 @@ import json
 import logging
 import sys
 
-from labchain.dashboardDB import DashBoardDB
-from labchain import event
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.transaction import NoHashError
 
@@ -12,7 +10,7 @@ from labchain.datastructure.transaction import NoHashError
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
-                 min_blocks_for_difficulty, event_bus, db, q):
+                 min_blocks_for_difficulty, db, q):
         """Constructor for BlockChain
 
         Parameters
@@ -28,7 +26,6 @@ class BlockChain:
         crypto_helper_obj : Instance of cryptoHelper module
         min_blocks_for_difficulty : Int
             Minimum blocks used to calculate difficulty
-        event_bus : Instance of event module
         db : Instance of DB to save all blockchain data
         q : Queue to push requests for missing blocks
 
@@ -62,7 +59,6 @@ class BlockChain:
         """
         self._logger = logging.getLogger(__name__)
         self._node_id = node_id
-        self.event_bus = event_bus
         self._blockchain = {}
         self._orphan_blocks = {}
         self._current_branch_heads = []
@@ -90,7 +86,7 @@ class BlockChain:
         self._node_branch_head = self._first_block_hash
         self._current_branch_heads = [self._first_block_hash, ]
         self._logger.debug("BlockChain initialized with genesis block")
-        self.event_bus.fire(event.EVENT_BLOCKCHAIN_INITIALIZED, {'block_chain': self})
+
 
     def get_block_range(self, range_start=None, range_end=None):
         """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
@@ -319,8 +315,6 @@ class BlockChain:
         if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
-        self.event_bus.fire(event.EVENT_BLOCK_ADDED, {'block_chain': self,
-                                                      'block': block})
         self._logger.info("Added new block --- \n {h} \n {b} \n".
                     format(h=str(block.get_computed_hash()), b=str(block)))
 
@@ -331,11 +325,6 @@ class BlockChain:
             self._logger.debug("Branch {} : {}".format(i + 1, branch))
             i += 1
         self.switch_to_longest_branch()
-        DashBoardDB.instance().change_block_chain_length(
-                      self._blockchain[self._node_branch_head].block_id)
-        DashBoardDB.instance().change_block_chain_memory_size(
-                sys.getsizeof(self._blockchain[self._node_branch_head]))
-        DashBoardDB.instance().retrieve_status_from_db()
         return True
 
     def create_block(self, transactions):

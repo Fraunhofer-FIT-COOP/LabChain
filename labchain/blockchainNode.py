@@ -18,13 +18,12 @@ from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
 from labchain.datastructure.txpool import TxPool
-from labchain.dashboardDB import DashBoardDB
 from labchain.databaseInterface import Db
 
 
 class BlockChainNode:
 
-    def __init__(self, config_file_path, event_bus, node_port=None,
+    def __init__(self, config_file_path, node_port=None,
                  peer_list=None):
         """Constructor for BlockChainNode
 
@@ -32,7 +31,6 @@ class BlockChainNode:
         ----------
         config_file_path : String
             Path from where to read the Config File
-        event_bus : Instance of event module
         node_port : Integer
             Port on which Blockchain node will run
         peer_list : List
@@ -40,7 +38,6 @@ class BlockChainNode:
 
         Attributes
         ----------
-        event_bus : Instance of event module
         consensus_obj : Instance of Consensus module
         crypto_helper_obj : Instance of CryptoHelper module
         blockchain_obj : Instance of BlockChain module
@@ -53,13 +50,11 @@ class BlockChainNode:
         network_port : Port for Networking
         initial_peers : Networking module configured with initial neighbour peers
         config_reader : Instance of the ConfigReader module
-        dash_board_db : DB instance for the dashboard database
         db : DB instance for saving the blockchain data to disk
         logger : Instane of logging
         rb_thread : Thread which polls in intervals for blocks requested
 
         """
-        self.event_bus = event_bus
         self.consensus_obj = None
         self.crypto_helper_obj = None
         self.blockchain_obj = None
@@ -72,7 +67,6 @@ class BlockChainNode:
         self.network_port = node_port
         self.initial_peers = peer_list
         self.config_reader = None
-        self.dash_board_db = None
         self.db = None
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
@@ -140,15 +134,15 @@ class BlockChainNode:
                     block.predecessor_hash)
                 self.logger.debug("Created new block, try to mine")
                 st = time.time()
-                if self.dash_board_db.get_mining_status() == 1:
-                    if self.consensus_obj.mine(block, _timestamp2, _timestamp1,
-                                               _num_of_blocks, _difficulty):
-                        # have to check if other node already created a block
-                        self.logger.debug("Mining was successful for new block")
-                        if self.blockchain_obj.add_block(block):
-                            self.on_new_block_created(block)
-                    self.logger.debug("Time to mine block is " + str(
-                        time.time() - st) + " seconds.")
+
+                if self.consensus_obj.mine(block, _timestamp2, _timestamp1,
+                                           _num_of_blocks, _difficulty):
+                    # have to check if other node already created a block
+                    self.logger.debug("Mining was successful for new block")
+                    if self.blockchain_obj.add_block(block):
+                        self.on_new_block_created(block)
+                self.logger.debug("Time to mine block is " + str(
+                    time.time() - st) + " seconds.")
             self.blockchain_obj.active_mine_block_update(None)
             delay_time = mine_freq - (
                         time.time() - self.consensus_obj.last_mine_time_sec)
@@ -236,7 +230,6 @@ class BlockChainNode:
         self.logger.debug("Initialized every component for the node")
         self.consensus_obj = Consensus()
         self.crypto_helper_obj = CryptoHelper.instance()
-        self.dash_board_db = DashBoardDB.instance()
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
         self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(
                      os.path.dirname(__file__), 'resources/labchaindb.sqlite')))
@@ -291,7 +284,7 @@ class BlockChainNode:
                                          txpool_obj=self.txpool_obj,
                                          crypto_helper_obj=self.crypto_helper_obj,
                                          min_blocks_for_difficulty=min_blocks,
-                                         event_bus=self.event_bus, db=self.db,
+                                         db=self.db,
                                          q=self.q)
 
         self.logger.debug("Initialized web server")

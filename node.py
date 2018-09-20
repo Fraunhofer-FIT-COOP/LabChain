@@ -7,12 +7,8 @@ import dns.resolver
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode  # noqa
-from labchain.dashboardDB import DashBoardDB
 from labchain.util.configReader import ConfigReader  # noqa
 from labchain.util.utility import Utility  # noqa
-from labchain import event  # noqa
-from labchain.event import EventBus  # noqa
-from labchain.plot import BlockchainPlotter  # noqa
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -25,14 +21,8 @@ CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_port, peer_list, plot_dir=None):
-    event_bus = EventBus()
-    if plot_dir:
-        plotter = BlockchainPlotter(plot_dir)
-        event_bus.register(event.EVENT_BLOCKCHAIN_INITIALIZED, plotter.plot_blockchain)
-        event_bus.register(event.EVENT_BLOCK_ADDED, plotter.plot_blockchain)
-        event_bus.register(event.EVENT_BLOCK_ADDED, plotter.generate_block_detail_page)
-    return BlockChainNode(CONFIG_FILE, event_bus, node_port, peer_list)
+def create_node(node_port, peer_list):
+    return BlockChainNode(CONFIG_FILE, node_port, peer_list)
 
 
 def setup_logging(verbose, very_verbose):
@@ -52,9 +42,6 @@ def parse_args():
     parser.add_argument('--peers', nargs='*', default=[], help='The peer list address of the Labchain node')
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
-    parser.add_argument('--plot', '-p', action='store_true')
-    parser.add_argument('--plot-dir', default=DEFAULT_PLOT_DIRECTORY,
-                        help='Enable plotting graphics to the specified dir')
     return parser.parse_args()
 
 
@@ -102,9 +89,5 @@ if __name__ == '__main__':
     setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
     Utility.print_labchain_logo()
-    if args.plot:
-        plot_dir = args.plot_dir
-    else:
-        plot_dir = None
-    DashBoardDB.instance().set_plot_dir(plot_dir)
-    node = create_node(args.port, initial_peers, plot_dir)
+
+    node = create_node(args.port, initial_peers)
