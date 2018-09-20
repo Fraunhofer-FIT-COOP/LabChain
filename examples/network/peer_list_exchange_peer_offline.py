@@ -4,14 +4,14 @@ import sys
 from threading import Thread
 
 # append project dir to python path
-from labchain import networking
+from src import networking
 from tests.test_account import MockCryptoHelper
 
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 if project_dir not in sys.path:
     sys.path.append(project_dir)
 
-from labchain.networking import ServerNetworkInterface, JsonRpcClient  # noqa
+from src.networking import ServerNetworkInterface, JsonRpcClient  # noqa
 
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO

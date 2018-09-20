@@ -32,19 +32,18 @@ This script creats a symlink from ```.git//hooks/pre-commit``` to ```scripts/pre
 Run the following to install all dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 ```
 
 # Run the Node
 
 ```
-cd scripts
-python node_start.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
+python3 node.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 ```
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
-`-p` or `--plot` enables frequent plotting of the blockchain into `~/.labchain/plot`
+`-p` or `--plot` enables frequent plotting of the blockchain into `~/.src/plot`
 `--plot-dir <directory>` lets you choose a different directory for plot output
 `--plot-auto-open` enables opening the plot in your browser whenever it is created (may become annoying)
 
@@ -64,15 +63,7 @@ install node-red-dashboard palette to see the dashboard
 # Run the Client
 
 ```
-cd scripts
-python client-cli.py <node-ip> <node-port>
+python3 client.py <blockchain-node-ip> <blockchain-node-port>
 ```
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
-
-# Run using Docker
-
-```
-docker build -t labchain:latest .
-docker run --name "labchain" -p 1880:1880 -p 8080:8080 labchain:latest
-```

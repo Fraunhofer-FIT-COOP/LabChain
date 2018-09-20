@@ -1,20 +1,20 @@
 import unittest
 import os
 
-from labchain.blockchain import BlockChain
-from labchain.consensus import Consensus
-from labchain.cryptoHelper import CryptoHelper as crypto
-from labchain.transaction import Transaction
-from labchain.txpool import TxPool
-from labchain.configReader import ConfigReader
-from labchain.db import Db
+from src.blockchain import BlockChain
+from src.consensus import Consensus
+from src.cryptoHelper import CryptoHelper as crypto
+from src.transaction import Transaction
+from src.txpool import TxPool
+from src.configReader import ConfigReader
+from src.db import Db
 
 
 class DbTestCase(unittest.TestCase):
 
     def setUp(self):
         self.database = Db(block_chain_db_file=os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                                            '../labchain/resources/labchaindb.sqlite')))
+                                                                            '../src/resources/labchaindb.sqlite')))
         self.init_components()
         self.create_transactions()
         self.create_blocks()
@@ -27,7 +27,7 @@ class DbTestCase(unittest.TestCase):
         self.database.get_blockchain_from_db()
 
     def init_components(self):
-        node_config = '../labchain/resources/node_configuration.ini'
+        node_config = '../src/resources/node_configuration.ini'
         config_reader = ConfigReader(node_config)
 
         tolerance = config_reader.get_config(

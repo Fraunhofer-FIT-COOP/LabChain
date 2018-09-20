@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from labchain.transaction import Transaction
+from src.transaction import Transaction
 
 
 class TransactionTestCase(unittest.TestCase):

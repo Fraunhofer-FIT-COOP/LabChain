@@ -4,9 +4,9 @@ import sys
 from io import StringIO
 from unittest import TestCase
 
-from labchain.block import Block
-from labchain.client import BlockchainClient, Wallet
-from labchain.transaction import Transaction
+from src.block import Block
+from src.client import BlockchainClient, Wallet
+from src.transaction import Transaction
 
 
 class MockNetworkInterface:

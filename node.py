@@ -5,27 +5,23 @@ import socket
 import sys
 import dns.resolver
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-if parent_dir not in sys.path:
-    sys.path.append(parent_dir)
-
 # append project dir to python path
-from labchain.blockchainNode import BlockChainNode  # noqa
-from labchain.dashboardDB import DashBoardDB
-from labchain.configReader import ConfigReader  # noqa
-from labchain.utility import Utility  # noqa
-from labchain import event  # noqa
-from labchain.event import EventBus  # noqa
-from labchain.plot import BlockchainPlotter  # noqa
+from src.blockchainNode import BlockChainNode  # noqa
+from src.dashboardDB import DashBoardDB
+from src.configReader import ConfigReader  # noqa
+from src.utility import Utility  # noqa
+from src import event  # noqa
+from src.event import EventBus  # noqa
+from src.plot import BlockchainPlotter  # noqa
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
-CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,
-                                           'labchain', 'resources',
+CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                           'src', 'resources',
                                            'node_configuration.ini'))
-CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
+CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.src')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 

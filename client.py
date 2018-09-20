@@ -3,21 +3,17 @@ import logging
 import os
 import sys
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-if parent_dir not in sys.path:
-    sys.path.append(parent_dir)
-
 # append project dir to python path
-from labchain.cryptoHelper import CryptoHelper  # noqa
-from labchain.networking import ClientNetworkInterface, JsonRpcClient  # noqa
+from src.cryptoHelper import CryptoHelper  # noqa
+from src.networking import ClientNetworkInterface, JsonRpcClient  # noqa
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
-from labchain.client import Wallet, BlockchainClient  # noqa
+from src.client import Wallet, BlockchainClient  # noqa
 
-CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
+CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.src')
 WALLET_FILE_PATH = os.path.join(CONFIG_DIRECTORY, 'wallet.csv')
 
 

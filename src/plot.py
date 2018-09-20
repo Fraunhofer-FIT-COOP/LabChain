@@ -228,7 +228,7 @@ class BlockchainPlotter:
 
     def _get_jinja_environment(self):
         env = Environment(
-            loader=PackageLoader('labchain', 'resources/plot'),
+            loader=PackageLoader('src', 'resources/plot'),
             autoescape=select_autoescape(['html', 'xml'])
         )
         return env

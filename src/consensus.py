@@ -6,8 +6,8 @@ import logging
 from math import log
 from random import randint
 
-from labchain.cryptoHelper import CryptoHelper
-from labchain.dashboardDB import DashBoardDB
+from src.cryptoHelper import CryptoHelper
+from src.dashboardDB import DashBoardDB
 
 
 class Consensus:

@@ -1,8 +1,8 @@
 import os
 from collections import OrderedDict
 
-from labchain.networking import TransactionDoesNotExistException, BlockDoesNotExistException
-from labchain.transaction import Transaction
+from src.networking import TransactionDoesNotExistException, BlockDoesNotExistException
+from src.transaction import Transaction
 
 LABCHAIN_LOGO = """
           .(##%*

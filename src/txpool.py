@@ -1,6 +1,6 @@
 import logging
 
-from labchain.transaction import Transaction
+from src.transaction import Transaction
 
 
 class TxPool:

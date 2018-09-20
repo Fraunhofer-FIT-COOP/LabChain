@@ -3,11 +3,11 @@ import json
 import logging
 import sys
 
-from labchain.block import Block
-from labchain.dashboardDB import DashBoardDB
-from labchain import event
-from labchain.block import LogicalBlock
-from labchain.transaction import NoHashError
+from src.block import Block
+from src.dashboardDB import DashBoardDB
+from src import event
+from src.block import LogicalBlock
+from src.transaction import NoHashError
 
 
 class BlockChain:

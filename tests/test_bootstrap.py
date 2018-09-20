@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import patch, MagicMock, call
 
-from labchain.bootstrap import Bootstrapper, BlockchainInitFailed
+from src.bootstrap import Bootstrapper, BlockchainInitFailed
 
 
 class BootrapperTestCase(TestCase):
@@ -9,11 +9,11 @@ class BootrapperTestCase(TestCase):
     def setUp(self):
         self.create_bootstrapper()
 
-    @patch('labchain.block.Block')
-    @patch('labchain.block.Block')
-    @patch('labchain.block.Block')
-    @patch('labchain.blockchain.BlockChain')
-    @patch('labchain.networking.NetworkInterface')
+    @patch('src.block.Block')
+    @patch('src.block.Block')
+    @patch('src.block.Block')
+    @patch('src.blockchain.BlockChain')
+    @patch('src.networking.NetworkInterface')
     def create_bootstrapper(self, network_interface, blockchain, block1, block2, genesis_block):
         self.network_interface = network_interface
         self.bootstrapper = Bootstrapper(network_interface)

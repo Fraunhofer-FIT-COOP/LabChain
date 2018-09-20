@@ -5,9 +5,9 @@ from unittest import TestCase
 
 from werkzeug.test import Client
 
-from labchain.block import Block
-from labchain.networking import ServerNetworkInterface, TransactionDoesNotExistException, BlockDoesNotExistException
-from labchain.transaction import Transaction
+from src.block import Block
+from src.networking import ServerNetworkInterface, TransactionDoesNotExistException, BlockDoesNotExistException
+from src.transaction import Transaction
 
 
 class MockJsonRpcClient:
