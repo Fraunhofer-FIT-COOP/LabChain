@@ -7,19 +7,19 @@ import threading
 import time
 import uuid
 
-from src.block import Block
-from src.block import LogicalBlock
-from src.blockchain import BlockChain
-from src.bootstrap import Bootstrapper
-from src.configReader import ConfigReader
-from src.configReader import ConfigReaderException
-from src.consensus import Consensus
-from src.cryptoHelper import CryptoHelper
-from src.networking import JsonRpcClient
-from src.networking import ServerNetworkInterface, NoPeersException
-from src.txpool import TxPool
-from src.dashboardDB import DashBoardDB
-from src.db import Db
+from labchain.datastructure.block import Block
+from labchain.datastructure.block import LogicalBlock
+from labchain.datastructure.blockchain import BlockChain
+from labchain.blockchainNodeBootstrap import Bootstrapper
+from labchain.util.configReader import ConfigReader
+from labchain.util.configReader import ConfigReaderException
+from labchain.consensus.consensus import Consensus
+from labchain.util.cryptoHelper import CryptoHelper
+from labchain.network.networking import JsonRpcClient
+from labchain.network.networking import ServerNetworkInterface, NoPeersException
+from labchain.datastructure.txpool import TxPool
+from labchain.dashboardDB import DashBoardDB
+from labchain.databaseInterface import Db
 
 
 class BlockChainNode:

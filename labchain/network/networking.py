@@ -13,10 +13,10 @@ from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 
-from src.block import Block
-from src.transaction import Transaction
-from src.utility import Utility
-from src.dashboardDB import DashBoardDB
+from labchain.datastructure.block import Block
+from labchain.datastructure.transaction import Transaction
+from labchain.util.utility import Utility
+from labchain.dashboardDB import DashBoardDB
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import logging
 import sqlite3
-from src.block import Block
-from src.transaction import Transaction
+from labchain.datastructure.block import Block
+from labchain.datastructure.transaction import Transaction
 
 
 class Db:

@@ -3,11 +3,10 @@ import math
 import sys
 import time
 import logging
-from math import log
 from random import randint
 
-from src.cryptoHelper import CryptoHelper
-from src.dashboardDB import DashBoardDB
+from labchain.util.cryptoHelper import CryptoHelper
+from labchain.dashboardDB import DashBoardDB
 
 
 class Consensus:

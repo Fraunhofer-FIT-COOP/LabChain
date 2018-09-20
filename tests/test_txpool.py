@@ -1,8 +1,8 @@
 import unittest
 
 
-from src.txpool import TxPool
-from src.transaction import Transaction
+from labchain.datastructure.txpool import TxPool
+from labchain.datastructure.transaction import Transaction
 from mock.cryptoHelper import CryptoHelper
 
 

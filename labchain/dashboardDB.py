@@ -1,4 +1,4 @@
-from src.singleton import Singleton
+from labchain.util.singleton import Singleton
 import logging
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt

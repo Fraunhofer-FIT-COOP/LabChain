@@ -5,15 +5,15 @@ import time
 from threading import Thread
 
 # append project dir to python path
-from src import networking
-from src.transaction import Transaction
+from labchain.network import networking
+from labchain.datastructure.transaction import Transaction
 from tests.test_account import MockCryptoHelper
 
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 if project_dir not in sys.path:
     sys.path.append(project_dir)
 
-from src.networking import ServerNetworkInterface, JsonRpcClient, TransactionDoesNotExistException  # noqa
+from labchain.network.networking import ServerNetworkInterface, JsonRpcClient, TransactionDoesNotExistException  # noqa
 
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO

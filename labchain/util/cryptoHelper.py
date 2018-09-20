@@ -3,8 +3,8 @@ from Crypto.Signature import DSS
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 
-from src.singleton import Singleton
-from src.utility import Utility
+from labchain.util.singleton import Singleton
+from labchain.util.utility import Utility
 
 import json
 import logging

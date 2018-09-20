@@ -43,7 +43,7 @@ python3 node.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 ```
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
-`-p` or `--plot` enables frequent plotting of the blockchain into `~/.src/plot`
+`-p` or `--plot` enables frequent plotting of the blockchain into `~/.labchain/plot`
 `--plot-dir <directory>` lets you choose a different directory for plot output
 `--plot-auto-open` enables opening the plot in your browser whenever it is created (may become annoying)
 

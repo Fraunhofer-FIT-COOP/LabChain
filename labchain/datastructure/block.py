@@ -4,8 +4,8 @@ import logging
 from pprint import pformat
 import time
 
-from src.cryptoHelper import CryptoHelper
-from src.transaction import Transaction
+from labchain.util.cryptoHelper import CryptoHelper
+from labchain.datastructure.transaction import Transaction
 
 
 class Block(object):

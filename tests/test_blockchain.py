@@ -3,12 +3,12 @@ import json
 import unittest
 from unittest.mock import Mock
 
-from src.blockchain import BlockChain
-from src.configReader import ConfigReader
-from src.consensus import Consensus
-from src.cryptoHelper import CryptoHelper as crypto
-from src.transaction import Transaction
-from src.txpool import TxPool
+from labchain.datastructure.blockchain import BlockChain
+from labchain.util.configReader import ConfigReader
+from labchain.consensus import Consensus
+from labchain.util.cryptoHelper import CryptoHelper as crypto
+from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.txpool import TxPool
 
 
 class BlockChainComponent(unittest.TestCase):
@@ -94,7 +94,7 @@ class BlockChainComponent(unittest.TestCase):
         self.assertEqual(1, 2 - 1, "They are equal")
 
     def init_components(self):
-        node_config = '../src/resources/node_configuration.ini'
+        node_config = '../labchain/resources/node_configuration.ini'
         config_reader = ConfigReader(node_config)
 
         tolerance = config_reader.get_config(

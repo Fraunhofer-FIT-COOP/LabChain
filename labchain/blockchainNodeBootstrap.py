@@ -1,6 +1,6 @@
 import logging
 
-from src.networking import NoPeersException, NoBlockExistsInRange
+from labchain.network.networking import NoPeersException, NoBlockExistsInRange
 
 logger = logging.getLogger(__name__)
 

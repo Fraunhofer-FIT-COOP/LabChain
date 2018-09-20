@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from Crypto.PublicKey import ECC
 
-from src.cryptoHelper import CryptoHelper
+from labchain.util.cryptoHelper import CryptoHelper
 
 
 class Tests(TestCase):
