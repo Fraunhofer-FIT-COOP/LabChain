@@ -55,3 +55,38 @@ python3 client.py <blockchain-node-ip> <blockchain-node-port>
 ```
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
+
+# TODO
+
+- [x] Check if README is still correct
+- [x] Changed directory structure
+- [x] Remove presentations
+- [x] Refactor names
+- [x] Remove Node red stuff and MQTT
+- [x] Remove visualizer
+- [x] Clean up existing branches
+- [ ] Remove `nogas` and check PEP8 Styleguide
+- [ ] Check unit tests
+- [ ] Add an example (quick start/ getting started) to the README
+- [ ] Remove mocks
+- [ ] Introduce version number
+- [ ] Remove constraint to store only a certain number of preceding blocks
+- [ ] Check difficulty calculation
+- [ ] Check block timestamp
+- [ ] Put every class into a file
+- [ ] Update versions in PIP requirements file
+- [ ] Remove 10 seconds delay to wait for incoming transactions
+- [ ] Currently the blocksynchronisation seems not to work ( > 2 peers) -> fix it
+- [ ] Remove auto discovery mechanism
+
+## Nice to have
+
+- [ ] Use JSON for configuration
+- [ ] Remove SQLite file from ressource directory
+- [ ] Rename configuration in default_configuration and copy it in case there is no configuration provided
+- [ ] Check and refactor block explorer
+- [ ] Blockchain instance as singleton
+- [ ] Check networking class (max number of connections,...)
+- [ ] Remove large number of parameters in functions
+- [ ] Create a setup.py
+- [ ] Create a docker file (data directory must be mountable and the node must be configurable)
