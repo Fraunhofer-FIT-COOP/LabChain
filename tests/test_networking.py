@@ -113,7 +113,11 @@ class CommonTestCase(TestCase):
 
     def assert_json_equal(self, json_expected, json_actual):
         """Assert that two JSON strings contain the same data."""
-        self.assertEqual(json.loads(json_expected), json.loads(json_actual))
+        if type(json_expected) is str:
+            json_expected = json.loads(json_expected)
+        if type(json_actual) is str:
+            json_actual = json.loads(json_actual)
+        self.assertEqual(json_expected, json_actual)
 
 
 class PeerListExchangeTestCase(CommonTestCase):
@@ -278,9 +282,10 @@ class SendBlockTestCase(CommonTestCase):
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
         self.assertEqual(last_request_method, 'sendBlock')
-        self.assertEqual(last_request_params, [{'nr': 2, 'timestamp': now, 'merkleHash': 'merkle_hash123',
+        self.assert_json_equal(last_request_params, [{'nr': 2, 'timestamp': now, 'merkleHash': 'merkle_hash123',
                                                 'predecessorBlock': 'pre_hash123', 'nonce': 6969,
                                                 'creator': 'test_creator',
+                                                'difficulty' : -1,
                                                 'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver',
                                                                   'payload': 'test_payload',
                                                                   'signature': 'test_signature'}]}])
@@ -367,6 +372,7 @@ class RequestBlockServerTestCase(CommonTestCase):
         # then
         self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": [{"nr": 2, "timestamp": 1337.0, '
                                          '"merkleHash" : "test_merkle_hash", '
+                                         '"difficulty" : -1,'
                                          '"predecessorBlock" : "test_pred_block_hash", "nonce" : 5, '
                                          '"creator" : "test_creator", "transactions" : '
                                          '[{"sender": "test_sender", "receiver": "test_receiver", '
@@ -386,6 +392,7 @@ class RequestBlockServerTestCase(CommonTestCase):
         # then
         self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": {"nr": 2, "timestamp": 1337.0, '
                                          '"merkleHash" : "test_merkle_hash", '
+                                         '"difficulty" : -1,'
                                          '"predecessorBlock" : "test_pred_block_hash", "nonce" : 5, '
                                          '"creator" : "test_creator", "transactions" : '
                                          '[{"sender": "test_sender", "receiver": "test_receiver", '
@@ -405,6 +412,7 @@ class RequestBlockServerTestCase(CommonTestCase):
         # then
         self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": [{"nr": 2, "timestamp": 1337.0, '
                                          '"merkleHash" : "test_merkle_hash", '
+                                         '"difficulty" : -1,'
                                          '"predecessorBlock" : null, "nonce" : 5, '
                                          '"creator" : "test_creator", "transactions" : '
                                          '[{"sender": "test_sender", "receiver": "test_receiver", '
@@ -433,6 +441,7 @@ class RequestBlockServerTestCase(CommonTestCase):
         # then
         self.assert_json_equal(response, '{ "jsonrpc": "2.0", "result": [{"nr": 2, "timestamp": 1337.0, '
                                          '"merkleHash" : "test_merkle_hash", '
+                                         '"difficulty" : -1,'
                                          '"predecessorBlock" : "test_pred_block_hash", "nonce" : 5, '
                                          '"creator" : "test_creator", "transactions" : '
                                          '[{"sender": "test_sender", "receiver": "test_receiver", '
@@ -456,6 +465,7 @@ class RequestBlockClientTestCase(CommonTestCase):
                     'nonce': 5,
                     'creator': 'test_creator',
                     'timestamp': 1337.0,
+                    'difficulty' : 13,
                     'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
                                       'signature': 'test_signature'}]
                 }
@@ -494,6 +504,7 @@ class RequestBlockClientTestCase(CommonTestCase):
                     'nonce': 5,
                     'creator': 'test_creator',
                     'timestamp': 1337.0,
+                    'difficulty' : 13,
                     'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
                                       'signature': 'test_signature'}]
                 },
@@ -529,7 +540,7 @@ class RequestBlockClientTestCase(CommonTestCase):
         self.assertEqual(last_request_method, 'requestBlock')
 
     def test_request_block_by_range(self):
-        """Test case #17."""
+        """Test case #17a."""
         # given
         self.add_peer('192.168.100.4', 6666)
         # when
@@ -543,6 +554,7 @@ class RequestBlockClientTestCase(CommonTestCase):
                     'nonce': 5,
                     'creator': 'test_creator',
                     'timestamp': 1337.0,
+                    'difficulty' : 13,
                     'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
                                       'signature': 'test_signature'}]
                 }
