@@ -18,7 +18,8 @@ class Bootstrapper:
         self.network_interface = network_interface
 
     def do_bootstrap(self, blockchain):
-        """Initialize a blockchain object with blocks from other nodes."""
+        """Initialize a blockchain object with blocks from other nodes.
+        """
         retries = 0
         while True:
             if retries == self.MAX_BLOCK_REQUEST_RETRIES:
@@ -36,6 +37,8 @@ class Bootstrapper:
             logger.info('Received {} blocks from peers. Adding them now...'.format(len(blocks)))
             for block in reversed(blocks):
                 blockchain.add_block(block)
-            break
+
+            if len(blocks) > 0:
+               break
 
         return blockchain
