@@ -94,6 +94,8 @@ python3 -m unittest discover
 - [ ] Remove 10 seconds delay to wait for incoming transactions
 - [ ] Currently the blocksynchronisation seems not to work ( > 2 peers) -> fix it
 - [ ] Remove auto discovery mechanism
+- [ ] The `test_account.py` uses the `MockCryptoHelper` but should use the real CryptoHelper
+- [ ] Check the calls of the crypto helper methods (First `json.dumps(...)` then in the crypto helper `json.loads(...)`. There must be a better way.)
 
 ## Nice to have
 
