@@ -2,7 +2,7 @@ import unittest
 import os
 
 from labchain.datastructure.blockchain import BlockChain
-from labchain.consensus import Consensus
+from labchain.consensus.consensus import Consensus
 from labchain.util.cryptoHelper import CryptoHelper as crypto
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.txpool import TxPool
@@ -27,7 +27,7 @@ class DbTestCase(unittest.TestCase):
         self.database.get_blockchain_from_db()
 
     def init_components(self):
-        node_config = '../labchain/resources/node_configuration.ini'
+        node_config = './labchain/resources/node_configuration.ini'
         config_reader = ConfigReader(node_config)
 
         tolerance = config_reader.get_config(
@@ -50,9 +50,8 @@ class DbTestCase(unittest.TestCase):
                                      txpool_obj=self.txpool,
                                      crypto_helper_obj=self.crypto_helper_obj,
                                      min_blocks_for_difficulty=min_blocks,
-                                     request_block_callback=None,
-                                     request_block_hash_callback=None,
-                                     db=self.database)
+                                     db=self.database,
+                                     q=None)
 
     def create_transactions(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()
