@@ -56,6 +56,22 @@ python3 client.py <blockchain-node-ip> <blockchain-node-port>
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
 
+# Run the unit tests
+
+Executing a single test:
+
+```
+python3 -m unittest test.<test_name>
+```
+
+Notice that you must not add a `.py` to the name of the test.
+
+For running all the unit tests execute:
+
+```
+python3 -m unittest discover
+```
+
 # TODO
 
 - [x] Check if README is still correct

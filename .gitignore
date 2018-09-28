@@ -106,3 +106,7 @@ ENV/
 .mypy_cache/
 /.idea
 /database/labchaindb.sqlite
+
+# vim stuff
+*.swp
+*.swo
