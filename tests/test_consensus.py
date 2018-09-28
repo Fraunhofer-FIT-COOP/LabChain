@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 from labchain.datastructure.block import Block
-from labchain.consensus import Consensus
+from labchain.consensus.consensus import Consensus
 from datetime import datetime
 from unittest import TestCase
 

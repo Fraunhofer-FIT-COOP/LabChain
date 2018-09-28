@@ -3,6 +3,7 @@ import math
 import sys
 import time
 import logging
+import datetime
 from random import randint
 
 from labchain.util.cryptoHelper import CryptoHelper
@@ -93,6 +94,12 @@ class Consensus:
         return difficulty
 
     def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
+        if type(latest_timestamp) is datetime.datetime:
+            latest_timestamp = latest_timestamp.timestamp()
+
+        if type(earliest_timestamp) is datetime.datetime:
+            earliest_timestamp = earliest_timestamp.timestamp()
+
         difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty)
 
         logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
@@ -109,6 +116,12 @@ class Consensus:
 
 
     def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
+        if type(latest_timestamp) is datetime.datetime:
+            latest_timestamp = latest_timestamp.timestamp()
+
+        if type(earliest_timestamp) is datetime.datetime:
+            earliest_timestamp = earliest_timestamp.timestamp()
+
         difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty)
 
         logging.debug('#INFO: mine Difficulty: ' + str(difficulty))
