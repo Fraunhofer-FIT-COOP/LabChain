@@ -166,7 +166,7 @@ class TransactionWizard:
 
     def __wallet_to_list(self):
         wallet_list_result = []
-        for key in self.wallet:
+        for key in sorted(self.wallet):
             wallet_list_result.append([str(key), self.wallet[key][0], self.wallet[key][1]])
         return wallet_list_result
 

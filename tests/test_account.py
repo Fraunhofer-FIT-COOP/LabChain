@@ -363,10 +363,10 @@ class CreateTransactionTestCase(CommonTestCase):
             Test requirement: 180, 190
         """
         # given
-        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_456')
-        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
-        valid_signature = self.mock_crypto_helper.sign('private_111', json.dumps({
-            'sender': 'public_555',
+        self.client.wallet['DrugMoneyKey'] = ('public_123', 'private_456')
+        self.client.wallet['BestLabel'] = ('public_555', 'private_111')
+        valid_signature = self.mock_crypto_helper.sign('private_456', json.dumps({
+            'sender': 'public_123',
             'receiver': 'test_receiver',
             'payload': 'test_payload'
         }))
@@ -381,7 +381,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.client.main()
         # then
         self.assertEqual(len(self.transactions), 1)
-        self.assertEqual(self.transactions[0].sender, 'public_555')
+        self.assertEqual(self.transactions[0].sender, 'public_123')
         self.assertEqual(self.transactions[0].receiver, 'test_receiver')
         self.assertEqual(self.transactions[0].payload, 'test_payload')
         self.assertEqual(self.transactions[0].signature, valid_signature)
@@ -412,8 +412,8 @@ class CreateTransactionTestCase(CommonTestCase):
             Test requirement: 180, 190
         """
         # given
-        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_45')
-        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
+        self.client.wallet['DrugMoneyKey'] =  ('public_123', 'private_45')
+        self.client.wallet['BestLabel'] = ('public_555', 'private_111')
         # when
         self.queue_input('2')
         self.queue_input('2')
