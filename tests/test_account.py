@@ -122,7 +122,7 @@ class CommonTestCase(TestCase):
     def queue_input(self, line):
         """Queue an input to stdin to be retrieved later by an "input()" call.
 
-        Make sure tu queue all inputs BEFORE running the actual program.
+        Make sure to queue all inputs BEFORE running the actual program.
         Also do not query less inputs than the code will try to read.
         Else you will get: EOFError: EOF when reading a line
         """
@@ -336,16 +336,17 @@ class ManageWalletTestCase(CommonTestCase):
         """
         # given
         pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
-        self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
+        self.client.wallet["test key 1"] = (pub_key, pr_key)
         pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
-        self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
+        self.client.wallet["test key 2"] = (pub_key, pr_key)
+
         # when
-        self.queue_input('1')
-        self.queue_input('3')
-        self.queue_input('2')
-        self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('5')
+        self.queue_input('1') # Manage Wallet
+        self.queue_input('3') # Delete Address
+        self.queue_input('2') # Select '2' address
+        self.queue_input('') # Press enter
+        self.queue_input('4') # Exit Wallet menue
+        self.queue_input('5') # Exit blockchain client
         self.client.main()
         # then
         addresses = self.get_wallet_key_pairs()

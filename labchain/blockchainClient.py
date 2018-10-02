@@ -72,8 +72,8 @@ class Wallet:
     @staticmethod
     def __dict_to_csv(dictionary):
         result = ''
-        for label, key_tuple in dictionary.items():
-            public_key, private_key = key_tuple
+        for label in sorted(list(dictionary.keys())):
+            public_key, private_key = dictionary[label]
             result += label + ';' + public_key + ';' + private_key + os.linesep
         return result
 
@@ -364,7 +364,7 @@ class BlockchainClient:
         else:
             i = 1
             addresses = {}
-            for label in self.wallet:
+            for label in sorted(self.wallet):
                 addresses[str(i)] = (label, self.__delete_by_label, [label, ])
                 i += 1
             delete_menu = Menu(['Delete address'], addresses,
