@@ -243,7 +243,7 @@ class SendBlockTestCase(CommonTestCase):
                                      '"params":  [{'
                                      '"nr" : 2, "merkleHash" : "merkle_hash123", '
                                      '"predecessorBlock" : "pre_hash123","nonce" : 6969, '
-                                     '"creator" : "test_creator", "timestamp": 0.0 , '
+                                     '"creator" : "test_creator", "timestamp": 0.0 , "difficulty" : 0, '
                                      '"transactions" : ['
                                      '{"sender": "test_sender", "receiver": "test_receiver", '
                                      '"payload": "test_payload", "signature": "test_signature"}]}], "id": 1}')
@@ -285,7 +285,7 @@ class SendBlockTestCase(CommonTestCase):
         self.assert_json_equal(last_request_params, [{'nr': 2, 'timestamp': now, 'merkleHash': 'merkle_hash123',
                                                 'predecessorBlock': 'pre_hash123', 'nonce': 6969,
                                                 'creator': 'test_creator',
-                                                'difficulty' : -1,
+                                                'difficulty': -1,
                                                 'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver',
                                                                   'payload': 'test_payload',
                                                                   'signature': 'test_signature'}]}])
@@ -465,7 +465,7 @@ class RequestBlockClientTestCase(CommonTestCase):
                     'nonce': 5,
                     'creator': 'test_creator',
                     'timestamp': 1337.0,
-                    'difficulty' : 13,
+                    'difficulty': 13,
                     'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
                                       'signature': 'test_signature'}]
                 }
@@ -504,7 +504,7 @@ class RequestBlockClientTestCase(CommonTestCase):
                     'nonce': 5,
                     'creator': 'test_creator',
                     'timestamp': 1337.0,
-                    'difficulty' : 13,
+                    'difficulty': 13,
                     'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
                                       'signature': 'test_signature'}]
                 },
@@ -554,7 +554,7 @@ class RequestBlockClientTestCase(CommonTestCase):
                     'nonce': 5,
                     'creator': 'test_creator',
                     'timestamp': 1337.0,
-                    'difficulty' : 13,
+                    'difficulty': 13,
                     'transactions': [{'sender': 'test_sender', 'receiver': 'test_receiver', 'payload': 'test_payload',
                                       'signature': 'test_signature'}]
                 }
