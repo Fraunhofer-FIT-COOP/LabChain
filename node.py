@@ -6,9 +6,9 @@ import sys
 import dns.resolver
 
 # append project dir to python path
-from labchain.blockchainNode import BlockChainNode  # noqa
-from labchain.util.configReader import ConfigReader  # noqa
-from labchain.util.utility import Utility  # noqa
+from labchain.blockchainNode import BlockChainNode
+from labchain.util.configReader import ConfigReader
+from labchain.util.utility import Utility
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:

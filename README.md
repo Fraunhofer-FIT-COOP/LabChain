@@ -81,7 +81,7 @@ python3 -m unittest discover
 - [x] Remove Node red stuff and MQTT
 - [x] Remove visualizer
 - [x] Clean up existing branches
-- [ ] Remove `nogas` and check PEP8 Styleguide
+- [x] Remove `nogas` and check PEP8 Styleguide
 - [ ] Check unit tests
 - [ ] Add an example (quick start/ getting started) to the README
 - [ ] Remove mocks

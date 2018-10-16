@@ -9,12 +9,12 @@ from labchain.network import networking
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 from tests.test_account import MockCryptoHelper
+from labchain.network.networking import ServerNetworkInterface, JsonRpcClient, BlockDoesNotExistException
 
 project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 if project_dir not in sys.path:
     sys.path.append(project_dir)
 
-from labchain.network.networking import ServerNetworkInterface, JsonRpcClient, BlockDoesNotExistException  # noqa
 
 # change to DEBUG to see more output
 LOG_LEVEL = logging.INFO

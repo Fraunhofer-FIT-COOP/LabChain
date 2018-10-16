@@ -3,14 +3,14 @@ import logging
 import os
 
 # append project dir to python path
-from labchain.util.cryptoHelper import CryptoHelper  # noqa
-from labchain.network.networking import ClientNetworkInterface, JsonRpcClient  # noqa
+from labchain.util.cryptoHelper import CryptoHelper
+from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
+from labchain.blockchainClient import Wallet, BlockchainClient
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
-from labchain.blockchainClient import Wallet, BlockchainClient  # noqa
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 WALLET_FILE_PATH = os.path.join(CONFIG_DIRECTORY, 'wallet.csv')
