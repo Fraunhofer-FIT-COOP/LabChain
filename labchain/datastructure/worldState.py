@@ -14,12 +14,15 @@ class WorldState:
 
         Parameters
         ----------
-        None
+        contracts: list
+            List of smartContracts to be loaded. The default is None.
 
         Attributes
         ----------
         contracts : list
             List of all the smartContracts in the blockchain.
+        _crypto_helper : CryptoHelper
+            Instance of the CryptoHelper Module
 
         """
 
