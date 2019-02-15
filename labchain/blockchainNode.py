@@ -19,6 +19,7 @@ from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
 from labchain.datastructure.txpool import TxPool
 from labchain.databaseInterface import Db
+from labchain.datastructure.worldState import WorldState
 
 
 class BlockChainNode:
@@ -70,6 +71,7 @@ class BlockChainNode:
         self.db = None
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
+        self worldState = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             self.logger.debug("Read config file successfully!")
@@ -233,6 +235,7 @@ class BlockChainNode:
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
         self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(
                      os.path.dirname(__file__), 'resources/labchaindb.sqlite')))
+        self.worldState = WorldState()
 
         """init blockchain"""
         # Generate the node ID using host ID

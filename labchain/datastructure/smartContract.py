@@ -28,11 +28,11 @@ class SmartContract:
         self._state = state
 
     def to_dict(self):
-            """Convert own data to a dictionary."""
-            return {
-                'address': self._address,
-                'txHash': self._txHash,
-                'state': self._state
+        """Convert own data to a dictionary."""
+        return {
+            'address': self._address,
+            'txHash': self._txHash,
+            'state': self._state
             }
 
     def get_json(self):

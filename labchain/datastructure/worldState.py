@@ -1,11 +1,17 @@
 import logging
 import json
 import docker
+import time
+import os
 
 from pprint import pformat
 from labchain.datastructure.smartContract import SmartContract
 from labchain.util.cryptoHelper import CryptoHelper
 
+CONTAINER_NAME = "bit_blockchain_container"
+DOCKER_FILES_PATH = os.path.join(os.path.dirname(__file__),
+                        'labchain', 'resources',
+                        'dockerResources')
 
 class WorldState:
 
@@ -93,3 +99,23 @@ class WorldState:
     def get_computed_hash(self):
         """Gets the hash for the entire WorldState instance"""
         return self._crypto_helper.hash(self.get_json)
+
+
+    def create_container(self):
+        client = docker.from_env()
+
+        try:
+            client.images.get(CONTAINER_NAME)
+        except:
+            print("No image found")
+            print("Creating image...")
+            client.images.build(path=DOCKER_FILES_PATH, tag=CONTAINER_NAME)
+            print("Image created")
+
+        container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": 5000}, detach=True)
+        print(container)
+        print("Running container")
+
+        time.sleep(30)
+        container.remove(force=True)
+        print("Quit container")
