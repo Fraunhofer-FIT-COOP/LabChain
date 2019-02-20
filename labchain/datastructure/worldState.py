@@ -3,6 +3,8 @@ import json
 import docker
 import time
 import os
+import requests
+import logging
 
 from pprint import pformat
 from labchain.datastructure.smartContract import SmartContract
@@ -12,6 +14,7 @@ CONTAINER_NAME = "bit_blockchain_container"
 DOCKER_FILES_PATH = os.path.join(os.path.dirname(__file__),
                         'labchain', 'resources',
                         'dockerResources')
+CONTAINER_PORT = 5000
 
 class WorldState:
 
@@ -43,6 +46,12 @@ class WorldState:
     def addContract(self, contract):
         """Adds a contract to the contract list."""
         self._contracts.append(contract)
+    
+    def updateContractState(self, contractAddress, newState):
+        for contract in self._contracts:
+            if contract.address == contractAddress:
+                contract.state = newState
+                break
 
 
     def getContract(self, address):
@@ -100,6 +109,11 @@ class WorldState:
         """Gets the hash for the entire WorldState instance"""
         return self._crypto_helper.hash(self.get_json)
 
+    def get_all_contract_addresses(self):
+        allAddresses = []
+        for contract in self._contracts:
+            allAddresses.append(contract.address)
+        return allAddresses
 
     def create_container(self):
         client = docker.from_env()
@@ -112,10 +126,102 @@ class WorldState:
             client.images.build(path=DOCKER_FILES_PATH, tag=CONTAINER_NAME)
             print("Image created")
 
-        container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": 5000}, detach=True)
-        print(container)
+        container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": CONTAINER_PORT}, detach=True)
         print("Running container")
+        return container
 
-        time.sleep(30)
+        # time.sleep(30)
+        # container.remove(force=True)
+        # print("Quit container")
+
+    def createContract(self, tx):
+        container = self.create_container()
+        url = "http://localhost:" + CONTAINER_PORT + "/createContract"
+        data = {"code": tx.payload['contractCode'],
+                "arguments": tx.payload['arguments'],
+                "sender": tx.sender}
+        r = requests.post(url,json=data).json()
+        
+        try:
+            if(r["success"] == True):
+                #TODO UPDATE ADDRESS INFO
+                self.addContract(SmartContract(address='address',
+                                            txHash=tx.transaction_hash,
+                                            state=r['encodedNewState']))
+            if(r["success"] == False):
+                    print(r["error"])
+        except:
+            logging.error("Contract from transaction " + tx.transaction_hash + 
+                        "could not be created")
         container.remove(force=True)
-        print("Quit container")
+
+    def callMethod(self, tx, tx_of_contractCreation):
+        container = self.create_container()
+        url = "http://localhost:" + CONTAINER_PORT + "/callMethod"
+        data = {"code": tx_of_contractCreation.payload['contractCode'],
+                "state": tx.payload['state'],
+                "methods": tx.payload['methods'],
+                "sender": tx.sender}
+        r = requests.post(url,json=data).json()
+
+        try:
+            if(r["success"] == True):
+                self.updateContractState(tx.receiver, r['encodedUpdatedState'])
+            if(r["success"] == False):
+                print(r["error"])
+        except:
+            logging.error("Method call from transaction " + tx.transaction_hash + 
+                        "could not be completed")
+        container.remove(force=True)
+
+    def getState(self, state, tx_of_contractCreation):
+        container = self.create_container()
+        url = "http://localhost:" + CONTAINER_PORT + "/getState"
+        data = {"code": tx_of_contractCreation.payload['contractCode'],
+                "state": state}
+        r = requests.post(url,json=data).json()
+
+        try:
+            if(r["success"] == True):
+                return r["state"]
+            if(r["success"] == False):
+                return r["error"]
+        except:
+            logging.error("Could not get state")
+            return None
+        container.remove(force=True)
+    
+
+    def getParameters(self, state, methodName, tx_of_contractCreation):
+        container = self.create_container()
+        url = "http://localhost:" + CONTAINER_PORT + "/getParameters"
+        data = {"code": tx_of_contractCreation.payload['contractCode'],
+                "state": state,
+                "methodName": methodName}
+        r = requests.post(url,json=data).json()
+
+        try:
+            if(r["success"] == True):
+                return r["parameters"]
+            if(r["success"] == False):
+                return r["error"]
+        except:
+            logging.error("Could not get state")
+            return None
+        container.remove(force=True)
+
+    def getMethods(self, state, tx_of_contractCreation):
+        container = self.create_container()
+        url = "http://localhost:" + CONTAINER_PORT + "/getMethods"
+        data = {"code": tx_of_contractCreation.payload['contractCode'],
+                "state": state}
+        r = requests.post(url,json=data).json()
+        try:
+            if(r["success"] == True):
+                return r["methods"]
+            if(r["success"] == False):
+                return r["error"]
+        except:
+            logging.error("Could not get methods")
+            return None
+        container.remove(force=True)

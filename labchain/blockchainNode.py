@@ -19,7 +19,6 @@ from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
 from labchain.datastructure.txpool import TxPool
 from labchain.databaseInterface import Db
-from labchain.datastructure.worldState import WorldState
 
 
 class BlockChainNode:
@@ -54,7 +53,7 @@ class BlockChainNode:
         db : DB instance for saving the blockchain data to disk
         logger : Instane of logging
         rb_thread : Thread which polls in intervals for blocks requested
-
+        update_worldState_thread: Thread which perodically updates the blockchain's worldState
         """
         self.consensus_obj = None
         self.crypto_helper_obj = None
@@ -71,7 +70,7 @@ class BlockChainNode:
         self.db = None
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
-        self worldState = None
+        self.update_worldState_thread = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             self.logger.debug("Read config file successfully!")
@@ -110,6 +109,12 @@ class BlockChainNode:
         """Kill orphan blocks at interval defined"""
         while True:
             self.blockchain_obj.prune_orphans()
+            time.sleep(interval)
+    
+    def schedule_worldState_update(self, interval):
+        """Update the worldState at interval definer"""
+        while True:
+            self.blockchain_obj.update_worldState()
             time.sleep(interval)
 
     def block_mine_timer(self, mine_freq, block_transactions_size):
@@ -235,7 +240,6 @@ class BlockChainNode:
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
         self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(
                      os.path.dirname(__file__), 'resources/labchaindb.sqlite')))
-        self.worldState = WorldState()
 
         """init blockchain"""
         # Generate the node ID using host ID
@@ -251,6 +255,10 @@ class BlockChainNode:
             pruning_interval = self.config_reader.get_config(
                 section='BLOCK_CHAIN',
                 option='TIME_TO_PRUNE')
+            worldState_update_interval = self.config_reader.get_config(
+                section='BLOCK_CHAIN',
+                option='TIME_TO_UPDATE_WORLDSTATE')
+            worldState_update_interval = 
             fetch_prev_interval = self.config_reader.get_config(
                                   section='BLOCK_CHAIN',
                                   option='FETCH_PREV_INTERVAL')
@@ -347,5 +355,8 @@ class BlockChainNode:
         self.orphan_killer = threading.Thread(
             target=self.schedule_orphans_killing,
             kwargs=dict(interval=pruning_interval))
+        self.update_worldState_thread = threading.Thread(
+            target=self.schedule_worldState_update,
+            kwargs=dict(interval=worldState_update_interval))
 
         self.orphan_killer.start()

@@ -5,7 +5,7 @@ import sys
 
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.transaction import NoHashError
-
+from labchain.datastructure.worldState import WorldState
 
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
@@ -55,6 +55,8 @@ class BlockChain:
         _crypto_helper : Instance of cryptoHelper module
         _db : Instance of database object
         _q = queue to get missing blocks
+        _worldState: Instance of WorldState module
+        _ws_last_checked_block_id: ID of the block that was last checked by the WorldState
 
         """
         self._logger = logging.getLogger(__name__)
@@ -73,6 +75,8 @@ class BlockChain:
         self._active_mine_block = None
         self._db = db
         self._q = q
+        self.worldState = WorldState()
+        self._ws_last_checked_block_id = 0
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=0, timestamp=0)
@@ -418,6 +422,42 @@ class BlockChain:
             if _time_passed >= self._pruning_interval:
                 self._orphan_blocks.pop(_hash)
                 del _block
+
+    def update_worldState(self):
+        #TODO
+        last_block_id = self._blockchain.values()[-1].block_id
+        txType = {'normal_transaction': False,
+                    'contract_creation': False,
+                    'method_call': False }
+        
+        for block in range(self._ws_last_checked_block_id, last_block_id):
+            for tx in block.transactions:
+                # Classify transactions depending on the address of the receiver
+                if (tx.receiver == None):
+                    txType['contract_creation'] = True
+                if(tx.receiver not in self.worldState.get_all_contract_addresses()):
+                    txType['normal_transaction'] = True
+                if (tx.receiver in self.worldState.get_all_contract_addresses()):
+                    txType['method_call'] = True
+
+                # Handle transactions depending on their type
+                if(txType['contract_creation'] == True):
+                    self.worldState.addContract(tx)
+                if(txType['normal_transaction'] == True):
+                    txType['normal_transaction'] = False
+                    continue
+                if(txType['method_call'] == True):
+                    tx_of_contractCreation = self.get_transaction(self.worldState.getContract(tx.receiver).txHash)
+                    self.worldState.callMethod(tx, tx_of_contractCreation)
+                
+                # Reset txType
+                for key, _ in txType: 
+                    txType[key] = False
+
+        self._ws_last_checked_block_id = last_block_id
+
+
+
 
     def request_block_from_neighbour(self, requested_block_hash):
         """Requests a block from other nodes connected with.
