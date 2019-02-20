@@ -258,7 +258,7 @@ class BlockChainNode:
             worldState_update_interval = self.config_reader.get_config(
                 section='BLOCK_CHAIN',
                 option='TIME_TO_UPDATE_WORLDSTATE')
-            worldState_update_interval = 
+            worldState_update_interval = 'TIME_TO_UPDATE_WORLDSTATE'
             fetch_prev_interval = self.config_reader.get_config(
                                   section='BLOCK_CHAIN',
                                   option='FETCH_PREV_INTERVAL')

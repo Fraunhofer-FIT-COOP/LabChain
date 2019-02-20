@@ -40,9 +40,8 @@ class WorldState:
         else:
             self._contracts = contracts
 
-        self._crypto_helper = CryptoHelper()
+        self._crypto_helper = CryptoHelper.instance()
 
-    
     def addContract(self, contract):
         """Adds a contract to the contract list."""
         self._contracts.append(contract)
@@ -145,9 +144,11 @@ class WorldState:
         try:
             if(r["success"] == True):
                 #TODO UPDATE ADDRESS INFO
-                self.addContract(SmartContract(address='address',
+                newContract = SmartContract(address=None,
                                             txHash=tx.transaction_hash,
-                                            state=r['encodedNewState']))
+                                            state=r['encodedNewState'])
+                newContract.address = self._crypto_helper.hash(newContract.get_json())
+                self.addContract(newContract)
             if(r["success"] == False):
                     print(r["error"])
         except:
