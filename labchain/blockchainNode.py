@@ -116,7 +116,6 @@ class BlockChainNode:
         while True:
             self.blockchain_obj.update_worldState()
             time.sleep(interval)
-            print("WORLDSTATE: " + self.worldState)
 
     def block_mine_timer(self, mine_freq, block_transactions_size):
         """Thread which periodically checks to mine
@@ -265,7 +264,6 @@ class BlockChainNode:
             worldState_update_interval = self.config_reader.get_config(
                 section='BLOCK_CHAIN',
                 option='TIME_TO_UPDATE_WORLDSTATE')
-            worldState_update_interval = 'TIME_TO_UPDATE_WORLDSTATE'
             fetch_prev_interval = self.config_reader.get_config(
                                   section='BLOCK_CHAIN',
                                   option='FETCH_PREV_INTERVAL')
@@ -362,6 +360,7 @@ class BlockChainNode:
         self.orphan_killer = threading.Thread(
             target=self.schedule_orphans_killing,
             kwargs=dict(interval=pruning_interval))
+        self.logger.debug("Starting worldState thread...")
         self.update_worldState_thread = threading.Thread(
             target=self.schedule_worldState_update,
             kwargs=dict(interval=worldState_update_interval))

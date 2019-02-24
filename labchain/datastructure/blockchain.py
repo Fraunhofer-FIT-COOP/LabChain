@@ -427,7 +427,7 @@ class BlockChain:
                 del _block
 
     def update_worldState(self):
-        #TODO
+        print('Function update_WorldState was called')
         last_block_id = self._blockchain.values()[-1].block_id
         txType = {'normal_transaction': False,
                     'contract_creation': False,
@@ -445,13 +445,16 @@ class BlockChain:
 
                 # Handle transactions depending on their type
                 if(txType['contract_creation'] == True):
-                    self.worldState.addContract(tx)
+                    self.worldState.createContract(tx)
+                    print("New contract added to worldState")
                 if(txType['normal_transaction'] == True):
                     txType['normal_transaction'] = False
                     continue
                 if(txType['method_call'] == True):
                     tx_of_contractCreation = self.get_transaction(self.worldState.getContract(tx.receiver).txHash)
-                    self.worldState.callMethod(tx, tx_of_contractCreation)
+                    state = self.worldState.getContract(tx.address).state
+                    self.worldState.callMethod(tx, tx_of_contractCreation, state)
+                    print('method called on contract')
                 
                 # Reset txType
                 for key, _ in txType: 

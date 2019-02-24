@@ -156,11 +156,11 @@ class WorldState:
                         "could not be created")
         container.remove(force=True)
 
-    def callMethod(self, tx, tx_of_contractCreation):
+    def callMethod(self, tx, tx_of_contractCreation, state):
         container = self.create_container()
         url = "http://localhost:" + CONTAINER_PORT + "/callMethod"
         data = {"code": tx_of_contractCreation.payload['contractCode'],
-                "state": tx.payload['state'],
+                "state": state,
                 "methods": tx.payload['methods'],
                 "sender": tx.sender}
         r = requests.post(url,json=data).json()

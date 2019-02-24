@@ -291,17 +291,18 @@ class TransactionWizard:
             print(u'Sender: ' + str(chosen_key))
             print(u'Transaction Type: ' + tx_types[chosen_txType])
             if(tx_types[chosen_txType] == 'Contract Creation'):
-                payload = {'code':'', 'arguments':''}
+                payload = {'contractCode':'', 'arguments':''}
                 pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
                 pickledContract = None
                 with open(pathToContract, 'r') as file:
                     pickledContract = pickle.dumps(file.read())
-                payload['code'] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
+                payload['contractCode'] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
                 print('Contract successfully imported.')
                 payload['arguments'] = json.loads(input("Please enter the arguments for the contract's constructor in dict format: "))
                 chosen_payload = payload
             if(tx_types[chosen_txType] == 'Method Call'):
                 print(u'Receiver: ' + str(chosen_receiver))
+                payload = {'methods':[]}
                 methods = []
                 methodName = input("Please enter name of the method you want to call on this contract: ")
                 arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
@@ -315,7 +316,8 @@ class TransactionWizard:
                         moreArguments = False
                         break
                     arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
-                chosen_payload = methods
+                payload['methods'] = methods
+                chosen_payload = payload
             if(tx_types[chosen_txType] == 'Normal Transaction'):
                 print(u'Receiver: ' + str(chosen_receiver))
                 chosen_payload = self.__ask_for_payload()
