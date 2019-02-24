@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException
 from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.smartContract import SmartContract
 
 LABCHAIN_LOGO = """
           .(##%*

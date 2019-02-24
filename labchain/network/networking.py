@@ -15,6 +15,7 @@ from werkzeug.wrappers import Request, Response
 
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.smartContract import SmartContract
 from labchain.util.utility import Utility
 
 
@@ -32,6 +33,9 @@ class NoPeersException(Exception):
 
 
 class TransactionDoesNotExistException(Exception):
+    pass
+
+class ContractDoesNotExistException(Exception):
     pass
 
 
@@ -124,6 +128,18 @@ class NetworkInterface:
                 return Transaction.from_dict(transaction), block_hash
             else:
                 raise TransactionDoesNotExistException()
+        else:
+            raise NoPeersException('No nodes available to request the transaction from')
+
+    def requestContract(self, contract_hash):
+        """Returns the tuple (contract)."""
+        responses = self._bulk_send('requestContract', [contract_hash], return_on_first_success=True)
+        if responses:
+            if responses[0]:
+                contract = responses[0]
+                return SmartContract.from_dict(contract)
+            else:
+                raise ContractDoesNotExistException()
         else:
             raise NoPeersException('No nodes available to request the transaction from')
 
@@ -258,6 +274,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_callback,
                  get_block_by_hash_callback,
                  get_transaction_callback,
+                 #get_contract_callback,
                  get_blocks_by_hash_range, port=8080, block_cache_size=1000, transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
@@ -267,6 +284,8 @@ class ServerNetworkInterface(NetworkInterface):
         :param get_block_callback: A callable that gets a block ID and returns the corresponding Block instance or None.
         :param get_transaction_callback: A callable that gets a transaction hash and returns the corresponding
                                             Transaction instance or None.
+        :param get_contract_callback: A callable that gets a contracts hash and returns the corresponding
+                                            Contract instance or None.
         :param port: The port number to listen on.
         """
         super().__init__(json_rpc_client, initial_peers)
@@ -276,6 +295,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_callback = get_block_callback
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
+        #self.get_contract_callback = get_contract_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
         self.port = int(port)
         self.block_cache = []
@@ -326,6 +346,7 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestBlock'] = self.__handle_request_block
         dispatcher['requestBlockByHash'] = self.__handle_request_block_by_hash
         dispatcher['requestTransaction'] = self.__handle_request_transaction
+        dispatcher['requestContract'] = self.__handle_request_contract
         dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
 
         # insert IP address of peer if advertise peer is called
@@ -407,6 +428,12 @@ class ServerNetworkInterface(NetworkInterface):
         transaction, block_hash = self.get_transaction_callback(transaction_hash)
         if transaction:
             return transaction.to_dict(), block_hash
+        return None
+
+    def __handle_request_contract(self, contract_hash):
+        contract = self.get_contract_callback(contract_hash)
+        if contract:
+            return contract.to_dict()
         return None
 
     def __filter_own_address(self, peers):

@@ -116,6 +116,7 @@ class BlockChainNode:
         while True:
             self.blockchain_obj.update_worldState()
             time.sleep(interval)
+            print("WORLDSTATE: " + self.worldState)
 
     def block_mine_timer(self, mine_freq, block_transactions_size):
         """Thread which periodically checks to mine
@@ -171,6 +172,11 @@ class BlockChainNode:
                 transaction_hash)
         return transaction_tuple
 
+    def on_get_contract(self, contract_hash):
+        """Retrieve a contract from the blockchain according to the given contract hash
+        """
+        return self.blockchain_obj.get_contract(contract_hash)
+
     def on_new_transaction_received(self, transaction):
         """Callback method to pass to network"""
         return self.txpool_obj.add_transaction_if_not_exist(transaction)
@@ -225,6 +231,7 @@ class BlockChainNode:
                                       self.on_get_block_by_id,
                                       self.on_get_block_by_hash,
                                       self.on_get_transaction,
+                                      #self.on_get_contract,
                                       self.on_get_blocks_by_range,
                                       port)
 

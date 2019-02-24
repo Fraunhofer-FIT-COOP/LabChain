@@ -97,13 +97,19 @@ class Db:
             "VALUES (?,?,?,?,?,?)".format(self.transaction_table)
 
         try:
+            print('1')
             self.cursor.execute(insert_into_blockchain, block_data)
+            print('2')
             for t in block.transactions:
+                print('3')
                 self.cursor.execute(insert_into_transactions,
                                     (t.sender, t.receiver, t.payload, t.signature,
                                      t.transaction_hash, block_hash))
+            print('4')
             self.conn.commit()
+            print('5')
             self.conn.close()
+            print('6')
         except sqlite3.Error as e:
             self.logger.error("Error in adding block: " + str(e.args[0]))
             return False

@@ -169,6 +169,9 @@ class BlockChain:
         else:
             return None, None
 
+    def get_contract(self, contract_hash):
+        return self.worldState.getContract(contract_hash)
+
     def calculate_diff(self, _hash=None):
         """Sends the timestamps of given/latest and nth last block and
         number of blocks between that time
