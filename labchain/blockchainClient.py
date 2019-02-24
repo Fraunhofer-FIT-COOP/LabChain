@@ -1,4 +1,7 @@
 import os
+import pickle
+import codecs
+import json
 from collections import OrderedDict
 
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException
@@ -170,13 +173,13 @@ class TransactionWizard:
             wallet_list_result.append([str(key), self.wallet[key][0], self.wallet[key][1]])
         return wallet_list_result
 
-    def __validate_sender_input(self, usr_input):
+    def __validate_sender_input(self, usr_input, length):
         try:
             int_usr_input = int(usr_input)
         except ValueError:
             return False
 
-        if int_usr_input != 0 and int_usr_input <= len(self.wallet):
+        if int_usr_input != 0 and int_usr_input <= length:
             return True
         else:
             return False
@@ -209,6 +212,16 @@ class TransactionWizard:
         return user_input
 
     @staticmethod
+    def __ask_for_tx_type(tx_types):
+        print(u'Please select a transaction type: ')
+        print()
+        for key, value in tx_types.items():
+            print(str(key) + ':\t' + value)
+        print()
+        user_input = input('Please choose a transaction type (by number) or press enter to return: ')
+        return user_input
+
+    @staticmethod
     def __ask_for_receiver():
         usr_input = input('Please type in a receiver address: ')
         return str(usr_input)
@@ -230,12 +243,10 @@ class TransactionWizard:
         # check if wallet contains any keys
         # case: wallet not empty
         if not len(self.wallet) == 0:
-            chosen_key = self.__ask_for_key_from_wallet(wallet_list)
-            if chosen_key == '':
-                return
+            chosen_key = ''
 
             # ask for valid sender input in a loop
-            while not self.__validate_sender_input(chosen_key):
+            while not self.__validate_sender_input(chosen_key, len(self.wallet)):
                 chosen_key = self.__ask_for_key_from_wallet(wallet_list)
                 if chosen_key == '':
                     return
@@ -243,32 +254,80 @@ class TransactionWizard:
                 print('Invalid input! Please choose a correct index!')
                 print()
 
+            # ask for valid transaction type input in a loop
             clear_screen()
-            print(u'Sender: ' + str(chosen_key))
-            chosen_receiver = self.__ask_for_receiver()
-
-            while not self.__validate_receiver_input(chosen_receiver):
-                # clear_screen()
-                print('Invalid input! Please choose a correct receiver!')
-                print(u'Sender: ' + str(chosen_key))
-                chosen_receiver = self.__ask_for_receiver()
+            tx_types = {'1': 'Normal Transaction',
+                        '2': 'Contract Creation',
+                        '3': 'Method Call'}
+            chosen_txType = ''
+            while not self.__validate_sender_input(chosen_txType, len(tx_types)):
+                chosen_txType = self.__ask_for_tx_type(tx_types)
+                if chosen_txType == '':
+                    return
+                clear_screen()
+                print('Invalid input! Please choose a correct index!')
                 print()
 
+            # ask for valid receiver or set it depending on transaction type
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
-            print(u'Receiver: ' + str(chosen_receiver))
-            chosen_payload = self.__ask_for_payload()
+            print(u'Transaction Type: ' + tx_types[chosen_txType]) 
+            if(tx_types[chosen_txType] == 'Contract Creation'):
+                chosen_receiver = ''
+            if(tx_types[chosen_txType] == 'Normal Transaction' or tx_types[chosen_txType] == 'Method Call'):
+                chosen_receiver = self.__ask_for_receiver()
+                while not self.__validate_receiver_input(chosen_receiver):
+                    clear_screen()
+                    print('Invalid input! Please choose a correct receiver!')
+                    print(u'Sender: ' + str(chosen_key))
+                    print(u'Transaction Type: ' + tx_types[chosen_txType])
+                    chosen_receiver = self.__ask_for_receiver()
+                    print()
 
-            while not self.__validate_payload_input(chosen_payload):
-                # clear_screen()
-                print('Invalid input! Please choose a correct payload!')
-                print(u'Sender: ' + str(chosen_key))
+
+            # ask for valid payload or set it depending on transaction type
+            clear_screen()
+            print(u'Sender: ' + str(chosen_key))
+            print(u'Transaction Type: ' + tx_types[chosen_txType])
+            if(tx_types[chosen_txType] == 'Contract Creation'):
+                payload = {'code':'', 'arguments':''}
+                pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
+                pickledContract = None
+                with open(pathToContract, 'r') as file:
+                    pickledContract = pickle.dumps(file.read())
+                payload['code'] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
+                print('Contract successfully imported.')
+                payload['arguments'] = json.loads(input("Please enter the arguments for the contract's constructor in dict format: "))
+                chosen_payload = payload
+            if(tx_types[chosen_txType] == 'Method Call'):
+                print(u'Receiver: ' + str(chosen_receiver))
+                methods = []
+                methodName = input("Please enter name of the method you want to call on this contract: ")
+                arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
+                moreArguments = True
+                while moreArguments:
+                    methodToCall = {'methodName':methodName, 'arguments':arguments}
+                    methods.append(methodToCall)
+                    methodName = input(("Please enter name of another method you want to call on this contract "
+                                    + "(leave empty if you do not want to call any other methods): "))
+                    if methodName == '':
+                        moreArguments = False
+                        break
+                    arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
+                chosen_payload = methods
+            if(tx_types[chosen_txType] == 'Normal Transaction'):
                 print(u'Receiver: ' + str(chosen_receiver))
                 chosen_payload = self.__ask_for_payload()
-                print()
+                while not self.__validate_payload_input(chosen_payload):
+                    clear_screen()
+                    print('Invalid input! Please choose a correct payload!')
+                    print(u'Sender: ' + str(chosen_key))
+                    print(u'Transaction Type: ' + tx_types[chosen_txType])
+                    print(u'Receiver: ' + str(chosen_receiver))
+                    chosen_payload = self.__ask_for_payload()
+                    print()
 
             clear_screen()
-
             # Create transaction Object and send to network
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
@@ -282,6 +341,7 @@ class TransactionWizard:
             print('Transaction successfully created!')
             print()
             print(u'Sender: ' + public_key)
+            print(u'Transaction Type: ' + tx_types[chosen_txType])
             print(u'Receiver: ' + str(chosen_receiver))
             print(u'Payload: ' + str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
@@ -292,6 +352,10 @@ class TransactionWizard:
             print(u'Wallet does not contain any keys! Please create one first!')
 
         input('Press any key to go back to the main menu!')
+
+
+
+
 
 
 class BlockchainClient:
@@ -314,6 +378,7 @@ class BlockchainClient:
             '2': ('Create Transaction', self.__create_transaction, []),
             '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Load Transaction', self.__load_transaction, []),
+            '5': ('Load Contract', self.__load_contract, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
@@ -326,6 +391,9 @@ class BlockchainClient:
                                                self.crypto_helper,
                                                self.network_interface)
         transaction_wizard.show()
+    
+    def __create_contract(self):
+        """Ask for all important information to create a new contract transaction and sends it to the network."""
 
     def __show_my_addresses(self):
         clear_screen()
@@ -443,4 +511,20 @@ class BlockchainClient:
             print('Block Hash: {}'.format(block_hash))
         print()
         # wait for any input before returning to menu
+        input('Press enter to continue...')
+
+    def __load_contract(self):
+        """Prompt the user for a contract's hash and display the contract's details."""
+        clear_screen()
+        contracts_hash = input('Please enter a contract hash: ')
+        try:
+            contract = self.network_interface.requestContract(contracts_hash)
+        except:
+            contract = None
+        clear_screen()
+        if not contract:
+            print('Contract does not exist')
+        else:
+            print('Contract does exist')
+        print()
         input('Press enter to continue...')
