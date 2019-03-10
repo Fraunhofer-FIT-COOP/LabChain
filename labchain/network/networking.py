@@ -274,7 +274,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_callback,
                  get_block_by_hash_callback,
                  get_transaction_callback,
-                 #get_contract_callback,
+                 get_contract_callback,
                  get_blocks_by_hash_range, port=8080, block_cache_size=1000, transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
@@ -295,7 +295,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_callback = get_block_callback
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
-        #self.get_contract_callback = get_contract_callback
+        self.get_contract_callback = get_contract_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
         self.port = int(port)
         self.block_cache = []

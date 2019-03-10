@@ -47,8 +47,19 @@ def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
     print("I came here5")
-    return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), on_block_received,
-                                  empty_function, get_block, empty_function, empty_function, port)
+    # return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), on_block_received,
+    #                               empty_function, get_block, empty_function, empty_function, port)
+    return ServerNetworkInterface(json_rpc_client = JsonRpcClient(),
+                                    initial_peers = initial_peers,
+                                    crypto_helper = MockCryptoHelper(),
+                                    on_block_received_callback = on_block_received,
+                                    on_transaction_received_callback = empty_function,
+                                    get_block_callback = get_block,
+                                    get_block_by_hash_callback = empty_function,
+                                    get_transaction_callback = empty_function,
+                                    get_contract_callback = empty_function,
+                                    get_blocks_by_hash_range = empty_function,
+                                    port= port)
 
 
 def configure_logging():

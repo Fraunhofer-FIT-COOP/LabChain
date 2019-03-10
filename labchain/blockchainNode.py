@@ -230,7 +230,7 @@ class BlockChainNode:
                                       self.on_get_block_by_id,
                                       self.on_get_block_by_hash,
                                       self.on_get_transaction,
-                                      #self.on_get_contract,
+                                      self.on_get_contract,
                                       self.on_get_blocks_by_range,
                                       port)
 
