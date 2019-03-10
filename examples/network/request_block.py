@@ -40,6 +40,8 @@ def empty_function():
 def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
+    print("I came here3")
+
     return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
                                   get_block, empty_function, empty_function, port)
 

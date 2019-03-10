@@ -59,7 +59,7 @@ class WorldState:
             if contract.address == address:
                 return contract
         return None
-    
+
 
     def to_dict(self):
         """Returns the WorldState data as a dictionary."""
@@ -144,10 +144,10 @@ class WorldState:
         try:
             if(r["success"] == True):
                 #TODO UPDATE ADDRESS INFO
-                newContract = SmartContract(address=None,
+                newContract = SmartContract(address=tx.transaction_hash,
                                             txHash=tx.transaction_hash,
                                             state=r['encodedNewState'])
-                newContract.address = self._crypto_helper.hash(newContract.get_json())
+                #newContract.address = self._crypto_helper.hash(newContract.get_json())
                 self.addContract(newContract)
             if(r["success"] == False):
                     print(r["error"])
