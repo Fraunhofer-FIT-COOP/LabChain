@@ -47,9 +47,6 @@ class MockCryptoHelper:
 class CommonTestCase(TestCase):
 
     def create_server_network_interface(self, json_rpc_client):
-        # return ServerNetworkInterface(json_rpc_client, {}, MockCryptoHelper(), self.on_block_received,
-        #                               self.on_transaction_received, self.get_block, self.get_block_by_hash,
-        #                               self.get_transaction, self.get_blocks_by_hash_range, port=6666)
         return ServerNetworkInterface(json_rpc_client = json_rpc_client,
                                     initial_peers = {},
                                     crypto_helper = MockCryptoHelper(),
