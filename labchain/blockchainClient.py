@@ -288,17 +288,18 @@ class TransactionWizard:
 
             # ask for valid payload or set it depending on transaction type
             clear_screen()
-            print(u'Sender: ' + str(chosen_key))
+            print(u"Sender: " + str(chosen_key))
             print(u'Transaction Type: ' + tx_types[chosen_txType])
-            if(tx_types[chosen_txType] == 'Contract Creation'):
-                payload = {'contractCode':'', 'arguments':''}
-                pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
+            if(tx_types[chosen_txType] == "Contract Creation"):
+                payload = {"contractCode":'', "arguments":""}
+                pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"#input('Please enter the path to your contract: ').replace(' ', '')
                 pickledContract = None
                 with open(pathToContract, 'r') as file:
                     pickledContract = pickle.dumps(file.read())
-                payload['contractCode'] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
+                payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
                 print('Contract successfully imported.')
-                payload['arguments'] = json.loads(input("Please enter the arguments for the contract's constructor in dict format: "))
+                arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
+                payload['arguments'] = json.loads(arguments)
                 chosen_payload = payload
             if(tx_types[chosen_txType] == 'Method Call'):
                 print(u'Receiver: ' + str(chosen_receiver))

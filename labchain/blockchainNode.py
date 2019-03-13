@@ -53,7 +53,7 @@ class BlockChainNode:
         db : DB instance for saving the blockchain data to disk
         logger : Instane of logging
         rb_thread : Thread which polls in intervals for blocks requested
-        update_worldState_thread: Thread which perodically updates the blockchain's worldState
+        update_worldState: Thread which perodically updates the blockchain's worldState
         """
         self.consensus_obj = None
         self.crypto_helper_obj = None
@@ -70,7 +70,7 @@ class BlockChainNode:
         self.db = None
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
-        self.update_worldState_thread = None
+        self.update_worldState = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             self.logger.debug("Read config file successfully!")
@@ -107,15 +107,18 @@ class BlockChainNode:
 
     def schedule_orphans_killing(self, interval):
         """Kill orphan blocks at interval defined"""
+        print("Updating orphan killing...")
         while True:
             self.blockchain_obj.prune_orphans()
             time.sleep(interval)
     
     def schedule_worldState_update(self, interval):
         """Update the worldState at interval definer"""
+        print("Updating worldState...")
         while True:
-            self.blockchain_obj.update_worldState()
-            time.sleep(interval)
+            if not self.blockchain_obj._worldState_is_updating:
+                self.blockchain_obj.update_worldState()
+                time.sleep(interval)
 
     def block_mine_timer(self, mine_freq, block_transactions_size):
         """Thread which periodically checks to mine
@@ -174,7 +177,8 @@ class BlockChainNode:
     def on_get_contract(self, contract_hash):
         """Retrieve a contract from the blockchain according to the given contract hash
         """
-        return self.blockchain_obj.get_contract(contract_hash)
+        #TODO
+        return None
 
     def on_new_transaction_received(self, transaction):
         """Callback method to pass to network"""
@@ -361,8 +365,9 @@ class BlockChainNode:
             target=self.schedule_orphans_killing,
             kwargs=dict(interval=pruning_interval))
         self.logger.debug("Starting worldState thread...")
-        self.update_worldState_thread = threading.Thread(
+        self.update_worldState = threading.Thread(
             target=self.schedule_worldState_update,
             kwargs=dict(interval=worldState_update_interval))
 
         self.orphan_killer.start()
+        self.update_worldState.start()

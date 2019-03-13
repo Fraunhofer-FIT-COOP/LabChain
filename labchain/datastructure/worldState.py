@@ -5,6 +5,7 @@ import time
 import os
 import requests
 import logging
+import socket
 
 from pprint import pformat
 from labchain.datastructure.smartContract import SmartContract
@@ -14,7 +15,6 @@ CONTAINER_NAME = "bit_blockchain_container"
 DOCKER_FILES_PATH = os.path.join(os.path.dirname(__file__),
                         'labchain', 'resources',
                         'dockerResources')
-CONTAINER_PORT = 5000
 
 class WorldState:
 
@@ -114,7 +114,7 @@ class WorldState:
             allAddresses.append(contract.address)
         return allAddresses
 
-    def create_container(self):
+    def create_container(self, port):
         client = docker.from_env()
 
         try:
@@ -125,8 +125,9 @@ class WorldState:
             client.images.build(path=DOCKER_FILES_PATH, tag=CONTAINER_NAME)
             print("Image created")
 
-        container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": CONTAINER_PORT}, detach=True)
+        container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": port}, detach=True)
         print("Running container")
+        time.sleep(2)
         return container
 
         # time.sleep(30)
@@ -134,40 +135,51 @@ class WorldState:
         # print("Quit container")
 
     def createContract(self, tx):
-        container = self.create_container()
-        url = "http://localhost:" + CONTAINER_PORT + "/createContract"
-        data = {"code": tx.payload['contractCode'],
-                "arguments": tx.payload['arguments'],
-                "sender": tx.sender}
-        r = requests.post(url,json=data).json()
+        port = self.find_free_port()
+        container = self.create_container(port)
+        url = "http://localhost:" + str(port) + "/createContract"
         
         try:
+            payload = tx.to_dict()['payload'].replace("'",'"')
+            payload = json.loads(payload)
+            data = {"code": payload['contractCode'],
+                    "arguments": payload['arguments'],
+                    "sender": tx.sender}
+            r = requests.post(url,json=data).json()
             if(r["success"] == True):
                 #TODO UPDATE ADDRESS INFO
-                newContract = SmartContract(address=tx.transaction_hash,
-                                            txHash=tx.transaction_hash,
+                txHash = tx.transaction_hash
+                if txHash == None:
+                    txHash = self._crypto_helper.hash(tx.get_json())
+                newContract = SmartContract(address=txHash,
+                                            txHash=txHash,
                                             state=r['encodedNewState'])
                 #newContract.address = self._crypto_helper.hash(newContract.get_json())
                 self.addContract(newContract)
             if(r["success"] == False):
                     print(r["error"])
         except:
-            logging.error("Contract from transaction " + tx.transaction_hash + 
-                        "could not be created")
+            logging.error("Contract from transaction could not be created")
         container.remove(force=True)
 
     def callMethod(self, tx, tx_of_contractCreation, state):
-        container = self.create_container()
-        url = "http://localhost:" + CONTAINER_PORT + "/callMethod"
-        data = {"code": tx_of_contractCreation.payload['contractCode'],
+        port = self.find_free_port()
+        container = self.create_container(port)
+        url = "http://localhost:" + str(port) + "/callMethod"
+        
+        payload_contractCreation = tx_of_contractCreation.to_dict()['payload'].replace("'",'"')
+        payload = tx.to_dict()['payload'].replace("'",'"')
+
+        data = {"code": json.loads(payload_contractCreation)['contractCode'],
                 "state": state,
-                "methods": tx.payload['methods'],
+                "methods": json.loads(payload)['methods'],
                 "sender": tx.sender}
         r = requests.post(url,json=data).json()
 
         try:
             if(r["success"] == True):
                 self.updateContractState(tx.receiver, r['encodedUpdatedState'])
+                print("Successfully called a method on a contract. New State: " + str(r['encodedUpdatedState']))
             if(r["success"] == False):
                 print(r["error"])
         except:
@@ -176,8 +188,9 @@ class WorldState:
         container.remove(force=True)
 
     def getState(self, state, tx_of_contractCreation):
-        container = self.create_container()
-        url = "http://localhost:" + CONTAINER_PORT + "/getState"
+        port = self.find_free_port()
+        container = self.create_container(port)
+        url = "http://localhost:" + str(port) + "/getState"
         data = {"code": tx_of_contractCreation.payload['contractCode'],
                 "state": state}
         r = requests.post(url,json=data).json()
@@ -194,8 +207,9 @@ class WorldState:
     
 
     def getParameters(self, state, methodName, tx_of_contractCreation):
-        container = self.create_container()
-        url = "http://localhost:" + CONTAINER_PORT + "/getParameters"
+        port = self.find_free_port()
+        container = self.create_container(port)
+        url = "http://localhost:" + str(port) + "/getParameters"
         data = {"code": tx_of_contractCreation.payload['contractCode'],
                 "state": state,
                 "methodName": methodName}
@@ -212,8 +226,9 @@ class WorldState:
         container.remove(force=True)
 
     def getMethods(self, state, tx_of_contractCreation):
-        container = self.create_container()
-        url = "http://localhost:" + CONTAINER_PORT + "/getMethods"
+        port = self.find_free_port()
+        container = self.create_container(port)
+        url = "http://localhost:" + str(port) + "/getMethods"
         data = {"code": tx_of_contractCreation.payload['contractCode'],
                 "state": state}
         r = requests.post(url,json=data).json()
@@ -226,3 +241,9 @@ class WorldState:
             logging.error("Could not get methods")
             return None
         container.remove(force=True)
+
+    
+    def find_free_port(self):
+        s = socket.socket()
+        s.bind(('', 0))            # Bind to a free port provided by the host.
+        return s.getsockname()[1]  # Return the port number assigned.
