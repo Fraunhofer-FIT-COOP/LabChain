@@ -177,8 +177,12 @@ class BlockChainNode:
     def on_get_contract(self, contract_hash):
         """Retrieve a contract from the blockchain according to the given contract hash
         """
-        #TODO
-        return None
+        contract = self.blockchain_obj.worldState.getContract(contract_hash)
+        tx_contract_creation = self.blockchain_obj.get_transaction(contract_hash)[0]
+        state = self.blockchain_obj.worldState.getState(contract.state,tx_contract_creation)
+        print("TEST4: blockchainNode.on_get_contract: state: " + str(state))
+        print("TEST4: blockchainNode.on_get_contract: type: " + str(type(state)))
+        return state
 
     def on_new_transaction_received(self, transaction):
         """Callback method to pass to network"""

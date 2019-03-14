@@ -137,7 +137,7 @@ class NetworkInterface:
         if responses:
             if responses[0]:
                 contract = responses[0]
-                return SmartContract.from_dict(contract)
+                return contract
             else:
                 raise ContractDoesNotExistException()
         else:
@@ -431,9 +431,12 @@ class ServerNetworkInterface(NetworkInterface):
         return None
 
     def __handle_request_contract(self, contract_hash):
-        contract = self.get_contract_callback(contract_hash)
-        if contract:
-            return contract.to_dict()
+        state = self.get_contract_callback(contract_hash)
+        print("TEST 1: " + str(state))
+        if state:
+            print("TEST2: Returning state: " + str(state))
+            return state
+        print("TEST3: Not returning state: " + str(state))
         return None
 
     def __filter_own_address(self, peers):

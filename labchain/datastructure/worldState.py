@@ -191,16 +191,34 @@ class WorldState:
         port = self.find_free_port()
         container = self.create_container(port)
         url = "http://localhost:" + str(port) + "/getState"
-        data = {"code": tx_of_contractCreation.payload['contractCode'],
+
+        payload_contractCreation = tx_of_contractCreation.to_dict()['payload'].replace("'",'"')
+
+        # print()
+        # print("PAYLOAD COde: " + str(json.loads(payload_contractCreation)['contractCode']))
+        # print("STATE: " + state)
+        # print()
+
+        data = {"code": json.loads(payload_contractCreation)['contractCode'],
                 "state": state}
         r = requests.post(url,json=data).json()
+        
+        print()
+        print(r)
+        print(type(r))
+        print()
 
         try:
             if(r["success"] == True):
+                print("1")
+                print(r["state"])
+                print(type(r["state"]))
                 return r["state"]
             if(r["success"] == False):
+                print("2")
                 return r["error"]
         except:
+            print("3")
             logging.error("Could not get state")
             return None
         container.remove(force=True)

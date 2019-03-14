@@ -48,6 +48,8 @@ class SmartContract:
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a SmartContract from a data dictionary."""
+        print(str(data_dict))
+        print(str(type(data_dict)))
         return SmartContract(data_dict['address'], 
                 data_dict['txHash'], 
                 data_dict['state'])

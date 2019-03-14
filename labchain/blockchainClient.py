@@ -521,14 +521,16 @@ class BlockchainClient:
         """Prompt the user for a contract's hash and display the contract's details."""
         clear_screen()
         contracts_hash = input('Please enter a contract hash: ')
-        try:
-            contract = self.network_interface.requestContract(contracts_hash)
-        except:
-            contract = None
-        clear_screen()
-        if not contract:
-            print('Contract does not exist')
+        #try:
+        contract_state = self.network_interface.requestContract(contracts_hash)
+        
+        print("TEST 5: contract state: " + str(contract_state))
+        print("TEST 5: contract state type: " + str(type(contract_state)))
+        #
+        #clear_screen()
+        if not contract_state:
+            print(contract_state)
         else:
-            print('Contract does exist')
+            print(contract_state)
         print()
         input('Press enter to continue...')
