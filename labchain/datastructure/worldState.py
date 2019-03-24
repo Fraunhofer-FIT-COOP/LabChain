@@ -1,4 +1,3 @@
-import logging
 import json
 import docker
 import time
@@ -15,16 +14,15 @@ CONTAINER_NAME = "bit_blockchain_container"
 DOCKER_FILES_PATH = os.path.join(os.path.dirname(__file__),
                         'labchain', 'resources',
                         'dockerResources')
+CONTAINER_TIMEOUT = 10
 
 class WorldState:
 
-    def __init__(self, contracts: SmartContract = None):
-        """Constructor for Block, placeholder for Block information.
+    def __init__(self):
+        """Constructor for WorldState.
 
         Parameters
         ----------
-        contracts: list
-            List of smartContracts to be loaded. The default is None.
 
         Attributes
         ----------
@@ -35,29 +33,30 @@ class WorldState:
 
         """
 
-        if contracts == None:
-            self._contracts = []
-        else:
-            self._contracts = contracts
-
+        self._contracts = []
         self._crypto_helper = CryptoHelper.instance()
 
-    def addContract(self, contract):
-        """Adds a contract to the contract list."""
+    def add_contract(self, contract):
+        """Adds a contract to the contract list if it is not already there."""
+        for _contract in self._contracts:
+            if contract.address == _contract.address:
+                break
         self._contracts.append(contract)
     
-    def updateContractState(self, contractAddress, newState):
+    def update_contract_state(self, contract_address, new_state):
         for contract in self._contracts:
-            if contract.address == contractAddress:
-                contract.state = newState
+            if contract.address == contract_address:
+                contract.state = new_state
                 break
 
 
-    def getContract(self, address):
+    def get_contract(self, address):
         """Returns the smartContract that has the specified address if it exists."""
         for contract in self._contracts:
             if contract.address == address:
+                print("contract found")
                 return contract
+        print("no contract found")
         return None
 
 
@@ -72,11 +71,11 @@ class WorldState:
             try:
                 c.append(contract.to_dict())
             except Exception as e:
-                logging.error("contract error = "+e)
+                logging.error("contract error = " + e)
                 raise e
         
         return {
-            'contracts' : c
+            'Contracts' : c
         }
 
 
@@ -100,168 +99,179 @@ class WorldState:
 
 
     def __str__(self):
-        """String representation of WorldState object"""
+        """String representation of WorldState object."""
         return pformat(self.to_dict())
 
 
     def get_computed_hash(self):
-        """Gets the hash for the entire WorldState instance"""
+        """Gets the hash for the entire WorldState instance."""
         return self._crypto_helper.hash(self.get_json)
 
     def get_all_contract_addresses(self):
-        allAddresses = []
+        """Returns a list of all the contracts stored in worldState."""
+        all_addresses = []
         for contract in self._contracts:
-            allAddresses.append(contract.address)
-        return allAddresses
+            all_addresses.append(contract.address)
+        return all_addresses
 
     def create_container(self, port):
+        """Creates a docker container to run the code of the contract."""
+        print("tets1")
         client = docker.from_env()
-
         try:
+            print("tetst2")
             client.images.get(CONTAINER_NAME)
         except:
-            print("No image found")
-            print("Creating image...")
+            print("\nNo image found. Creating image...")
             client.images.build(path=DOCKER_FILES_PATH, tag=CONTAINER_NAME)
-            print("Image created")
+            print("Image created,\n")
 
+        print("test3")
         container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": port}, detach=True)
         print("Running container")
         time.sleep(2)
+        print("test4")
         return container
 
-        # time.sleep(30)
-        # container.remove(force=True)
-        # print("Quit container")
+        #Check if the container works
+        # timeout = time.time() + CONTAINER_TIMEOUT
+        # url = 'http://localhost:' + str(port) + '/'
+        # while True:
+        #     try:
+        #         r = requests.post(url).json()
+        #         if r or time.time() > timeout:
+        #             break
+        #     except:
+        #         continue
+        # return container
 
-    def createContract(self, tx):
+    def create_contract(self, tx):
+        """Creates a new contract and adds it to the list _contracts."""
+        print("1")
         port = self.find_free_port()
+        print("1.1")
         container = self.create_container(port)
-        url = "http://localhost:" + str(port) + "/createContract"
-        
+        print("1.2")
+        url = 'http://localhost:' + str(port) + '/createContract'
+        print("2")
         try:
+            print("3")
             payload = tx.to_dict()['payload'].replace("'",'"')
+            print("4")
             payload = json.loads(payload)
-            data = {"code": payload['contractCode'],
-                    "arguments": payload['arguments'],
-                    "sender": tx.sender}
+            print("5")
+            data = {'code': payload['contractCode'],
+                    'arguments': payload['arguments'],
+                    'sender': tx.sender}
+            print("6")
             r = requests.post(url,json=data).json()
-            if(r["success"] == True):
-                #TODO UPDATE ADDRESS INFO
+            print("7")
+            if(r['success'] == True):
                 txHash = tx.transaction_hash
                 if txHash == None:
                     txHash = self._crypto_helper.hash(tx.get_json())
-                newContract = SmartContract(address=txHash,
+                new_contract = SmartContract(address=txHash,
                                             txHash=txHash,
                                             state=r['encodedNewState'])
-                #newContract.address = self._crypto_helper.hash(newContract.get_json())
-                self.addContract(newContract)
-            if(r["success"] == False):
-                    print(r["error"])
+                self.add_contract(new_contract)
+                print("TEST6: Contract added")
+            if(r['success'] == False):
+                    print(r['error'])
         except:
-            logging.error("Contract from transaction could not be created")
+            logging.error('Contract from transaction could not be created')
         container.remove(force=True)
 
-    def callMethod(self, tx, tx_of_contractCreation, state):
+    def call_method(self, tx, tx_of_contractCreation, state):
+        """Calls a method or methods on an existing contract from the _contracts list."""
         port = self.find_free_port()
         container = self.create_container(port)
-        url = "http://localhost:" + str(port) + "/callMethod"
+        url = 'http://localhost:' + str(port) + '/callMethod'
         
         payload_contractCreation = tx_of_contractCreation.to_dict()['payload'].replace("'",'"')
         payload = tx.to_dict()['payload'].replace("'",'"')
 
-        data = {"code": json.loads(payload_contractCreation)['contractCode'],
-                "state": state,
-                "methods": json.loads(payload)['methods'],
-                "sender": tx.sender}
+        data = {'code': json.loads(payload_contractCreation)['contractCode'],
+                'state': state,
+                'methods': json.loads(payload)['methods'],
+                'sender': tx.sender}
         r = requests.post(url,json=data).json()
 
         try:
-            if(r["success"] == True):
-                self.updateContractState(tx.receiver, r['encodedUpdatedState'])
-                print("Successfully called a method on a contract. New State: " + str(r['encodedUpdatedState']))
+            if(r['success'] == True):
+                self.update_contract_state(tx.receiver, r['encodedUpdatedState'])
+                print('Successfully called a method on a contract. New State: ' + str(r['encodedUpdatedState']))
             if(r["success"] == False):
                 print(r["error"])
         except:
-            logging.error("Method call from transaction " + tx.transaction_hash + 
-                        "could not be completed")
+            logging.error('Method call from transaction ' + tx.transaction_hash + 
+                        'could not be completed')
         container.remove(force=True)
 
-    def getState(self, state, tx_of_contractCreation):
+    def get_state(self, state, tx_of_contractCreation):
+        """Returns a readable version of the current state of a contract
+            Note: This only works if the contract has a to_dict method."""
         port = self.find_free_port()
         container = self.create_container(port)
-        url = "http://localhost:" + str(port) + "/getState"
+        url = 'http://localhost:' + str(port) + '/getState'
 
         payload_contractCreation = tx_of_contractCreation.to_dict()['payload'].replace("'",'"')
 
-        # print()
-        # print("PAYLOAD COde: " + str(json.loads(payload_contractCreation)['contractCode']))
-        # print("STATE: " + state)
-        # print()
-
-        data = {"code": json.loads(payload_contractCreation)['contractCode'],
-                "state": state}
+        data = {'code': json.loads(payload_contractCreation)['contractCode'],
+                'state': state}
         r = requests.post(url,json=data).json()
-        
-        print()
         print(r)
-        print(type(r))
-        print()
-
         try:
-            if(r["success"] == True):
-                print("1")
-                print(r["state"])
-                print(type(r["state"]))
-                return r["state"]
-            if(r["success"] == False):
-                print("2")
-                return r["error"]
+            if(r['success'] == True):
+                return r['state']
+            if(r['success'] == False):
+                return r['error']
         except:
-            print("3")
-            logging.error("Could not get state")
+            logging.error('Could not get state')
             return None
         container.remove(force=True)
     
 
-    def getParameters(self, state, methodName, tx_of_contractCreation):
+    def get_parameters(self, state, methodName, tx_of_contractCreation):
+        """Returns the parameters that a contract constructor/method needs to execute."""
         port = self.find_free_port()
         container = self.create_container(port)
-        url = "http://localhost:" + str(port) + "/getParameters"
-        data = {"code": tx_of_contractCreation.payload['contractCode'],
-                "state": state,
-                "methodName": methodName}
+        url = 'http://localhost:' + str(port) + '/getParameters'
+        data = {'code': tx_of_contractCreation.payload['contractCode'],
+                'state': state,
+                'methodName': methodName}
         r = requests.post(url,json=data).json()
 
         try:
-            if(r["success"] == True):
-                return r["parameters"]
-            if(r["success"] == False):
+            if(r['success'] == True):
+                return r['parameters']
+            if(r['success'] == False):
                 return r["error"]
         except:
-            logging.error("Could not get state")
+            logging.error('Could not get parameters')
             return None
         container.remove(force=True)
 
-    def getMethods(self, state, tx_of_contractCreation):
+    def get_methods(self, state, tx_of_contractCreation):
+        """Returns the methods that a contract has."""
         port = self.find_free_port()
         container = self.create_container(port)
-        url = "http://localhost:" + str(port) + "/getMethods"
-        data = {"code": tx_of_contractCreation.payload['contractCode'],
-                "state": state}
+        url = 'http://localhost:' + str(port) + '/getMethods'
+        data = {'code': tx_of_contractCreation.payload['contractCode'],
+                'state': state}
         r = requests.post(url,json=data).json()
         try:
-            if(r["success"] == True):
-                return r["methods"]
+            if(r['success'] == True):
+                return r['methods']
             if(r["success"] == False):
-                return r["error"]
+                return r['error']
         except:
-            logging.error("Could not get methods")
+            logging.error('Could not get methods')
             return None
         container.remove(force=True)
 
     
     def find_free_port(self):
+        """Returns a free port to be used."""
         s = socket.socket()
         s.bind(('', 0))            # Bind to a free port provided by the host.
         return s.getsockname()[1]  # Return the port number assigned.

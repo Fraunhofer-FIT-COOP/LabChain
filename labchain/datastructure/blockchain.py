@@ -176,7 +176,7 @@ class BlockChain:
             return None, None
 
     def get_contract(self, contract_hash):
-        return self.worldState.getContract(contract_hash)
+        return self.worldState.get_contract(contract_hash)
 
     def calculate_diff(self, _hash=None):
         """Sends the timestamps of given/latest and nth last block and
@@ -433,6 +433,7 @@ class BlockChain:
                 del _block
 
     def update_worldState(self):
+        print("UPDATING WORLDSTATE")
         self._worldState_is_updating = True
 
         txType = {'normal_transaction': False,
@@ -458,16 +459,18 @@ class BlockChain:
 
                 # Handle transactions depending on their type
                 if(txType['contract_creation'] == True):
-                    self.worldState.createContract(tx)
+                    self.worldState.create_contract(tx)
+                    print('Contract created')
                 if(txType['normal_transaction'] == True):
                     txType['normal_transaction'] = False
+                    print('Normal transaction')
                     continue
                 if(txType['method_call'] == True):
                     tx_of_contractCreation = self.get_transaction(str(tx.receiver))[0]
                     print(tx_of_contractCreation)
-                    state = self.worldState.getContract(tx.receiver).state
-                    self.worldState.callMethod(tx, tx_of_contractCreation, state)
-                    print('method called on contract')
+                    state = self.worldState.get_contract(tx.receiver).state
+                    self.worldState.call_method(tx, tx_of_contractCreation, state)
+                    print('Method called on contract')
                 
                 # Reset txType
                 txType = {x: False for x in txType}
@@ -491,14 +494,14 @@ class BlockChain:
 
         #         # Handle transactions depending on their type
         #         if(txType['contract_creation'] == True):
-        #             self.worldState.createContract(tx)
+        #             self.worldState.create_contract(tx)
         #         if(txType['normal_transaction'] == True):
         #             txType['normal_transaction'] = False
         #             continue
         #         # if(txType['method_call'] == True):
-        #             # tx_of_contractCreation = self.get_transaction(self.worldState.getContract(tx.receiver).txHash)
-        #             # state = self.worldState.getContract(tx.address).state
-        #             # self.worldState.callMethod(tx, tx_of_contractCreation, state)
+        #             # tx_of_contractCreation = self.get_transaction(self.worldState.get_contract(tx.receiver).txHash)
+        #             # state = self.worldState.get_contract(tx.address).state
+        #             # self.worldState.call_method(tx, tx_of_contractCreation, state)
         #             # print('method called on contract')
                 
         #         # Reset txType

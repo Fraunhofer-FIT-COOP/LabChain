@@ -177,9 +177,11 @@ class BlockChainNode:
     def on_get_contract(self, contract_hash):
         """Retrieve a contract from the blockchain according to the given contract hash
         """
-        contract = self.blockchain_obj.worldState.getContract(contract_hash)
+        contract = self.blockchain_obj.worldState.get_contract(contract_hash)
+        print("Contract: " + str(contract))
         tx_contract_creation = self.blockchain_obj.get_transaction(contract_hash)[0]
-        state = self.blockchain_obj.worldState.getState(contract.state,tx_contract_creation)
+        print("TX of contract creation: " + str(tx_contract_creation))
+        state = self.blockchain_obj.worldState.get_state(contract.state,tx_contract_creation)
         print("TEST4: blockchainNode.on_get_contract: state: " + str(state))
         print("TEST4: blockchainNode.on_get_contract: type: " + str(type(state)))
         return state
