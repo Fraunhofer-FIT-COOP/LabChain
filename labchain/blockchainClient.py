@@ -520,17 +520,58 @@ class BlockchainClient:
     def __load_contract(self):
         """Prompt the user for a contract's hash and display the contract's details."""
         clear_screen()
-        contracts_hash = input('Please enter a contract hash: ')
-        #try:
-        contract_state = self.network_interface.requestContract(contracts_hash)
-        
-        print("TEST 5: contract state: " + str(contract_state))
-        print("TEST 5: contract state type: " + str(type(contract_state)))
-        #
-        #clear_screen()
+        contract_hash = input('Please enter a contract hash: ')
+
+        contract_state = self.network_interface.requestContract(contract_hash)
         if not contract_state:
-            print(contract_state)
+            print("No contract state was found")
+            return
+        contract_options =   {  '1': 'Get the state of the contract',
+                                '2': 'Get the callable methods from the contract',
+                                '3': 'Get the code of the contract'}
+        chosen_contract_option = ''
+        while not self.__validate_sender_input(chosen_contract_option, len(contract_options)):
+            chosen_contract_option = self.__ask_for_contract_interaction(contract_options)
+            if chosen_contract_option == '1':
+                print()
+                print('Contract\'s state:')
+                for key, value in contract_state.items():
+                    print('\t' + str(key) + ": " + str(value))
+                print()
+                input('Press enter to continue...')
+            if chosen_contract_option == '2':
+                print('Contract\'s state:')
+            if chosen_contract_option == '3':
+                print('Contract\'s code:\n')
+                tx_of_contract_creation = self.network_interface.requestTransaction(contract_hash)[0].to_dict()
+                contract_code = tx_of_contract_creation['payload'].replace("'",'"')
+                contract_code = json.loads(contract_code)['contractCode']
+                decoded_code = pickle.loads(codecs.decode(contract_code.encode(), "base64"))
+                print(str(pickle.loads(decoded_code)))
+                print()
+                input('Press enter to continue...')
+            if chosen_contract_option == '':
+                return
+            print('Invalid input! Please choose a correct index!')
+            print()
+
+    def __validate_sender_input(self, usr_input, length):
+        try:
+            int_usr_input = int(usr_input)
+        except ValueError:
+            return False
+
+        if int_usr_input != 0 and int_usr_input <= length:
+            return True
         else:
-            print(contract_state)
+            return False
+        
+    @staticmethod
+    def __ask_for_contract_interaction(contract_options):
+        print(u'Please select one of the following options for interacting with the contract: ')
         print()
-        input('Press enter to continue...')
+        for key, value in contract_options.items():
+            print(str(key) + ':\t' + value)
+        print()
+        user_input = input('Please choose an option (by number) or press enter to return: ')
+        return user_input
