@@ -54,9 +54,7 @@ class WorldState:
         """Returns the smartContract that has the specified address if it exists."""
         for contract in self._contracts:
             if contract.address == address:
-                print("contract found")
                 return contract
-        print("no contract found")
         return None
 
 
@@ -116,21 +114,16 @@ class WorldState:
 
     def create_container(self, port):
         """Creates a docker container to run the code of the contract."""
-        print("tets1")
         client = docker.from_env()
         try:
-            print("tetst2")
             client.images.get(CONTAINER_NAME)
         except:
             print("\nNo image found. Creating image...")
-            client.images.build(path=DOCKER_FILES_PATH, tag=CONTAINER_NAME)
+            client.images.build(path=DOCKER_FILES_PATH, )
             print("Image created,\n")
-
-        print("test3")
         container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": port}, detach=True)
         print("Running container")
         time.sleep(2)
-        print("test4")
         return container
 
         #Check if the container works
@@ -147,25 +140,16 @@ class WorldState:
 
     def create_contract(self, tx):
         """Creates a new contract and adds it to the list _contracts."""
-        print("1")
         port = self.find_free_port()
-        print("1.1")
         container = self.create_container(port)
-        print("1.2")
         url = 'http://localhost:' + str(port) + '/createContract'
-        print("2")
         try:
-            print("3")
             payload = tx.to_dict()['payload'].replace("'",'"')
-            print("4")
             payload = json.loads(payload)
-            print("5")
             data = {'code': payload['contractCode'],
                     'arguments': payload['arguments'],
                     'sender': tx.sender}
-            print("6")
             r = requests.post(url,json=data).json()
-            print("7")
             if(r['success'] == True):
                 txHash = tx.transaction_hash
                 if txHash == None:
@@ -174,7 +158,6 @@ class WorldState:
                                             txHash=txHash,
                                             state=r['encodedNewState'])
                 self.add_contract(new_contract)
-                print("TEST6: Contract added")
             if(r['success'] == False):
                     print(r['error'])
         except:
@@ -199,7 +182,6 @@ class WorldState:
         try:
             if(r['success'] == True):
                 self.update_contract_state(tx.receiver, r['encodedUpdatedState'])
-                print('Successfully called a method on a contract. New State: ' + str(r['encodedUpdatedState']))
             if(r["success"] == False):
                 print(r["error"])
         except:
@@ -236,7 +218,7 @@ class WorldState:
         port = self.find_free_port()
         container = self.create_container(port)
         url = 'http://localhost:' + str(port) + '/getParameters'
-        data = {'code': tx_of_contractCreation.payload['contractCode'],
+        data = {'code': tx_of_contractCreation.to_dict()['payload']['contractCode'],
                 'state': state,
                 'methodName': methodName}
         r = requests.post(url,json=data).json()
@@ -256,7 +238,10 @@ class WorldState:
         port = self.find_free_port()
         container = self.create_container(port)
         url = 'http://localhost:' + str(port) + '/getMethods'
-        data = {'code': tx_of_contractCreation.payload['contractCode'],
+
+        payload = json.loads(tx_of_contractCreation['payload'].replace("'",'"'))
+
+        data = {'code': payload['contractCode'],
                 'state': state}
         r = requests.post(url,json=data).json()
         try:

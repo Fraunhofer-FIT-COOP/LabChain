@@ -56,6 +56,7 @@ class CommonTestCase(TestCase):
                                     get_block_by_hash_callback = self.get_block_by_hash,
                                     get_transaction_callback = self.get_transaction,
                                     get_contract_callback = self.get_contract,
+                                    get_methods_callback = self.get_methods,
                                     get_blocks_by_hash_range = self.get_blocks_by_hash_range,
                                     port= 6666)
         
@@ -95,6 +96,10 @@ class CommonTestCase(TestCase):
         if transaction_hash in self.available_transactions:
             return self.available_transactions[transaction_hash], 'test_block_hash'
         return None, None
+
+    def get_contract(self, contract_address):
+        #TODO
+        return None
 
     def get_contract(self, contract_address):
         #TODO

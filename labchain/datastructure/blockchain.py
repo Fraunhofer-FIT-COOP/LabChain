@@ -448,13 +448,13 @@ class BlockChain:
                     txHash = self._crypto_helper.hash(tx.get_json().encode())
                 # Classify transactions depending on the address of the receiver
                 if (tx.receiver == ''):
-                    print("contract creation tx detected in Block: " + str(self._ws_next_block_id_to_check)+ "with tx.hash " + str(txHash))
+                    print("\ncontract creation tx detected in Block #" + str(self._ws_next_block_id_to_check)+ " with tx.hash " + str(txHash))
                     txType['contract_creation'] = True
                 if(tx.receiver != '' and tx.receiver not in self.worldState.get_all_contract_addresses()):
-                    print("normal tx detected in Block: " + str(self._ws_next_block_id_to_check) + "with tx.hash " + txHash)
+                    print("\nnormal tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
                     txType['normal_transaction'] = True
                 if (tx.receiver != '' and tx.receiver in self.worldState.get_all_contract_addresses()):
-                    print("method call tx detected in Block: " + str(self._ws_next_block_id_to_check) + "with tx.hash " + txHash)
+                    print("\nmethod call tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
                     txType['method_call'] = True
 
                 # Handle transactions depending on their type
@@ -467,7 +467,6 @@ class BlockChain:
                     continue
                 if(txType['method_call'] == True):
                     tx_of_contractCreation = self.get_transaction(str(tx.receiver))[0]
-                    print(tx_of_contractCreation)
                     state = self.worldState.get_contract(tx.receiver).state
                     self.worldState.call_method(tx, tx_of_contractCreation, state)
                     print('Method called on contract')

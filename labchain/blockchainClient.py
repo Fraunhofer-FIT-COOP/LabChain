@@ -521,8 +521,12 @@ class BlockchainClient:
         """Prompt the user for a contract's hash and display the contract's details."""
         clear_screen()
         contract_hash = input('Please enter a contract hash: ')
+        contract, contract_state = self.network_interface.requestContractState(contract_hash)
+        contract_state_encoded = contract['state']
+        tx_of_contract_creation = self.network_interface.requestTransaction(contract_hash)[0].to_dict()
+        contract_code_str = tx_of_contract_creation['payload'].replace("'",'"')
+        contract_code_json = json.loads(contract_code_str)['contractCode']
 
-        contract_state = self.network_interface.requestContract(contract_hash)
         if not contract_state:
             print("No contract state was found")
             return
@@ -540,13 +544,16 @@ class BlockchainClient:
                 print()
                 input('Press enter to continue...')
             if chosen_contract_option == '2':
-                print('Contract\'s state:')
+                print()
+                print('Contract\'s methods:\n' )
+                methods = self.network_interface.requestMethods(contract_state_encoded, tx_of_contract_creation)
+                for key, value in methods.items():
+                    print('\t' + str(key) + ': ' + str(value))
+                print()
+                input('Press enter to continue...')
             if chosen_contract_option == '3':
                 print('Contract\'s code:\n')
-                tx_of_contract_creation = self.network_interface.requestTransaction(contract_hash)[0].to_dict()
-                contract_code = tx_of_contract_creation['payload'].replace("'",'"')
-                contract_code = json.loads(contract_code)['contractCode']
-                decoded_code = pickle.loads(codecs.decode(contract_code.encode(), "base64"))
+                decoded_code = pickle.loads(codecs.decode(contract_code_json.encode(), "base64"))
                 print(str(pickle.loads(decoded_code)))
                 print()
                 input('Press enter to continue...')

@@ -126,7 +126,7 @@ def callMethod():
 	try:
 		contractInstance = pickle.loads(codecs.decode(state.encode(), "base64"))
 	except:
-		errorMessage = "The state provided could not be decoded. String may be corrupted."
+		errorMessage = "The state provided could not be decoded. String may be corrupted. (callMethod function)"
 		return jsonError(errorMessage)
 
 	# Fetch all methods to call and their arguments and call them
@@ -187,7 +187,7 @@ def getState():
 	try:
 		contractInstance = pickle.loads(codecs.decode(state.encode(), "base64"))
 	except:
-		errorMessage = "The state provided could not be decoded. String may be corrupted."
+		errorMessage = "The state provided could not be decoded. String may be corrupted. (getState function)"
 		return jsonError(errorMessage)
 	
 	# Encode updated the updated contract's state to send back
@@ -224,7 +224,7 @@ def getMethods():
 	try:
 		contractInstance = pickle.loads(codecs.decode(state.encode(), "base64"))
 	except:
-		errorMessage = "The state provided could not be decoded. String may be corrupted."
+		errorMessage = "The state provided could not be decoded. String may be corrupted. (getMethods Function)"
 		return jsonError(errorMessage)
 
 	object_attributes = [f for f in dir(contractInstance) 
@@ -272,7 +272,7 @@ def getAttributes():
 	try:
 		contractInstance = pickle.loads(codecs.decode(state.encode(), "base64"))
 	except:
-		errorMessage = "The state provided could not be decoded. String may be corrupted."
+		errorMessage = "The state provided could not be decoded. String may be corrupted. (getAttributes function)"
 		return jsonError(errorMessage)
 
 	# Check if method exists, if not, return error

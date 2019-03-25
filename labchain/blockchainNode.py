@@ -107,14 +107,12 @@ class BlockChainNode:
 
     def schedule_orphans_killing(self, interval):
         """Kill orphan blocks at interval defined"""
-        print("Updating orphan killing...")
         while True:
             self.blockchain_obj.prune_orphans()
             time.sleep(interval)
     
     def schedule_worldState_update(self, interval):
         """Update the worldState at interval definer"""
-        print("Updating worldState...")
         while True:
             if not self.blockchain_obj._worldState_is_updating:
                 self.blockchain_obj.update_worldState()
@@ -175,16 +173,18 @@ class BlockChainNode:
         return transaction_tuple
 
     def on_get_contract(self, contract_hash):
-        """Retrieve a contract from the blockchain according to the given contract hash
+        """Retrieve a contract and it's state from the blockchain according to the given contract hash
         """
         contract = self.blockchain_obj.worldState.get_contract(contract_hash)
-        print("Contract: " + str(contract))
         tx_contract_creation = self.blockchain_obj.get_transaction(contract_hash)[0]
-        print("TX of contract creation: " + str(tx_contract_creation))
         state = self.blockchain_obj.worldState.get_state(contract.state,tx_contract_creation)
-        print("TEST4: blockchainNode.on_get_contract: state: " + str(state))
-        print("TEST4: blockchainNode.on_get_contract: type: " + str(type(state)))
-        return state
+        return contract.to_dict(), state
+    
+    def on_get_methods(self, state, tx_of_contract_creation):
+        """Get the methods of a contract
+        """
+        methods = self.blockchain_obj.worldState.get_methods(state, tx_of_contract_creation)
+        return methods
 
     def on_new_transaction_received(self, transaction):
         """Callback method to pass to network"""
@@ -241,6 +241,7 @@ class BlockChainNode:
                                       self.on_get_block_by_hash,
                                       self.on_get_transaction,
                                       self.on_get_contract,
+                                      self.on_get_methods,
                                       self.on_get_blocks_by_range,
                                       port)
 

@@ -131,17 +131,30 @@ class NetworkInterface:
         else:
             raise NoPeersException('No nodes available to request the transaction from')
 
-    def requestContract(self, contract_hash):
-        """Returns the tuple (contract)."""
-        responses = self._bulk_send('requestContract', [contract_hash], return_on_first_success=True)
+    def requestContractState(self, contract_hash):
+        """Returns a contract if it exists."""
+        responses = self._bulk_send('requestContractState', [contract_hash], return_on_first_success=True)
         if responses:
             if responses[0]:
-                contract = responses[0]
-                return contract
+                state = responses[0]
+                return state
             else:
                 raise ContractDoesNotExistException()
         else:
             raise NoPeersException('No nodes available to request the transaction from')
+
+    def requestMethods(self, state, tx_of_contract_creation):
+        """Returns a contract's methods if the contract exists."""
+        responses = self._bulk_send('requestMethods', [state, tx_of_contract_creation], return_on_first_success=True)
+        if responses:
+            if responses[0]:
+                methods = responses[0]
+                return methods
+            else:
+                raise ContractDoesNotExistException()
+        else:
+            raise NoPeersException('No nodes available to request the transaction from')
+
 
     def requestBlock(self, block_id):
         """Request a single block by block ID.
@@ -275,6 +288,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_by_hash_callback,
                  get_transaction_callback,
                  get_contract_callback,
+                 get_methods_callback,
                  get_blocks_by_hash_range, port=8080, block_cache_size=1000, transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
@@ -296,6 +310,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
         self.get_contract_callback = get_contract_callback
+        self.get_methods_callback = get_methods_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
         self.port = int(port)
         self.block_cache = []
@@ -346,7 +361,8 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestBlock'] = self.__handle_request_block
         dispatcher['requestBlockByHash'] = self.__handle_request_block_by_hash
         dispatcher['requestTransaction'] = self.__handle_request_transaction
-        dispatcher['requestContract'] = self.__handle_request_contract
+        dispatcher['requestContractState'] = self.__handle_request_contract_state
+        dispatcher['requestMethods'] = self.__handle_request_methods
         dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
 
         # insert IP address of peer if advertise peer is called
@@ -430,13 +446,22 @@ class ServerNetworkInterface(NetworkInterface):
             return transaction.to_dict(), block_hash
         return None
 
-    def __handle_request_contract(self, contract_hash):
+    def __handle_request_contract_state(self, contract_hash):
         state = self.get_contract_callback(contract_hash)
         print("TEST 1: " + str(state))
         if state:
             print("TEST2: Returning state: " + str(state))
             return state
         print("TEST3: Not returning state: " + str(state))
+        return None
+
+    def __handle_request_methods(self, state, tx_of_contract_creation):
+        methods = self.get_methods_callback(state, tx_of_contract_creation)
+        print("TEST 1: " + str(methods))
+        if methods:
+            print("TEST2: Returning methods: " + str(methods))
+            return methods
+        print("TEST3: Not returning methods: " + str(methods))
         return None
 
     def __filter_own_address(self, peers):
