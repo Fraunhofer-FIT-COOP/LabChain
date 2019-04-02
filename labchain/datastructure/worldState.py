@@ -107,7 +107,10 @@ class WorldState:
     def create_contract(self, tx):
         """Creates a new contract and adds it to the contract_list."""
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
-        contract = SmartContract(self._contract_id_counter, [tx.sender], payload['contractCode'])
+        txHash = tx.transaction_hash
+        if txHash == None:
+            txHash = self._crypto_helper.hash(tx.get_json())
+        contract = SmartContract(self._contract_id_counter, [txHash], payload['contractCode'])
         self._contract_id_counter += 1
         url = 'http://localhost:' + str(contract.port) + '/createContract'
         try:
@@ -117,7 +120,7 @@ class WorldState:
             r = requests.post(url,json=data).json()
             if(r['success'] == True):
                 contract.state = r['encodedNewState']
-                self.contract_list.append(contract)
+                self._contract_list.append(contract)
             if(r['success'] == False):
                     print(r['error'])
         except:
@@ -201,6 +204,7 @@ class WorldState:
         """Returns a readable version of the current state of a contract
             Note: This only works if the contract has a to_dict method."""
         contract = self.get_contract(contract_address)
+        print(self._contract_list)
         url = 'http://localhost:' + str(contract.port) + '/getState'
 
         data = {'code': contract.code,

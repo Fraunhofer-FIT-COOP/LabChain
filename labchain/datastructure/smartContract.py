@@ -82,7 +82,7 @@ class SmartContract:
             'addresses': self._addresses,
             'code': self._code,
             'state': self._state,
-            'container': self._container,
+            #'container': self._container,
             'port': self._port,
             'terminated': self._terminated
             }
@@ -105,7 +105,7 @@ class SmartContract:
                 data_dict['code'],
                 data_dict['terminated'])
         smartContract.state = data_dict['state']
-        smartContract.container = data_dict['container']
+        #smartContract.container = data_dict['container']
         smartContract.port = data_dict['port']
         return smartContract
 

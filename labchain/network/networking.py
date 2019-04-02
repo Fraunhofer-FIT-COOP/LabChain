@@ -131,9 +131,9 @@ class NetworkInterface:
         else:
             raise NoPeersException('No nodes available to request the transaction from')
 
-    def requestContractState(self, contract_hash):
+    def requestContractState(self, contract_address):
         """Returns a contract if it exists."""
-        responses = self._bulk_send('requestContractState', [contract_hash], return_on_first_success=True)
+        responses = self._bulk_send('requestContractState', [contract_address], return_on_first_success=True)
         if responses:
             if responses[0]:
                 state = responses[0]
@@ -143,9 +143,9 @@ class NetworkInterface:
         else:
             raise NoPeersException('No nodes available to request the transaction from')
 
-    def requestMethods(self, state, tx_of_contract_creation):
+    def requestMethods(self, state, contract_address):
         """Returns a contract's methods if the contract exists."""
-        responses = self._bulk_send('requestMethods', [state, tx_of_contract_creation], return_on_first_success=True)
+        responses = self._bulk_send('requestMethods', [state, contract_address], return_on_first_success=True)
         if responses:
             if responses[0]:
                 methods = responses[0]
@@ -446,8 +446,8 @@ class ServerNetworkInterface(NetworkInterface):
             return transaction.to_dict(), block_hash
         return None
 
-    def __handle_request_contract_state(self, contract_hash):
-        state = self.get_contract_callback(contract_hash)
+    def __handle_request_contract_state(self, contract_address):
+        state = self.get_contract_callback(contract_address)
         print("TEST 1: " + str(state))
         if state:
             print("TEST2: Returning state: " + str(state))
