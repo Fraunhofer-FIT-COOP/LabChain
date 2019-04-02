@@ -466,9 +466,7 @@ class BlockChain:
                     print('Normal transaction')
                     continue
                 if(txType['method_call'] == True):
-                    tx_of_contractCreation = self.get_transaction(str(tx.receiver))[0]
-                    state = self.worldState.get_contract(tx.receiver).state
-                    self.worldState.call_method(tx, tx_of_contractCreation, state)
+                    self.worldState.call_method(tx)
                     print('Method called on contract')
                 
                 # Reset txType
@@ -477,36 +475,6 @@ class BlockChain:
             next_block_to_check = self.get_block_by_id(self._ws_next_block_id_to_check)
         
         self._worldState_is_updating = False
-
-        # for block_id in range(self._ws_last_checked_block_id, last_block_id):
-        #     for tx in self.get_block_by_id(block_id)[0].transactions:
-        #         # Classify transactions depending on the address of the receiver
-        #         if (tx.receiver == ''):
-        #             print("contract creation tx detected.")
-        #             txType['contract_creation'] = True
-        #         if(tx.receiver != '' and tx.receiver not in self.worldState.get_all_contract_addresses()):
-        #             print("normal tx detected.")
-        #             txType['normal_transaction'] = True
-        #         if (tx.receiver != '' and tx.receiver in self.worldState.get_all_contract_addresses()):
-        #             print("method call tx detected")
-        #             txType['method_call'] = True
-
-        #         # Handle transactions depending on their type
-        #         if(txType['contract_creation'] == True):
-        #             self.worldState.create_contract(tx)
-        #         if(txType['normal_transaction'] == True):
-        #             txType['normal_transaction'] = False
-        #             continue
-        #         # if(txType['method_call'] == True):
-        #             # tx_of_contractCreation = self.get_transaction(self.worldState.get_contract(tx.receiver).txHash)
-        #             # state = self.worldState.get_contract(tx.address).state
-        #             # self.worldState.call_method(tx, tx_of_contractCreation, state)
-        #             # print('method called on contract')
-                
-        #         # Reset txType
-        #         txType = {x: False for x in txType}
-
-
 
 
     def request_block_from_neighbour(self, requested_block_hash):
