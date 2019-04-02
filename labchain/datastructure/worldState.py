@@ -123,20 +123,18 @@ class WorldState:
             print("Image created,\n")
         container = client.containers.run(image=CONTAINER_NAME, ports={"80/tcp": port}, detach=True)
         print("Running container")
-        time.sleep(2)
-        return container
 
         #Check if the container works
-        # timeout = time.time() + CONTAINER_TIMEOUT
-        # url = 'http://localhost:' + str(port) + '/'
-        # while True:
-        #     try:
-        #         r = requests.post(url).json()
-        #         if r or time.time() > timeout:
-        #             break
-        #     except:
-        #         continue
-        # return container
+        timeout = time.time() + CONTAINER_TIMEOUT
+        url = 'http://localhost:' + str(port) + '/'
+        while True:
+            try:
+                r = requests.get(url).json()
+                if r == "Container is running" or time.time() > timeout:
+                    break
+            except:
+                continue
+        return container
 
     def create_contract(self, tx):
         """Creates a new contract and adds it to the list _contracts."""

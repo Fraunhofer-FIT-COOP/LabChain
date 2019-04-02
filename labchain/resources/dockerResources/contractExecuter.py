@@ -10,9 +10,9 @@ CONTRACT_FILE_NAME = "contract.py"
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
-	return True
+	return json.dumps("Container is running")
 
 
 @app.route('/createContract', methods=['POST'])

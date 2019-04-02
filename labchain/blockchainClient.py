@@ -292,7 +292,8 @@ class TransactionWizard:
             print(u'Transaction Type: ' + tx_types[chosen_txType])
             if(tx_types[chosen_txType] == "Contract Creation"):
                 payload = {"contractCode":'', "arguments":""}
-                pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"#input('Please enter the path to your contract: ').replace(' ', '')
+                #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
+                pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
                 pickledContract = None
                 with open(pathToContract, 'r') as file:
                     pickledContract = pickle.dumps(file.read())
