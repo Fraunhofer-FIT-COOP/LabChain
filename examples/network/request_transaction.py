@@ -20,7 +20,7 @@ LOG_LEVEL = logging.INFO
 # change the polling interval
 POLL_INTERVAL = 10
 
-TRANSACTIONS = {'123': Transaction('some sender', 'some_receiver', 'some_payload', 'some_signature')}
+TRANSACTIONS = {'123': Transaction('some sender', 'some_receiver', 'some_payload', 'some_type', 'some_signature')}
 
 
 def get_transaction(transaction_hash):

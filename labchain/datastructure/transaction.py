@@ -1,15 +1,39 @@
 import json
 
+class Transaction_Types:
+        def __init__(self):
+            self.__normal_transaction = 'Normal Transaction'
+            self.__contract_creation = 'Contract Creation'
+            self.__method_call = 'Method Call'
+            self.__contract_termination = 'Contract Termination'
+            self.__contract_restoration = 'Contract Restoration'
+
+        @property
+        def normal_transaction(self):
+            return self.__normal_transaction
+        @property
+        def contract_creation(self):
+            return self.__contract_creation
+        @property
+        def method_call(self):
+            return self.__method_call
+        @property
+        def contract_termination(self):
+            return self.__contract_termination
+        @property
+        def contract_restoration(self):
+            return self.__contract_restoration
 
 class Transaction:
     """Represents a single transaction within the blockchain.
     """
 
-    def __init__(self, sender, receiver, payload, signature=None):
+    def __init__(self, sender, receiver, payload, transaction_type, signature=None):
         self.__sender = sender
         self.__receiver = receiver
         self.__payload = payload
         self.__signature = signature
+        self.__transaction_type = transaction_type
         self.__transaction_hash = None
 
     def to_dict(self):
@@ -18,6 +42,7 @@ class Transaction:
             'sender': self.__sender,
             'receiver': self.__receiver,
             'payload': self.__payload,
+            'transaction_type': self.__transaction_type,
             'signature': self.__signature
         }
 
@@ -34,8 +59,9 @@ class Transaction:
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
-        return Transaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'], data_dict['signature'])
+        return Transaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
+                           payload=data_dict['payload'], transaction_type=data_dict['transaction_type'],
+                           signature=data_dict['signature'])
 
     def sign_transaction(self, crypto_helper, private_key):
         """
@@ -47,7 +73,8 @@ class Transaction:
         data = json.dumps({
             'sender': self.__sender,
             'receiver': self.__receiver,
-            'payload': self.__payload
+            'payload': self.__payload,
+            'transaction_type': self.__transaction_type
         })
         self.signature = crypto_helper.sign(private_key, data)
 
@@ -67,7 +94,8 @@ class Transaction:
         data = json.dumps({
             'sender': self.__sender,
             'receiver': self.__receiver,
-            'payload': self.__payload
+            'payload': self.__payload,
+            'transaction_type': self.__transaction_type
         })
         return crypto_helper.validate(self.sender, data, self.signature)
 
@@ -90,11 +118,21 @@ class Transaction:
     def signature(self):
         return self.__signature
 
+    @property
+    def transaction_type(self):
+        return self.__transaction_type
+
     @signature.setter
     def signature(self, signature):
         if self.__signature:
             raise ValueError('signature is already set')
         self.__signature = signature
+
+    @transaction_type.setter
+    def transaction_type(self, txType):
+        if self.__transaction_type:
+            raise ValueError('type is already set')
+        self.__transaction_type = txType
 
     @property
     def transaction_hash(self):

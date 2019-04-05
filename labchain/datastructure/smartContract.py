@@ -178,7 +178,6 @@ class SmartContract:
                     break
             except:
                 continue
-        print("2")
         return container
 
     def find_free_port(self):

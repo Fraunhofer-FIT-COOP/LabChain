@@ -20,7 +20,7 @@ LOG_LEVEL = logging.INFO
 # change the polling interval
 POLL_INTERVAL = 10
 
-TRANSACTION = Transaction('some sender', 'some_receiver', 'some_payload', 'some_signature')
+TRANSACTION = Transaction('some sender', 'some_receiver', 'some_payload', 'some_type', 'some_signature')
 RECEIVED_TRANSACTIONS = {}
 
 

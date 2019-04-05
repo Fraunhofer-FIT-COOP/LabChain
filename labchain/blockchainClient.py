@@ -5,7 +5,7 @@ import json
 from collections import OrderedDict
 
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException
-from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.transaction import Transaction, Transaction_Types
 from labchain.datastructure.smartContract import SmartContract
 
 LABCHAIN_LOGO = """
@@ -213,10 +213,10 @@ class TransactionWizard:
         return user_input
 
     @staticmethod
-    def __ask_for_tx_type(tx_types):
+    def __ask_for_tx_type(tx_types_enum):
         print(u'Please select a transaction type: ')
         print()
-        for key, value in tx_types.items():
+        for key, value in tx_types_enum.items():
             print(str(key) + ':\t' + value)
         print()
         user_input = input('Please choose a transaction type (by number) or press enter to return: ')
@@ -257,87 +257,44 @@ class TransactionWizard:
 
             # ask for valid transaction type input in a loop
             clear_screen()
-            tx_types = {'1': 'Normal Transaction',
-                        '2': 'Contract Creation',
-                        '3': 'Method Call'}
-            chosen_txType = ''
-            while not self.__validate_sender_input(chosen_txType, len(tx_types)):
-                chosen_txType = self.__ask_for_tx_type(tx_types)
-                if chosen_txType == '':
+            txTypes = Transaction_Types()
+            tx_types_enum = {'1': txTypes.normal_transaction,
+                            '2': txTypes.contract_creation,
+                            '3': txTypes.method_call,
+                            '4': txTypes.contract_termination,
+                            '5': txTypes.contract_restoration}
+            chosen_txType_index = ''
+            while not self.__validate_sender_input(chosen_txType_index, len(tx_types_enum)):
+                chosen_txType_index = self.__ask_for_tx_type(tx_types_enum)
+                if chosen_txType_index == '':
                     return
                 clear_screen()
                 print('Invalid input! Please choose a correct index!')
                 print()
+            chosen_txType = tx_types_enum[chosen_txType_index]
 
-            # ask for valid receiver or set it depending on transaction type
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
-            print(u'Transaction Type: ' + tx_types[chosen_txType]) 
-            if(tx_types[chosen_txType] == 'Contract Creation'):
-                chosen_receiver = ''
-            if(tx_types[chosen_txType] == 'Normal Transaction' or tx_types[chosen_txType] == 'Method Call'):
-                chosen_receiver = self.__ask_for_receiver()
-                while not self.__validate_receiver_input(chosen_receiver):
-                    clear_screen()
-                    print('Invalid input! Please choose a correct receiver!')
-                    print(u'Sender: ' + str(chosen_key))
-                    print(u'Transaction Type: ' + tx_types[chosen_txType])
-                    chosen_receiver = self.__ask_for_receiver()
-                    print()
+            print(u'Transaction Type: ' + chosen_txType) 
 
-
-            # ask for valid payload or set it depending on transaction type
-            clear_screen()
-            print(u"Sender: " + str(chosen_key))
-            print(u'Transaction Type: ' + tx_types[chosen_txType])
-            if(tx_types[chosen_txType] == "Contract Creation"):
-                payload = {"contractCode":'', "arguments":""}
-                #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
-                pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
-                pickledContract = None
-                with open(pathToContract, 'r') as file:
-                    pickledContract = pickle.dumps(file.read())
-                payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
-                print('Contract successfully imported.')
-                arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
-                payload['arguments'] = json.loads(arguments)
-                chosen_payload = payload
-            if(tx_types[chosen_txType] == 'Method Call'):
-                print(u'Receiver: ' + str(chosen_receiver))
-                payload = {'methods':[]}
-                methods = []
-                methodName = input("Please enter name of the method you want to call on this contract: ")
-                arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
-                moreArguments = True
-                while moreArguments:
-                    methodToCall = {'methodName':methodName, 'arguments':arguments}
-                    methods.append(methodToCall)
-                    methodName = input(("Please enter name of another method you want to call on this contract "
-                                    + "(leave empty if you do not want to call any other methods): "))
-                    if methodName == '':
-                        moreArguments = False
-                        break
-                    arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
-                payload['methods'] = methods
-                chosen_payload = payload
-            if(tx_types[chosen_txType] == 'Normal Transaction'):
-                print(u'Receiver: ' + str(chosen_receiver))
-                chosen_payload = self.__ask_for_payload()
-                while not self.__validate_payload_input(chosen_payload):
-                    clear_screen()
-                    print('Invalid input! Please choose a correct payload!')
-                    print(u'Sender: ' + str(chosen_key))
-                    print(u'Transaction Type: ' + tx_types[chosen_txType])
-                    print(u'Receiver: ' + str(chosen_receiver))
-                    chosen_payload = self.__ask_for_payload()
-                    print()
+            # Handle the transaction depending on it's type
+            if(chosen_txType == txTypes.normal_transaction):
+                chosen_receiver, chosen_payload = self.handle_normal_transaction(chosen_key, chosen_txType)
+                chosen_txType = 'Normal Transaction'
+            if(chosen_txType == txTypes.contract_creation):
+                chosen_receiver, chosen_payload = self.handle_contract_creation()
+                chosen_txType = 'Contract Creation'
+            if(chosen_txType == txTypes.method_call):
+                chosen_receiver, chosen_payload = self.handle_method_call(chosen_key, chosen_txType)
+                chosen_txType = 'Method Call'
 
             clear_screen()
             # Create transaction Object and send to network
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
-            new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload))
+            #new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload), str(chosen_txType))
+            new_transaction = Transaction(sender=str(public_key), receiver=str(chosen_receiver), payload=str(chosen_payload), transaction_type=str(chosen_txType))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
             transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
 
@@ -346,8 +303,8 @@ class TransactionWizard:
             print('Transaction successfully created!')
             print()
             print(u'Sender: ' + public_key)
-            print(u'Transaction Type: ' + tx_types[chosen_txType])
-            print(u'Receiver: ' + str(chosen_receiver))
+            print(u'Transaction Type: ' + chosen_txType)
+            print(u'Receiver: ' + chosen_receiver)
             print(u'Payload: ' + str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
             print()
@@ -359,6 +316,76 @@ class TransactionWizard:
         input('Press any key to go back to the main menu!')
 
 
+    def handle_normal_transaction(self, chosen_key, chosen_txType):
+        chosen_receiver = self.__ask_for_receiver()
+        while not self.__validate_receiver_input(chosen_receiver):
+            clear_screen()
+            print('Invalid input! Please choose a correct receiver!')
+            print(u'Sender: ' + str(chosen_key))
+            print(u'Transaction Type: ' + chosen_txType)
+            chosen_receiver = self.__ask_for_receiver()
+            print()
+
+        print(u'Receiver: ' + str(chosen_receiver))
+        chosen_payload = self.__ask_for_payload()
+        while not self.__validate_payload_input(chosen_payload):
+            clear_screen()
+            print('Invalid input! Please choose a correct payload!')
+            print(u'Sender: ' + str(chosen_key))
+            print(u'Transaction Type: ' + str(chosen_txType))
+            print(u'Receiver: ' + str(chosen_receiver))
+            chosen_payload = self.__ask_for_payload()
+            print()
+
+        return chosen_receiver, chosen_payload
+
+
+    def handle_contract_creation(self):
+        chosen_receiver = ''
+
+        payload = {"contractCode":'', "arguments":""}
+        #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
+        pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
+        pickledContract = None
+        with open(pathToContract, 'r') as file:
+            pickledContract = pickle.dumps(file.read())
+        payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
+        print('Contract successfully imported.')
+        arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
+        payload['arguments'] = json.loads(arguments)
+        chosen_payload = payload
+
+        return chosen_receiver, chosen_payload
+    
+
+    def handle_method_call(self, chosen_key, chosen_txType):
+        chosen_receiver = self.__ask_for_receiver()
+        while not self.__validate_receiver_input(chosen_receiver):
+            clear_screen()
+            print('Invalid input! Please choose a correct receiver!')
+            print(u'Sender: ' + str(chosen_key))
+            print(u'Transaction Type: ' + str(chosen_txType))
+            chosen_receiver = self.__ask_for_receiver()
+            print()
+
+        print(u'Receiver: ' + str(chosen_receiver))
+        chosen_payload = {'methods':[]}
+        methods = []
+        methodName = input("Please enter name of the method you want to call on this contract: ")
+        arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
+        moreArguments = True
+        while moreArguments:
+            methodToCall = {'methodName':methodName, 'arguments':arguments}
+            methods.append(methodToCall)
+            methodName = input(("Please enter name of another method you want to call on this contract "
+                            + "(leave empty if you do not want to call any other methods): "))
+            if methodName == '':
+                moreArguments = False
+                break
+            arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
+        chosen_payload['methods'] = methods
+
+        return chosen_receiver, chosen_payload
 
 
 

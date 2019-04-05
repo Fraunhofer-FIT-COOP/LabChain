@@ -22,7 +22,7 @@ LOG_LEVEL = logging.INFO
 POLL_INTERVAL = 10
 
 BLOCKS = {1: Block(1, 'some_root', 'pred_hash', 'creator_id',
-                   [Transaction('some sender', 'some_receiver', 'some_payload', 'some_signature')],
+                   [Transaction('some sender', 'some_receiver', 'some_payload', 'some_type', 'some_signature')],
                    1234)}
 
 

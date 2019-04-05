@@ -6,7 +6,7 @@ import sys
 import time
 
 from labchain.datastructure.block import LogicalBlock
-from labchain.datastructure.transaction import NoHashError
+from labchain.datastructure.transaction import NoHashError, Transaction_Types
 from labchain.datastructure.worldState import WorldState
 
 class BlockChain:
@@ -435,42 +435,66 @@ class BlockChain:
     def update_worldState(self):
         print("UPDATING WORLDSTATE")
         self._worldState_is_updating = True
-
-        txType = {'normal_transaction': False,
-                    'contract_creation': False,
-                    'method_call': False }
+        
+        txTypes_instance = Transaction_Types()
+        txType = ''
+        # txType = {'normal_transaction': False,
+        #             'contract_creation': False,
+        #             'method_call': False }
 
         next_block_to_check = self.get_block_by_id(self._ws_next_block_id_to_check)
         while next_block_to_check:
             for tx in next_block_to_check[0].transactions:
+                txType = tx.transaction_type
                 txHash = tx.transaction_hash
                 if txHash == None:
                     txHash = self._crypto_helper.hash(tx.get_json().encode())
-                # Classify transactions depending on the address of the receiver
-                if (tx.receiver == ''):
-                    print("\ncontract creation tx detected in Block #" + str(self._ws_next_block_id_to_check)+ " with tx.hash " + str(txHash))
-                    txType['contract_creation'] = True
-                if(tx.receiver != '' and tx.receiver not in self.worldState.get_all_contract_addresses()):
-                    print("\nnormal tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
-                    txType['normal_transaction'] = True
-                if (tx.receiver != '' and tx.receiver in self.worldState.get_all_contract_addresses()):
-                    print("\nmethod call tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
-                    txType['method_call'] = True
 
-                # Handle transactions depending on their type
-                if(txType['contract_creation'] == True):
-                    self.worldState.create_contract(tx)
-                    print('Contract created')
-                if(txType['normal_transaction'] == True):
-                    txType['normal_transaction'] = False
+                if(txType == txTypes_instance.normal_transaction):
+                    print("\nnormal tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
                     print('Normal transaction')
                     continue
-                if(txType['method_call'] == True):
+                if (txType == txTypes_instance.contract_creation):
+                    print("\ncontract creation tx detected in Block #" + 
+                        str(self._ws_next_block_id_to_check) + " with tx.hash " + str(txHash))
+                    self.worldState.create_contract(tx)
+                    print('Contract created')
+                if (txType == txTypes_instance.method_call):
+                    print("\nmethod call tx detected in Block #" + 
+                        str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
                     self.worldState.call_method(tx)
                     print('Method called on contract')
+
+                # txHash = tx.transaction_hash
+                # if txHash == None:
+                #     txHash = self._crypto_helper.hash(tx.get_json().encode())
+                # # Classify transactions depending on the address of the receiver
+                # if (tx.receiver == ''):
+                #     print("\ncontract creation tx detected in Block #" + str(self._ws_next_block_id_to_check)+ " with tx.hash " + str(txHash))
+                #     txType['contract_creation'] = True
+                # if(tx.receiver != '' and tx.receiver not in self.worldState.get_all_contract_addresses()):
+                #     print("\nnormal tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
+                #     txType['normal_transaction'] = True
+                # if (tx.receiver != '' and tx.receiver in self.worldState.get_all_contract_addresses()):
+                #     print("\nmethod call tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
+                #     txType['method_call'] = True
+
+                # Handle transactions depending on their type
+                # if(txType['contract_creation'] == True):
+                #     self.worldState.create_contract(tx)
+                #     print('Contract created')
+                # if(txType['normal_transaction'] == True):
+                #     txType['normal_transaction'] = False
+                #     print('Normal transaction')
+                #     continue
+                # if(txType['method_call'] == True):
+                #     self.worldState.call_method(tx)
+                #     print('Method called on contract')
                 
-                # Reset txType
-                txType = {x: False for x in txType}
+                # # Reset txType
+                # txType = {x: False for x in txType}
+
+
             self._ws_next_block_id_to_check += 1
             next_block_to_check = self.get_block_by_id(self._ws_next_block_id_to_check)
         

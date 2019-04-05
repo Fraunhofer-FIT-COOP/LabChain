@@ -448,20 +448,14 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __handle_request_contract_state(self, contract_address):
         state = self.get_contract_callback(contract_address)
-        print("TEST 1: " + str(state))
         if state:
-            print("TEST2: Returning state: " + str(state))
             return state
-        print("TEST3: Not returning state: " + str(state))
         return None
 
     def __handle_request_methods(self, state, tx_of_contract_creation):
         methods = self.get_methods_callback(state, tx_of_contract_creation)
-        print("TEST 1: " + str(methods))
         if methods:
-            print("TEST2: Returning methods: " + str(methods))
             return methods
-        print("TEST3: Not returning methods: " + str(methods))
         return None
 
     def __filter_own_address(self, peers):

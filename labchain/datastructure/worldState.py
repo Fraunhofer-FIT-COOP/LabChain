@@ -204,7 +204,6 @@ class WorldState:
         """Returns a readable version of the current state of a contract
             Note: This only works if the contract has a to_dict method."""
         contract = self.get_contract(contract_address)
-        print(self._contract_list)
         url = 'http://localhost:' + str(contract.port) + '/getState'
 
         data = {'code': contract.code,
