@@ -35,6 +35,7 @@ def create_network_interface(port, initial_peers=None):
                                     get_block_by_hash_callback = empty_function,
                                     get_transaction_callback = empty_function,
                                     get_contract_callback = empty_function,
+                                    get_contract_state_callback = empty_function,
                                     get_methods_callback = empty_function,
                                     get_blocks_by_hash_range = empty_function,
                                     port= port)

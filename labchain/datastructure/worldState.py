@@ -36,6 +36,38 @@ class WorldState:
                     return contract
         return None
 
+    def terminate_contract(self, contract_address):
+        """Returns the smartContract that has the specified address if it exists."""
+        for contract in self._contract_list:
+            for address in contract.addresses:
+                if address == contract_address:
+                    contract.terminate()
+                    return True
+        return False
+    
+    def restore_contract(self, tx):
+        """Returns the smartContract that has the specified address if it exists."""
+        contract_address = tx.receiver
+        payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
+        print(payload)
+        new_code = payload['contractCode']
+        new_address = tx.transaction_hash
+        for contract in self._contract_list:
+            for address in contract.addresses:
+                if address == contract_address:
+                    contract.restore(new_address,new_code)
+                    url = 'http://localhost:' + str(contract.port) + '/createContract'
+                    try:
+                        data = {'code': payload['contractCode'],
+                                'arguments': payload['arguments'],
+                                'sender': tx.sender}
+                        r = requests.post(url,json=data).json()
+                        if(r['success'] == True):
+                            contract.state = r['encodedNewState']
+                        if(r['success'] == False):
+                                print(r['error'])
+                    except:
+                        logging.error('Contract from transaction could not be created')
 
     def update_contract_state(self, contract_address, new_state):
         """Updates the state of a contract."""

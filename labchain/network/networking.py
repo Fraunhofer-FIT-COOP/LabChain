@@ -131,6 +131,18 @@ class NetworkInterface:
         else:
             raise NoPeersException('No nodes available to request the transaction from')
 
+    def requestContract(self, contract_address):
+        """Returns a contract if it exists."""
+        responses = self._bulk_send('requestContract', [contract_address], return_on_first_success=True)
+        if responses:
+            if responses[0]:
+                state = responses[0]
+                return state
+            else:
+                raise ContractDoesNotExistException()
+        else:
+            raise NoPeersException('No nodes available to request the contract from')
+
     def requestContractState(self, contract_address):
         """Returns a contract if it exists."""
         responses = self._bulk_send('requestContractState', [contract_address], return_on_first_success=True)
@@ -141,7 +153,7 @@ class NetworkInterface:
             else:
                 raise ContractDoesNotExistException()
         else:
-            raise NoPeersException('No nodes available to request the transaction from')
+            raise NoPeersException('No nodes available to request the contract state from')
 
     def requestMethods(self, state, contract_address):
         """Returns a contract's methods if the contract exists."""
@@ -288,6 +300,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_by_hash_callback,
                  get_transaction_callback,
                  get_contract_callback,
+                 get_contract_state_callback,
                  get_methods_callback,
                  get_blocks_by_hash_range, port=8080, block_cache_size=1000, transaction_cache_size=1000):
         """
@@ -310,6 +323,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
         self.get_contract_callback = get_contract_callback
+        self.get_contract_state_callback = get_contract_state_callback
         self.get_methods_callback = get_methods_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
         self.port = int(port)
@@ -361,6 +375,7 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestBlock'] = self.__handle_request_block
         dispatcher['requestBlockByHash'] = self.__handle_request_block_by_hash
         dispatcher['requestTransaction'] = self.__handle_request_transaction
+        dispatcher['requestContract'] = self.__handle_request_contract
         dispatcher['requestContractState'] = self.__handle_request_contract_state
         dispatcher['requestMethods'] = self.__handle_request_methods
         dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
@@ -375,7 +390,7 @@ class ServerNetworkInterface(NetworkInterface):
                 request_body_dict['params'] = [6666]
             request_body_dict['params'].insert(0, request.remote_addr)
         request.data = json.dumps(request_body_dict)
-
+        
         response = JSONRPCResponseManager.handle(
             request.data, dispatcher)
         return Response(response.json, mimetype='application/json')
@@ -447,9 +462,15 @@ class ServerNetworkInterface(NetworkInterface):
         return None
 
     def __handle_request_contract_state(self, contract_address):
-        state = self.get_contract_callback(contract_address)
+        state = self.get_contract_state_callback(contract_address)
         if state:
             return state
+        return None
+
+    def __handle_request_contract(self, contract_address):
+        contract = self.get_contract_callback(contract_address)
+        if contract:
+            return contract
         return None
 
     def __handle_request_methods(self, state, tx_of_contract_creation):

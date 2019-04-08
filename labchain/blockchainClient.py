@@ -279,14 +279,20 @@ class TransactionWizard:
 
             # Handle the transaction depending on it's type
             if(chosen_txType == txTypes.normal_transaction):
-                chosen_receiver, chosen_payload = self.handle_normal_transaction(chosen_key, chosen_txType)
+                chosen_receiver, chosen_payload = self.handle_normal_transaction(chosen_key)
                 chosen_txType = 'Normal Transaction'
             if(chosen_txType == txTypes.contract_creation):
                 chosen_receiver, chosen_payload = self.handle_contract_creation()
                 chosen_txType = 'Contract Creation'
             if(chosen_txType == txTypes.method_call):
-                chosen_receiver, chosen_payload = self.handle_method_call(chosen_key, chosen_txType)
+                chosen_receiver, chosen_payload = self.handle_method_call(chosen_key)
                 chosen_txType = 'Method Call'
+            if(chosen_txType == txTypes.contract_termination):
+                chosen_receiver, chosen_payload = self.handle_contract_termination()
+                chosen_txType = 'Contract Termination'
+            if(chosen_txType == txTypes.contract_restoration):
+                chosen_receiver, chosen_payload = self.handle_contract_restoration()
+                chosen_txType = 'Contract Restoration'
 
             clear_screen()
             # Create transaction Object and send to network
@@ -316,8 +322,9 @@ class TransactionWizard:
         input('Press any key to go back to the main menu!')
 
 
-    def handle_normal_transaction(self, chosen_key, chosen_txType):
+    def handle_normal_transaction(self, chosen_key):
         chosen_receiver = self.__ask_for_receiver()
+        chosen_txType = Transaction_Types().normal_transaction
         while not self.__validate_receiver_input(chosen_receiver):
             clear_screen()
             print('Invalid input! Please choose a correct receiver!')
@@ -342,10 +349,9 @@ class TransactionWizard:
 
     def handle_contract_creation(self):
         chosen_receiver = ''
-
         payload = {"contractCode":'', "arguments":""}
-        #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
-        pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
+        pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
+        #pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
         pickledContract = None
         with open(pathToContract, 'r') as file:
             pickledContract = pickle.dumps(file.read())
@@ -358,8 +364,9 @@ class TransactionWizard:
         return chosen_receiver, chosen_payload
     
 
-    def handle_method_call(self, chosen_key, chosen_txType):
+    def handle_method_call(self, chosen_key):
         chosen_receiver = self.__ask_for_receiver()
+        chosen_txType = Transaction_Types().method_call
         while not self.__validate_receiver_input(chosen_receiver):
             clear_screen()
             print('Invalid input! Please choose a correct receiver!')
@@ -388,6 +395,27 @@ class TransactionWizard:
         return chosen_receiver, chosen_payload
 
 
+    def handle_contract_termination(self):
+        chosen_receiver = self.__ask_for_receiver()
+        chosen_payload = {}
+        return chosen_receiver, chosen_payload
+
+
+    def handle_contract_restoration(self):
+        chosen_receiver = self.__ask_for_receiver()
+        payload = {"contractCode":'', "arguments":""}
+        #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
+        pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
+        pickledContract = None
+        with open(pathToContract, 'r') as file:
+            pickledContract = pickle.dumps(file.read())
+        payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
+        print('Contract successfully imported.')
+        arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
+        payload['arguments'] = json.loads(arguments)
+        chosen_payload = payload
+
+        return chosen_receiver, chosen_payload
 
 
 class BlockchainClient:
@@ -548,15 +576,25 @@ class BlockchainClient:
     def __load_contract(self):
         """Prompt the user for a contract's hash and display the contract's details."""
         clear_screen()
-        contract_address = input('Please enter a contract\'s address: ')
-        contract, contract_state = self.network_interface.requestContractState(contract_address)
+        contract_address = input('Please enter a contract\'s address: ')        
         
-        contract_state_encoded = contract['state']
-        contract_code = contract['code']
-        contract_address = contract['addresses'][-1]
-
-        if not contract_state:
-            print("No contract state was found")
+        try:
+            contract = self.network_interface.requestContract(contract_address)
+            if contract['terminated']:
+                print("This contract has been terminated.")
+                print()
+                # wait for any input before returning to menu
+                input('Press enter to continue...')
+                return
+            contract_state = self.network_interface.requestContractState(contract_address)
+            contract_state_encoded = contract['state']
+            contract_code = contract['code']
+            contract_address = contract['addresses'][-1]
+        except:
+            print("No contract was found")
+            print()
+            # wait for any input before returning to menu
+            input('Press enter to continue...')
             return
         contract_options =   {  '1': 'Get the state of the contract',
                                 '2': 'Get the callable methods from the contract',

@@ -172,12 +172,22 @@ class BlockChainNode:
                 transaction_hash)
         return transaction_tuple
 
+
     def on_get_contract(self, contract_address):
         """Retrieve a contract and it's state from the blockchain according to the given contract hash
         """
-        contract = self.blockchain_obj.worldState.get_contract(contract_address)
+        try:
+            contract = self.blockchain_obj.worldState.get_contract(contract_address)
+            return contract.to_dict()
+        except:
+            return None
+
+
+    def on_get_contract_state(self, contract_address):
+        """Retrieve a contract and it's state from the blockchain according to the given contract hash
+        """
         state = self.blockchain_obj.worldState.get_state(contract_address)
-        return contract.to_dict(), state
+        return state
     
     def on_get_methods(self, state, contract_address):
         """Get the methods of a contract
@@ -240,6 +250,7 @@ class BlockChainNode:
                                       self.on_get_block_by_hash,
                                       self.on_get_transaction,
                                       self.on_get_contract,
+                                      self.on_get_contract_state,
                                       self.on_get_methods,
                                       self.on_get_blocks_by_range,
                                       port)

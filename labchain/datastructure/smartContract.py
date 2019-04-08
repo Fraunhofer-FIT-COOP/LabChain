@@ -53,29 +53,32 @@ class SmartContract:
         self._id = id
         self._addresses = addresses
         self._code = code
-        self.state = None
+        self._state = None
         self._terminated = terminated
         self._port = self.find_free_port()
         self._container = self.create_container()
 
     def terminate(self):
         """Terminates a contract and removes its container."""
-        self._container.remove(force=True)
-        self.container = None
-        self._port = None
-        self._terminated = True
+        if self._terminated == False:
+            self._container.remove(force=True)
+            self._container = None
+            self._port = None
+            self._code = None
+            self._terminated = True
 
-    def restart(self, address, newCode):
+    def restore(self, new_address, new_code):
         """Restarts a terminated contract with a new address.
             The contract is now callable with the old and the new addresses.
         """
-        self._addresses.append(address)
-        self._code = newCode
+        self._addresses.append(new_address)
+        self._code = new_code
         self._port = self.find_free_port()
         self._container = self.create_container()
         self._terminated = False
 
     def to_dict(self):
+        print('TEST2')
         """Convert own data to a dictionary."""
         return {
             'id' : self._id,
@@ -88,17 +91,20 @@ class SmartContract:
             }
 
     def get_json(self):
+        print('TEST3')
         """Serialize this instance to a JSON string."""
         return json.dumps(self.to_dict())
 
     @staticmethod
     def from_json(json_data):
+        print('TEST4')
         """Deserialize a JSON string to a SmartContract instance."""
         data_dict = json.loads(json_data)
         return SmartContract.from_dict(data_dict)
 
     @staticmethod
     def from_dict(data_dict):
+        print('TEST5')
         """Instantiate a SmartContract from a data dictionary."""
         smartContract = SmartContract(data_dict['id'], 
                 data_dict['addresses'],
