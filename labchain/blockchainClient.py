@@ -605,6 +605,8 @@ class BlockchainClient:
             if chosen_contract_option == '1':
                 print()
                 print('Contract\'s state:')
+                print(type(contract_state))
+                print(contract_state)
                 for key, value in contract_state.items():
                     print('\t' + str(key) + ": " + str(value))
                 print()

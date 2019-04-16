@@ -461,7 +461,7 @@ class BlockChain:
                 if (txType == txTypes_instance.contract_termination):
                     print("\nContract Termination tx detected in Block #" + 
                         str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
-                    self.worldState.terminate_contract(tx.receiver)
+                    self.worldState.terminate_contract(tx.receiver, tx.sender)
                     print('Contract Terminated')
                 if (txType == txTypes_instance.contract_restoration):
                     print("\nContract Restoration tx detected in Block #" + 

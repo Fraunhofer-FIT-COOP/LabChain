@@ -15,7 +15,7 @@ CONTAINER_TIMEOUT = 10
 
 class SmartContract:
 
-    def __init__(self, id, addresses, code, terminated=False):
+    def __init__(self, id, contract_owners, addresses, code, terminated=False):
         """Constructor for Block, placeholder for Block information.
 
         Parameters
@@ -51,6 +51,7 @@ class SmartContract:
         """
 
         self._id = id
+        self._contract_owners = contract_owners
         self._addresses = addresses
         self._code = code
         self._state = None
@@ -66,6 +67,7 @@ class SmartContract:
             self._port = None
             self._code = None
             self._terminated = True
+            self._state = None
 
     def restore(self, new_address, new_code):
         """Restarts a terminated contract with a new address.
@@ -78,10 +80,10 @@ class SmartContract:
         self._terminated = False
 
     def to_dict(self):
-        print('TEST2')
         """Convert own data to a dictionary."""
         return {
             'id' : self._id,
+            'contract_owners' : self._contract_owners,
             'addresses': self._addresses,
             'code': self._code,
             'state': self._state,
@@ -91,22 +93,20 @@ class SmartContract:
             }
 
     def get_json(self):
-        print('TEST3')
         """Serialize this instance to a JSON string."""
         return json.dumps(self.to_dict())
 
     @staticmethod
     def from_json(json_data):
-        print('TEST4')
         """Deserialize a JSON string to a SmartContract instance."""
         data_dict = json.loads(json_data)
         return SmartContract.from_dict(data_dict)
 
     @staticmethod
     def from_dict(data_dict):
-        print('TEST5')
         """Instantiate a SmartContract from a data dictionary."""
-        smartContract = SmartContract(data_dict['id'], 
+        smartContract = SmartContract(data_dict['id'],
+                data_dict['contract_owners'],
                 data_dict['addresses'],
                 data_dict['code'],
                 data_dict['terminated'])
@@ -121,6 +121,10 @@ class SmartContract:
     @property
     def addresses(self):
         return self._addresses
+
+    @property
+    def contract_owners(self):
+        return self._contract_owners
 
     @property
     def code(self):
@@ -157,6 +161,14 @@ class SmartContract:
     @port.setter
     def port(self, port):
         self._port = port
+
+    @addresses.setter
+    def addresses(self, addresses):
+        self._addresses = addresses
+
+    @contract_owners.setter
+    def contract_owners(self, contract_owners):
+        self._contract_owners = contract_owners
     
     @terminated.setter
     def terminated(self, terminated):

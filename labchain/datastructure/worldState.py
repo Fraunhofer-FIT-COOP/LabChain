@@ -36,11 +36,11 @@ class WorldState:
                     return contract
         return None
 
-    def terminate_contract(self, contract_address):
+    def terminate_contract(self, contract_address, sender):
         """Returns the smartContract that has the specified address if it exists."""
         for contract in self._contract_list:
-            for address in contract.addresses:
-                if address == contract_address:
+            if contract_address in contract.addresses:
+                if sender in contract.contract_owners:
                     contract.terminate()
                     return True
         return False
@@ -48,32 +48,40 @@ class WorldState:
     def restore_contract(self, tx):
         """Returns the smartContract that has the specified address if it exists."""
         contract_address = tx.receiver
+        sender = tx.sender
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
-        print(payload)
         new_code = payload['contractCode']
         new_address = tx.transaction_hash
+        
+        #Add sender at the beginning of the arguments
+        arguments = json.dumps(payload['arguments'])
+        arguments = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
+        arguments = json.loads(arguments)
+        
         for contract in self._contract_list:
-            for address in contract.addresses:
-                if address == contract_address:
-                    contract.restore(new_address,new_code)
-                    url = 'http://localhost:' + str(contract.port) + '/createContract'
+            if contract_address in contract.addresses:
+                if sender in contract.contract_owners:
                     try:
-                        data = {'code': payload['contractCode'],
-                                'arguments': payload['arguments'],
-                                'sender': tx.sender}
+                        contract.restore(new_address,new_code)
+                        url = 'http://localhost:' + str(contract.port) + '/createContract'
+                        data = {'sender': tx.sender,
+                                'code': payload['contractCode'],
+                                'arguments': arguments}
                         r = requests.post(url,json=data).json()
                         if(r['success'] == True):
-                            contract.state = r['encodedNewState']
+                            new_state = r['encodedNewState']
+                            contract.state = new_state
                         if(r['success'] == False):
                                 print(r['error'])
                     except:
-                        logging.error('Contract from transaction could not be created')
+                        logging.error('Contract from transaction could not be restored')
 
-    def update_contract_state(self, contract_address, new_state):
+    def update_contract_state(self, contract_address, new_state, new_encoded_state):
         """Updates the state of a contract."""
         contract = self.get_contract(contract_address)
         if contract:
-            contract.state = new_state
+            contract.contract_owners = new_state['contract_owners']
+            contract.state = new_encoded_state
             return True
         else:
             return False
@@ -142,13 +150,25 @@ class WorldState:
         txHash = tx.transaction_hash
         if txHash == None:
             txHash = self._crypto_helper.hash(tx.get_json())
-        contract = SmartContract(self._contract_id_counter, [txHash], payload['contractCode'])
+        
+        contract_id = self._contract_id_counter
+        contract_owners = [tx.sender]
+        contract_addresses = [txHash]
+        contract_code = payload['contractCode']
+        contract = SmartContract(contract_id, contract_owners, contract_addresses, contract_code)
+
         self._contract_id_counter += 1
         url = 'http://localhost:' + str(contract.port) + '/createContract'
         try:
-            data = {'code': payload['contractCode'],
-                    'arguments': payload['arguments'],
-                    'sender': tx.sender}
+            #Add sender at the beginning of the arguments
+            arguments = json.dumps(payload['arguments'])
+            arguments = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
+            arguments = json.loads(arguments)
+
+            data = {'sender': tx.sender,
+                    'code': payload['contractCode'],
+                    'arguments': arguments
+                    }
             r = requests.post(url,json=data).json()
             if(r['success'] == True):
                 contract.state = r['encodedNewState']
@@ -200,7 +220,8 @@ class WorldState:
 
         try:
             if(r['success'] == True):
-                self.update_contract_state(tx.receiver, r['encodedUpdatedState'])
+                self.update_contract_state(tx.receiver, r['updatedState'], r['encodedUpdatedState'])
+
             if(r["success"] == False):
                 print(r["error"])
         except:
