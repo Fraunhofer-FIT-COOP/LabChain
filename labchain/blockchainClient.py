@@ -349,9 +349,9 @@ class TransactionWizard:
 
     def handle_contract_creation(self):
         chosen_receiver = ''
-        payload = {"contractCode":'', "arguments":""}
-        pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
-        #pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
+        payload = {"contractCode":'', "arguments":"", "contract_file_name":""}
+        #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
+        pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
         pickledContract = None
         with open(pathToContract, 'r') as file:
             pickledContract = pickle.dumps(file.read())
@@ -359,6 +359,7 @@ class TransactionWizard:
         print('Contract successfully imported.')
         arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
         payload['arguments'] = json.loads(arguments)
+        payload['contract_file_name'] = os.path.basename(pathToContract)
         chosen_payload = payload
 
         return chosen_receiver, chosen_payload
@@ -578,24 +579,24 @@ class BlockchainClient:
         clear_screen()
         contract_address = input('Please enter a contract\'s address: ')        
         
-        try:
-            contract = self.network_interface.requestContract(contract_address)
-            if contract['terminated']:
-                print("This contract has been terminated.")
-                print()
-                # wait for any input before returning to menu
-                input('Press enter to continue...')
-                return
-            contract_state = self.network_interface.requestContractState(contract_address)
-            contract_state_encoded = contract['state']
-            contract_code = contract['code']
-            contract_address = contract['addresses'][-1]
-        except:
-            print("No contract was found")
+        #try:
+        contract = self.network_interface.requestContract(contract_address)
+        if contract['terminated']:
+            print("This contract has been terminated.")
             print()
             # wait for any input before returning to menu
             input('Press enter to continue...')
             return
+        contract_state = self.network_interface.requestContractState(contract_address)
+        contract_state_encoded = contract['state']
+        contract_code = contract['code']
+        contract_address = contract['addresses'][-1]
+        # except:
+        #     print("No contract was found")
+        #     print()
+        #     # wait for any input before returning to menu
+        #     input('Press enter to continue...')
+        #     return
         contract_options =   {  '1': 'Get the state of the contract',
                                 '2': 'Get the callable methods from the contract',
                                 '3': 'Get the code of the contract'}
@@ -605,8 +606,6 @@ class BlockchainClient:
             if chosen_contract_option == '1':
                 print()
                 print('Contract\'s state:')
-                print(type(contract_state))
-                print(contract_state)
                 for key, value in contract_state.items():
                     print('\t' + str(key) + ": " + str(value))
                 print()

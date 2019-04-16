@@ -167,6 +167,7 @@ class WorldState:
 
             data = {'sender': tx.sender,
                     'code': payload['contractCode'],
+                    'contract_file_name': payload['contract_file_name'],
                     'arguments': arguments
                     }
             r = requests.post(url,json=data).json()

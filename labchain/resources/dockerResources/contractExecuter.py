@@ -4,9 +4,7 @@ import pickle
 import codecs
 import importlib
 import inspect
-
-CONTRACT_CLASS_NAME = "Contract"
-CONTRACT_FILE_NAME = "contract.py"
+import os
 
 app = Flask(__name__)
 
@@ -35,6 +33,7 @@ def createContract():
 	
 	# Fetch received data
 	data_dict = request.json
+	contract_file_name = data_dict['contract_file_name']
 	code = data_dict['code']
 	arguments = data_dict['arguments']
 
@@ -42,28 +41,23 @@ def createContract():
 	args = tuple(arguments.values())
 
 	#Try to create the contract .py file. Return an error if not possible
-	createContractErrorMessage = createContractHelper(code)
+	createContractErrorMessage = createContractHelper(code, contract_file_name)
 	if createContractErrorMessage != None:
 		return createContractErrorMessage
 
 	#Import module dynamically
-	module = importlib.import_module(CONTRACT_FILE_NAME[:-3])
+	module = importlib.import_module(contract_file_name[:-3])
 
-	# Get the Contract class if it exists. If not return an error.
-	try:
-		contractConstructor = module.Contract
-	except:
-		errorMessage = ("The contract's main class is not called 'Contract'. " +
-						"Please rename it")
-		return jsonError(errorMessage)
+	mainClass = inspect.getmembers(module)[0][0]
+	mainClassName = str(mainClass)
 
 	# Check if the arguments the user provided are correct, if not return an error
-	falseArgumentsErrorMessage = falseArgumentsInMethod(module, CONTRACT_CLASS_NAME, args)
+	falseArgumentsErrorMessage = falseArgumentsInMethod(module, mainClassName, args)
 	if falseArgumentsErrorMessage != None:
 		return falseArgumentsErrorMessage
 
 	# Create a contracts instance with the fetched arguments and encode it to send back
-	contractInstance = contractConstructor(*args)
+	contractInstance = getattr(module, mainClass)(*args)
 	encodedInstance = codecs.encode(pickle.dumps(contractInstance), "base64").decode()
 
 	# Prepare response
@@ -117,8 +111,15 @@ def callMethod():
 	state = data_dict['state']
 	methods = data_dict['methods']
 
+	try:
+		for doc in os.listdir():
+			if '.py' in doc and 'contractExecuter.py' != doc:
+				contract_file_name = doc
+	except:
+		errorMessage = "Contract file could not be found. (callMethod function)"
+		return jsonError(errorMessage)
 	
-	createContractErrorMessage = createContractHelper(code)
+	createContractErrorMessage = createContractHelper(code, contract_file_name)
 	if createContractErrorMessage != None:
 		return createContractErrorMessage
 
@@ -150,7 +151,7 @@ def callMethod():
 		try:
 			getattr(contractInstance, methodName)(*args)
 		except:
-			errorMessage = "Contract's method " + methodName + " does not take argument '" + str(argument) + "'."
+			errorMessage = "Contract's method " + methodName + " does not take argument '" + str(arguments) + "'."
 			return jsonError(errorMessage)
 			
 	# Encode updated the updated contract's state to send back
@@ -293,16 +294,17 @@ def getAttributes():
 			}
 	return json.dumps(response, indent=4, sort_keys=False)
 
-def createContractHelper(code):
+def createContractHelper(code, contract_file_name):
 	noError = None
 	
+
 	# Decode the string 'code' provided, write it into a .py file 
 	# and import it dynamically
 	try:
 		codeString = pickle.loads(codecs.decode(code.encode(), "base64"))
-		with open(CONTRACT_FILE_NAME, 'w') as file:
+		with open(contract_file_name, 'w') as file:
 			file.write(str(pickle.loads(codeString)))
-		module = importlib.import_module(CONTRACT_FILE_NAME[:-3])
+		# module = importlib.import_module(contract_file_name[:-3])
 	except:
 		errorMessage = "The code provided could not be decoded. String may be corrupted."
 		return jsonError(errorMessage)
