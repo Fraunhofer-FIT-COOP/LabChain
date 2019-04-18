@@ -433,11 +433,10 @@ class BlockChain:
                 del _block
 
     def update_worldState(self):
-        print("UPDATING WORLDSTATE")
         self._worldState_is_updating = True
 
         next_block_to_check = self.get_block_by_id(self._ws_next_block_id_to_check)
-        while next_block_to_check:
+        if next_block_to_check:
             for tx in next_block_to_check[0].transactions:
                 txType = tx.transaction_type
                 txHash = tx.transaction_hash
@@ -471,7 +470,6 @@ class BlockChain:
 
 
             self._ws_next_block_id_to_check += 1
-            next_block_to_check = self.get_block_by_id(self._ws_next_block_id_to_check)
         
         self._worldState_is_updating = False
 

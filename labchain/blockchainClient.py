@@ -414,6 +414,7 @@ class TransactionWizard:
         print('Contract successfully imported.')
         arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
         payload['arguments'] = json.loads(arguments)
+        payload['contract_file_name'] = os.path.basename(pathToContract)
         chosen_payload = payload
 
         return chosen_receiver, chosen_payload
@@ -590,7 +591,7 @@ class BlockchainClient:
         contract_state = self.network_interface.requestContractState(contract_address)
         contract_state_encoded = contract['state']
         contract_code = contract['code']
-        contract_address = contract['addresses'][-1]
+        #contract_address = contract['addresses'][-1]
         # except:
         #     print("No contract was found")
         #     print()
@@ -606,6 +607,7 @@ class BlockchainClient:
             if chosen_contract_option == '1':
                 print()
                 print('Contract\'s state:')
+                print(contract_state)
                 for key, value in contract_state.items():
                     print('\t' + str(key) + ": " + str(value))
                 print()

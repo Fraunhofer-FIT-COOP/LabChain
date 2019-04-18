@@ -66,6 +66,7 @@ class WorldState:
                         url = 'http://localhost:' + str(contract.port) + '/createContract'
                         data = {'sender': tx.sender,
                                 'code': payload['contractCode'],
+                                'contract_file_name': payload['contract_file_name'],
                                 'arguments': arguments}
                         r = requests.post(url,json=data).json()
                         if(r['success'] == True):
