@@ -110,11 +110,17 @@ def callMethod():
 	code = data_dict['code']
 	state = data_dict['state']
 	methods = data_dict['methods']
+	contract_file_name = data_dict['contract_file_name']
 
 	try:
-		for doc in os.listdir():
-			if '.py' in doc and 'contractExecuter.py' != doc:
-				contract_file_name = doc
+		#####
+		#Import module dynamically
+		module = importlib.import_module(contract_file_name[:-3])
+
+		mainClass = inspect.getmembers(module)[0][0]
+		#mainClassName = str(mainClass)
+
+	# 	#####
 	except:
 		errorMessage = "Contract file could not be found. (callMethod function)"
 		return jsonError(errorMessage)

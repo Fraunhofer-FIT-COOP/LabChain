@@ -278,6 +278,7 @@ class TransactionWizard:
             print(u'Transaction Type: ' + chosen_txType) 
 
             # Handle the transaction depending on it's type
+            sender = wallet_list[int(chosen_key) - 1][1]
             if(chosen_txType == txTypes.normal_transaction):
                 chosen_receiver, chosen_payload = self.handle_normal_transaction(chosen_key)
                 chosen_txType = 'Normal Transaction'
@@ -285,7 +286,9 @@ class TransactionWizard:
                 chosen_receiver, chosen_payload = self.handle_contract_creation()
                 chosen_txType = 'Contract Creation'
             if(chosen_txType == txTypes.method_call):
-                chosen_receiver, chosen_payload = self.handle_method_call(chosen_key)
+                chosen_receiver, chosen_payload = self.handle_method_call(sender)
+                if not chosen_receiver or not chosen_payload:
+                    return
                 chosen_txType = 'Method Call'
             if(chosen_txType == txTypes.contract_termination):
                 chosen_receiver, chosen_payload = self.handle_contract_termination()
@@ -365,13 +368,13 @@ class TransactionWizard:
         return chosen_receiver, chosen_payload
     
 
-    def handle_method_call(self, chosen_key):
+    def handle_method_call(self, sender):
         chosen_receiver = self.__ask_for_receiver()
         chosen_txType = Transaction_Types().method_call
         while not self.__validate_receiver_input(chosen_receiver):
             clear_screen()
             print('Invalid input! Please choose a correct receiver!')
-            print(u'Sender: ' + str(chosen_key))
+            print(u'Sender: ' + str(sender))
             print(u'Transaction Type: ' + str(chosen_txType))
             chosen_receiver = self.__ask_for_receiver()
             print()
@@ -381,6 +384,11 @@ class TransactionWizard:
         methods = []
         methodName = input("Please enter name of the method you want to call on this contract: ")
         arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
+        
+        arguments = json.dumps(arguments)
+        arguments = arguments.replace('{','{"sender": "' + sender + '", ', 1)
+        arguments = json.loads(arguments)
+
         moreArguments = True
         while moreArguments:
             methodToCall = {'methodName':methodName, 'arguments':arguments}
@@ -393,7 +401,14 @@ class TransactionWizard:
             arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
         chosen_payload['methods'] = methods
 
+        # try:
+        tx_of_contract_creation, _ = self.network_interface.requestTransaction(chosen_receiver)
+        contract_file_name = json.loads(tx_of_contract_creation.payload.replace("'", '"'))['contract_file_name']
+        chosen_payload['contract_file_name'] = contract_file_name
         return chosen_receiver, chosen_payload
+        # except:
+        #     print('Error: Could not create the method call transaction.')
+        #     return None, None
 
 
     def handle_contract_termination(self):
@@ -607,7 +622,6 @@ class BlockchainClient:
             if chosen_contract_option == '1':
                 print()
                 print('Contract\'s state:')
-                print(contract_state)
                 for key, value in contract_state.items():
                     print('\t' + str(key) + ": " + str(value))
                 print()

@@ -212,12 +212,14 @@ class WorldState:
         contract = self.get_contract(tx.to_dict()['receiver'])
         url = 'http://localhost:' + str(contract.port) + '/callMethod'
 
-        payload = tx.to_dict()['payload'].replace("'",'"')
+        payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
 
         data = {'code': contract.code,
                 'state': contract.state,
-                'methods': json.loads(payload)['methods'],
+                'contract_file_name': payload['contract_file_name'],
+                'methods': payload['methods'],
                 'sender': tx.sender}
+        
         r = requests.post(url,json=data).json()
 
         try:
@@ -227,8 +229,7 @@ class WorldState:
             if(r["success"] == False):
                 print(r["error"])
         except:
-            logging.error('Method call from transaction ' + tx.transaction_hash + 
-                        'could not be completed')
+            logging.error('Method call from transaction could not be completed')
 
 
         # """Calls a method or methods on an existing contract from the _contract_list."""
