@@ -1,7 +1,7 @@
-requests==2.18.4
+requests==2.21.0
 json-rpc>=1.11.0
 netifaces==0.10.7
-pycryptodome==3.6.1
+pycryptodome==3.8.1
 werkzeug
 dnspython
 plotly==2.7.0
