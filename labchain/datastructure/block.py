@@ -183,8 +183,10 @@ class Block(object):
         Else returns False
         """
         if isinstance(other, Block) or isinstance(other, LogicalBlock):
-            return any([self._block_id == other.block_id,
-                        any(t in self._transactions for t in other.transactions)])
+            return any([
+                self._block_id == other.block_id,
+                any(t in self._transactions for t in other.transactions)
+            ])
 
 
 class LogicalBlock(Block):
@@ -215,7 +217,7 @@ class LogicalBlock(Block):
 
         Attributes
         ----------
-        _length_in_chain : Int
+        _position_in_chain : Int
             Position at which it resides in the node's chain
         _crypto_helper : Instance of the Crypto Helper Module
         _merkle_tree_root : Hash
@@ -231,7 +233,7 @@ class LogicalBlock(Block):
                                            nonce=nonce,
                                            timestamp=timestamp,
                                            difficulty=difficulty)
-        self._length_in_chain = None
+        self._position_in_chain = None
         self._crypto_helper = CryptoHelper.instance()
         self._consensus = consensus_obj
         if not self._merkle_tree_root:
@@ -246,11 +248,11 @@ class LogicalBlock(Block):
 
     def get_block_pos(self):
         """Returns position at which block resides in the chain"""
-        return self._length_in_chain
+        return self._position_in_chain
 
     def set_block_pos(self, value):
         """Sets the position at which block will reside in chain"""
-        self._length_in_chain = value
+        self._position_in_chain = value
 
     def get_computed_hash(self):
         """Gets the hash for the entire block"""
@@ -315,7 +317,8 @@ class LogicalBlock(Block):
 
         # Validate Merkle Tree correctness
         if self.compute_merkle_root() != self._merkle_tree_root:
-            self._logger.debug('Invalid merkle root: {}'.format(self._merkle_tree_root))
+            self._logger.debug('Invalid merkle root: {}'
+                               .format(self._merkle_tree_root))
             return -2
 
         #  validate nonce

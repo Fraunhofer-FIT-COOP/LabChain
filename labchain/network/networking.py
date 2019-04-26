@@ -78,15 +78,18 @@ class JsonRpcClient:
         }
         logger.debug('Sending request {} to {}'.format(str(payload), url))
         try:
-            response = requests.post(url, data=json.dumps(payload), headers=headers).json()
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            response = requests.post(url, data=json.dumps(payload),
+                                     headers=headers).json()
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
             raise NodeNotAvailableException(str(e))
         logger.debug('Received response {} from {}'.format(response, url))
         self.id_counter += 1
         try:
             return response['result']
         except KeyError:
-            raise UnexpectedResponseException('Unexpected response from {}: {}'.format(url, response))
+            raise UnexpectedResponseException('Unexpected response from {}: {}'
+                                              .format(url, response))
 
 
 class NetworkInterface:
