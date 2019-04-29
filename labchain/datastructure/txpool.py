@@ -29,9 +29,10 @@ class TxPool:
                 return (transaction, None)
         return None, None
 
-    def get_transactions(self, count):
+    def get_transactions(self, count, remove_result=True):
         transactions = self._transactions[:count]
-        self._transactions = self._transactions[count:]
+        if remove_result:
+            self._transactions = self._transactions[count:]
         return transactions
 
     def remove_transaction(self, transaction):

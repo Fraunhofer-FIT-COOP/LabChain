@@ -450,15 +450,12 @@ class BlockchainClient:
 
     def __show_transaction_pool(self):
         clear_screen()
-        txpool = TxPool(CryptoHelper.instance())
-        txcount = txpool.get_transaction_count()
-        transactions = txpool.get_transactions(txcount)
-        print('There are ', str(txcount), ' transactions in pool:')
+        transactions = self.network_interface.requestTransactionsInPool()
+        print('There are ', str(len(transactions)), ' transactions in the txpool:')
         for transaction in transactions:
             print('Sender ID: {}'.format(transaction.sender))
             print('Receiver ID: {}'.format(transaction.receiver))
             print('Payload: {}'.format(transaction.payload))
             print('Signature: {}'.format(transaction.signature))
             print()
-        txpool.return_transactions_to_pool(transactions)
         input('Press enter to continue...')
