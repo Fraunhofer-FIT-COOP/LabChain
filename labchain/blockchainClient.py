@@ -3,6 +3,8 @@ from collections import OrderedDict
 
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException
 from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.txpool import TxPool
+from labchain.util.cryptoHelper import CryptoHelper
 
 LABCHAIN_LOGO = """
           .(##%*
@@ -314,6 +316,7 @@ class BlockchainClient:
             '2': ('Create Transaction', self.__create_transaction, []),
             '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Load Transaction', self.__load_transaction, []),
+            '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
@@ -443,4 +446,19 @@ class BlockchainClient:
             print('Block Hash: {}'.format(block_hash))
         print()
         # wait for any input before returning to menu
+        input('Press enter to continue...')
+
+    def __show_transaction_pool(self):
+        clear_screen()
+        txpool = TxPool(CryptoHelper.instance())
+        txcount = txpool.get_transaction_count()
+        transactions = txpool.get_transactions(txcount)
+        print('There are ', str(txcount), ' transactions in pool:')
+        for transaction in transactions:
+            print('Sender ID: {}'.format(transaction.sender))
+            print('Receiver ID: {}'.format(transaction.receiver))
+            print('Payload: {}'.format(transaction.payload))
+            print('Signature: {}'.format(transaction.signature))
+            print()
+        txpool.return_transactions_to_pool(transactions)
         input('Press enter to continue...')
