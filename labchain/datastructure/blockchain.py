@@ -80,8 +80,8 @@ class BlockChain:
         self._db = db
         self._q = q
         self.worldState = WorldState()
-        self._ws_next_block_id_to_check = 0
-        self._worldState_is_updating = False
+        # self._ws_next_block_id_to_check = 0
+        # self._worldState_is_updating = False
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=0, timestamp=0)
@@ -348,6 +348,11 @@ class BlockChain:
             self._logger.debug("Branch {} : {}".format(i + 1, branch))
             i += 1
         self.switch_to_longest_branch()
+
+        #################################
+        self.update_worldState(block)
+        #################################
+
         return True
 
     def create_block(self, transactions):
@@ -442,46 +447,79 @@ class BlockChain:
                 self._orphan_blocks.pop(_hash)
                 del _block
 
-    def update_worldState(self):
-        self._worldState_is_updating = True
 
-        next_block_to_check = self.get_block_by_id(self._ws_next_block_id_to_check)
-        if next_block_to_check:
-            for tx in next_block_to_check[0].transactions:
-                txType = tx.transaction_type
-                txHash = tx.transaction_hash
-                if txHash == None:
-                    txHash = self._crypto_helper.hash(tx.get_json().encode())
+    def update_worldState(self, block):
+        for tx in block.transactions:
+            txType = tx.transaction_type
+            txHash = tx.transaction_hash
+            if txHash == None:
+                txHash = self._crypto_helper.hash(tx.get_json().encode())
 
-                txTypes_instance = Transaction_Types()
-                if(txType == txTypes_instance.normal_transaction):
-                    print("\nNormal tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
-                    continue
-                if (txType == txTypes_instance.contract_creation):
-                    print("\nContract creation tx detected in Block #" + 
-                        str(self._ws_next_block_id_to_check) + " with tx.hash " + str(txHash))
-                    self.worldState.create_contract(tx)
-                    print('Contract created')
-                if (txType == txTypes_instance.method_call):
-                    print("\nmethod call tx detected in Block #" + 
-                        str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
-                    self.worldState.call_method(tx)
-                    print('Method called on contract')
-                if (txType == txTypes_instance.contract_termination):
-                    print("\nContract Termination tx detected in Block #" + 
-                        str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
-                    self.worldState.terminate_contract(tx.receiver, tx.sender)
-                    print('Contract Terminated')
-                if (txType == txTypes_instance.contract_restoration):
-                    print("\nContract Restoration tx detected in Block #" + 
-                        str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
-                    self.worldState.restore_contract(tx)
-                    print('Contract Restored')
+            txTypes_instance = Transaction_Types()
+            if(txType == txTypes_instance.normal_transaction):
+                print("\nNormal tx detected in Block #" + str(block.block_id) + " with tx.hash " + txHash)
+                continue
+            if (txType == txTypes_instance.contract_creation):
+                print("\nContract creation tx detected in Block #" + 
+                    str(block.block_id) + " with tx.hash " + str(txHash))
+                self.worldState.create_contract(tx)
+                print('Contract created')
+            if (txType == txTypes_instance.method_call):
+                print("\nmethod call tx detected in Block #" + 
+                    str(block.block_id) + " with tx.hash " + txHash)
+                self.worldState.call_method(tx)
+                print('Method called on contract')
+            if (txType == txTypes_instance.contract_termination):
+                print("\nContract Termination tx detected in Block #" + 
+                    str(block.block_id) + " with tx.hash " + txHash)
+                self.worldState.terminate_contract(tx.receiver, tx.sender)
+                print('Contract Terminated')
+            if (txType == txTypes_instance.contract_restoration):
+                print("\nContract Restoration tx detected in Block #" + 
+                    str(block.block_id) + " with tx.hash " + txHash)
+                self.worldState.restore_contract(tx)
+                print('Contract Restored')
+
+    # def update_worldState(self):
+    #     self._worldState_is_updating = True
+
+    #     next_block_to_check = self.get_block_by_id(self._ws_next_block_id_to_check)
+    #     if next_block_to_check:
+    #         for tx in next_block_to_check[0].transactions:
+    #             txType = tx.transaction_type
+    #             txHash = tx.transaction_hash
+    #             if txHash == None:
+    #                 txHash = self._crypto_helper.hash(tx.get_json().encode())
+
+    #             txTypes_instance = Transaction_Types()
+    #             if(txType == txTypes_instance.normal_transaction):
+    #                 print("\nNormal tx detected in Block #" + str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
+    #                 continue
+    #             if (txType == txTypes_instance.contract_creation):
+    #                 print("\nContract creation tx detected in Block #" + 
+    #                     str(self._ws_next_block_id_to_check) + " with tx.hash " + str(txHash))
+    #                 self.worldState.create_contract(tx)
+    #                 print('Contract created')
+    #             if (txType == txTypes_instance.method_call):
+    #                 print("\nmethod call tx detected in Block #" + 
+    #                     str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
+    #                 self.worldState.call_method(tx)
+    #                 print('Method called on contract')
+    #             if (txType == txTypes_instance.contract_termination):
+    #                 print("\nContract Termination tx detected in Block #" + 
+    #                     str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
+    #                 self.worldState.terminate_contract(tx.receiver, tx.sender)
+    #                 print('Contract Terminated')
+    #             if (txType == txTypes_instance.contract_restoration):
+    #                 print("\nContract Restoration tx detected in Block #" + 
+    #                     str(self._ws_next_block_id_to_check) + " with tx.hash " + txHash)
+    #                 self.worldState.restore_contract(tx)
+    #                 print('Contract Restored')
 
 
-            self._ws_next_block_id_to_check += 1
+    #         self._ws_next_block_id_to_check += 1
         
-        self._worldState_is_updating = False
+    #     self._worldState_is_updating = False
 
 
     def request_block_from_neighbour(self, requested_block_hash):

@@ -387,4 +387,4 @@ class BlockChainNode:
             kwargs=dict(interval=worldState_update_interval))
 
         self.orphan_killer.start()
-        self.update_worldState.start()
+        #self.update_worldState.start()
