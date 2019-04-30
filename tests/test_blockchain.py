@@ -94,6 +94,11 @@ class BlockChainComponent(unittest.TestCase):
         self.assertEqual(self.blockchain.get_n_last_transactions(0), [])
         self.assertEqual(self.blockchain.get_n_last_transactions(1), [self.txn1])
         self.assertEqual(self.blockchain.get_n_last_transactions(3), [self.txn1,self.txn2])
+    
+    def test_get_transactions_by_hash(self):
+        block_hash = self.create_and_save_block([self.txn1, self.txn2])
+        self.assertEqual(self.blockchain.get_transaction(self.txn1.transaction_hash),(self.txn1,block_hash))
+
     """
     def test_send_block_to_neighbour(self):
         block_as_json = self.blockchain.send_block_to_neighbour(self.block1)
@@ -163,15 +168,15 @@ class BlockChainComponent(unittest.TestCase):
         self.block7 = self.blockchain.create_block([self.txn2, self.txn4])
 
     def create_and_save_block(self,transactions):
-        result = False
+        block_hash = None
         block = self.blockchain.create_block(transactions)
         self.blockchain.active_mine_block_update(block)
         _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain.calculate_diff(block.predecessor_hash)
         if self.consensus.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
             if self.blockchain.add_block(block,False):
-                result = True
+                block_hash = block.get_computed_hash()
         self.blockchain.active_mine_block_update(None)
-        return result
+        return block_hash
 
 if __name__ == '__main__':
     unittest.main()
