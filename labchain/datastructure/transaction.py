@@ -100,7 +100,7 @@ class Transaction:
         })
 
         if self.__transaction_type == Transaction_Types().method_call:
-            print('Verifying method call')
+            print('Verifying method call...')
             methods = json.loads(self.__payload.replace("'",'"'))['methods']
             
             for method in methods:
@@ -111,8 +111,9 @@ class Transaction:
                                         'the sender specified in the method\'s arguments did not match.')
                         return False
                 except:
+                    logging.debug('Could not verify transaction.')
                     return False
-            print("Methods call verified")
+            print("Method call tx verified")
 
         return crypto_helper.validate(self.sender, data, self.signature)
 

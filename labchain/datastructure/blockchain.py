@@ -8,6 +8,7 @@ import time
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.transaction import NoHashError, Transaction_Types
 from labchain.datastructure.worldState import WorldState
+from labchain.datastructure.transaction import Transaction_Types
 
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
@@ -270,8 +271,17 @@ class BlockChain:
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
             self.calculate_diff(block.predecessor_hash)
 
+        # Get list of already existing contracts that the transactions in this block
+        # interact with.
+        transactions = block._transactions
+        if transactions is not None:
+            _contracts = {}
+            for t in transactions:
+                if t.transaction_type == Transaction_Types().method_call:
+                    _contracts[t.receiver] = self.worldState.get_contract(t.receiver)
+                    
         validity_level = block.validate_block(_latest_ts, _earliest_ts,
-                                              _num_of_blocks, _latest_difficulty)
+                                              _num_of_blocks, _latest_difficulty, _contracts)
 
         if _prev_hash not in self._blockchain:
             if validity_level == -3:

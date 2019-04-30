@@ -3,9 +3,11 @@ import json
 import logging
 from pprint import pformat
 import time
+import requests
 
 from labchain.util.cryptoHelper import CryptoHelper
-from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.transaction import Transaction, Transaction_Types
+from labchain.datastructure.smartContract import SmartContract
 
 
 class Block(object):
@@ -289,12 +291,14 @@ class LogicalBlock(Block):
         return Block.from_json(super(LogicalBlock, self).get_json())
 
     def validate_block(self, _latest_timestamp, _earliest_timestamp,
-                       _num_of_blocks, _prev_difficulty):
+                       _num_of_blocks, _prev_difficulty, _contracts=None):
         """Validate the block by checking -
            1. The transaction signatures in the block
            2. The Merkle Tree correctness
            3. The Block Hash with given Nonce to see if it
               satisfies the configured number of zeroes.
+           4. If the transaction interacts with a contract,
+              if the interaction is valid.
 
         Returns
         -------
@@ -302,6 +306,7 @@ class LogicalBlock(Block):
             -1 : If Check 1 failed
             -2 : If Check 2 failed
             -3 : If Check 3 failed
+            -4 : If Check 4 failed
             0 : If all Checks passed
         """
 
@@ -325,6 +330,22 @@ class LogicalBlock(Block):
         if not block_valid:
             self._logger.debug('Invalid block: {}'.format(self))
             return -3
+
+        transactions = self._transactions
+        if transactions is not None:
+            for t in transactions:
+                if t.transaction_type == Transaction_Types().contract_creation:
+                    if not self.validate_contract_creation(t):
+                        return -4
+
+                elif t.transaction_type == Transaction_Types().method_call:
+                    contract = _contracts[t.receiver]
+                    valid_state = self.validate_method_call(t, contract)
+                    if valid_state == None:
+                        return -4
+                    else:
+                        _contracts[t.receiver].state = valid_state
+        
 
         return 0
 
@@ -377,3 +398,68 @@ class LogicalBlock(Block):
         for t in self._transactions:
             txn_hashes.append(self._crypto_helper.hash(t.get_json()))
         return _merkle_root(txn_hashes)
+
+    
+    def validate_contract_creation(self, tx):
+        """Checks if the tx can create a new contract successfully."""
+        payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
+        txHash = tx.transaction_hash
+        if txHash == None:
+            txHash = self._crypto_helper.hash(tx.get_json())
+
+        contract_id = -1
+        contract_owners = [tx.sender]
+        contract_addresses = [txHash]
+        contract_code = payload['contractCode']
+        contract = SmartContract(contract_id, contract_owners, contract_addresses, contract_code)
+
+        url = 'http://localhost:' + str(contract.port) + '/createContract'
+        try:
+            #Add sender at the beginning of the arguments
+            arguments = json.dumps(payload['arguments'])
+            arguments = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
+            arguments = json.loads(arguments)
+
+            data = {'sender': tx.sender,
+                    'code': payload['contractCode'],
+                    'contract_file_name': payload['contract_file_name'],
+                    'arguments': arguments
+                    }
+            r = requests.post(url,json=data).json()
+            contract.terminate()
+            if(r['success'] == True and r['newState']['bad_exec'] == False):
+                print('\nContract creation tx was validated.\n')
+                return True
+            else:
+                print('\nContract creation tx was not validated.\n')
+                return False
+        except:
+            logging.error('\nContract creation tx was not validated2.\n')
+            return False
+
+    def validate_method_call(self, tx, contract):
+        """Checks if a tx can call a method or methods on an existing contract successfully."""
+        try:
+            url = 'http://localhost:' + str(contract.port) + '/callMethod'
+
+            payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
+
+            data = {'code': contract.code,
+                    'state': contract.state,
+                    'contract_file_name': payload['contract_file_name'],
+                    'methods': payload['methods'],
+                    'sender': tx.sender}
+            
+            r = requests.post(url,json=data).json()
+            if(r['success'] == True 
+                and r['encodedUpdatedState'] != contract.state 
+                and r['updatedState']['bad_exec'] == False):
+                    print('\nMethod call was validated.\n')
+                    return r['encodedUpdatedState']
+            #If the execution wasn't successfull or the tx didn't create any state changes return false
+            else:
+                print('\nMethod call was not validated.\n')
+                return None
+        except:
+            logging.error('Method call verification could not be completed')
+            return None
