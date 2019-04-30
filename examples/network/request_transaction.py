@@ -38,7 +38,7 @@ def create_network_interface(port, initial_peers=None):
     if initial_peers is None:
         initial_peers = {}
     return ServerNetworkInterface(JsonRpcClient(), initial_peers, MockCryptoHelper(), empty_function, empty_function,
-                                  empty_function, empty_function, get_transaction, port)
+                                  empty_function, empty_function, get_transaction,empty_function,empty_function, port)
 
 
 def configure_logging():

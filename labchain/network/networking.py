@@ -261,7 +261,15 @@ class NetworkInterface:
             # remove address if last port was removed
             if not self.peers[host]:
                 del self.peers[host]
-
+    
+    def get_n_last_transactions(self,n):
+        """return a list of n last mined transactions"""
+        responses = self._bulk_send('requestNLastTransaction', [n], return_on_first_success=True)
+        if responses:
+            return responses[0]
+        else:
+            raise NoPeersException('No nodes available to request the transaction from')
+    
     @staticmethod
     def __resolve_hostname(ip_address):
         return socket.gethostbyname(ip_address)
@@ -277,7 +285,9 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_by_hash_callback,
                  get_transaction_callback,
                  get_blocks_by_hash_range,
-                 get_transactions_in_pool, port=8080, block_cache_size=1000, transaction_cache_size=1000):
+                 get_transactions_in_pool,
+                 get_n_last_transactions_callback,
+                 port=8080, block_cache_size=1000, transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
         :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
@@ -286,6 +296,7 @@ class ServerNetworkInterface(NetworkInterface):
         :param get_block_callback: A callable that gets a block ID and returns the corresponding Block instance or None.
         :param get_transaction_callback: A callable that gets a transaction hash and returns the corresponding
                                             Transaction instance or None.
+        :param get_n_last_transactions_callback: A callable that get n last mined transactions from blockchain
         :param port: The port number to listen on.
         """
         super().__init__(json_rpc_client, initial_peers)
@@ -295,6 +306,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_callback = get_block_callback
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
+        self.get_n_last_transactions_callback = get_n_last_transactions_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
         self.get_transactions_in_pool_callback = get_transactions_in_pool
         self.port = int(port)
@@ -348,6 +360,7 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestTransaction'] = self.__handle_request_transaction
         dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
         dispatcher['requestTransactionsInPool'] = self.__handle_request_transactions_in_pool
+        dispatcher['requestNLastTransaction'] = self.__handle_request_n_last_transaction
 
         # insert IP address of peer if advertise peer is called
         try:
@@ -435,6 +448,12 @@ class ServerNetworkInterface(NetworkInterface):
         if transaction:
             return transaction.to_dict(), block_hash
         return None
+    
+    def __handle_request_n_last_transaction(self,n):
+        transactions = self.get_n_last_transactions_callback(n)
+        if transactions:
+            return [transaction.to_dict() for transaction in transactions]
+        return []
 
     def __filter_own_address(self, peers):
         """Filter entries with own IP address and port."""

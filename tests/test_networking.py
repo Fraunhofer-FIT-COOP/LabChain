@@ -46,10 +46,23 @@ class MockCryptoHelper:
 
 class CommonTestCase(TestCase):
 
+    def empty_function():
+        """Empty function for unneeded functionality."""
+        pass
+
     def create_server_network_interface(self, json_rpc_client):
-        return ServerNetworkInterface(json_rpc_client, {}, MockCryptoHelper(), self.on_block_received,
-                                      self.on_transaction_received, self.get_block, self.get_block_by_hash,
-                                      self.get_transaction, self.get_blocks_by_hash_range, port=6666)
+        return ServerNetworkInterface(json_rpc_client, 
+                                        {}, 
+                                        MockCryptoHelper(), 
+                                        self.on_block_received,
+                                        self.on_transaction_received, 
+                                        self.get_block, 
+                                        self.get_block_by_hash,
+                                        self.get_transaction,
+                                        self.get_blocks_by_hash_range,
+                                        self.empty_function,
+                                        self.get_n_last_transactions,
+                                        port=6666)
 
     def setUp(self):
         # key block ID -> value block instance
@@ -86,6 +99,9 @@ class CommonTestCase(TestCase):
         if transaction_hash in self.available_transactions:
             return self.available_transactions[transaction_hash], 'test_block_hash'
         return None, None
+    
+    def get_n_last_transactions(self,n):
+        return self.available_transactions
 
     def get_peer_list(self):
         return self.network_interface.peers

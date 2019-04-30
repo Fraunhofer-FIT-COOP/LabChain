@@ -311,13 +311,18 @@ class BlockchainClient:
             '1': ('Load by number', self.__load_block, [False]),
             '2': ('Load by hash', self.__load_block, [True])
         }, 'Please select a value: ', 'Exit Load Block Menu')
+        self.load_transaction_menu = Menu(['Load Transaction'], {
+            '1': ('Load by hash', self.__load_transaction_by_hash,[]),
+            '2': ('Show Transaction Pool', self.__show_transaction_pool,[]),
+            '3': ('Show n last transactions', self.__load_n_last_transactions,[])
+        }, 'Please select a value: ', 'Exit Load Transaction Menu')
         self.main_menu = Menu(LABCHAIN_LOGO_LIST + ['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction', self.__create_transaction, []),
             '3': ('Load Block', self.load_block_menu.show, []),
-            '4': ('Load Transaction', self.__load_transaction, []),
-            '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
+            '4': ('Load Transaction', self.load_transaction_menu.show, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
+
 
     def main(self):
         """Entry point for the client console application."""
@@ -426,7 +431,7 @@ class BlockchainClient:
         print()
         input('Press any key to go back to the main menu!')
 
-    def __load_transaction(self):
+    def __load_transaction_by_hash(self):
         """Prompt the user for a transaction hash and display the transaction details."""
         clear_screen()
         transaction_hash = input('Please enter a transaction hash: ')
@@ -458,4 +463,24 @@ class BlockchainClient:
             print('Payload: {}'.format(transaction.payload))
             print('Signature: {}'.format(transaction.signature))
             print()
+        input('Press enter to continue...')
+
+    def __load_n_last_transactions(self):
+        """Prompt the user for a n: number of transactions"""
+        clear_screen()
+        n = input('Please enter n: ')
+    
+        transactions = self.network_interface.get_n_last_transactions(n)
+
+        clear_screen()
+
+        if not transactions:
+            print ("No transactions")
+        else:
+            for transaction in transactions:
+                print('Sender ID: {}'.format(transaction['sender']))
+                print('Receiver ID: {}'.format(transaction['receiver']))
+                print('Payload: {}'.format(transaction['payload']))
+                print('Signature: {}'.format(transaction['signature']))
+                print ()
         input('Press enter to continue...')

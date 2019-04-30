@@ -18,24 +18,27 @@ class BlockChainComponent(unittest.TestCase):
         """Setup phase for each testcase"""
         self.init_components()
         self.create_transactions()
-        self.create_blocks()
 
     def test_get_block_range(self):
+        self.create_blocks()
         # get_block_range doesn't consider genesis block so expected length = 0
         blocks = self.blockchain.get_block_range(0)
         self.assertEqual(len(blocks), 0)
 
     def test_get_block_by_id(self):
+        self.create_blocks()
         # fetching first block whose id = 0
         blocks = self.blockchain.get_block_by_id(0)
         for block in blocks:
             self.assertEqual(block._block_id, 0)
 
     def test_get_block_by_hash(self):
+        self.create_blocks()
         block_info = json.loads(self.blockchain.get_block_by_hash(self.blockchain._first_block_hash))
         self.assertEqual(block_info['nr'], 0)
 
     def test_add_block(self):
+        self.create_blocks()
         self.blockchain.add_block(self.block1)
         #blocks = self.blockchain.get_block_range(0)
         #self.assertEqual(len(blocks), 1)
@@ -53,6 +56,7 @@ class BlockChainComponent(unittest.TestCase):
     """
 
     def test_switch_to_longest_branch(self):
+        self.create_blocks()
         # now block8 has a branch with block 6
         self.block8 = self.block1 = self.blockchain.create_block([self.txn2, self.txn4])
 
@@ -71,6 +75,7 @@ class BlockChainComponent(unittest.TestCase):
         self.assertEqual(prev_block_length, after_block_length, "Block is deleted")
 
     def test_calculate_diff(self):
+        self.create_blocks()
         # blocks added in setup
         blocks, t1, t2, diff = self.blockchain.calculate_diff()
         self.assertIsNotNone(blocks)
@@ -79,10 +84,16 @@ class BlockChainComponent(unittest.TestCase):
         self.assertIsNotNone(diff)
 
     def test_create_block(self):
+        self.create_blocks()
         # creating new block based on given transaction list
         new_block = self.blockchain.create_block([self.txn2, self.txn4])
         self.assertIsNotNone(new_block, "New block Created")
 
+    def test_get_last_n_transactions(self):
+        self.create_and_save_block([self.txn1, self.txn2])
+        self.assertEqual(self.blockchain.get_n_last_transactions(0), [])
+        self.assertEqual(self.blockchain.get_n_last_transactions(1), [self.txn1])
+        self.assertEqual(self.blockchain.get_n_last_transactions(3), [self.txn1,self.txn2])
     """
     def test_send_block_to_neighbour(self):
         block_as_json = self.blockchain.send_block_to_neighbour(self.block1)
@@ -91,6 +102,7 @@ class BlockChainComponent(unittest.TestCase):
     """
 
     def request_block_from_neighbour(self):
+        self.create_blocks()
         self.assertEqual(1, 2 - 1, "They are equal")
 
     def init_components(self):
@@ -150,6 +162,16 @@ class BlockChainComponent(unittest.TestCase):
         self.block6 = self.blockchain.create_block([self.txn3, self.txn4])
         self.block7 = self.blockchain.create_block([self.txn2, self.txn4])
 
+    def create_and_save_block(self,transactions):
+        result = False
+        block = self.blockchain.create_block(transactions)
+        self.blockchain.active_mine_block_update(block)
+        _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain.calculate_diff(block.predecessor_hash)
+        if self.consensus.mine(block, _timestamp2, _timestamp1, _num_of_blocks, _difficulty):
+            if self.blockchain.add_block(block,False):
+                result = True
+        self.blockchain.active_mine_block_update(None)
+        return result
 
 if __name__ == '__main__':
     unittest.main()

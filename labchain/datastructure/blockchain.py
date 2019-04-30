@@ -165,6 +165,27 @@ class BlockChain:
         else:
             return None, None
 
+    def get_n_last_transactions(self,n):
+        """
+        Parameters
+        ----------
+        n: numbers of last mined transactions
+        Returns
+        -------
+        array of transactions
+        """
+        n = int(n)
+        number_of_transactions = 0
+        total_transactions = []
+        current_block_hash = self._node_branch_head
+        while(number_of_transactions < n and self._blockchain[current_block_hash].block_id != 0):
+            remained_transactions = n - number_of_transactions
+            block_transactions = self._blockchain[current_block_hash].transactions[:remained_transactions]
+            current_block_hash = self._blockchain[current_block_hash].predecessor_hash
+            total_transactions.extend(block_transactions)
+            number_of_transactions += len(block_transactions)
+        return total_transactions
+
     def calculate_diff(self, _hash=None):
         """Sends the timestamps of given/latest and nth last block and
         number of blocks between that time
