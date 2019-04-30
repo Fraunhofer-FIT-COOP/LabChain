@@ -296,6 +296,8 @@ class TransactionWizard:
             if(chosen_txType == txTypes.contract_restoration):
                 chosen_receiver, chosen_payload = self.handle_contract_restoration()
                 chosen_txType = 'Contract Restoration'
+            if chosen_receiver == None and chosen_payload == None:
+                return
 
             clear_screen()
             # Create transaction Object and send to network
@@ -356,16 +358,20 @@ class TransactionWizard:
         #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
         pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
         pickledContract = None
-        with open(pathToContract, 'r') as file:
-            pickledContract = pickle.dumps(file.read())
-        payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
-        print('Contract successfully imported.')
-        arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
-        payload['arguments'] = json.loads(arguments)
-        payload['contract_file_name'] = os.path.basename(pathToContract)
-        chosen_payload = payload
+        try:
+            with open(pathToContract, 'r') as file:
+                pickledContract = pickle.dumps(file.read())
+            payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
+            print('Contract successfully imported.')
+            arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
+            payload['arguments'] = json.loads(arguments)
+            payload['contract_file_name'] = os.path.basename(pathToContract)
+            chosen_payload = payload
+            return chosen_receiver, chosen_payload
+        except:
+            input('\nInvalid input, press any key to go back to the main menu!')
+            return None, None
 
-        return chosen_receiver, chosen_payload
     
 
     def handle_method_call(self, sender):
@@ -373,66 +379,84 @@ class TransactionWizard:
         chosen_txType = Transaction_Types().method_call
         while not self.__validate_receiver_input(chosen_receiver):
             clear_screen()
-            print('Invalid input! Please choose a correct receiver!')
+            print('Invalid input! Please choose a correct receiver!\n')
             print(u'Sender: ' + str(sender))
             print(u'Transaction Type: ' + str(chosen_txType))
             chosen_receiver = self.__ask_for_receiver()
             print()
 
-        print(u'Receiver: ' + str(chosen_receiver))
+        # clear_screen()
+        # print(u'Sender: ' + str(sender))
+        # print(u'Transaction Type: ' + str(chosen_txType))
+        # print(u'Receiver: ' + str(chosen_receiver))
         chosen_payload = {'methods':[]}
         methods = []
-        methodName = input("Please enter name of the method you want to call on this contract: ")
-        arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
-        
-        arguments = json.dumps(arguments)
-        arguments = arguments.replace('{','{"sender": "' + sender + '", ', 1)
-        arguments = json.loads(arguments)
 
-        moreArguments = True
-        while moreArguments:
-            methodToCall = {'methodName':methodName, 'arguments':arguments}
-            methods.append(methodToCall)
-            methodName = input(("Please enter name of another method you want to call on this contract "
-                            + "(leave empty if you do not want to call any other methods): "))
-            if methodName == '':
-                moreArguments = False
-                break
-            arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
-        chosen_payload['methods'] = methods
+        try:
+            methodName = input("Please enter name of the method you want to call on this contract: ")
+            arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
+            
+            arguments = json.dumps(arguments)
+            arguments = arguments.replace('{','{"sender": "' + sender + '", ', 1)
+            arguments = json.loads(arguments)
 
-        # try:
-        tx_of_contract_creation, _ = self.network_interface.requestTransaction(chosen_receiver)
-        contract_file_name = json.loads(tx_of_contract_creation.payload.replace("'", '"'))['contract_file_name']
-        chosen_payload['contract_file_name'] = contract_file_name
-        return chosen_receiver, chosen_payload
-        # except:
-        #     print('Error: Could not create the method call transaction.')
-        #     return None, None
+            moreArguments = True
+            while moreArguments:
+                methodToCall = {'methodName':methodName, 'arguments':arguments}
+                methods.append(methodToCall)
+                methodName = input(("Please enter name of another method you want to call on this contract "
+                                + "(leave empty if you do not want to call any other methods): "))
+                if methodName == '':
+                    moreArguments = False
+                    break
+                arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
+            chosen_payload['methods'] = methods
+
+            tx_of_contract_creation, _ = self.network_interface.requestTransaction(chosen_receiver)
+            contract_file_name = json.loads(tx_of_contract_creation.payload.replace("'", '"'))['contract_file_name']
+            chosen_payload['contract_file_name'] = contract_file_name
+            return chosen_receiver, chosen_payload
+        except:
+            input('\nCould not create the method call transaction. Press any key to go back to the main menu!')
+            return None, None
 
 
     def handle_contract_termination(self):
         chosen_receiver = self.__ask_for_receiver()
-        chosen_payload = {}
-        return chosen_receiver, chosen_payload
+        try:
+            self.network_interface.requestContract(chosen_receiver)
+            chosen_payload = {}
+            return chosen_receiver, chosen_payload
+        except:
+            input('\nContract does not exist. Press any key to go back to the main menu!')
+            return None, None
 
 
     def handle_contract_restoration(self):
         chosen_receiver = self.__ask_for_receiver()
-        payload = {"contractCode":'', "arguments":""}
-        #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
-        pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
-        pickledContract = None
-        with open(pathToContract, 'r') as file:
-            pickledContract = pickle.dumps(file.read())
-        payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
-        print('Contract successfully imported.')
-        arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
-        payload['arguments'] = json.loads(arguments)
-        payload['contract_file_name'] = os.path.basename(pathToContract)
-        chosen_payload = payload
-
-        return chosen_receiver, chosen_payload
+        try:
+            self.network_interface.requestContract(chosen_receiver)
+        except:
+            input('\nContract does not exist. Press any key to go back to the main menu!')
+            return None, None
+        
+        try:
+            payload = {"contractCode":'', "arguments":""}
+            #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
+            pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
+            pickledContract = None
+            with open(pathToContract, 'r') as file:
+                pickledContract = pickle.dumps(file.read())
+            payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
+            print('Contract successfully imported.')
+            arguments = input("Please enter the arguments for the contract's constructor in dict format: ")
+            payload['arguments'] = json.loads(arguments)
+            payload['contract_file_name'] = os.path.basename(pathToContract)
+            chosen_payload = payload
+            return chosen_receiver, chosen_payload
+        except:
+            input('\nCould not create contract restoration transaction. Press any key to go back to the main menu!')
+            return None, None
 
 
 class BlockchainClient:

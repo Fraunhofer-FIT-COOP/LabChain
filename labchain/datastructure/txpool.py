@@ -4,6 +4,7 @@ from labchain.datastructure.transaction import Transaction
 
 
 class TxPool:
+    _MAX_TX_REJECTIONS = 1
     _singleton = None
     _first_time = True
 
@@ -11,6 +12,7 @@ class TxPool:
         #  Note: Re-look this logic again later
         if self._first_time:
             self._transactions = []
+            self._penalized_transactions = {}
             self._crypto_helper = crypto_helper_obj
             self._first_time = False
 
@@ -32,6 +34,12 @@ class TxPool:
     def get_transactions(self, count):
         transactions = self._transactions[:count]
         self._transactions = self._transactions[count:]
+        if self._penalized_transactions:
+            for key, value in self._penalized_transactions.items():
+                if value >= self._MAX_TX_REJECTIONS:
+                    for transaction in transactions:
+                        if transaction.transaction_hash == key:
+                            transactions.remove(transaction)
         return transactions
 
     def remove_transaction(self, transaction):
@@ -62,3 +70,10 @@ class TxPool:
         for transaction in transactions:
             status = status and self.add_transaction_if_not_exist(transaction)
         return status
+
+    def penalize_transaction(self, transaction):
+        if transaction.transaction_hash not in self._penalized_transactions:
+            self._penalized_transactions[transaction.transaction_hash] = 1
+        else:
+            self._penalized_transactions[transaction.transaction_hash] += 1
+

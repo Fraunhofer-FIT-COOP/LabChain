@@ -6,9 +6,8 @@ import sys
 import time
 
 from labchain.datastructure.block import LogicalBlock
-from labchain.datastructure.transaction import NoHashError, Transaction_Types
+from labchain.datastructure.transaction import NoHashError, Transaction_Types, Transaction
 from labchain.datastructure.worldState import WorldState
-from labchain.datastructure.transaction import Transaction_Types
 
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
@@ -277,11 +276,18 @@ class BlockChain:
         if transactions is not None:
             _contracts = {}
             for t in transactions:
-                if t.transaction_type == Transaction_Types().method_call:
+                if (t.transaction_type == Transaction_Types().method_call
+                    or t.transaction_type == Transaction_Types().contract_termination
+                    or t.transaction_type == Transaction_Types().contract_restoration):
                     _contracts[t.receiver] = self.worldState.get_contract(t.receiver)
                     
         validity_level = block.validate_block(_latest_ts, _earliest_ts,
                                               _num_of_blocks, _latest_difficulty, _contracts)
+        bad_tx = None
+        if isinstance(validity_level,tuple):
+            bad_tx = validity_level[1]
+            validity_level = validity_level[0]
+
 
         if _prev_hash not in self._blockchain:
             if validity_level == -3:
@@ -298,6 +304,8 @@ class BlockChain:
                     self._logger.debug("Since this block is ours, returning the "
                                  "transactions back to transaction pool")
                     _txns = block.transactions
+                    if isinstance(bad_tx,Transaction):
+                        self._txpool.penalize_transaction(bad_tx)
                     self._txpool.return_transactions_to_pool(_txns)
                 del block
                 return False
@@ -349,9 +357,7 @@ class BlockChain:
             i += 1
         self.switch_to_longest_branch()
 
-        #################################
         self.update_worldState(block)
-        #################################
 
         return True
 

@@ -297,8 +297,8 @@ class LogicalBlock(Block):
            2. The Merkle Tree correctness
            3. The Block Hash with given Nonce to see if it
               satisfies the configured number of zeroes.
-           4. If the transaction interacts with a contract,
-              if the interaction is valid.
+           4. If the transaction interacts with a contract
+              and produces an invalid state
 
         Returns
         -------
@@ -306,7 +306,7 @@ class LogicalBlock(Block):
             -1 : If Check 1 failed
             -2 : If Check 2 failed
             -3 : If Check 3 failed
-            -4 : If Check 4 failed
+            -4 , bad_tx: If Check 4 failed
             0 : If all Checks passed
         """
 
@@ -331,23 +331,38 @@ class LogicalBlock(Block):
             self._logger.debug('Invalid block: {}'.format(self))
             return -3
 
+        bad_tx = self.get_bad_transaction(_contracts)
+        if isinstance(bad_tx,Transaction):
+            return -4, bad_tx
+        
+        return 0
+
+    def get_bad_transaction(self, _contracts):
         transactions = self._transactions
         if transactions is not None:
             for t in transactions:
                 if t.transaction_type == Transaction_Types().contract_creation:
                     if not self.validate_contract_creation(t):
-                        return -4
-
+                        return t
                 elif t.transaction_type == Transaction_Types().method_call:
-                    contract = _contracts[t.receiver]
+                    try:
+                        contract = _contracts[t.receiver]
+                    except:
+                        return t
                     valid_state = self.validate_method_call(t, contract)
                     if valid_state == None:
-                        return -4
+                        return t
                     else:
                         _contracts[t.receiver].state = valid_state
-        
-
-        return 0
+                elif t.transaction_type == Transaction_Types().contract_termination:
+                    contract = _contracts[t.receiver]
+                    if not self.validate_contract_termination(t, contract):
+                        return t
+                elif t.transaction_type == Transaction_Types().contract_restoration:
+                    contract = _contracts[t.receiver]
+                    if not self.validate_contract_restoration(t, contract):
+                        return t
+        return None
 
     def compute_merkle_root(self):
         """Computes the hashes of all transaction and calls _merkle_root
@@ -463,3 +478,28 @@ class LogicalBlock(Block):
         except:
             logging.error('Method call verification could not be completed')
             return None
+
+    def validate_contract_termination(self, tx, contract):
+        print("Validating contract termination")
+        if (contract != None 
+            and contract.terminated == False
+            and tx.sender in contract.contract_owners):
+            print("Contract termination validated")
+            return True
+        else:
+            print("Contract termination not validated")
+            return False
+
+
+    
+    def validate_contract_restoration(self, tx, contract):
+        print("Validating contract restoration")
+        if (contract != None 
+            and contract.terminated == True
+            and tx.sender in contract.contract_owners
+            and self.validate_contract_creation(tx)):
+            print("Contract restoration validated")
+            return True
+        else:
+            print("Contract restoration not validated")
+            return False
