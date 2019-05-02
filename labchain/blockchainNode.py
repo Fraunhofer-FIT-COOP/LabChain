@@ -23,8 +23,8 @@ from labchain.databaseInterface import Db
 
 class BlockChainNode:
 
-    def __init__(self, config_file_path, node_port=None,
-                 peer_list=None):
+    def __init__(self, config_file_path, node_ip="127.0.0.1", node_port=None,
+                 peer_list=None, peer_discovery=True):
         """Constructor for BlockChainNode
 
         Parameters
@@ -64,8 +64,10 @@ class BlockChainNode:
         self.network_interface = None
         self.webserver_thread = None
         self.polling_thread = None
+        self.network_ip = node_ip
         self.network_port = node_port
         self.initial_peers = peer_list
+        self.peer_discovery = peer_discovery
         self.config_reader = None
         self.db = None
         self.logger = logging.getLogger(__name__)
@@ -207,7 +209,7 @@ class BlockChainNode:
         """Request a block from other peers according to a block id"""
         return self.network_interface.requestBlock(block_id)
 
-    def create_network_interface(self, port, initial_peers=None):
+    def create_network_interface(self, ip, port, initial_peers=None):
         """Initialize the network interface"""
         if initial_peers is None:
             initial_peers = {}
@@ -219,7 +221,7 @@ class BlockChainNode:
                                       self.on_get_block_by_hash,
                                       self.on_get_transaction,
                                       self.on_get_blocks_by_range,
-                                      port)
+                                      self.peer_discovery, ip, port)
 
     def reinitialize_blockchain_from_db(self):
         """Restore DB by fetching entries from Blockchain"""
@@ -294,7 +296,7 @@ class BlockChainNode:
             intial_peer_list = json.loads(initial_peers_from_config)
             self.initial_peers = initial_peers_from_config
         self.network_interface = self.create_network_interface(
-            self.network_port,
+            self.network_ip, self.network_port,
             initial_peers=intial_peer_list)
 
         # start the web servers for receiving JSON-RPC calls

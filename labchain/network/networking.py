@@ -15,6 +15,7 @@ from werkzeug.wrappers import Request, Response
 
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
+from labchain.network.discover import PeerDiscoverySystem
 from labchain.util.utility import Utility
 
 
@@ -261,7 +262,11 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_callback,
                  get_block_by_hash_callback,
                  get_transaction_callback,
-                 get_blocks_by_hash_range, port=8080, block_cache_size=1000, transaction_cache_size=1000):
+                 get_blocks_by_hash_range,
+                 peer_discovery,
+                 ip, port=8080,
+                 block_cache_size=1000,
+                 transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
         :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
@@ -280,11 +285,25 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
+        self.ip = ip
         self.port = int(port)
         self.block_cache = []
         self.block_cache_size = block_cache_size
         self.transaction_cache = []
         self.transaction_cache_size = transaction_cache_size
+
+        if peer_discovery:
+            self.peerDiscoveryServer = PeerDiscoverySystem(self.ip, self.port)
+            self.peerDiscoveryServer.register_service()
+
+            def callback(info):
+                ip = socket.inet_ntoa(info.address)
+                print('Add new peer {}:{}'.format(ip, info.port))
+                self.add_peer(ip, info.port)
+
+            self.peerDiscoveryClient = PeerDiscoverySystem(ip, port,
+                                                           callback_function=callback)
+            self.peerDiscoveryClient.start_service_listener()
 
     def update_peer_lists(self):
         """Get new peer lists from all peers."""
