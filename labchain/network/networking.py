@@ -297,12 +297,12 @@ class ServerNetworkInterface(NetworkInterface):
             self.peerDiscoveryServer.register_service()
 
             def callback(info):
-                ip = socket.inet_ntoa(info.address)
-                print('Add new peer {}:{}'.format(ip, info.port))
-                self.add_peer(ip, info.port)
+                new_ip = socket.inet_ntoa(info.address)
+                logger.info('Add new peer {}:{}'.format(ip, info.port))
+                if new_ip != ip and port != int(info.port):
+                    self.add_peer(new_ip, info.port)
 
-            self.peerDiscoveryClient = PeerDiscoverySystem(ip, port,
-                                                           callback_function=callback)
+            self.peerDiscoveryClient = PeerDiscoverySystem(ip, port, callback_function=callback)
             self.peerDiscoveryClient.start_service_listener()
 
     def update_peer_lists(self):
