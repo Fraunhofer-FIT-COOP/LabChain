@@ -265,7 +265,11 @@ class NetworkInterface:
     @staticmethod
     def __resolve_hostname(ip_address):
         return socket.gethostbyname(ip_address)
-
+        
+    def _connected_peers(self):
+        """Get all connected peers."""
+        responses = self._bulk_send('getPeers')
+        return responses	
 
 class ServerNetworkInterface(NetworkInterface):
     """Advanced network interface for additional server-to-server communication."""

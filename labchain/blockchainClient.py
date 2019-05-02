@@ -1,7 +1,7 @@
 import os
 from collections import OrderedDict
 
-from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException
+from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, BlockDoesNotExistException,NoPeersException
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.txpool import TxPool
 from labchain.util.cryptoHelper import CryptoHelper
@@ -317,6 +317,7 @@ class BlockchainClient:
             '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Load Transaction', self.__load_transaction, []),
             '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
+            '6': ('Show Connected Peers', self.__load_peers, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
@@ -459,3 +460,14 @@ class BlockchainClient:
             print('Signature: {}'.format(transaction.signature))
             print()
         input('Press enter to continue...')
+
+    def __load_peers(self):
+        """display the peers list."""
+        clear_screen()
+        try:
+            print('peers : {}'.format(self.network_interface._connected_peers()))            
+        except NoPeersException:
+            print('No peers found')
+        print()
+        # wait for any input before returning to menu
+        input('Press enter to continue...')         
