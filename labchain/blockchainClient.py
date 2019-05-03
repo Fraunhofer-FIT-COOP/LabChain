@@ -136,8 +136,7 @@ class Menu:
         print(self.error_message)
 
     def __append_back_menu_item(self, back_option_label):
-        max_key = max(self.menu_items, key=int)
-        self.back_option_key = str(int(max_key) + 1)
+        self.back_option_key = 'q'
         self.menu_items[self.back_option_key] = (back_option_label, None, None)
 
     def show(self):

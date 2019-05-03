@@ -92,9 +92,6 @@ class BlockChainComponent(unittest.TestCase):
         self.assertIsInstance(block_as_object, Block, "Sent the Block information requested by any neighbour")
     """
 
-    def request_block_from_neighbour(self):
-        self.assertEqual(1, 2 - 1, "They are equal")
-
     def init_components(self):
         node_config = './labchain/resources/node_configuration.ini'
         config_reader = ConfigReader(node_config)
