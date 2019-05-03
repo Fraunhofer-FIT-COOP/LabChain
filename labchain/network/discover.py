@@ -53,6 +53,3 @@ class PeerDiscoverySystem:
     def start_service_listener(self):
         self.zeroconf.add_service_listener(type_=self.type,
                                            listener=self.listener)
-        # self.browser = ServiceBrowser(self.zeroconf, self.type,
-        #                               handlers=[self.listener,
-        #                                         peer_adding_function])
