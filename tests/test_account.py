@@ -199,7 +199,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -214,7 +214,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -229,7 +229,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('test key')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -249,7 +249,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -267,7 +267,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('test key')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -292,7 +292,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('existing key')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -306,7 +306,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('3')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -326,7 +326,9 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('3')
         self.queue_input('3')
         self.queue_input('')
-        self.queue_input('4')
+        self.queue_input('q')
+        self.queue_input('q')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
         # then
@@ -348,7 +350,7 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('3') # Delete Address
         self.queue_input('2') # Select '2' address
         self.queue_input('') # Press enter
-        self.queue_input('4') # Exit Wallet menue
+        self.queue_input('q') # Exit Wallet menue
         self.queue_input('q') # Exit blockchain client
         self.client.main()
         # then
@@ -502,7 +504,7 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')  # press enter
-        self.queue_input('3')
+        self.queue_input('q')
         # at this point the main menu is shown
         self.queue_input('q')  # exit blockchain client
         self.client.main()
@@ -525,7 +527,7 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')  # press enter
-        self.queue_input('3')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
 
@@ -552,7 +554,7 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')  # press enter
-        self.queue_input('3')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
 
