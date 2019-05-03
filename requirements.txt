@@ -5,5 +5,5 @@ pycryptodome==3.8.1
 werkzeug
 dnspython
 plotly==2.7.0
-Jinja2==2.10
+Jinja2==2.10.1
 zeroconf>=0.22.0

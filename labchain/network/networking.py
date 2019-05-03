@@ -171,6 +171,38 @@ class NetworkInterface:
             raise NoPeersException('No nodes available to request the block from')
         return res
 
+    def requestTransactionReceived(self, public_key):
+        """Returns the tuple (transaction, block hash of transaction)."""
+        responses = self._bulk_send('requestTransactionReceived', [public_key], return_on_first_success=False)
+
+        res = []
+        if responses:
+            if len(responses) > 0:
+                for tx in responses[0]:
+                    res.append(Transaction.from_dict(tx))
+                #transaction, block_hash = responses[0]
+                #return Transaction.from_dict(transaction), block_hash
+            else:
+                raise TransactionDoesNotExistException()
+        else:
+            raise NoPeersException('No nodes available to request the transaction from')
+        return res
+
+    def requestTransactionsInPool(self):
+        """Requests all transactions in the txpool of the connected node"""
+        responses = self._bulk_send('requestTransactionsInPool', return_on_first_success=True)
+
+        res = []
+        if responses:
+            if len(responses) > 0:
+                for tx in responses[0]:
+                    res.append(Transaction.from_dict(tx))
+            else:
+                raise Exception('There was a response but it was empty')
+        else:
+            raise NoPeersException('No nodes available to request the transactions from')
+        return res
+
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""
         if not Utility.is_valid_ipv4(ip_address) and not Utility.is_valid_ipv6(ip_address):
@@ -252,6 +284,10 @@ class NetworkInterface:
     def __resolve_hostname(ip_address):
         return socket.gethostbyname(ip_address)
 
+    def _connected_peers(self):
+        """Get all connected peers."""
+        responses = self._bulk_send('getPeers')
+        return responses
 
 class ServerNetworkInterface(NetworkInterface):
     """Advanced network interface for additional server-to-server communication."""
@@ -263,10 +299,9 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_by_hash_callback,
                  get_transaction_callback,
                  get_blocks_by_hash_range,
-                 peer_discovery,
-                 ip, port=8080,
-                 block_cache_size=1000,
-                 transaction_cache_size=1000):
+                 get_transaction_received_callback,
+                 get_transactions_in_pool, peer_discovery,
+                 ip, port=8080, block_cache_size=1000, transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
         :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
@@ -285,12 +320,14 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_block_by_hash_callback = get_block_by_hash_callback
         self.get_transaction_callback = get_transaction_callback
         self.get_blocks_by_hash_range_callback = get_blocks_by_hash_range
+        self.get_transactions_in_pool_callback = get_transactions_in_pool
         self.ip = ip
         self.port = int(port)
         self.block_cache = []
         self.block_cache_size = block_cache_size
         self.transaction_cache = []
         self.transaction_cache_size = transaction_cache_size
+        self.get_transaction_received_callback = get_transaction_received_callback
 
         if peer_discovery:
             self.peerDiscoveryServer = PeerDiscoverySystem(self.ip, self.port)
@@ -349,6 +386,8 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestBlockByHash'] = self.__handle_request_block_by_hash
         dispatcher['requestTransaction'] = self.__handle_request_transaction
         dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
+        dispatcher['requestTransactionsInPool'] = self.__handle_request_transactions_in_pool
+        dispatcher['requestTransactionReceived'] = self.__handle_request_transaction_received
 
         # insert IP address of peer if advertise peer is called
         try:
@@ -425,11 +464,23 @@ class ServerNetworkInterface(NetworkInterface):
             return [block.to_dict() for block in blocks]
         return []
 
+    def __handle_request_transactions_in_pool(self):
+        transactions = self.get_transactions_in_pool_callback()
+        if transactions:
+            return [transaction.to_dict() for transaction in transactions]
+        return []
+
     def __handle_request_transaction(self, transaction_hash):
         transaction, block_hash = self.get_transaction_callback(transaction_hash)
         if transaction:
             return transaction.to_dict(), block_hash
         return None
+
+    def __handle_request_transaction_received(self, public_key):
+        transactions = self.get_transaction_received_callback(public_key)
+        if transactions:
+            return [transaction.to_dict() for transaction in transactions]
+        return []
 
     def __filter_own_address(self, peers):
         """Filter entries with own IP address and port."""

@@ -166,6 +166,14 @@ class BlockChainNode:
                 transaction_hash)
         return transaction_tuple
 
+    def on_get_all_transactions(self, transaction_hash):
+        """Retrieve all transaction from the blockchain"""
+        transaction_tuple = self.blockchain_obj.get_all_transactions()
+        return transaction_tuple
+
+    def on_get_transactions_in_txpool(self):
+        return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
+
     def on_new_transaction_received(self, transaction):
         """Callback method to pass to network"""
         return self.txpool_obj.add_transaction_if_not_exist(transaction)
@@ -221,6 +229,8 @@ class BlockChainNode:
                                       self.on_get_block_by_hash,
                                       self.on_get_transaction,
                                       self.on_get_blocks_by_range,
+                                      self.on_get_all_transactions,
+                                      self.on_get_transactions_in_txpool,
                                       self.peer_discovery, ip, port)
 
     def reinitialize_blockchain_from_db(self):
