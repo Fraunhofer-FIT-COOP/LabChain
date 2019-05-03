@@ -319,6 +319,8 @@ class BlockchainClient:
             '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
             '6': ('Show Connected Peers', self.__load_peers, []),
             '7': ('Show Receieved Transaction', self._show_received_transaction, []),
+            '8': ('Show Transaction Sent', self._show_sent_transaction, []),
+            '9': ('Show All Transaction', self._show_all_transaction, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
@@ -496,5 +498,55 @@ class BlockchainClient:
                 print('Payload: {}'.format(transaction.payload))
                 print('Signature: {}'.format(transaction.signature))
                 print()
+        # wait for any input before returning to menu
+        input('Press enter to continue...')
+    def _show_sent_transaction(self):
+        """show transaction received."""
+        #clear_screen()
+        #try:
+        #    print('transaction : {}'.format(self.network_interface.requestTransactionReceived()))
+        #except NoPeersException:
+        #    print('No transaction found')
+        #print()
+        """Prompt the user for a transaction hash and display the transaction details."""
+        clear_screen()
+        public_key = input('Please enter a sender address: ')
+        try:
+            transactions = self.network_interface.requestTransactionReceived(public_key)
+        except TransactionDoesNotExistException:
+            transactions = None
+
+        clear_screen()
+        for transaction in transactions:
+            if public_key == transaction.sender:
+                print('Sender ID: {}'.format(transaction.sender))
+                print('Receiver ID: {}'.format(transaction.receiver))
+                print('Payload: {}'.format(transaction.payload))
+                print('Signature: {}'.format(transaction.signature))
+                print()
+        # wait for any input before returning to menu
+        input('Press enter to continue...')
+    def _show_all_transaction(self):
+        """show transaction received."""
+        #clear_screen()
+        #try:
+        #    print('transaction : {}'.format(self.network_interface.requestTransactionReceived()))
+        #except NoPeersException:
+        #    print('No transaction found')
+        #print()
+        """Prompt the user for a transaction hash and display the transaction details."""
+        clear_screen()
+        try:
+            transactions = self.network_interface.requestTransactionReceived("public_key")
+        except TransactionDoesNotExistException:
+            transactions = None
+
+        clear_screen()
+        for transaction in transactions:
+            print('Sender ID: {}'.format(transaction.sender))
+            print('Receiver ID: {}'.format(transaction.receiver))
+            print('Payload: {}'.format(transaction.payload))
+            print('Signature: {}'.format(transaction.signature))
+            print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
