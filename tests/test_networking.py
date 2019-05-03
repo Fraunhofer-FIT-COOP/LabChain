@@ -62,6 +62,7 @@ class CommonTestCase(TestCase):
                                         self.get_blocks_by_hash_range,
                                         self.empty_function,
                                         self.get_n_last_transactions,
+                                        self.empty_function,
                                         port=6666)
 
     def setUp(self):

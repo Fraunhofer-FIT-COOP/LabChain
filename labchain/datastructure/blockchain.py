@@ -188,6 +188,32 @@ class BlockChain:
             total_transactions.extend(block_transactions)
             number_of_transactions += len(block_transactions)
         return total_transactions
+    
+    def get_all_transactions(self):
+        """
+        Parameters
+        ----------
+        None
+        Returns
+        -------
+        Tuple
+            (Transaction obj, Block_hash)
+        """
+        res = []
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                #if transaction_hash == _txn.transaction_hash:
+                res.append(_txn)
+                #return _txn
+        return res
+        #for _hash, _block in self._blockchain.items():
+        #    _txns = _block.transactions
+        #    for _txn in _txns:
+        #        res.append(_txn)
+        #else:
+        #    return None, None
+        #return res
 
     def calculate_diff(self, _hash=None):
         """Sends the timestamps of given/latest and nth last block and

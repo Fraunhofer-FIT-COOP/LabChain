@@ -168,6 +168,11 @@ class BlockChainNode:
         """Retrieve a list of n last mined transactions from the blockchain"""
         return self.blockchain_obj.get_n_last_transactions(n)
 
+    def on_get_all_transactions(self, transaction_hash):
+        """Retrieve all transaction from the blockchain"""
+        transaction_tuple = self.blockchain_obj.get_all_transactions()
+        return transaction_tuple
+
     def on_get_transactions_in_txpool(self):
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
@@ -228,6 +233,7 @@ class BlockChainNode:
                                       self.on_get_blocks_by_range,
                                       self.on_get_transactions_in_txpool,
                                       self.on_get_last_n_transactions,
+                                      self.on_get_all_transactions,
                                       port)
 
     def reinitialize_blockchain_from_db(self):
