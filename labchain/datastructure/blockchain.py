@@ -89,7 +89,7 @@ class BlockChain:
 
 
     def get_block_range(self, range_start=None, range_end=None):
-        """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
+        """Returns a list of Logicalblock objects from the blockchain range_start and range_end inclusive.
         Chain followed by this node is the one traversed.
         range_start or range_end are block hashes
         if range_end is not specified, all blocks till end of chain are returned

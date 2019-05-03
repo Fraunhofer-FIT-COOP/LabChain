@@ -23,22 +23,24 @@ class BlockChainComponent(unittest.TestCase):
     def test_get_block_range(self):
         # get_block_range doesn't consider genesis block so expected length = 0
         blocks = self.blockchain.get_block_range(0)
-        self.assertEqual(len(blocks), 0)
+        self.assertEqual(0, len(blocks))
 
     def test_get_block_by_id(self):
         # fetching first block whose id = 0
         blocks = self.blockchain.get_block_by_id(0)
         for block in blocks:
-            self.assertEqual(block._block_id, 0)
+            self.assertEqual(0, block._block_id)
 
     def test_get_block_by_hash(self):
         block_info = json.loads(self.blockchain.get_block_by_hash(self.blockchain._first_block_hash))
-        self.assertEqual(block_info['nr'], 0)
+        self.assertEqual(0, block_info['nr'])
 
+    # TODO Rework method, currently not working!
     def test_add_block(self):
-        self.blockchain.add_block(self.block1)
-        #blocks = self.blockchain.get_block_range(0)
-        #self.assertEqual(len(blocks), 1)
+        self.assertTrue(self.blockchain.add_block(self.block1),
+                        msg='Block is not added')
+        blocks = self.blockchain.get_block_range(0)
+        self.assertEqual(1, len(blocks))
 
     """
     def test_add_block1(self):
