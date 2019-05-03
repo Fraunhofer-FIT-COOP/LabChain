@@ -300,8 +300,9 @@ class ServerNetworkInterface(NetworkInterface):
                  get_transaction_callback,
                  get_blocks_by_hash_range,
                  get_transaction_received_callback,
-                 get_transactions_in_pool, peer_discovery,
-                 ip, port=8080, block_cache_size=1000, transaction_cache_size=1000):
+                 get_transactions_in_pool, peer_discovery=True,
+                 ip='127.0.0.1', port=8080, block_cache_size=1000,
+                 transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
         :param initial_peers: A dict structured like {'<ip1>': {'port': <port1>}, ...}.
