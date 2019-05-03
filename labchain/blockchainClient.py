@@ -437,7 +437,7 @@ class BlockchainClient:
         try:
             transaction, block_hash = self.network_interface.requestTransaction(transaction_hash)
         except TransactionDoesNotExistException:
-            transaction = None
+            transaction, block_hash = None, None
 
         clear_screen()
         if not transaction:
