@@ -47,9 +47,20 @@ class MockCryptoHelper:
 class CommonTestCase(TestCase):
 
     def create_server_network_interface(self, json_rpc_client):
-        return ServerNetworkInterface(json_rpc_client, {}, MockCryptoHelper(), self.on_block_received,
-                                      self.on_transaction_received, self.get_block, self.get_block_by_hash,
-                                      self.get_transaction, self.get_blocks_by_hash_range, port=6666)
+        return ServerNetworkInterface(
+                                        json_rpc_client,
+                                        {}, 
+                                        MockCryptoHelper(), 
+                                        self.on_block_received,
+                                        self.on_transaction_received, 
+                                        self.get_block, 
+                                        self.get_block_by_hash,
+                                        self.get_transaction, 
+                                        self.get_blocks_by_hash_range,
+                                        self.empty_function,
+                                        self.empty_function,
+                                        False,
+                                        port=6666)
 
     def setUp(self):
         # key block ID -> value block instance
@@ -119,6 +130,9 @@ class CommonTestCase(TestCase):
             json_actual = json.loads(json_actual)
         self.assertEqual(json_expected, json_actual)
 
+    def empty_function():
+        """Empty function for unneeded functionality."""
+        pass
 
 class PeerListExchangeTestCase(CommonTestCase):
 
