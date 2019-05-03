@@ -270,10 +270,11 @@ class BlockChain:
 
         """
         if not isinstance(block, LogicalBlock):
-            self._logger.debug("Converting block to logical block ")
+            self._logger.debug("Converting block to logical block!")
             block = LogicalBlock.from_block(block, self._consensus)
 
         if block.get_computed_hash() in self._blockchain:
+            self._logger.debug("Hash already present in blockchain! Not adding.")
             return False
 
         _prev_hash = block.predecessor_hash
@@ -303,6 +304,7 @@ class BlockChain:
                     _txns = block.transactions
                     self._txpool.return_transactions_to_pool(_txns)
                 del block
+                self._logger.debug("Block not valid! Not adding.")
                 return False
 
             _prev_block = self._blockchain.get(_prev_hash)
