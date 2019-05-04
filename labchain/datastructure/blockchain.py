@@ -162,6 +162,9 @@ class BlockChain:
             for _txn in _txns:
                 if transaction_hash == _txn.transaction_hash:
                     return _txn, _hash
+        pool_transaction = self._txpool.get_transaction_by_hash(transaction_hash)[0]
+        if pool_transaction: 
+                return pool_transaction,"No block hash - this transaction still in the pool"
         else:
             return None, None
 
