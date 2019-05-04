@@ -10,21 +10,29 @@ from labchain.util.configReader import ConfigReader
 from labchain.databaseInterface import Db
 
 
+test_db_file = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                            '../labchain/tests/resources/labchaindb.sqlite'))
+test_db_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                            '../labchain/tests/resources/'))
 class DbTestCase(unittest.TestCase):
-
+    
     def setUp(self):
-        self.database = Db(block_chain_db_file=os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                                            '../labchain/resources/labchaindb.sqlite')))
+        if not os.path.exists(test_db_dir):
+            os.makedirs(test_db_dir)
+            
+        self.database = Db(test_db_file)
         self.init_components()
         self.create_transactions()
         self.create_blocks()
 
+
     def test_create_tables(self):
+        self.database.open_connection(test_db_file)
         self.assertTrue(self.database.create_tables())
 
     def test_save_block(self):
         self.assertTrue(self.database.save_block(self.block1))
-        self.database.get_blockchain_from_db()
+        blocks = self.database.get_blockchain_from_db()
 
     def init_components(self):
         node_config = './labchain/resources/node_configuration.ini'
@@ -83,6 +91,9 @@ class DbTestCase(unittest.TestCase):
         self.block6 = self.blockchain.create_block([self.txn3, self.txn4])
         self.block7 = self.blockchain.create_block([self.txn2, self.txn4])
 
+    # def tearDown(self):
+    #     self.database.drop_block_chain_table
+    #     self.assertTrue(self.database.drop_block_chain_table())
 
 if __name__ == '__main__':
     unittest.main()
