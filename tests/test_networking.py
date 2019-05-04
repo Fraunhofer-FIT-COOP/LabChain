@@ -59,6 +59,7 @@ class CommonTestCase(TestCase):
                                         self.get_blocks_by_hash_range,
                                         self.empty_function,
                                         self.empty_function,
+                                        self.empty_function,
                                         False,
                                         port=6666)
 

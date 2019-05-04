@@ -202,6 +202,14 @@ class NetworkInterface:
         else:
             raise NoPeersException('No nodes available to request the transactions from')
         return res
+    
+    def get_n_last_transactions(self,n):
+        """return a list of n last mined transactions"""
+        responses = self._bulk_send('requestNLastTransaction', [n], return_on_first_success=True)
+        if responses:
+            return responses[0]
+        else:
+            raise NoPeersException('No nodes available to request the transaction from')
 
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""
@@ -300,7 +308,9 @@ class ServerNetworkInterface(NetworkInterface):
                  get_transaction_callback,
                  get_blocks_by_hash_range,
                  get_transaction_received_callback,
-                 get_transactions_in_pool, peer_discovery=True,
+                 get_transactions_in_pool,
+                 get_n_last_transactions_callback,
+                 peer_discovery=True,
                  ip='127.0.0.1', port=8080, block_cache_size=1000,
                  transaction_cache_size=1000):
         """
@@ -311,6 +321,7 @@ class ServerNetworkInterface(NetworkInterface):
         :param get_block_callback: A callable that gets a block ID and returns the corresponding Block instance or None.
         :param get_transaction_callback: A callable that gets a transaction hash and returns the corresponding
                                             Transaction instance or None.
+        :param get_n_last_transactions_callback: A callable that get n last mined transactions from blockchain
         :param port: The port number to listen on.
         """
         super().__init__(json_rpc_client, initial_peers)
@@ -329,6 +340,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.transaction_cache = []
         self.transaction_cache_size = transaction_cache_size
         self.get_transaction_received_callback = get_transaction_received_callback
+        self.get_n_last_transactions_callback = get_n_last_transactions_callback
 
         if peer_discovery:
             self.peerDiscoveryServer = PeerDiscoverySystem(self.ip, self.port)
@@ -389,6 +401,8 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
         dispatcher['requestTransactionsInPool'] = self.__handle_request_transactions_in_pool
         dispatcher['requestTransactionReceived'] = self.__handle_request_transaction_received
+        dispatcher['requestNLastTransaction'] = self.__handle_request_n_last_transaction
+
 
         # insert IP address of peer if advertise peer is called
         try:
@@ -495,6 +509,12 @@ class ServerNetworkInterface(NetworkInterface):
                 if not peers[my_address]:
                     del (peers[my_address])
         return peers
+
+    def __handle_request_n_last_transaction(self,n):
+        transactions = self.get_n_last_transactions_callback(n)
+        if transactions:
+            return [transaction.to_dict() for transaction in transactions]
+        return []
 
     @staticmethod
     def __ip4_addresses():
