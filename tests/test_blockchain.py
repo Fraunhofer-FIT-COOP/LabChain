@@ -3,6 +3,7 @@ import json
 import unittest
 from unittest.mock import Mock
 
+from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.blockchain import BlockChain
 from labchain.util.configReader import ConfigReader
 from labchain.consensus.consensus import Consensus
@@ -37,10 +38,28 @@ class BlockChainComponent(unittest.TestCase):
 
     # TODO Rework method, currently not working!
     def test_add_block(self):
-        self.assertTrue(self.blockchain.add_block(self.block1),
+        """
+            Save granular factor before modifying and modify to 0.5
+            to speed up test
+        """
+        previous_granular_factor = self.consensus.granular_factor
+        self.consensus.granular_factor = 0.5
+        block1: LogicalBlock = self.block1
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            self.blockchain.calculate_diff(block1.predecessor_hash)
+        # Mine block to get correct Nonce
+        self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
+                            earliest_timestamp=_earliest_ts,
+                            num_of_blocks=_num_of_blocks,
+                            prev_difficulty=_latest_difficulty)
+        # Add block to blockchain
+        self.assertTrue(self.blockchain.add_block(block1),
                         msg='Block is not added')
+        # Check if blockchain has correct length
         blocks = self.blockchain.get_block_range(0)
         self.assertEqual(1, len(blocks))
+        # Restore granular_factor
+        self.consensus.granular_factor = previous_granular_factor
 
     """
     def test_add_block1(self):
