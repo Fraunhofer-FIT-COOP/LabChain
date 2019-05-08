@@ -311,16 +311,16 @@ class BlockchainClient:
             '2': ('Load by hash', self.__load_block, [True])
         }, 'Please select a value: ', 'Exit Load Block Menu')
         self.main_menu = Menu(LABCHAIN_LOGO_LIST + ['Main menu'], {
-            '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
-            '2': ('Create Transaction', self.__create_transaction, []),
-            '3': ('Load Block', self.load_block_menu.show, []),
-            '4': ('Load Transaction', self.__load_transaction, []),
-            '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
-            '6': ('Show Connected Peers', self.__load_peers, []),
-            '7': ('Show Receieved Transaction', self._show_received_transaction, []),
-            '8': ('Show Transaction Sent', self._show_sent_transaction, []),
-            '9': ('Show All Transaction', self._show_all_transaction, []),
-        }, 'Please select a value: ', 'Exit Blockchain Client')
+            '1': ('Manage wallet', self.manage_wallet_menu.show, []),
+            '2': ('Create transaction', self.__create_transaction, []),
+            '3': ('Load block', self.load_block_menu.show, []),
+            '4': ('Load transaction', self.__load_transaction, []),
+            '5': ('Show transaction pool', self.__show_transaction_pool, []),
+            '6': ('Show connected peers', self.__load_peers, []),
+            '7': ('Show received transactions', self._show_received_transaction, []),
+            '8': ('Show sent transactions', self._show_sent_transaction, []),
+            '9': ('Show all transactions', self._show_all_transaction, []),
+        }, 'Please select a value: ', 'Exit Blockchain client')
 
     def main(self):
         """Entry point for the client console application."""
