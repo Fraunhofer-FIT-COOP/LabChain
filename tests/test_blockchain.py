@@ -191,13 +191,13 @@ class BlockChainComponent(unittest.TestCase):
         # Restore granular_factor
         self.consensus.granular_factor = previous_granular_factor
 
+    """
     def test_add_orphan(self):
         pass
 
     def test_prune_orphans(self):
         pass
-
-    """
+        
     def test_add_block1(self):
         # now block8 has a branch with block 6
 
