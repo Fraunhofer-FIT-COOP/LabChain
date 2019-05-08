@@ -51,9 +51,9 @@ class BlockChainComponent(unittest.TestCase):
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
-                            prev_difficulty=_latest_difficulty)
+                            prev_difficulty=0)
         # Add block to blockchain
-        self.assertTrue(self.blockchain.add_block(block1),
+        self.assertTrue(self.blockchain.add_block(block1, False),
                         msg='Block is not added')
         # Check if blockchain has correct length
         blocks = self.blockchain.get_block_range(0)

@@ -532,7 +532,7 @@ class BlockchainClient:
         """Prompt the user for a transaction hash and display the transaction details."""
         clear_screen()
         try:
-            transactions = self.network_interface.requestTransactionReceived("public_key")
+            transactions = self.network_interface.requestTransactionReceived("public_key") #TODO rework this method as it now tests for the string public key, needs a different method and message
         except TransactionDoesNotExistException:
             transactions = None
 
