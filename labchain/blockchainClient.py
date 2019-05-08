@@ -440,12 +440,10 @@ class BlockchainClient:
 
         clear_screen()
         if not transaction:
-            print('Transaction does not exist')
+            print('Transaction does not exist.')
         else:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+            transaction.print()
+            print()
             print('Block Hash: {}'.format(block_hash))
         print()
         # wait for any input before returning to menu
@@ -454,12 +452,13 @@ class BlockchainClient:
     def __show_transaction_pool(self):
         clear_screen()
         transactions = self.network_interface.requestTransactionsInPool()
-        print('There are ', str(len(transactions)), ' transactions in the txpool:')
-        for transaction in transactions:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+        if len(transactions) > 0:
+            print('There are {} transactions in the txpool:'.format(str(len(transactions))))
+            for transaction in transactions:
+                transaction.print()
+                print()
+        else:
+            print("Transaction pool is empty.")
             print()
         input('Press enter to continue...')
 
@@ -473,6 +472,7 @@ class BlockchainClient:
         print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
+
     def _show_received_transaction(self):
         """show transaction received."""
         #clear_screen()
@@ -492,13 +492,11 @@ class BlockchainClient:
         clear_screen()
         for transaction in transactions:
             if public_key == transaction.receiver:
-                print('Sender ID: {}'.format(transaction.sender))
-                print('Receiver ID: {}'.format(transaction.receiver))
-                print('Payload: {}'.format(transaction.payload))
-                print('Signature: {}'.format(transaction.signature))
+                transaction.print()
                 print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
+
     def _show_sent_transaction(self):
         """show transaction received."""
         #clear_screen()
@@ -518,13 +516,11 @@ class BlockchainClient:
         clear_screen()
         for transaction in transactions:
             if public_key == transaction.sender:
-                print('Sender ID: {}'.format(transaction.sender))
-                print('Receiver ID: {}'.format(transaction.receiver))
-                print('Payload: {}'.format(transaction.payload))
-                print('Signature: {}'.format(transaction.signature))
+                transaction.print()
                 print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
+
     def _show_all_transaction(self):
         """show transaction received."""
         #clear_screen()
@@ -542,10 +538,7 @@ class BlockchainClient:
 
         clear_screen()
         for transaction in transactions:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+            transaction.print()
             print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
