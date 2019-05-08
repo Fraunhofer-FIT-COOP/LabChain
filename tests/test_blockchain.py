@@ -3,7 +3,7 @@ import json
 import unittest
 from unittest.mock import Mock
 
-from labchain.datastructure.block import LogicalBlock
+from labchain.datastructure.block import LogicalBlock, Block
 from labchain.datastructure.blockchain import BlockChain
 from labchain.util.configReader import ConfigReader
 from labchain.consensus.consensus import Consensus
@@ -36,14 +36,13 @@ class BlockChainComponent(unittest.TestCase):
         block_info = json.loads(self.blockchain.get_block_by_hash(self.blockchain._first_block_hash))
         self.assertEqual(0, block_info['nr'])
 
-    # TODO Rework method, currently not working!
     def test_add_block(self):
         """
-            Save granular factor before modifying and modify to 0.5
+            Save granular factor before modifying and modify to 0.25
             to speed up test
         """
         previous_granular_factor = self.consensus.granular_factor
-        self.consensus.granular_factor = 0.5
+        self.consensus.granular_factor = 0.25
         block1: LogicalBlock = self.block1
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
@@ -60,6 +59,50 @@ class BlockChainComponent(unittest.TestCase):
         self.assertEqual(1, len(blocks))
         # Restore granular_factor
         self.consensus.granular_factor = previous_granular_factor
+
+    def test_add_orphan(self):
+        pass
+
+    def test_add_invalid_block(self):
+        """
+            Tests if an invalid block is added to the blockchain
+        """
+        self.assertFalse(self.blockchain.add_block(self.block2, False),
+                         msg='An invalid block was added!')
+
+    # TODO currently not working!
+    def test_add_block_not_logical_block(self):
+        """
+                    Save granular factor before modifying and modify to 0.25
+                    to speed up test
+                """
+        previous_granular_factor = self.consensus.granular_factor
+        self.consensus.granular_factor = 0.25
+        block1: Block = Block(block_id=42, merkle_tree_root=None,
+                              predecessor_hash=None,
+                              block_creator_id=42, transactions=[],
+                              nonce=42)
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            self.blockchain.calculate_diff(block1.predecessor_hash)
+        # Mine block to get correct Nonce
+        self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
+                            earliest_timestamp=_earliest_ts,
+                            num_of_blocks=_num_of_blocks,
+                            prev_difficulty=0)
+        # Add block to blockchain
+        self.assertTrue(self.blockchain.add_block(block1, False),
+                        msg='Block is not added')
+        # Check if blockchain has correct length
+        blocks = self.blockchain.get_block_range(0)
+        self.assertEqual(1, len(blocks))
+        # Restore granular_factor
+        self.consensus.granular_factor = previous_granular_factor
+
+    def test_switch_to_longer_blockchain(self):
+        pass
+
+    def test_prune_orphans(self):
+        pass
 
     """
     def test_add_block1(self):
