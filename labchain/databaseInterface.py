@@ -84,6 +84,8 @@ class Db:
         -------
         True if data saved successfully, False otherwise
         """
+        if not block:
+            return False 
         self.open_connection(self.db_file)
         # save a single block and its correspondent transactions in the db
         block_hash = block.get_computed_hash()
@@ -142,20 +144,6 @@ class Db:
             blocks.append(block)
         self.conn.close()
         return blocks
-
-    def drop_block_chain_table(self):
-        successfully_drop = False
-        self.open_connection(self.db_file)
-        drop_table = "DROP TABLE {}".format(self.blockchain_table)
-        try:
-            self.cursor.execute(drop_table)
-            self.conn.commit()
-            successfully_drop =True
-        except sqlite3.Error as e:
-            self.logger.error("Error in adding block: " + str(e.args[0]))
-        finally:
-            self.conn.close()
-            return successfully_drop
         
         
         
