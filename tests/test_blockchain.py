@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import json
 import unittest
-from unittest.mock import Mock
+import logging
+import sys
 
 from labchain.datastructure.block import LogicalBlock, Block
 from labchain.datastructure.blockchain import BlockChain
@@ -10,6 +11,12 @@ from labchain.consensus.consensus import Consensus
 from labchain.util.cryptoHelper import CryptoHelper as crypto
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.txpool import TxPool
+
+
+logger = logging.getLogger()
+logger.level = logging.DEBUG
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
 
 
 class BlockChainComponent(unittest.TestCase):
@@ -60,8 +67,30 @@ class BlockChainComponent(unittest.TestCase):
         # Restore granular_factor
         self.consensus.granular_factor = previous_granular_factor
 
-    def test_add_orphan(self):
-        pass
+    def test_add_block_already_in_chain(self):
+        previous_granular_factor = self.consensus.granular_factor
+        self.consensus.granular_factor = 0.25
+        block1 = LogicalBlock(block_id=23, merkle_tree_root=None,
+                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc',
+                              # Hash of genesis block
+                              block_creator_id=23, transactions=[], nonce=23,
+                              consensus_obj=self.consensus)
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            self.blockchain.calculate_diff(block1.predecessor_hash)
+
+        # Mine block to get correct Nonce
+        self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
+                            earliest_timestamp=_earliest_ts,
+                            num_of_blocks=_num_of_blocks,
+                            prev_difficulty=0)
+        # Add both blocks to blockchain
+        self.assertTrue(self.blockchain.add_block(block1, False),
+                        msg='Block is not added')
+        self.assertFalse(self.blockchain.add_block(block1, False),
+                         msg='Block was added again')
+
+        # Restore granular_factor
+        self.consensus.granular_factor = previous_granular_factor
 
     def test_add_invalid_block(self):
         """
@@ -79,7 +108,7 @@ class BlockChainComponent(unittest.TestCase):
         previous_granular_factor = self.consensus.granular_factor
         self.consensus.granular_factor = 0.25
         block1: Block = Block(block_id=42, merkle_tree_root=None,
-                              predecessor_hash=None,
+                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc', # Hash of genesis block
                               block_creator_id=42, transactions=[],
                               nonce=42)
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
@@ -99,6 +128,62 @@ class BlockChainComponent(unittest.TestCase):
         self.consensus.granular_factor = previous_granular_factor
 
     def test_switch_to_longer_blockchain(self):
+        previous_granular_factor = self.consensus.granular_factor
+        self.consensus.granular_factor = 0.25
+        block1 = LogicalBlock(block_id=23, merkle_tree_root=None,
+                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc', # Hash of genesis block
+                              block_creator_id=23, transactions=[], nonce=23,
+                              consensus_obj=self.consensus)
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            self.blockchain.calculate_diff(block1.predecessor_hash)
+        # Mine block to get correct Nonce
+        self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
+                            earliest_timestamp=_earliest_ts,
+                            num_of_blocks=_num_of_blocks,
+                            prev_difficulty=0)
+        block2 = LogicalBlock(block_id=42, merkle_tree_root=None,
+                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc', # Hash of genesis block
+                              block_creator_id=42, transactions=[], nonce=42,
+                              consensus_obj=self.consensus)
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            self.blockchain.calculate_diff(block2.predecessor_hash)
+        # Mine block to get correct Nonce
+        self.consensus.mine(block=block2, latest_timestamp=_latest_ts,
+                            earliest_timestamp=_earliest_ts,
+                            num_of_blocks=_num_of_blocks,
+                            prev_difficulty=block1.difficulty)
+        # Add both blocks to blockchain
+        self.assertTrue(self.blockchain.add_block(block1, False),
+                        msg='Block for first branch is not added')
+        self.assertTrue(self.blockchain.add_block(block2, False),
+                        msg='Block for second branch is not added')
+
+        block3 = None
+        for i in range(1, 3):
+            block3 = LogicalBlock(block_id=42+i, merkle_tree_root=None,
+                                  predecessor_hash=block2.get_computed_hash(), # Hash of genesis block
+                                  block_creator_id=42, transactions=[],
+                                  nonce=42, consensus_obj=self.consensus)
+            _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+                self.blockchain.calculate_diff(block3.predecessor_hash)
+            # Mine block to get correct Nonce
+            self.consensus.mine(block=block3, latest_timestamp=_latest_ts,
+                                earliest_timestamp=_earliest_ts,
+                                num_of_blocks=_num_of_blocks,
+                                prev_difficulty=block2.difficulty)
+            # Add both blocks to blockchain
+            self.assertTrue(self.blockchain.add_block(block3, False),
+                            msg='Branch is not extended, because block could not be added')
+            block2 = block3
+
+        self.assertEquals(self.blockchain.get_block_range()[0].get_computed_hash(),
+                          block3.get_computed_hash(),
+                          msg='Branch was not switched correctly')
+
+        # Restore granular_factor
+        self.consensus.granular_factor = previous_granular_factor
+
+    def test_add_orphan(self):
         pass
 
     def test_prune_orphans(self):
