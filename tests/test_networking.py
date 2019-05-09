@@ -57,7 +57,7 @@ class CommonTestCase(TestCase):
                                         self.get_block_by_hash,
                                         self.get_transaction, 
                                         self.get_blocks_by_hash_range,
-                                        self.empty_function,
+                                        self.get_n_last_transactions,
                                         self.empty_function,
                                         self.empty_function,
                                         False,
@@ -131,9 +131,17 @@ class CommonTestCase(TestCase):
             json_actual = json.loads(json_actual)
         self.assertEqual(json_expected, json_actual)
 
+    def get_n_last_transactions(self, n):
+        n = int(n)
+        total_transactions = []
+        for transaction in list(reversed(list(self.available_transactions)))[0:n]:
+            total_transactions.extend(transaction)
+        return total_transactions
+
     def empty_function():
         """Empty function for unneeded functionality."""
         pass
+
 
 class PeerListExchangeTestCase(CommonTestCase):
 
@@ -594,3 +602,92 @@ class RequestBlockClientTestCase(CommonTestCase):
         self.assertEqual(transaction.receiver, 'test_receiver')
         self.assertEqual(transaction.payload, 'test_payload')
         self.assertEqual(transaction.signature, 'test_signature')
+
+
+class RequestTransactionMenuServerTestCase(CommonTestCase):
+
+    def test_request_transaction_received(self):
+        """test case #18 """
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        self.available_transactions['hash_of_transaction_#1'] = Transaction("test_sender",
+                                                                            "test_receiver",
+                                                                            "test_payload",
+                                                                            "test_signature")
+        # when
+        json_rpc_request = {"jsonrpc": "2.0", "method": "requestTransactionReceived", "params": ["test_receiver"],
+                            "id": 1}
+        response = self.make_request(json.dumps(json_rpc_request))
+
+        # then
+        self.assert_json_equal(response,
+                               '{"result": [{"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"}, "test_block_hash"], "id": 1,"jsonrpc": "2.0"}')
+
+    def test_request_n_transaction_received(self):
+        """test case #18a """
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        self.available_transactions['hash_of_transaction_#1'] = Transaction("test_sender",
+                                                                            "test_receiver",
+                                                                            "test_payload",
+                                                                            "test_signature")
+        # when
+        json_rpc_request = {"jsonrpc": "2.0", "method": "requestNLastTransaction", "params": ["1"],
+                            "id": 1}
+        response = self.make_request(json.dumps(json_rpc_request))
+
+        # then
+        self.assert_json_equal(response,
+                               '{"result": [{"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"}, "test_block_hash"], "id": 1,"jsonrpc": "2.0"}')
+
+    def test_request_transaction_in_pool(self):
+        """test case #18b """
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        self.available_transactions['hash_of_transaction_#1'] = Transaction("test_sender",
+                                                                            "test_receiver",
+                                                                            "test_payload",
+                                                                            "test_signature")
+        # when
+        json_rpc_request = {"jsonrpc": "2.0", "method": "requestTransactionsInPool", "id": 1}
+        response = self.make_request(json.dumps(json_rpc_request))
+
+        # then
+        self.assert_json_equal(response,
+                               '{"result": [{"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"}, "test_block_hash"], "id": 1,"jsonrpc": "2.0"}')
+
+
+class RequestTransactionMenuClientTestCase(CommonTestCase):
+
+    def test_request_n_last_transaction_received(self):
+        """Test case #18."""
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        # when
+        self.json_rpc_client.queue_response({
+            'jsonrpc': '2.0',
+            'result': [
+                {
+                    'sender': 'test_sender',
+                    'receiver': 'test_receiver',
+                    'payload': 'test_payload',
+                    'signature': 'test_signature',
+                }
+            ],
+            'id': 1
+        })
+        transactions = self.network_interface.get_n_last_transactions(1)
+        transaction = transactions[0]
+        # then
+        last_request_method, last_request_params = self.get_last_request('192.168.100.4', 6666)
+        self.assertEqual(last_request_method, 'requestTransactionReceived')
+        self.assertEqual(last_request_params, [1])
+        self.assertEqual(transaction.sender, 'test_sender')
+        self.assertEqual(transaction.receiver, 'test_receiver')
+        self.assertEqual(transaction.payload, 'test_payload')
+        self.assertEqual(transaction.signature, 'test_signature')
+
+
