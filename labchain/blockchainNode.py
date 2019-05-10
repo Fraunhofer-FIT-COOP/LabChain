@@ -166,7 +166,7 @@ class BlockChainNode:
                 transaction_hash)
         return transaction_tuple
 
-    def on_get_all_transactions(self, transaction_hash):
+    def on_get_all_transactions(self):
         """Retrieve all transaction from the blockchain"""
         transaction_tuple = self.blockchain_obj.get_all_transactions()
         return transaction_tuple

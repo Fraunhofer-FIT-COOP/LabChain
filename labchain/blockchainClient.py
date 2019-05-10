@@ -314,7 +314,10 @@ class BlockchainClient:
         self.load_transaction_menu = Menu(['Load Transaction'], {
             '1': ('Load by hash', self.__load_transaction_by_hash,[]),
             '2': ('Show Transaction Pool', self.__show_transaction_pool,[]),
-            '3': ('Show n last transactions', self.__load_n_last_transactions,[])
+            '3': ('Show n last transactions', self.__load_n_last_transactions,[]),
+            '4': ('Load by receiver\'s public key', self._show_transaction_by_public_key,["receiver"]),
+            '5': ('Load by sender\'s public key', self._show_transaction_by_public_key,["sender"]),
+            '6': ('Show all transactions', self._show_transaction_by_public_key,[])
         }, 'Please select a value: ', 'Exit Load Transaction Menu')
         self.main_menu = Menu(LABCHAIN_LOGO_LIST + ['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
@@ -323,9 +326,6 @@ class BlockchainClient:
             '4': ('Transaction Menu', self.load_transaction_menu.show, []),
             '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
             '6': ('Show Connected Peers', self.__load_peers, []),
-            '7': ('Show Receieved Transaction', self._show_received_transaction, []),
-            '8': ('Show Transaction Sent', self._show_sent_transaction, []),
-            '9': ('Show All Transaction', self._show_all_transaction, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
@@ -499,79 +499,50 @@ class BlockchainClient:
         print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
-    def _show_received_transaction(self):
-        """show transaction received."""
-        #clear_screen()
-        #try:
-        #    print('transaction : {}'.format(self.network_interface.requestTransactionReceived()))
-        #except NoPeersException:
-        #    print('No transaction found')
-        #print()
-        """Prompt the user for a transaction hash and display the transaction details."""
-        clear_screen()
-        public_key = input('Please enter a receiver address: ')
-        try:
-            transactions = self.network_interface.requestTransactionReceived(public_key)
-        except TransactionDoesNotExistException:
-            transactions = None
 
+    def _show_transaction_by_public_key(self, Owner_Of_publicKey = ""):
+        """Show received/sent transaction by receiver's/sender's public key."""
+        """If Owner_of_publicKey = "", show all transactions."""
         clear_screen()
-        for transaction in transactions:
-            if public_key == transaction.receiver:
+        if Owner_Of_publicKey != "":
+            public_key = input('Please enter a ' + Owner_Of_publicKey + ' address: ')
+
+        transactions = self.network_interface.requestAllTransactions()
+
+        transaction_exist = False
+        clear_screen()
+
+        if Owner_Of_publicKey == "sender":
+            for transaction in transactions:
+                if public_key == transaction.sender:
+                    transaction_exist = True
+
+                    print('Sender ID: {}'.format(transaction.sender))
+                    print('Receiver ID: {}'.format(transaction.receiver))
+                    print('Payload: {}'.format(transaction.payload))
+                    print('Signature: {}'.format(transaction.signature))
+                    print()
+        if Owner_Of_publicKey == "receiver":
+            for transaction in transactions:
+                if public_key == transaction.receiver:
+                    transaction_exist = True
+
+                    print('Sender ID: {}'.format(transaction.sender))
+                    print('Receiver ID: {}'.format(transaction.receiver))
+                    print('Payload: {}'.format(transaction.payload))
+                    print('Signature: {}'.format(transaction.signature))
+                    print()
+        if Owner_Of_publicKey == "":
+            if transactions:
+                transaction_exist = True
+            for transaction in transactions:
                 print('Sender ID: {}'.format(transaction.sender))
                 print('Receiver ID: {}'.format(transaction.receiver))
                 print('Payload: {}'.format(transaction.payload))
                 print('Signature: {}'.format(transaction.signature))
                 print()
-        # wait for any input before returning to menu
-        input('Press enter to continue...')
-    def _show_sent_transaction(self):
-        """show transaction received."""
-        #clear_screen()
-        #try:
-        #    print('transaction : {}'.format(self.network_interface.requestTransactionReceived()))
-        #except NoPeersException:
-        #    print('No transaction found')
-        #print()
-        """Prompt the user for a transaction hash and display the transaction details."""
-        clear_screen()
-        public_key = input('Please enter a sender address: ')
-        try:
-            transactions = self.network_interface.requestTransactionReceived(public_key)
-        except TransactionDoesNotExistException:
-            transactions = None
 
-        clear_screen()
-        for transaction in transactions:
-            if public_key == transaction.sender:
-                print('Sender ID: {}'.format(transaction.sender))
-                print('Receiver ID: {}'.format(transaction.receiver))
-                print('Payload: {}'.format(transaction.payload))
-                print('Signature: {}'.format(transaction.signature))
-                print()
-        # wait for any input before returning to menu
-        input('Press enter to continue...')
-    def _show_all_transaction(self):
-        """show transaction received."""
-        #clear_screen()
-        #try:
-        #    print('transaction : {}'.format(self.network_interface.requestTransactionReceived()))
-        #except NoPeersException:
-        #    print('No transaction found')
-        #print()
-        """Prompt the user for a transaction hash and display the transaction details."""
-        clear_screen()
-        try:
-            transactions = self.network_interface.requestTransactionReceived("public_key")
-        except TransactionDoesNotExistException:
-            transactions = None
-
-        clear_screen()
-        for transaction in transactions:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
-            print()
+        if transaction_exist == False:
+            print('Transaction does not exist')
         # wait for any input before returning to menu
         input('Press enter to continue...')
