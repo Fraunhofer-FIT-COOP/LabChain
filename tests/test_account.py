@@ -478,8 +478,10 @@ class TransactionTestCase(CommonTestCase):
         transaction_hash = self.mock_crypto_helper.hash_transaction(transaction)
         # when
         self.queue_input('4')
+        self.queue_input('1')
         self.queue_input(transaction_hash)
         self.queue_input('')
+        self.queue_input('4')
         self.queue_input('q')
         self.client.main()
         # then
@@ -494,8 +496,10 @@ class TransactionTestCase(CommonTestCase):
         """
         # when
         self.queue_input('4')
+        self.queue_input('1')
         self.queue_input('1a2b')
         self.queue_input('')
+        self.queue_input('4')
         self.queue_input('q')
         self.client.main()
         # then

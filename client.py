@@ -37,8 +37,8 @@ def setup_logging(verbose, very_verbose):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='CLI client for Labchain.')
-    parser.add_argument('node_ip', help='The IP address of the Labchain node')
-    parser.add_argument('node_port', help='The port address of the Labchain node')
+    parser.add_argument('node_ip', nargs='?',help='The IP address of the Labchain node',default="localhost")
+    parser.add_argument('node_port',nargs='?',help='The port address of the Labchain node',default="8080")
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     return parser.parse_args()

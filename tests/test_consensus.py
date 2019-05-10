@@ -63,4 +63,4 @@ class Tests(TestCase):
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
         block.nonce = nonce_false
-        self.assertFalse(consensus.validate(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1))
+        self.assertFalse(consensus.validate(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1,2))
