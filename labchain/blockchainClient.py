@@ -136,8 +136,7 @@ class Menu:
         print(self.error_message)
 
     def __append_back_menu_item(self, back_option_label):
-        max_key = max(self.menu_items, key=int)
-        self.back_option_key = str(int(max_key) + 1)
+        self.back_option_key = 'q'
         self.menu_items[self.back_option_key] = (back_option_label, None, None)
 
     def show(self):
@@ -317,16 +316,16 @@ class BlockchainClient:
             '3': ('Show n last transactions', self.__load_n_last_transactions,[])
         }, 'Please select a value: ', 'Exit Load Transaction Menu')
         self.main_menu = Menu(LABCHAIN_LOGO_LIST + ['Main menu'], {
-            '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
-            '2': ('Create Transaction', self.__create_transaction, []),
-            '3': ('Load Block', self.load_block_menu.show, []),
-            '4': ('Transaction Menu', self.load_transaction_menu.show, []),
-            '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
-            '6': ('Show Connected Peers', self.__load_peers, []),
-            '7': ('Show Receieved Transaction', self._show_received_transaction, []),
-            '8': ('Show Transaction Sent', self._show_sent_transaction, []),
-            '9': ('Show All Transaction', self._show_all_transaction, []),
-        }, 'Please select a value: ', 'Exit Blockchain Client')
+            '1': ('Manage wallet', self.manage_wallet_menu.show, []),
+            '2': ('Create transaction', self.__create_transaction, []),
+            '3': ('Load block', self.load_block_menu.show, []),
+            '4': ('Transaction menu', self.load_transaction_menu.show, []),
+            '5': ('Show transaction pool', self.__show_transaction_pool, []),
+            '6': ('Show connected peers', self.__load_peers, []),
+            '7': ('Show received transactions', self._show_received_transaction, []),
+            '8': ('Show sent transactions', self._show_sent_transaction, []),
+            '9': ('Show all transactions', self._show_all_transaction, []),
+        }, 'Please select a value: ', 'Exit Blockchain client')
 
     def main(self):
         """Entry point for the client console application."""
@@ -446,12 +445,10 @@ class BlockchainClient:
 
         clear_screen()
         if not transaction:
-            print('Transaction does not exist')
+            print('Transaction does not exist.')
         else:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+            transaction.print()
+            print()
             print('Block Hash: {}'.format(block_hash))
         print()
         # wait for any input before returning to menu
@@ -470,22 +467,20 @@ class BlockchainClient:
             print ("No transactions")
         else:
             for transaction in transactions:
-                print('Sender ID: {}'.format(transaction['sender']))
-                print('Receiver ID: {}'.format(transaction['receiver']))
-                print('Payload: {}'.format(transaction['payload']))
-                print('Signature: {}'.format(transaction['signature']))
-                print ()
+                transaction.print()
+                print()
         input('Press enter to continue...')
 
     def __show_transaction_pool(self):
         clear_screen()
         transactions = self.network_interface.requestTransactionsInPool()
-        print('There are ', str(len(transactions)), ' transactions in the txpool:')
-        for transaction in transactions:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+        if len(transactions) > 0:
+            print('There are {} transactions in the txpool:'.format(str(len(transactions))))
+            for transaction in transactions:
+                transaction.print()
+                print()
+        else:
+            print("Transaction pool is empty.")
             print()
         input('Press enter to continue...')
 
@@ -499,6 +494,7 @@ class BlockchainClient:
         print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
+
     def _show_received_transaction(self):
         """show transaction received."""
         #clear_screen()
@@ -518,13 +514,11 @@ class BlockchainClient:
         clear_screen()
         for transaction in transactions:
             if public_key == transaction.receiver:
-                print('Sender ID: {}'.format(transaction.sender))
-                print('Receiver ID: {}'.format(transaction.receiver))
-                print('Payload: {}'.format(transaction.payload))
-                print('Signature: {}'.format(transaction.signature))
+                transaction.print()
                 print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
+
     def _show_sent_transaction(self):
         """show transaction received."""
         #clear_screen()
@@ -544,13 +538,11 @@ class BlockchainClient:
         clear_screen()
         for transaction in transactions:
             if public_key == transaction.sender:
-                print('Sender ID: {}'.format(transaction.sender))
-                print('Receiver ID: {}'.format(transaction.receiver))
-                print('Payload: {}'.format(transaction.payload))
-                print('Signature: {}'.format(transaction.signature))
+                transaction.print()
                 print()
         # wait for any input before returning to menu
         input('Press enter to continue...')
+
     def _show_all_transaction(self):
         """show transaction received."""
         #clear_screen()
@@ -562,16 +554,13 @@ class BlockchainClient:
         """Prompt the user for a transaction hash and display the transaction details."""
         clear_screen()
         try:
-            transactions = self.network_interface.requestTransactionReceived("public_key")
+            transactions = self.network_interface.requestTransactionReceived("public_key") #TODO rework this method as it now tests for the string public key, needs a different method and message
         except TransactionDoesNotExistException:
             transactions = None
 
         clear_screen()
         for transaction in transactions:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+            transaction.print()
             print()
         # wait for any input before returning to menu
         input('Press enter to continue...')

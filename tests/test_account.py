@@ -45,6 +45,17 @@ class MockNetworkInterface:
     def requestTransactionsInPool(self):
         return []
 
+    def _connected_peers(self):
+        return [{}]
+
+    def requestTransactionReceived(self, public_key):
+        res = []
+        for tx in self.transactions:
+            if tx.receiver == public_key or tx.sender == public_key:
+                res.append(tx)
+        return res
+
+
 
 class MockCryptoHelper:
 
@@ -199,8 +210,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('test key 1')
@@ -214,8 +225,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('no addresses in your wallet')
@@ -229,8 +240,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('test key')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         addresses = self.get_wallet_key_pairs()
@@ -249,8 +260,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('Name should not be empty')
@@ -267,8 +278,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('test key')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         addresses = self.get_wallet_key_pairs()
@@ -292,8 +303,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('2')
         self.queue_input('existing key')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('Name should be unique!')
@@ -306,8 +317,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('3')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('no addresses in your wallet')
@@ -326,8 +337,10 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('3')
         self.queue_input('3')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('test key 1')
@@ -348,8 +361,8 @@ class ManageWalletTestCase(CommonTestCase):
         self.queue_input('3') # Delete Address
         self.queue_input('2') # Select '2' address
         self.queue_input('') # Press enter
-        self.queue_input('4') # Exit Wallet menue
-        self.queue_input('10') # Exit blockchain client
+        self.queue_input('q') # Exit Wallet menue
+        self.queue_input('q') # Exit blockchain client
         self.client.main()
         # then
         addresses = self.get_wallet_key_pairs()
@@ -380,7 +393,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('test_payload')  # input payload
         self.queue_input('')  # press Enter
         # end of test case input
-        self.queue_input('10')  # quit client now
+        self.queue_input('q')  # quit client now
         self.client.main()
         # then
         self.assertEqual(len(self.transactions), 1)
@@ -405,7 +418,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('test_receiver')  # input receiver address
         self.queue_input('test_payload')  # input payload
         self.queue_input('')  # press Enter
-        self.queue_input('10')  # quit client now
+        self.queue_input('q')  # quit client now
         self.client.main()
         # then
         self.assert_string_in_output('Invalid input! Please choose a correct index!')
@@ -426,7 +439,7 @@ class CreateTransactionTestCase(CommonTestCase):
         self.queue_input('test_receiver')  # input receiver address
         self.queue_input('test_payload')  # input payload
         self.queue_input('')  # press Enter
-        self.queue_input('10')  # quit client now
+        self.queue_input('q')  # quit client now
         self.client.main()
         # then
         self.assert_string_in_output('Invalid input! Please choose a correct receiver!')
@@ -447,7 +460,7 @@ class CreateTransactionTestCase(CommonTestCase):
         # finish with valid input and quit client
         self.queue_input('test_payload')  # input payload
         self.queue_input('')  # press Enter
-        self.queue_input('10')  # quit client now
+        self.queue_input('q')  # quit client now
         self.client.main()
         # then
         self.assert_string_in_output('Invalid input! Please choose a correct payload!')
@@ -468,8 +481,8 @@ class TransactionTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input(transaction_hash)
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('some_sender_id')
@@ -486,8 +499,8 @@ class TransactionTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1a2b')
         self.queue_input('')
-        self.queue_input('4')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
         # then
         self.assert_string_in_output('Transaction does not exist')
@@ -506,9 +519,9 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')  # press enter
-        self.queue_input('3')
+        self.queue_input('q')
         # at this point the main menu is shown
-        self.queue_input('10')  # exit blockchain client
+        self.queue_input('q')  # exit blockchain client
         self.client.main()
         # then
         # check if submenu 3 was printed
@@ -529,8 +542,8 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')  # press enter
-        self.queue_input('3')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
 
         # then
@@ -556,8 +569,8 @@ class LoadBlockTestCase(CommonTestCase):
         self.queue_input('1')
         self.queue_input('1')
         self.queue_input('')  # press enter
-        self.queue_input('3')
-        self.queue_input('10')
+        self.queue_input('q')
+        self.queue_input('q')
         self.client.main()
 
         # then
@@ -566,3 +579,73 @@ class LoadBlockTestCase(CommonTestCase):
         self.assert_string_in_output('pred_hash_2')  # predecessor hash
         self.assert_string_in_output('456')  # nonce
         self.assert_string_in_output('creator_hash')  # block creator
+
+    def test_show_transaction_pool(self):
+        self.queue_input('5')
+        self.queue_input('')
+        self.queue_input('q')
+        self.client.main()
+
+        self.assert_string_in_output('Transaction pool is empty.')
+
+    def test_show_connected_peers(self):
+        self.queue_input('6')
+        self.queue_input('')
+        self.queue_input('q')
+        self.client.main()
+
+        self.assert_string_in_output('peers : [{}]')
+
+    def test_show_received_transaction(self):
+        self.mock_network_interface.transactions.append(Transaction("test_sender", "test_receiver", "payload_data"))
+
+        self.queue_input('7')
+        self.queue_input('test_receiver')
+        self.queue_input('')
+        self.queue_input('q')
+        self.client.main()
+
+        self.assert_string_in_output('Sender Address:   test_sender')
+        self.assert_string_in_output('Receiver Address: test_receiver')
+        self.assert_string_in_output('Payload:          payload_data')
+        self.assert_string_in_output('Signature:        None')
+
+    def test_show_sent_transaction(self):
+        self.mock_network_interface.transactions.append(Transaction("test_sender", "test_receiver", "payload_data"))
+
+        self.queue_input('8')
+        self.queue_input('test_sender')
+        self.queue_input('')
+        self.queue_input('q')
+        self.client.main()
+
+        self.assert_string_in_output('Sender Address:   test_sender')
+        self.assert_string_in_output('Receiver Address: test_receiver')
+        self.assert_string_in_output('Payload:          payload_data')
+        self.assert_string_in_output('Signature:        None')
+
+    def test_show_all_transaction(self):
+        self.mock_network_interface.transactions.append(Transaction("test_sender1", "test_receiver1", "payload_data1"))
+        self.mock_network_interface.transactions.append(Transaction("test_sender2", "test_receiver2", "payload_data2"))
+        self.mock_network_interface.transactions.append(Transaction("test_sender3", "test_receiver3", "payload_data3"))
+
+        self.queue_input('9')
+        self.queue_input('')
+        self.queue_input('q')
+        self.client.main()
+
+        self.assert_string_in_output('Sender Address:   test_sender1')
+        self.assert_string_in_output('Receiver Address: test_receiver1')
+        self.assert_string_in_output('Payload:          payload_data1')
+        self.assert_string_in_output('Signature:        None')
+
+        self.assert_string_in_output('Sender Address:   test_sender2')
+        self.assert_string_in_output('Receiver Address: test_receiver2')
+        self.assert_string_in_output('Payload:          payload_data2')
+        self.assert_string_in_output('Signature:        None')
+
+        self.assert_string_in_output('Sender Address:   test_sender3')
+        self.assert_string_in_output('Receiver Address: test_receiver3')
+        self.assert_string_in_output('Payload:          payload_data3')
+        self.assert_string_in_output('Signature:        None')
+

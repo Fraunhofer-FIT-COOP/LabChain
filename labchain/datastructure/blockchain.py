@@ -89,7 +89,7 @@ class BlockChain:
 
 
     def get_block_range(self, range_start=None, range_end=None):
-        """Returns a list of Lblock objects from the blockchain range_start and range_end inclusive.
+        """Returns a list of Logicalblock objects from the blockchain range_start and range_end inclusive.
         Chain followed by this node is the one traversed.
         range_start or range_end are block hashes
         if range_end is not specified, all blocks till end of chain are returned
@@ -104,7 +104,8 @@ class BlockChain:
 
         if any([range_start not in self._blockchain,
                 range_end not in self._blockchain]):
-            return None
+            raise Exception("Invalid start or end range")
+            #return None
 
         blocks_range = []
         while _b_hash != range_start:
@@ -121,6 +122,8 @@ class BlockChain:
         for _, _block in self._blockchain.items():
             if _block.block_id == block_id:
                 block_list.append(_block)
+        if not block_list:
+            raise Exception("No block found with id ".format(block_id))
         return block_list
 
     def get_block_by_hash(self, block_hash):
@@ -143,6 +146,8 @@ class BlockChain:
         _req_block = self._blockchain.get(block_hash, None)
         if _req_block:
             block_info = _req_block.get_json()
+        if not block_info:
+            raise Exception("No bock found with hash ".format(block_hash))
         return block_info
 
     def get_transaction(self, transaction_hash):
@@ -294,10 +299,11 @@ class BlockChain:
 
         """
         if not isinstance(block, LogicalBlock):
-            self._logger.debug("Converting block to logical block ")
+            self._logger.debug("Converting block to logical block!")
             block = LogicalBlock.from_block(block, self._consensus)
 
         if block.get_computed_hash() in self._blockchain:
+            self._logger.debug("Hash already present in blockchain! Not adding.")
             return False
 
         _prev_hash = block.predecessor_hash
@@ -327,6 +333,7 @@ class BlockChain:
                     _txns = block.transactions
                     self._txpool.return_transactions_to_pool(_txns)
                 del block
+                self._logger.debug("Block not valid! Not adding.")
                 return False
 
             _prev_block = self._blockchain.get(_prev_hash)

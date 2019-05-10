@@ -112,6 +112,13 @@ class Transaction:
         else:
             raise NoHashError("Transaction has no hash")
 
+    def print(self):
+        print('Sender Address:   {}'.format(self.__sender))
+        print('Receiver Address: {}'.format(self.__receiver))
+        print('Payload:          {}'.format(self.__payload))
+        print('Signature:        {}'.format(self.__signature))
+        print('Hash:             {}'.format(self.__transaction_hash))
+
 
 class NoHashError(Exception):
     def __init__(self, message):
