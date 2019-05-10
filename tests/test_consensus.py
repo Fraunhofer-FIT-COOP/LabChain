@@ -11,7 +11,6 @@ class Tests(TestCase):
 
     def test_show_mine_true(self):
         #  Values Dumped
-        nonce_true = 4
         hash_true = "00054358392586569542654697954676849367548926706893"
         hash_false = "03422354358392586569542654697954676849367548926706893"
         hash_list_for_nonce_4 = [hash_false, hash_false, hash_false, hash_true]
@@ -24,7 +23,6 @@ class Tests(TestCase):
 
     def test_show_mine_false(self):
         #  Values Dumped
-        nonce_true = 4
         hash_true = "00054358392586569542654697954676849367548926706893"
         hash_false = "03422354358392586569542654697954676849367548926706893"
         hash_list_for_nonce_4 = [hash_false, hash_false, hash_false, hash_true]
