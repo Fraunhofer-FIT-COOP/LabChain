@@ -136,8 +136,7 @@ class Menu:
         print(self.error_message)
 
     def __append_back_menu_item(self, back_option_label):
-        max_key = max(self.menu_items, key=int)
-        self.back_option_key = str(int(max_key) + 1)
+        self.back_option_key = 'q'
         self.menu_items[self.back_option_key] = (back_option_label, None, None)
 
     def show(self):
@@ -446,12 +445,10 @@ class BlockchainClient:
 
         clear_screen()
         if not transaction:
-            print('Transaction does not exist')
+            print('Transaction does not exist.')
         else:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+            transaction.print()
+            print()
             print('Block Hash: {}'.format(block_hash))
         print()
         # wait for any input before returning to menu
@@ -470,22 +467,20 @@ class BlockchainClient:
             print ("No transactions")
         else:
             for transaction in transactions:
-                print('Sender ID: {}'.format(transaction['sender']))
-                print('Receiver ID: {}'.format(transaction['receiver']))
-                print('Payload: {}'.format(transaction['payload']))
-                print('Signature: {}'.format(transaction['signature']))
-                print ()
+                transaction.print()
+                print()
         input('Press enter to continue...')
 
     def __show_transaction_pool(self):
         clear_screen()
         transactions = self.network_interface.requestTransactionsInPool()
-        print('There are ', str(len(transactions)), ' transactions in the txpool:')
-        for transaction in transactions:
-            print('Sender ID: {}'.format(transaction.sender))
-            print('Receiver ID: {}'.format(transaction.receiver))
-            print('Payload: {}'.format(transaction.payload))
-            print('Signature: {}'.format(transaction.signature))
+        if len(transactions) > 0:
+            print('There are {} transactions in the txpool:'.format(str(len(transactions))))
+            for transaction in transactions:
+                transaction.print()
+                print()
+        else:
+            print("Transaction pool is empty.")
             print()
         input('Press enter to continue...')
 
@@ -517,29 +512,20 @@ class BlockchainClient:
                 if public_key == transaction.sender:
                     transaction_exist = True
 
-                    print('Sender ID: {}'.format(transaction.sender))
-                    print('Receiver ID: {}'.format(transaction.receiver))
-                    print('Payload: {}'.format(transaction.payload))
-                    print('Signature: {}'.format(transaction.signature))
+                    transaction.print()
                     print()
         if Owner_Of_publicKey == "receiver":
             for transaction in transactions:
                 if public_key == transaction.receiver:
                     transaction_exist = True
 
-                    print('Sender ID: {}'.format(transaction.sender))
-                    print('Receiver ID: {}'.format(transaction.receiver))
-                    print('Payload: {}'.format(transaction.payload))
-                    print('Signature: {}'.format(transaction.signature))
+                    transaction.print()
                     print()
         if Owner_Of_publicKey == "":
             if transactions:
                 transaction_exist = True
             for transaction in transactions:
-                print('Sender ID: {}'.format(transaction.sender))
-                print('Receiver ID: {}'.format(transaction.receiver))
-                print('Payload: {}'.format(transaction.payload))
-                print('Signature: {}'.format(transaction.signature))
+                transaction.print()
                 print()
 
         if transaction_exist == False:
