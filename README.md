@@ -96,6 +96,8 @@ python3 -m unittest discover
 - [ ] Remove auto discovery mechanism
 - [ ] The `test_account.py` uses the `MockCryptoHelper` but should use the real CryptoHelper
 - [ ] Check the calls of the crypto helper methods (First `json.dumps(...)` then in the crypto helper `json.loads(...)`. There must be a better way.)
+- [ ] Add Status Information when starting the node (without verbose mode)
+- [ ] Clean up logging (better differentiation between log levels)
 
 ## Nice to have
 

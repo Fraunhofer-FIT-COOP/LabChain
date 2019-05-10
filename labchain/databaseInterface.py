@@ -18,7 +18,7 @@ class Db:
         ----------
         db_file : Location of database file
         blockchain_table: Name of blockchain table
-        transaction_table: Nmaeo of transaction table
+        transaction_table: Nmae of transaction table
         """
         # Creates or opens a file called mydb with a SQLite3 DB
         self.logger = logging.getLogger(__name__)
@@ -84,6 +84,8 @@ class Db:
         -------
         True if data saved successfully, False otherwise
         """
+        if not block:
+            return False 
         self.open_connection(self.db_file)
         # save a single block and its correspondent transactions in the db
         block_hash = block.get_computed_hash()
@@ -142,3 +144,6 @@ class Db:
             blocks.append(block)
         self.conn.close()
         return blocks
+        
+        
+        
