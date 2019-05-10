@@ -319,7 +319,7 @@ class BlockchainClient:
             '1': ('Manage wallet', self.manage_wallet_menu.show, []),
             '2': ('Create transaction', self.__create_transaction, []),
             '3': ('Load block', self.load_block_menu.show, []),
-            '4': ('Transaction menu', self.load_transaction_menu.show(), []),
+            '4': ('Transaction menu', self.load_transaction_menu.show, []),
             '5': ('Show transaction pool', self.__show_transaction_pool, []),
             '6': ('Show connected peers', self.__load_peers, []),
             '7': ('Show received transactions', self._show_received_transaction, []),
