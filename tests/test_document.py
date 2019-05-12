@@ -8,12 +8,6 @@ class DocumentTestClass(unittest.TestCase):
         self.attributes = ['1', '2', '3']
         self.values = ['a', 'b', 'c']
 
-    # def test_create_document(self):
-    #     doc = Document('1','a','init',self.holders[0])
-    #     self.assertEquals('1', doc.attribute)
-    #     self.assertEqual('a',doc.value)
-    #     self.assertEqual('alex', doc.holder)
-
     def test_workflow(self):
         doc = Document(self.holders[0], self.attributes[0], self.values[0], 'init')
         doc.add_to_holder_list(self.holders[0])
@@ -37,7 +31,7 @@ class DocumentTestClass(unittest.TestCase):
         doc = doc.from_json(transaction3.payload)
         doc.add_to_holder_list(self.holders[2])
         holder_history =  doc.get_holder_history()
-        print(holder_history)
+       
         self.assertEquals(self.holders[0], holder_history[0])
         self.assertEquals(self.holders[1], holder_history[1])
         self.assertEquals(self.holders[2], holder_history[2])
