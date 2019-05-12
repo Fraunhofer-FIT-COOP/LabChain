@@ -74,28 +74,6 @@ class TxPoolTestCase(unittest.TestCase):
         self.assertEqual(txpool, self._txPoolObj)
         self.assertEqual(txpool.get_transaction_count(), tx_pool_count)
 
-    def test_get_transaction_count(self):
-        """Test the transaction count"""
-        transaction = Transaction(self.private_key, self.public_key, "g")
-        status = self._txPoolObj.add_transaction_if_not_exist(transaction)
-        self.assertEqual(status, True)
-        self.assertEqual(5, self._txPoolObj.get_transaction_count())
-
-    def test_add_transaction_if_not_exist(self):
-        """Test adding transaction in txpool only when it is empty"""
-        transaction = Transaction(self.private_key, self.public_key, "h")
-        status = self._txPoolObj.add_transaction_if_not_exist(transaction)
-        self.assertEqual(status, True)
-
-    def test_get_transaction_by_hash(self):
-        """Test adding transaction by hash in txpool"""
-        tx_pool_count = self._txPoolObj.get_transaction_count()
-        if tx_pool_count < 2:
-            self._txPoolObj.add_transaction_if_not_exist(Transaction(self.private_key, self.public_key, "e"))
-            self._txPoolObj.add_transaction_if_not_exist(Transaction(self.private_key, self.public_key, "f"))
-        self.assertFalse(tx_pool_count < 2)
-        hash_val = self._txPoolObj.get_transaction_by_hash(self)
-        transactions = self._txPoolObj.get_transaction_by_hash(hash_val)
 
 if __name__ == '__main__':
     unittest.main()
