@@ -171,17 +171,15 @@ class NetworkInterface:
             raise NoPeersException('No nodes available to request the block from')
         return res
 
-    def requestTransactionReceived(self, public_key):
+    def requestAllTransactions(self):
         """Returns the tuple (transaction, block hash of transaction)."""
-        responses = self._bulk_send('requestTransactionReceived', [public_key], return_on_first_success=False)
+        responses = self._bulk_send('requestAllTransactions', return_on_first_success=False)
 
         res = []
         if responses:
             if len(responses) > 0:
                 for tx in responses[0]:
                     res.append(Transaction.from_dict(tx))
-                #transaction, block_hash = responses[0]
-                #return Transaction.from_dict(transaction), block_hash
             else:
                 raise TransactionDoesNotExistException()
         else:
@@ -202,7 +200,7 @@ class NetworkInterface:
         else:
             raise NoPeersException('No nodes available to request the transactions from')
         return res
-    
+
     def get_n_last_transactions(self,n):
         """return a list of n last mined transactions"""
         responses = self._bulk_send('requestNLastTransaction', [n], return_on_first_success=True)
@@ -307,7 +305,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_block_by_hash_callback,
                  get_transaction_callback,
                  get_blocks_by_hash_range,
-                 get_transaction_received_callback,
+                 get_all_transactions_callback,
                  get_transactions_in_pool,
                  get_n_last_transactions_callback,
                  peer_discovery=True,
@@ -339,7 +337,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.block_cache_size = block_cache_size
         self.transaction_cache = []
         self.transaction_cache_size = transaction_cache_size
-        self.get_transaction_received_callback = get_transaction_received_callback
+        self.get_all_transactions_callback = get_all_transactions_callback
         self.get_n_last_transactions_callback = get_n_last_transactions_callback
 
         if peer_discovery:
@@ -400,7 +398,7 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestTransaction'] = self.__handle_request_transaction
         dispatcher['requestBlocksByHashRange'] = self.__handle_request_blocks_by_hash_range
         dispatcher['requestTransactionsInPool'] = self.__handle_request_transactions_in_pool
-        dispatcher['requestTransactionReceived'] = self.__handle_request_transaction_received
+        dispatcher['requestAllTransactions'] = self.__handle_request_all_transactions
         dispatcher['requestNLastTransaction'] = self.__handle_request_n_last_transaction
 
 
@@ -491,8 +489,8 @@ class ServerNetworkInterface(NetworkInterface):
             return transaction.to_dict(), block_hash
         return None
 
-    def __handle_request_transaction_received(self, public_key):
-        transactions = self.get_transaction_received_callback(public_key)
+    def __handle_request_all_transactions(self):
+        transactions = self.get_all_transactions_callback()
         if transactions:
             return [transaction.to_dict() for transaction in transactions]
         return []

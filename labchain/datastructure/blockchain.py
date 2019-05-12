@@ -147,7 +147,7 @@ class BlockChain:
         if _req_block:
             block_info = _req_block.get_json()
         if not block_info:
-            raise Exception("No bock found with hash ".format(block_hash))
+            raise Exception("No block found with hash ".format(block_hash))
         return block_info
 
     def get_transaction(self, transaction_hash):
@@ -168,16 +168,13 @@ class BlockChain:
                 if transaction_hash == _txn.transaction_hash:
                     return _txn, _hash
         pool_transaction = self._txpool.get_transaction_by_hash(transaction_hash)[0]
-        if pool_transaction: 
+        if pool_transaction:
                 return pool_transaction,"No block hash - this transaction still in the pool"
         else:
             return None, None
 
     def get_all_transactions(self):
         """
-        Parameters
-        ----------
-        None
         Returns
         -------
         Tuple
@@ -187,17 +184,8 @@ class BlockChain:
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
-                #if transaction_hash == _txn.transaction_hash:
                 res.append(_txn)
-                #return _txn
         return res
-        #for _hash, _block in self._blockchain.items():
-        #    _txns = _block.transactions
-        #    for _txn in _txns:
-        #        res.append(_txn)
-        #else:
-        #    return None, None
-        #return res
 
     def get_n_last_transactions(self,n):
         """
