@@ -14,23 +14,26 @@ class Document:
         param[in] type_history History of docType 
         param[in] permission Permission of action that which pid can do what, which need to be specified if doctype is 'initial'
         """
-        if docType is 'subsequent':
-            assert (bool(dict_permission) == True), 'docType:subsequent should not define permission'
-        
         self.attribute = attribute
         self.value = value
         self.docType = docType
         self.pid_history = pid_history
         self.dict_permission = dict_permission
 
-    def _check_permission(self, attribute, pid, action):
+    def _check_permission(self, pid, attribute, action):
         """ Check the permission of a process id
         param[in] pid Process id that being check
         param[out] bool True if allow to perform the action, False if action is not permitted
         """
-        permissions = self.dict_permission[attribute]
-        if permissions[pid] is action:
-            return True
+
+        if attribute in self.dict_permission:
+            if pid in self.dict_permission[attribute]:
+                if action is self.dict_permission[attribute][pid]:
+                    return True
+                else:
+                    return False
+            else:
+                return False
         else:
             return False
 
@@ -56,15 +59,17 @@ class Document:
         return self.pid_history
 
     def _to_dict(self):
+        print('a')
         return {
             'attribute': self.attribute,
             'value':self.value,
             'docType':self.docType,
             'pid_history': self.pid_history,
-            'dict_permission': self.dict_permission,
+            'dict_permission': self.dict_permission
         }
 
     def to_json(self):
+        dict_data = self._to_dict()
         return json.dumps(self._to_dict())
 
     @staticmethod
@@ -73,7 +78,8 @@ class Document:
             attribute = dict_data['attribute'],
             value = dict_data['value'],
             docType = dict_data['docType'],
-            pid_history = dict_data['pid_history']
+            pid_history = dict_data['pid_history'],
+            dict_permission=dict_data['dict_permission']
         )
     @staticmethod
     def from_json(json_data):
