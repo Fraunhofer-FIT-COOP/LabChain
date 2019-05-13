@@ -38,6 +38,11 @@ class Document:
             return False
 
     def write(self, pid, attribute, value):
+        """Write value to the given attribute
+        param[in] pid Process id who write the data
+        param[in] attribute Attribute that is being wrote
+        param[in] value Value that being wrote to the attribute
+        """
         permission = self._check_permission(pid, attribute, 'WRITE')
         try:
             if permission is False:
@@ -51,12 +56,24 @@ class Document:
             print(inst)
     
     def read(self, attribute, value):
+        """Read a certain attribute and its value
+        param[out] list that has [attribute, value] 
+        """
         index = self.attribute.index(attribute)
         value = self.value[index]
         return [self.attribute[index], value]
 
     def get_holder_history(self):
+        """Get the history of pids who write to the document"""
         return self.pid_history
+
+    def get_attribute_history(self):
+        """Get the history of attribute"""
+        return self.attribute
+
+    def get_value_history(self):
+        """Get the history of value"""
+        return self.value
 
     def _to_dict(self):
         print('a')
@@ -69,7 +86,6 @@ class Document:
         }
 
     def to_json(self):
-        dict_data = self._to_dict()
         return json.dumps(self._to_dict())
 
     @staticmethod

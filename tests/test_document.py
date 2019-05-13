@@ -21,21 +21,5 @@ class DocumentTestClass(unittest.TestCase):
         transaction2 = Transaction.from_json(transaction1)
         doc = Document.from_json(transaction2.payload) # reconstruct document
         print('end')
-        # print('hello world')
-        # doc.add_to_holder_list(self.holders[1]) # add himself into the holder_history
-        # transaction2 = Transaction(
-        #     sender = self.holders[1],
-        #     receiver = self.holders[2],
-        #     payload = doc.to_json()
-        #     ).get_json()
-        # # Final holder
-        # transaction3 = Transaction.from_json(transaction2)
-        # doc = doc.from_json(transaction3.payload)
-        # doc.add_to_holder_list(self.holders[2])
-        # holder_history =  doc.get_holder_history()
-       
-        # self.assertEquals(self.holders[0], holder_history[0])
-        # self.assertEquals(self.holders[1], holder_history[1])
-        # self.assertEquals(self.holders[2], holder_history[2])
 
         
