@@ -3,7 +3,7 @@ import json
 class Document:
     """Document class in workflow application
     """
-    def __init__(self, pid, attribute = [], value = [], pid_history = [], dict_permission={}, docType='subsequent'):
+    def __init__(self, attribute = [], value = [], pid_history = [], dict_permission={}, docType='initial'):
         """Constructor of document
 
         param[in] pid Process id of the client who sends the document
@@ -26,7 +26,7 @@ class Document:
     def _check_permission(self, attribute, pid, action):
         """ Check the permission of a process id
         param[in] pid Process id that being check
-        param[out] Permission Type
+        param[out] bool True if allow to perform the action, False if action is not permitted
         """
         permissions = self.dict_permission[attribute]
         if permissions[pid] is action:
@@ -70,7 +70,6 @@ class Document:
     @staticmethod
     def _from_dict(dict_data):
         return Document(
-            pid = dict_data['pid'],
             attribute = dict_data['attribute'],
             value = dict_data['value'],
             docType = dict_data['docType'],
