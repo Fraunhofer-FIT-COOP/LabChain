@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Dict
 
 from labchain.datastructure.transaction import Transaction
@@ -21,12 +22,20 @@ class DocumentTransaction(Transaction):
         :return result: True if transaction is valid
         """
         previous_transaction: DocumentTransaction = self.get_previous_transaction()
-        if previous_transaction is not None:
+        if not isinstance(self, InitialDocumentTransaction):
             owner_valid = True if previous_transaction.receiver == self.sender else False
-            return self._check_permissioned_write() \
-                   and self._check_process_definition() \
-                   and owner_valid and super().validate_transaction(
-                crypto_helper)
+            if not self._check_permissioned_write():
+                logging.debug('Sender has not the permission to write!')
+                return False
+            if not self._check_process_definition():
+                logging.debug(
+                    'Transaction does not comply to process definition!')
+                return False
+            if not owner_valid:
+                logging.debug(
+                    'Sender is not the current owner of the document flow!')
+                return False
+            return super().validate_transaction(crypto_helper)
         else:
             return super().validate_transaction(crypto_helper)
 
