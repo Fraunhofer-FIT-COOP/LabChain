@@ -18,12 +18,17 @@ class DocumentTransaction(Transaction):
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: CryptoHelper object
         :param result: Receeives result of transaction validation.
+        :return result: True if transaction is valid
         """
         previous_transaction: DocumentTransaction = self.get_previous_transaction()
-        owner_valid = True if previous_transaction.receiver == self.sender else False
-        return self._check_permissioned_write() \
-               and self._check_process_definition() \
-               and owner_valid and super().validate_transaction(crypto_helper)
+        if previous_transaction is not None:
+            owner_valid = True if previous_transaction.receiver == self.sender else False
+            return self._check_permissioned_write() \
+                   and self._check_process_definition() \
+                   and owner_valid and super().validate_transaction(
+                crypto_helper)
+        else:
+            return super().validate_transaction(crypto_helper)
 
     def _check_permissioned_write(self):
         dict: Dict = json.loads(self.payload)
@@ -43,7 +48,7 @@ class DocumentTransaction(Transaction):
 
     """
     Getter for the previous transaction in the workflow
-    :returns previous_transaction: The DocumentTransaction-Object of the previous transaction
+    :return previous_transaction: The DocumentTransaction-Object of the previous transaction, returns None if this is the initial transaction
     """
 
     def get_previous_transaction(self) -> DocumentTransaction:
@@ -52,7 +57,7 @@ class DocumentTransaction(Transaction):
 
     """
     Getter for the initial transaction in the workflow
-    :returns initial_transaction: The DocumentTransaxction-Object of the initial transaction
+    :return initial_transaction: The DocumentTransaxction-Object of the initial transaction
     """
 
     def get_initial_transaction(self) -> InitialDocumentTransaction:
