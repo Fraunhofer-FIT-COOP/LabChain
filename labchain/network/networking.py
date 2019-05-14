@@ -204,10 +204,16 @@ class NetworkInterface:
     def get_n_last_transactions(self,n):
         """return a list of n last mined transactions"""
         responses = self._bulk_send('requestNLastTransaction', [n], return_on_first_success=True)
+        res = []
         if responses:
-            return responses[0]
+            if len(responses) > 0:
+                for tx in responses[0]:
+                    res.append(Transaction.from_dict(tx))
+            else:
+                raise Exception('There was a response but it was empty')
         else:
-            raise NoPeersException('No nodes available to request the transaction from')
+            raise NoPeersException('No nodes available to request the transactions from')
+        return res
 
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""

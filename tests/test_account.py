@@ -48,6 +48,24 @@ class MockNetworkInterface:
     def _connected_peers(self):
         return [{}]
 
+    def requestAllTransactions(self):
+        res = []
+        for tx in self.transactions:
+            res.append(tx)
+
+        return res
+
+    def get_n_last_transactions(self, n):
+        res = []
+        amt = int(n)
+        for tx in self.transactions:
+            res.append(tx)
+            amt = amt - 1
+            if amt <= 0:
+                break
+
+        return res
+
     def requestTransactionReceived(self, public_key):
         res = []
         for tx in self.transactions:
@@ -581,56 +599,32 @@ class LoadBlockTestCase(CommonTestCase):
         self.assert_string_in_output('creator_hash')  # block creator
 
     def test_show_transaction_pool(self):
-        self.queue_input('5')
+        self.queue_input('4')
+        self.queue_input('2')
         self.queue_input('')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
 
         self.assert_string_in_output('Transaction pool is empty.')
 
     def test_show_connected_peers(self):
-        self.queue_input('6')
+        self.queue_input('5')
         self.queue_input('')
         self.queue_input('q')
         self.client.main()
 
         self.assert_string_in_output('peers : [{}]')
 
-    def test_show_received_transaction(self):
-        self.mock_network_interface.transactions.append(Transaction("test_sender", "test_receiver", "payload_data"))
-
-        self.queue_input('7')
-        self.queue_input('test_receiver')
-        self.queue_input('')
-        self.queue_input('q')
-        self.client.main()
-
-        self.assert_string_in_output('Sender Address:   test_sender')
-        self.assert_string_in_output('Receiver Address: test_receiver')
-        self.assert_string_in_output('Payload:          payload_data')
-        self.assert_string_in_output('Signature:        None')
-
-    def test_show_sent_transaction(self):
-        self.mock_network_interface.transactions.append(Transaction("test_sender", "test_receiver", "payload_data"))
-
-        self.queue_input('8')
-        self.queue_input('test_sender')
-        self.queue_input('')
-        self.queue_input('q')
-        self.client.main()
-
-        self.assert_string_in_output('Sender Address:   test_sender')
-        self.assert_string_in_output('Receiver Address: test_receiver')
-        self.assert_string_in_output('Payload:          payload_data')
-        self.assert_string_in_output('Signature:        None')
-
     def test_show_all_transaction(self):
         self.mock_network_interface.transactions.append(Transaction("test_sender1", "test_receiver1", "payload_data1"))
         self.mock_network_interface.transactions.append(Transaction("test_sender2", "test_receiver2", "payload_data2"))
         self.mock_network_interface.transactions.append(Transaction("test_sender3", "test_receiver3", "payload_data3"))
 
-        self.queue_input('9')
+        self.queue_input('4')
+        self.queue_input('6')
         self.queue_input('')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
 
@@ -649,3 +643,25 @@ class LoadBlockTestCase(CommonTestCase):
         self.assert_string_in_output('Payload:          payload_data3')
         self.assert_string_in_output('Signature:        None')
 
+    def test_show_n_last_transaction(self):
+        self.mock_network_interface.transactions.append(Transaction("test_sender1", "test_receiver1", "payload_data1"))
+        self.mock_network_interface.transactions.append(Transaction("test_sender2", "test_receiver2", "payload_data2"))
+        self.mock_network_interface.transactions.append(Transaction("test_sender3", "test_receiver3", "payload_data3"))
+
+        self.queue_input('4')
+        self.queue_input('3')
+        self.queue_input('2')
+        self.queue_input('')
+        self.queue_input('q')
+        self.queue_input('q')
+        self.client.main()
+
+        self.assert_string_in_output('Sender Address:   test_sender1')
+        self.assert_string_in_output('Receiver Address: test_receiver1')
+        self.assert_string_in_output('Payload:          payload_data1')
+        self.assert_string_in_output('Signature:        None')
+
+        self.assert_string_in_output('Sender Address:   test_sender2')
+        self.assert_string_in_output('Receiver Address: test_receiver2')
+        self.assert_string_in_output('Payload:          payload_data2')
+        self.assert_string_in_output('Signature:        None')

@@ -323,8 +323,7 @@ class BlockchainClient:
             '2': ('Create Transaction', self.__create_transaction, []),
             '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Transaction Menu', self.load_transaction_menu.show, []),
-            '5': ('Show Transaction Pool', self.__show_transaction_pool, []),
-            '6': ('Show Connected Peers', self.__load_peers, []),
+            '5': ('Show Connected Peers', self.__load_peers, []),
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
