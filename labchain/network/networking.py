@@ -5,11 +5,11 @@ import random
 import socket
 import time
 from copy import deepcopy
-from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
 from threading import Thread
 
 import requests
 from jsonrpc import JSONRPCResponseManager, dispatcher
+from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 
@@ -17,7 +17,6 @@ from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 from labchain.network.discover import PeerDiscoverySystem
 from labchain.util.utility import Utility
-
 
 logger = logging.getLogger(__name__)
 
@@ -347,17 +346,17 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_n_last_transactions_callback = get_n_last_transactions_callback
 
         if peer_discovery:
-            self.peerDiscoveryServer = PeerDiscoverySystem(self.ip, self.port)
-            self.peerDiscoveryServer.register_service()
 
             def callback(info):
                 new_ip = socket.inet_ntoa(info.address)
                 logger.info('Add new peer {}:{}'.format(ip, info.port))
-                if new_ip != ip and port != int(info.port):
+                if new_ip != self.ip and self.port != int(info.port):
                     self.add_peer(new_ip, info.port)
 
-            self.peerDiscoveryClient = PeerDiscoverySystem(ip, port, callback_function=callback)
-            self.peerDiscoveryClient.start_service_listener()
+            self.peerDiscovery = PeerDiscoverySystem(self.ip, self.port,
+                                                     callback_function=callback)
+            self.peerDiscovery.register_service()
+            self.peerDiscovery.start_service_listener()
 
     def update_peer_lists(self):
         """Get new peer lists from all peers."""
