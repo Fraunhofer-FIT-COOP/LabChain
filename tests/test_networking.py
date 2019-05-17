@@ -8,6 +8,7 @@ from werkzeug.test import Client
 from labchain.datastructure.block import Block
 from labchain.network.networking import ServerNetworkInterface, TransactionDoesNotExistException, BlockDoesNotExistException
 from labchain.datastructure.transaction import Transaction
+from labchain.util.cryptoHelper import CryptoHelper
 
 
 class MockJsonRpcClient:
@@ -29,25 +30,13 @@ class MockJsonRpcClient:
         response = self.response_queue.pop()
         return response['result']
 
-class MockCryptoHelper:
-    def __init__(self):
-        self.key_counter = 1
-        self.hash_counter = 1
-        self.hash_map = {}
-
-    def hash(self, message):
-        if message not in self.hash_map:
-            self.hash_map[message] = '{num:05d}'.format(num=self.hash_counter)
-            self.hash_counter += 1
-        return self.hash_map[message]
-
 class CommonTestCase(TestCase):
 
     def create_server_network_interface(self, json_rpc_client):
         return ServerNetworkInterface(
                                         json_rpc_client,
                                         {}, 
-                                        MockCryptoHelper(), 
+                                        CryptoHelper.instance(), 
                                         self.on_block_received,
                                         self.on_transaction_received, 
                                         self.get_block, 
