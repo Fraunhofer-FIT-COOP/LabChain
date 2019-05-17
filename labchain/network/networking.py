@@ -15,6 +15,8 @@ from werkzeug.wrappers import Request, Response
 
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.workflowTransaction import WorkflowTransaction
+from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.network.discover import PeerDiscoverySystem
 from labchain.util.utility import Utility
 
@@ -449,7 +451,16 @@ class ServerNetworkInterface(NetworkInterface):
             pass
 
     def __handle_send_transaction(self, transaction_data):
-        transaction = Transaction.from_dict(transaction_data)
+        if 'transaction_type' in transaction_data:
+            transaction_type = transaction_data['transaction_type']
+            if (transaction_type == 0):
+                transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
+            if (transaction_type == 1):
+                transaction = WorkflowTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'])
+            if (transaction_type == 2):
+                transaction = TaskTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'])
+        else:
+            transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
         transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
         self.on_transaction_received_callback(transaction)
