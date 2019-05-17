@@ -162,9 +162,10 @@ class TransactionTestCase(unittest.TestCase):
         transaction = Transaction(sender="s", receiver="r", payload="1", signature="sig")
         transaction.transaction_hash = "0x123456"
         capturedOutput = io.StringIO()
+        temp = sys.stdout
         sys.stdout = capturedOutput
         transaction.print()
-        sys.stdout = sys.__stdout__
+        sys.stdout = temp
         self.assertEqual('Sender Address:   s\n'+
         'Receiver Address: r\n'+
         'Payload:          1\n'+

@@ -18,7 +18,7 @@ class ServiceListener:
     def add_service(self, zeroconf: Zeroconf, type, name):
         info = zeroconf.get_service_info(type, name)
         logger.debug("Service %s added, service info: %s" % (name, info))
-        if self.callback is not None:
+        if self.callback is not None and info is not None:
             self.callback(info)
 
 
@@ -38,18 +38,22 @@ class PeerDiscoverySystem:
         self.listener = ServiceListener(callback_function=callback_function)
 
     def register_service(self):
-        logger.debug('Registering service: {} '.format(self.type),
-                     'for host with IP: {} and port: {}'
-                     .format(self.ip, self.port))
+        ip: str = socket.inet_ntoa(self.ip)
+        logger.debug('Registering service: {} for host with IP: {} and port: {}'
+                     .format(self.type, ip, str(self.port)))
         self.zeroconf.register_service(self.serviceinfo)
 
     def stop_service(self):
-        logger.debug('Unregistering service: {} '.format(self.type),
-                     'for host with IP: {} and port: {}'
-                     .format(self.ip, self.port))
+        ip: str = socket.inet_ntoa(self.ip)
+        logger.debug(
+            'Unregistering service: {} for host with IP: {} and port: {}'
+            .format(self.type, ip, str(self.port)))
         self.zeroconf.unregister_service(self.serviceinfo)
         self.zeroconf.close()
 
     def start_service_listener(self):
         self.zeroconf.add_service_listener(type_=self.type,
                                            listener=self.listener)
+
+    def __del__(self):
+        self.stop_service()

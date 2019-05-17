@@ -4,9 +4,10 @@ import sys
 from io import StringIO
 from unittest import TestCase
 
-from labchain.datastructure.block import Block
 from labchain.blockchainClient import BlockchainClient, Wallet
+from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
+from labchain.util.cryptoHelper import CryptoHelper
 
 
 class MockNetworkInterface:
@@ -48,45 +49,30 @@ class MockNetworkInterface:
     def _connected_peers(self):
         return [{}]
 
+    def requestAllTransactions(self):
+        res = []
+        for tx in self.transactions:
+            res.append(tx)
+
+        return res
+
+    def get_n_last_transactions(self, n):
+        res = []
+        amt = int(n)
+        for tx in self.transactions:
+            res.append(tx)
+            amt = amt - 1
+            if amt <= 0:
+                break
+
+        return res
+
     def requestTransactionReceived(self, public_key):
         res = []
         for tx in self.transactions:
             if tx.receiver == public_key or tx.sender == public_key:
                 res.append(tx)
         return res
-
-
-
-class MockCryptoHelper:
-
-    def __init__(self):
-        self.key_counter = 1
-        self.hash_counter = 1
-        self.hash_map = {}
-
-    def sign(self, private_key, message):
-        return message + ' Signed with: ' + private_key
-
-    def validate(self, public_key, message):
-        message, private_key = message.split(' Signed with: ', 1)
-        # valid if private key is reversed public key
-        return public_key == private_key[::-1]
-
-    def generate_key_pair(self):
-        public_key = '{num:05d}'.format(num=self.key_counter)
-        # private key is the reversed public key
-        private_key = public_key[::-1]
-        self.key_counter += 1
-        return private_key, public_key
-
-    def hash(self, message):
-        if message not in self.hash_map:
-            self.hash_map[message] = '{num:05d}'.format(num=self.hash_counter)
-            self.hash_counter += 1
-        return self.hash_map[message]
-
-    def hash_transaction(self, transaction):
-        return self.hash(transaction.sender + transaction.receiver + transaction.payload + transaction.signature)
 
 
 class CommonTestCase(TestCase):
@@ -113,9 +99,12 @@ class CommonTestCase(TestCase):
         self.wallet_file = StringIO()
         self.transactions = []
         self.blocks = []
-        self.mock_crypto_helper = MockCryptoHelper()
-        self.mock_network_interface = MockNetworkInterface(self.mock_crypto_helper, self.transactions, self.blocks)
-        return BlockchainClient(Wallet(self.wallet_file), self.mock_network_interface, self.mock_crypto_helper)
+        self.crypto_helper = CryptoHelper.instance()
+        self.mock_network_interface = MockNetworkInterface(self.crypto_helper,
+                                                           self.transactions,
+                                                           self.blocks)
+        return BlockchainClient(Wallet(self.wallet_file),
+                                self.mock_network_interface, self.crypto_helper)
 
     def get_raw_output(self):
         """Get the whole stdout content since the start of the test as raw string. """
@@ -202,9 +191,9 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #170
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -271,7 +260,7 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #160
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('existing key', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -296,7 +285,7 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #160
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('existing key', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -328,9 +317,9 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #170
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 1', pub_key, pr_key)
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.store_key_pair_in_wallet('test key 2', pub_key, pr_key)
         # when
         self.queue_input('1')
@@ -351,9 +340,9 @@ class ManageWalletTestCase(CommonTestCase):
             Tested requirement: #170
         """
         # given
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.client.wallet["test key 1"] = (pub_key, pr_key)
-        pr_key, pub_key = self.mock_crypto_helper.generate_key_pair()
+        pr_key, pub_key = self.crypto_helper.generate_key_pair()
         self.client.wallet["test key 2"] = (pub_key, pr_key)
 
         # when
@@ -379,17 +368,20 @@ class CreateTransactionTestCase(CommonTestCase):
             Test requirement: 180, 190
         """
         # given
-        self.client.wallet['DrugMoneyKey'] = ('public_123', 'private_456')
-        self.client.wallet['BestLabel'] = ('public_555', 'private_111')
-        valid_signature = self.mock_crypto_helper.sign('private_456', json.dumps({
-            'sender': 'public_123',
-            'receiver': 'test_receiver',
+        sender_private_key, sender_public_key = self.crypto_helper.generate_key_pair()
+        receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
+        self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
+        self.client.wallet['Receiver'] = (
+        receiver_public_key, receiver_private_key)
+        payload = json.dumps({
+            'sender': sender_public_key,
+            'receiver': receiver_public_key,
             'payload': 'test_payload'
-        }))
+        })
         # when
         self.queue_input('2')  # go to menu 2
-        self.queue_input('2')  # choose label 2
-        self.queue_input('test_receiver')  # input receiver address
+        self.queue_input('2')  # choose label 1
+        self.queue_input(receiver_public_key)  # input receiver address
         self.queue_input('test_payload')  # input payload
         self.queue_input('')  # press Enter
         # end of test case input
@@ -397,25 +389,31 @@ class CreateTransactionTestCase(CommonTestCase):
         self.client.main()
         # then
         self.assertEqual(len(self.transactions), 1)
-        self.assertEqual(self.transactions[0].sender, 'public_123')
-        self.assertEqual(self.transactions[0].receiver, 'test_receiver')
+        self.assertEqual(self.transactions[0].sender, sender_public_key)
+        self.assertEqual(self.transactions[0].receiver, receiver_public_key)
         self.assertEqual(self.transactions[0].payload, 'test_payload')
-        self.assertEqual(self.transactions[0].signature, valid_signature)
+        self.assertTrue(self.crypto_helper.validate(sender_public_key, payload,
+                                                    self.transactions[
+                                                        0].signature),
+                        'Signature was incorrect.')
 
     def test_create_transaction_with_invalid_key_pair_index_as_sender(self):
         """ Test Case: 8a
             Test requirement: 180, 190
         """
         # given
-        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_45')
-        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
+        sender_private_key, sender_public_key = self.crypto_helper.generate_key_pair()
+        receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
+        self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
+        self.client.wallet['Receiver'] = (
+        receiver_public_key, receiver_private_key)
         # when
         self.queue_input('2')
         self.queue_input('3')
         # end of test case input
         # finish with valid input and quit client
         self.queue_input('2')
-        self.queue_input('test_receiver')  # input receiver address
+        self.queue_input(receiver_public_key)  # input receiver address
         self.queue_input('test_payload')  # input payload
         self.queue_input('')  # press Enter
         self.queue_input('q')  # quit client now
@@ -428,8 +426,11 @@ class CreateTransactionTestCase(CommonTestCase):
             Test requirement: 180, 190
         """
         # given
-        self.client.wallet['DrugMoneyKey'] =  ('public_123', 'private_45')
-        self.client.wallet['BestLabel'] = ('public_555', 'private_111')
+        sender_private_key, sender_public_key = self.crypto_helper.generate_key_pair()
+        receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
+        self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
+        self.client.wallet['Receiver'] = (
+        receiver_public_key, receiver_private_key)
         # when
         self.queue_input('2')
         self.queue_input('2')
@@ -449,8 +450,11 @@ class CreateTransactionTestCase(CommonTestCase):
             Test requirement: 180, 190
         """
         # given
-        self.store_key_pair_in_wallet('DrugMoneyKey', 'public_123', 'private_45')
-        self.store_key_pair_in_wallet('BestLabel', 'public_555', 'private_111')
+        sender_private_key, sender_public_key = self.crypto_helper.generate_key_pair()
+        receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
+        self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
+        self.client.wallet['Receiver'] = (
+        receiver_public_key, receiver_private_key)
         # when
         self.queue_input('2')
         self.queue_input('2')
@@ -475,7 +479,7 @@ class TransactionTestCase(CommonTestCase):
         # given
         transaction = Transaction('some_sender_id', 'some_receiver_id', 'some_payload', 'some_signature')
         self.add_transaction(transaction)
-        transaction_hash = self.mock_crypto_helper.hash_transaction(transaction)
+        transaction_hash = self.crypto_helper.hash(transaction.get_json())
         # when
         self.queue_input('4')
         self.queue_input('1')
@@ -581,56 +585,32 @@ class LoadBlockTestCase(CommonTestCase):
         self.assert_string_in_output('creator_hash')  # block creator
 
     def test_show_transaction_pool(self):
-        self.queue_input('5')
+        self.queue_input('4')
+        self.queue_input('2')
         self.queue_input('')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
 
         self.assert_string_in_output('Transaction pool is empty.')
 
     def test_show_connected_peers(self):
-        self.queue_input('6')
+        self.queue_input('5')
         self.queue_input('')
         self.queue_input('q')
         self.client.main()
 
         self.assert_string_in_output('peers : [{}]')
 
-    def test_show_received_transaction(self):
-        self.mock_network_interface.transactions.append(Transaction("test_sender", "test_receiver", "payload_data"))
-
-        self.queue_input('7')
-        self.queue_input('test_receiver')
-        self.queue_input('')
-        self.queue_input('q')
-        self.client.main()
-
-        self.assert_string_in_output('Sender Address:   test_sender')
-        self.assert_string_in_output('Receiver Address: test_receiver')
-        self.assert_string_in_output('Payload:          payload_data')
-        self.assert_string_in_output('Signature:        None')
-
-    def test_show_sent_transaction(self):
-        self.mock_network_interface.transactions.append(Transaction("test_sender", "test_receiver", "payload_data"))
-
-        self.queue_input('8')
-        self.queue_input('test_sender')
-        self.queue_input('')
-        self.queue_input('q')
-        self.client.main()
-
-        self.assert_string_in_output('Sender Address:   test_sender')
-        self.assert_string_in_output('Receiver Address: test_receiver')
-        self.assert_string_in_output('Payload:          payload_data')
-        self.assert_string_in_output('Signature:        None')
-
     def test_show_all_transaction(self):
         self.mock_network_interface.transactions.append(Transaction("test_sender1", "test_receiver1", "payload_data1"))
         self.mock_network_interface.transactions.append(Transaction("test_sender2", "test_receiver2", "payload_data2"))
         self.mock_network_interface.transactions.append(Transaction("test_sender3", "test_receiver3", "payload_data3"))
 
-        self.queue_input('9')
+        self.queue_input('4')
+        self.queue_input('6')
         self.queue_input('')
+        self.queue_input('q')
         self.queue_input('q')
         self.client.main()
 
@@ -649,3 +629,25 @@ class LoadBlockTestCase(CommonTestCase):
         self.assert_string_in_output('Payload:          payload_data3')
         self.assert_string_in_output('Signature:        None')
 
+    def test_show_n_last_transaction(self):
+        self.mock_network_interface.transactions.append(Transaction("test_sender1", "test_receiver1", "payload_data1"))
+        self.mock_network_interface.transactions.append(Transaction("test_sender2", "test_receiver2", "payload_data2"))
+        self.mock_network_interface.transactions.append(Transaction("test_sender3", "test_receiver3", "payload_data3"))
+
+        self.queue_input('4')
+        self.queue_input('3')
+        self.queue_input('2')
+        self.queue_input('')
+        self.queue_input('q')
+        self.queue_input('q')
+        self.client.main()
+
+        self.assert_string_in_output('Sender Address:   test_sender1')
+        self.assert_string_in_output('Receiver Address: test_receiver1')
+        self.assert_string_in_output('Payload:          payload_data1')
+        self.assert_string_in_output('Signature:        None')
+
+        self.assert_string_in_output('Sender Address:   test_sender2')
+        self.assert_string_in_output('Receiver Address: test_receiver2')
+        self.assert_string_in_output('Payload:          payload_data2')
+        self.assert_string_in_output('Signature:        None')
