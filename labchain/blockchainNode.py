@@ -182,12 +182,44 @@ class BlockChainNode:
     def on_get_transactions_in_txpool(self):
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
+    # for workflow transaction utils
+    def get_previous_transaction(self, TaskTransaction)-> TaskTransaction:
+        if isinstance(WorkflowTransaction):
+            TaskTransaction.set_previous_transaction('')
+
+        else: 
+                if isinstance(TaskTransaction):
+                    sender = TaskTransaction
+                    for pool_transaction in self.on_get_transactions_in_txpool():
+                        if isinstance(pool_transaction, TaskTransaction):
+                            print(TaskTransaction)
+                            print(TaskTransaction.__class__.__name__)
+                            if pool_transaction.in_charge == sender:
+                                return pool_transaction            
+                    for blk_transaction in self.blockchain_obj.get_all_transactions():
+                        if isinstance(blk_transaction, TaskTransaction):
+                            print(TaskTransaction)
+                            print(TaskTransaction.__class__.__name__)
+                            if blk_transaction.in_charge == sender:
+                                return blk_transaction
+    
+    def get_workflow_transaction(self, TaskTransaction) -> WorkflowTransaction:
+        transaction = self.get_previous_transaction(TaskTransaction)
+        print(transaction)
+        print(transaction.__class__.__name__)
+        while (isinstance(transaction, WorkflowTransaction) is False):
+            print(transaction)
+            print(transaction.__class__.__name__)
+            transaction = self.get_previous_transaction(transaction)
+        print(transaction)
+        print(transaction.__class__.__name__)
+        return transaction
+
     def on_new_transaction_received(self, transaction):
-        if isinstance(transaction, WorkflowTransaction):
-             self.logger.warning('Received WorkflowTransaction ' + transaction.to_dict())
-        if isinstance(transaction, Transaction):
-            """Callback method to pass to network"""
-            return self.txpool_obj.add_transaction_if_not_exist(transaction)
+        if isinstance(transaction, TaskTransaction):
+            transaction.previous_transaction = self.get_previous_transaction(transaction)
+            transaction.workflow_transaction = self.get_workflow_transaction(transaction)
+        return self.txpool_obj.add_transaction_if_not_exist(transaction)
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""

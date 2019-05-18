@@ -38,6 +38,7 @@ class TaskTransaction(Transaction):
             return super().validate_transaction(crypto_helper)
         else:
             return super().validate_transaction(crypto_helper)
+    
 
     def _check_permissions_write(self):
         dict: Dict = json.loads(self.payload)
