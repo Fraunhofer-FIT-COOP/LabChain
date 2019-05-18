@@ -15,8 +15,8 @@ from werkzeug.wrappers import Request, Response
 
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.workflowTransaction import WorkflowTransaction
 from labchain.datastructure.taskTransaction import TaskTransaction
+from labchain.datastructure.taskTransaction import WorkflowTransaction
 from labchain.network.discover import PeerDiscoverySystem
 from labchain.util.utility import Utility
 

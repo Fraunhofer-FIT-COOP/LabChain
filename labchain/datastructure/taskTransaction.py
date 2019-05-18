@@ -11,6 +11,8 @@ class TaskTransaction(Transaction):
         super().__init__(sender, receiver, payload)
         self.document = payload['document'] # document is a dict
         self.in_charge = payload['in_charge']
+        self.previous_transaction = None
+        self.workflow_transaction = None
 
     def validate_transaction(self, crypto_helper):
         """
@@ -19,7 +21,7 @@ class TaskTransaction(Transaction):
         :param result: Receive result of transaction validation.
         :return result: True if transaction is valid
         """
-        previous_transaction: TaskTransaction = None # self.get_previous_transaction()
+        previous_transaction: TaskTransaction = self.previous_transaction
         if not isinstance(self, WorkflowTransaction):
             owner_valid = True if previous_transaction.receiver == self.sender else False
             if not self._check_permissions_write():
@@ -39,25 +41,47 @@ class TaskTransaction(Transaction):
 
     def _check_permissions_write(self):
         dict: Dict = json.loads(self.payload)
-        permission = self.get_workflow_transaction().permission
+        permission = self.workflow_transaction.permission
         for key in dict:
-            if not self.get_previous_transaction().in_charge in permission[key]:
+            if not self.previous_transaction.in_charge in permission[key]:
                 return False
         return True
 
     def _check_process_definition(self):
-        process_definition: Dict = self.get_workflow_transaction().get_process_definition()
-        previous_transaction: TaskTransaction = self.get_previous_transaction()
+        process_definition: Dict = self.workflow_transaction.get_process_definition()
+        previous_transaction: TaskTransaction = self.previous_transaction
         in_charge = previous_transaction.in_charge
         possible_receivers = process_definition[in_charge]
         return True if get_pid_of_receiver(self.receiver) in possible_receivers else False  # TODO associate receiver-public-key to corresponding PID
 
-    """
-    Getter for the previous transaction in the workflow
-    :return previous_transaction: The TaskTransaction-Object of the previous transaction, returns None if this is the initial transaction
-    """
+    @staticmethod
+    def from_json(json_data):
+        """Deserialize a JSON string to a Transaction instance."""
+        data_dict = json.loads(json_data)
+        return TaskTransaction.from_dict(data_dict)
 
-    """
-    Getter for the initial transaction in the workflow
-    :return initial_transaction: The DocumentTransaxction-Object of the initial transaction
-    """
+    @staticmethod
+    def from_dict(data_dict):
+        """Instantiate a Transaction from a data dictionary."""
+        return TaskTransaction(data_dict['sender'], data_dict['receiver'],
+                           data_dict['payload'])
+
+class WorkflowTransaction(TaskTransaction):
+
+    def __init__(self, sender, receiver, payload):
+        super().__init__(sender, receiver, payload)
+        self.processes = payload['processes'] # dict
+        self.permissions = payload['permissions'] # dict
+
+    def get_process_definition(self) -> Dict:
+        pass  # TODO get process definition
+
+    @staticmethod
+    def from_json(json_data):
+        data_dict = json.loads(json_data)
+        return WorkflowTransaction.from_dict(data_dict)
+
+    @staticmethod
+    def from_dict(data_dict):
+        return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
+                           data_dict['payload'])
