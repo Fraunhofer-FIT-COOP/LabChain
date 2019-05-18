@@ -326,7 +326,7 @@ class BlockchainClient:
             '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Transaction Menu', self.load_transaction_menu.show, []),
             '5': ('Show Connected Peers', self.__load_peers, []),
-            '6': ('Send dummy workflow transaction',self.send_dummpy_workflow_transaction,[]),
+            '6': ('Send dummy workflow transaction',self.send_dummy_workflow_transaction,[]),
             '7': ('Send dummy task transaction',self.send_dummy_task_transaction,[])
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
@@ -345,14 +345,13 @@ class BlockchainClient:
                     "stringAttribute":"1234"
                 },
                 "in_charge" : "PID_2",
-            },
-            "transaction_type": 2
+            }
         }
         transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
         transaction.sign_transaction(self.crypto_helper, task_transaction_json['sender'])
-        self.network_interface.sendTransaction(transaction)
+        self.network_interface.sendTransaction(transaction,2)
 
-    def send_dummpy_workflow_transaction(self):
+    def send_dummy_workflow_transaction(self):
 
         workflow_transaction_json = {
             "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
@@ -382,7 +381,7 @@ class BlockchainClient:
         }
         transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
         transaction.sign_transaction(self.crypto_helper, workflow_transaction_json['sender'])
-        self.network_interface.sendTransaction(transaction)
+        self.network_interface.sendTransaction(transaction,1)
 
     def __create_transaction(self):
         """Ask for all important information to create a new transaction and sends it to the network."""

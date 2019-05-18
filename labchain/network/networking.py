@@ -108,9 +108,11 @@ class NetworkInterface:
             for port, info in port_map.items():
                 self.add_peer(ip_address, port, info)
 
-    def sendTransaction(self, transaction):
+    def sendTransaction(self, transaction,transaction_type = 0):
         # send the transaction to all peers
-        responses = self._bulk_send('sendTransaction', [transaction.to_dict()])
+        transaction_dict = transaction.to_dict()
+        transaction_dict['transaction_type'] = transaction_type
+        responses = self._bulk_send('sendTransaction', [transaction_dict])
         if not responses:
             raise NoPeersException('No nodes available to send the transaction to')
 

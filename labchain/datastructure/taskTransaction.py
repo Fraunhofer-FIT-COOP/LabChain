@@ -7,8 +7,8 @@ from labchain.datastructure.transaction import Transaction
 
 class TaskTransaction(Transaction):
 
-    def __init__(self, sender, receiver, payload, transaction_type):
-        super().__init__(sender, receiver, payload, None, transaction_type)
+    def __init__(self, sender, receiver, payload):
+        super().__init__(sender, receiver, payload)
         self.document = payload['document'] # document is a dict
         self.in_charge = payload['in_charge']
         self.previous_transaction = None
@@ -65,12 +65,12 @@ class TaskTransaction(Transaction):
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
         return TaskTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'], data_dict['transaction_type'])
+                           data_dict['payload'])
 
 class WorkflowTransaction(TaskTransaction):
 
-    def __init__(self, sender, receiver, payload, transaction_type = 1):
-        super().__init__(sender, receiver, payload, None, 1)
+    def __init__(self, sender, receiver, payload):
+        super().__init__(sender, receiver, payload)
         self.processes = payload['processes'] # dict
         self.permissions = payload['permissions'] # dict
 
@@ -85,4 +85,4 @@ class WorkflowTransaction(TaskTransaction):
     @staticmethod
     def from_dict(data_dict):
         return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload']), data_dict['transaction_type']
+                           data_dict['payload'])
