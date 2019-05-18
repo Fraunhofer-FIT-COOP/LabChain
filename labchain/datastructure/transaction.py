@@ -5,12 +5,13 @@ class Transaction:
     """Represents a single transaction within the blockchain.
     """
 
-    def __init__(self, sender, receiver, payload, signature=None):
+    def __init__(self, sender, receiver, payload, signature=None, transaction_type=0):
         self.__sender = sender
         self.__receiver = receiver
         self.__payload = payload
         self.__signature = signature
         self.__transaction_hash = None
+        self.__transaction_type = transaction_type
 
     def to_dict(self):
         """Convert own data to a dictionary."""
@@ -18,7 +19,8 @@ class Transaction:
             'sender': self.__sender,
             'receiver': self.__receiver,
             'payload': self.__payload,
-            'signature': self.__signature
+            'signature': self.__signature,
+            'transaction_type': self.__transaction_type
         }
 
     def get_json(self):

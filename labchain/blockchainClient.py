@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, BlockDoesNotExistException,NoPeersException
 from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.datastructure.taskTransaction import WorkflowTransaction, TaskTransaction
 from labchain.datastructure.txpool import TxPool
 from labchain.util.cryptoHelper import CryptoHelper
 
@@ -326,14 +326,33 @@ class BlockchainClient:
             '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Transaction Menu', self.load_transaction_menu.show, []),
             '5': ('Show Connected Peers', self.__load_peers, []),
-            '6': ('Send dummy transaction',self.send_dummpy_transaction,[])
+            '6': ('Send dummy workflow transaction',self.send_dummpy_workflow_transaction,[]),
+            '7': ('Send dummy task transaction',self.send_dummy_task_transaction,[])
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
         """Entry point for the client console application."""
         self.main_menu.show()
 
-    def send_dummpy_transaction(self):
+    def send_dummy_task_transaction(self):
+
+        task_transaction_json = {
+            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
+            "signature": "sig",
+            "payload":{
+                "document":{
+                    "stringAttribute":"1234"
+                },
+                "in_charge" : "PID_2",
+            },
+            "transaction_type": 2
+        }
+        transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+        transaction.sign_transaction(self.crypto_helper, task_transaction_json['sender'])
+        self.network_interface.sendTransaction(transaction)
+
+    def send_dummpy_workflow_transaction(self):
 
         workflow_transaction_json = {
             "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
