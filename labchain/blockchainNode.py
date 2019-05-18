@@ -19,6 +19,10 @@ from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
 from labchain.datastructure.txpool import TxPool
 from labchain.databaseInterface import Db
+from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.datastructure.taskTransaction import TaskTransaction
+from labchain.datastructure.transaction import Transaction
+
 
 
 class BlockChainNode:
@@ -179,8 +183,11 @@ class BlockChainNode:
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
     def on_new_transaction_received(self, transaction):
-        """Callback method to pass to network"""
-        return self.txpool_obj.add_transaction_if_not_exist(transaction)
+        if isinstance(transaction, WorkflowTransaction):
+             self.logger.warning('Received WorkflowTransaction ' + transaction.to_dict())
+        if isinstance(transaction, Transaction):
+            """Callback method to pass to network"""
+            return self.txpool_obj.add_transaction_if_not_exist(transaction)
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""

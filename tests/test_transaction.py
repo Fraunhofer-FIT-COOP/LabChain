@@ -173,7 +173,6 @@ class TransactionTestCase(unittest.TestCase):
         'Hash:             0x123456\n'
         , capturedOutput.getvalue())
 
-
 class TaskTransactionTestCase(unittest.TestCase):
     
     def test_to_dict(self):
@@ -184,10 +183,12 @@ class TaskTransactionTestCase(unittest.TestCase):
             "signature": "sig", 
             "payload":{
                 "document":{
-                    "attribute1":"stringValue",
-                    "attribute2":1
+                    "stringAttribute":"stringValue",
+                    "booleanAttribute": 'true',
+                    "integerAttribute" : 1,
+                    "floatAttributes": 1.5
                 },
-                "in_charge":"PS_1"
+                "in_charge":"PID_2"
             }, 
             "sender": "s"
         }
@@ -207,22 +208,30 @@ class WorkflowTransactionTestCase(unittest.TestCase):
         """Test workflow transaction creation from json"""
 
         workflow_transaction_json = {
-            "receiver": "r", 
+            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
             "signature": "sig", 
             "payload":{
                 "document":{
-                    "attribute1":"stringValue",
-                    "attribute2":1
+                    "stringAttribute":"stringValue",
+                    "booleanAttribute": 'true',
+                    "integerAttribute" : 1,
+                    "floatAttributes": 1.5
                 },
-                "in_charge":"PS_1",
+                "in_charge":"PID_1",
                 "processes":{
-
+                    "PID_1" : ["PID_2"],
+                    "PID_2" : ["PID_3"],
+                    "PID_3" : ["PID_4"],
+                    "PID_4" : ["PID_5"]
                 },
                 "permissions":{
-
+                    "stringAttribute": ["PID_1","PID_2","PID_3"],
+                    "booleanAttribute": ["PID_5"],
+                    "integerAttribute" : ["PID_4"],
+                    "floatAttributes": ["PID_2"]
                 }
-            }, 
-            "sender": "s"
+            }
         }
         transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
         self.assertTrue(isinstance(transaction, WorkflowTransaction))
