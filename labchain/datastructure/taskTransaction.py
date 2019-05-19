@@ -7,8 +7,8 @@ from labchain.datastructure.transaction import Transaction
 
 class TaskTransaction(Transaction):
 
-    def __init__(self, sender, receiver, payload):
-        super().__init__(sender, receiver, payload)
+    def __init__(self, sender, receiver, payload, signature = None):
+        super().__init__(sender, receiver, payload, signature)
         self.document = payload['document'] # document is a dict
         self.in_charge = payload['in_charge']
         self.previous_transaction = None
@@ -39,7 +39,6 @@ class TaskTransaction(Transaction):
         else:
             return super().validate_transaction(crypto_helper)
 
-
     def _check_permissions_write(self):
         dict: Dict = json.loads(self.payload)
         permission = self.workflow_transaction.permission
@@ -65,12 +64,12 @@ class TaskTransaction(Transaction):
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
         return TaskTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'])
+                           data_dict['payload'],data_dict['signature'])
 
 class WorkflowTransaction(TaskTransaction):
 
-    def __init__(self, sender, receiver, payload):
-        super().__init__(sender, receiver, payload)
+    def __init__(self, sender, receiver, payload, signature = None):
+        super().__init__(sender, receiver, payload, signature)
         self.processes = payload['processes'] # dict
         self.permissions = payload['permissions'] # dict
 
@@ -85,4 +84,4 @@ class WorkflowTransaction(TaskTransaction):
     @staticmethod
     def from_dict(data_dict):
         return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'])
+                           data_dict['payload'], data_dict['signature'])

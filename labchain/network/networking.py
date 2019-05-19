@@ -458,9 +458,9 @@ class ServerNetworkInterface(NetworkInterface):
             if (transaction_type == 0):
                 transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
             if (transaction_type == 1):
-                transaction = WorkflowTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'])
+                transaction = WorkflowTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'],transaction_data['signature'])
             if (transaction_type == 2):
-                transaction = TaskTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'])
+                transaction = TaskTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
         else:
             transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
