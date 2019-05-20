@@ -5,6 +5,7 @@ import sys
 
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.transaction import NoHashError
+from labchain.datastructure.taskTransaction import TaskTransaction
 
 
 class BlockChain:
@@ -186,6 +187,15 @@ class BlockChain:
             for _txn in _txns:
                 res.append(_txn)
         return res
+
+    def get_task_transactions(self):
+        task_transactions = []
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if isinstance(_txn, TaskTransaction):
+                    task_transactions.append(_txn)
+        return task_transactions
 
     def get_n_last_transactions(self,n):
         """

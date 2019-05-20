@@ -11,6 +11,7 @@ class TaskTransaction(Transaction):
         super().__init__(sender, receiver, payload, signature)
         self.document = payload['document'] # document is a dict
         self.in_charge = payload['in_charge']
+        self.next_in_charge = payload['next_in_charge']
         self.previous_transaction = None
         self.workflow_transaction = None
 
@@ -22,25 +23,24 @@ class TaskTransaction(Transaction):
         :return result: True if transaction is valid
         """
         previous_transaction: TaskTransaction = self.previous_transaction
+        #import pdb; pdb.set_trace()
         if not isinstance(self, WorkflowTransaction):
             owner_valid = True if previous_transaction.receiver == self.sender else False
             if not self._check_permissions_write():
                 logging.debug('Sender has not the permission to write!')
                 return False
             if not self._check_process_definition():
-                logging.debug(
-                    'Transaction does not comply to process definition!')
+                logging.debug('Transaction does not comply to process definition!')
                 return False
             if not owner_valid:
-                logging.debug(
-                    'Sender is not the current owner of the document flow!')
+                logging.debug('Sender is not the current owner of the document flow!')
                 return False
             return super().validate_transaction(crypto_helper)
         else:
             return super().validate_transaction(crypto_helper)
 
     def _check_permissions_write(self):
-        dict: Dict = json.loads(self.payload)
+        return True
         permission = self.workflow_transaction.permission
         for key in dict:
             if not self.previous_transaction.in_charge in permission[key]:
@@ -48,6 +48,7 @@ class TaskTransaction(Transaction):
         return True
 
     def _check_process_definition(self):
+        return True
         process_definition: Dict = self.workflow_transaction.get_process_definition()
         previous_transaction: TaskTransaction = self.previous_transaction
         in_charge = previous_transaction.in_charge
