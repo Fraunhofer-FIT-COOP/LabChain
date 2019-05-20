@@ -9,6 +9,8 @@ from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
 from unittest.mock import MagicMock
 from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.taskTransaction import TaskTransaction,WorkflowTransaction
+
 from labchain.util.cryptoHelper import CryptoHelper
 
 class TransactionTestCase(unittest.TestCase):
@@ -35,7 +37,6 @@ class TransactionTestCase(unittest.TestCase):
         self.assertEqual(data_dict['receiver'], 'r')
         self.assertEqual(data_dict['payload'], '1')
         self.assertEqual(data_dict['signature'], 'sig')
-
 
     def test_from_json(self):
         """Test transaction creation from json"""
@@ -156,7 +157,6 @@ class TransactionTestCase(unittest.TestCase):
         int_hash = 1193046
         self.assertEqual(1193046, transaction.__hash__(), msg='{}'.format(transaction.__hash__()))
 
-
     def test_print(self):
         """Test printing transaction details"""
         transaction = Transaction(sender="s", receiver="r", payload="1", signature="sig")
@@ -173,7 +173,77 @@ class TransactionTestCase(unittest.TestCase):
         'Hash:             0x123456\n'
         , capturedOutput.getvalue())
 
+class TaskTransactionTestCase(unittest.TestCase):
+    
+    def test_to_dict(self):
+        """Test task transaction creation from json"""
 
+        task_transaction_json = {
+            "receiver": "r", 
+            "signature": "sig", 
+            "payload":{
+                "document":{
+                    "stringAttribute":"stringValue",
+                    "booleanAttribute": 'true',
+                    "integerAttribute" : 1,
+                    "floatAttributes": 1.5
+                },
+                "in_charge":"PID_2"
+            }, 
+            "sender": "s"
+        }
+        transaction: TaskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+        self.assertTrue(isinstance(transaction, TaskTransaction))
+        data_dict = transaction.to_dict()
+        self.assertEqual(data_dict['sender'], transaction.sender)
+        self.assertEqual(data_dict['receiver'], transaction.receiver)
+        self.assertEqual(data_dict['payload'], transaction.payload)
+        self.assertEqual(data_dict['signature'], transaction.signature)
+        self.assertEqual(data_dict['payload']['document'], transaction.document)
+        self.assertEqual(data_dict['payload']['in_charge'], transaction.in_charge)
+
+class WorkflowTransactionTestCase(unittest.TestCase):
+    
+    def test_to_dict(self):
+        """Test workflow transaction creation from json"""
+
+        workflow_transaction_json = {
+            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
+            "signature": "sig", 
+            "payload":{
+                "document":{
+                    "stringAttribute":"stringValue",
+                    "booleanAttribute": 'true',
+                    "integerAttribute" : 1,
+                    "floatAttributes": 1.5
+                },
+                "in_charge":"PID_1",
+                "processes":{
+                    "PID_1" : ["PID_2"],
+                    "PID_2" : ["PID_3"],
+                    "PID_3" : ["PID_4"],
+                    "PID_4" : ["PID_5"]
+                },
+                "permissions":{
+                    "stringAttribute": ["PID_1","PID_2","PID_3"],
+                    "booleanAttribute": ["PID_5"],
+                    "integerAttribute" : ["PID_4"],
+                    "floatAttributes": ["PID_2"]
+                }
+            }
+        }
+        transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
+        self.assertTrue(isinstance(transaction, WorkflowTransaction))
+        data_dict = transaction.to_dict()
+        self.assertEqual(data_dict['sender'], transaction.sender)
+        self.assertEqual(data_dict['receiver'], transaction.receiver)
+        self.assertEqual(data_dict['payload'], transaction.payload)
+        self.assertEqual(data_dict['signature'], transaction.signature)
+        self.assertEqual(data_dict['payload']['document'], transaction.document)
+        self.assertEqual(data_dict['payload']['in_charge'], transaction.in_charge)
+        self.assertEqual(data_dict['payload']['processes'], transaction.processes)
+        self.assertEqual(data_dict['payload']['permissions'], transaction.permissions)
 
 if __name__ == '__main__':
     unittest.main()
