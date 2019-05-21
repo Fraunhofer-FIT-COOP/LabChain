@@ -19,6 +19,10 @@ from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
 from labchain.datastructure.txpool import TxPool
 from labchain.databaseInterface import Db
+from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.datastructure.taskTransaction import TaskTransaction
+from labchain.datastructure.transaction import Transaction
+
 
 
 class BlockChainNode:
@@ -178,8 +182,36 @@ class BlockChainNode:
     def on_get_transactions_in_txpool(self):
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
+    # for workflow transaction utils
+    def get_previous_transaction(self, currenttaskTransaction)-> TaskTransaction:
+        current_in_charge = currenttaskTransaction.in_charge
+        for task_transaction in self.txpool_obj.get_task_transactions():
+            if task_transaction.next_in_charge == current_in_charge:
+                return task_transaction            
+        for task_transaction in self.blockchain_obj.get_task_transactions():
+            if task_transaction.next_in_charge == current_in_charge:
+                return task_transaction 
+    
+    def get_workflow_transaction(self, taskTransaction) -> WorkflowTransaction:
+        transaction = self.get_previous_transaction(taskTransaction)
+        while (isinstance(transaction, WorkflowTransaction) is False):
+            transaction = self.get_previous_transaction(transaction)
+        return transaction
+
     def on_new_transaction_received(self, transaction):
-        """Callback method to pass to network"""
+        if isinstance(transaction, WorkflowTransaction):
+            return self.txpool_obj.add_transaction_if_not_exist(transaction)
+        if isinstance(transaction, TaskTransaction):
+            transaction.previous_transaction = self.get_previous_transaction(transaction)
+            #transaction.workflow_transaction = self.get_workflow_transaction(transaction)
+            print ('-----------------------------------')
+            print (transaction.previous_transaction)
+            print ('-----------------------------------')
+            result = False
+            if transaction.previous_transaction:
+                result = self.txpool_obj.add_transaction_if_not_exist(transaction)
+            print ("Task transaction result {}".format(result))
+            return result
         return self.txpool_obj.add_transaction_if_not_exist(transaction)
 
     def on_new_block_received(self, block):
