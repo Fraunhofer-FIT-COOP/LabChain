@@ -23,7 +23,7 @@ class TxPoolTestCase(unittest.TestCase):
         self._txPoolObj.add_transaction_if_not_exist(t3)
 
     def tearDown(self):
-        del self._txPoolObj
+        self._txPoolObj._first_time = True
 
     def test_add_transaction(self):
         """Test for add transaction, get transaction count and
