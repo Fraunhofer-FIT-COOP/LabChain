@@ -105,8 +105,7 @@ class BlockChain:
 
         if any([range_start not in self._blockchain,
                 range_end not in self._blockchain]):
-            raise Exception("Invalid start or end range")
-            #return None
+            return None
 
         blocks_range = []
         while _b_hash != range_start:
@@ -123,8 +122,6 @@ class BlockChain:
         for _, _block in self._blockchain.items():
             if _block.block_id == block_id:
                 block_list.append(_block)
-        if not block_list:
-            raise Exception("No block found with id ".format(block_id))
         return block_list
 
     def get_block_by_hash(self, block_hash):
@@ -147,8 +144,6 @@ class BlockChain:
         _req_block = self._blockchain.get(block_hash, None)
         if _req_block:
             block_info = _req_block.get_json()
-        if not block_info:
-            raise Exception("No block found with hash ".format(block_hash))
         return block_info
 
     def get_transaction(self, transaction_hash):
