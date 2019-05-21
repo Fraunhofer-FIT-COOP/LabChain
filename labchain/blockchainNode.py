@@ -185,30 +185,37 @@ class BlockChainNode:
     # for workflow transaction utils
     def get_previous_transaction(self, currenttaskTransaction)-> TaskTransaction:
         current_in_charge = currenttaskTransaction.in_charge
-        for task_transaction in self.txpool_obj.get_task_transactions():
-            if task_transaction.next_in_charge == current_in_charge:
-                return task_transaction            
-        for task_transaction in self.blockchain_obj.get_task_transactions():
-            if task_transaction.next_in_charge == current_in_charge:
-                return task_transaction 
+        for transaction in self.txpool_obj.get_task_transactions():
+            if transaction.next_in_charge == current_in_charge:
+                return transaction            
+        for transaction in self.blockchain_obj.get_task_transactions():
+            if transaction.next_in_charge == current_in_charge:
+                return transaction
+        return None
     
     def get_workflow_transaction(self, taskTransaction) -> WorkflowTransaction:
-        transaction = self.get_previous_transaction(taskTransaction)
-        while (isinstance(transaction, WorkflowTransaction) is False):
-            transaction = self.get_previous_transaction(transaction)
-        return transaction
+        workflowID = taskTransaction.workflowID
+        for transaction in self.txpool_obj.get_workflow_transactions():
+            if transaction.workflowID == workflowID:
+                return transaction            
+        for transaction in self.blockchain_obj.get_workflow_transactions():
+            if transaction.workflowID == workflowID:
+                return transaction 
+        return None
 
     def on_new_transaction_received(self, transaction):
         if isinstance(transaction, WorkflowTransaction):
             return self.txpool_obj.add_transaction_if_not_exist(transaction)
         if isinstance(transaction, TaskTransaction):
             transaction.previous_transaction = self.get_previous_transaction(transaction)
-            #transaction.workflow_transaction = self.get_workflow_transaction(transaction)
-            print ('-----------------------------------')
+            transaction.workflow_transaction = self.get_workflow_transaction(transaction)
+            print ('--------------Previous---------------------')
             print (transaction.previous_transaction)
-            print ('-----------------------------------')
+            print ('--------------Workflow---------------------')
+            print (transaction.workflow_transaction)
+            print ('-------------------------------------------')
             result = False
-            if transaction.previous_transaction:
+            if transaction.previous_transaction and transaction.workflow_transaction:
                 result = self.txpool_obj.add_transaction_if_not_exist(transaction)
             print ("Task transaction result {}".format(result))
             return result

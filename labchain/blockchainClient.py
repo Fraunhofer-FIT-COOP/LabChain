@@ -341,11 +341,12 @@ class BlockchainClient:
             "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
             "signature": None,
             "payload":{
+                "workflow-id":"0",
                 "document":{
                     "stringAttribute":"1234"
                 },
-                "in_charge" : "PID_1",
-                "next_in_charge": "PID_2",
+                "in_charge" : "PID_2",
+                "next_in_charge": "PID_3",
             }
         }
         transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
@@ -359,6 +360,7 @@ class BlockchainClient:
             "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
             "signature": None, 
             "payload":{
+                "workflow-id":"0",
                 "document":{
                     "stringAttribute":"stringValue",
                     "booleanAttribute": 'true',

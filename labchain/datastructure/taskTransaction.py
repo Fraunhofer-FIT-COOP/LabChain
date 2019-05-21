@@ -12,6 +12,7 @@ class TaskTransaction(Transaction):
         self.document = payload['document'] # document is a dict
         self.in_charge = payload['in_charge']
         self.next_in_charge = payload['next_in_charge']
+        self.workflowID = payload['workflow-id']
         self.previous_transaction = None
         self.workflow_transaction = None
 
@@ -40,10 +41,11 @@ class TaskTransaction(Transaction):
             return super().validate_transaction(crypto_helper)
 
     def _check_permissions_write(self):
-        return True
-        permission = self.workflow_transaction.permission
-        for key in dict:
-            if not self.previous_transaction.in_charge in permission[key]:
+        permissions = self.workflow_transaction.permissions
+        for attributeName in self.document:
+            if not attributeName in permissions:
+                return False
+            if not self.in_charge in permissions[attributeName]:
                 return False
         return True
 
@@ -75,7 +77,7 @@ class WorkflowTransaction(TaskTransaction):
         self.permissions = payload['permissions'] # dict
 
     def get_process_definition(self) -> Dict:
-        pass  # TODO get process definition
+        return self.processes
 
     @staticmethod
     def from_json(json_data):
