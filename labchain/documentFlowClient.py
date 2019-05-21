@@ -1,5 +1,9 @@
 import os
+import json
 from collections import OrderedDict
+
+from labchain.datastructure.taskTransaction import TaskTransaction
+
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -132,13 +136,204 @@ class Menu:
                 self.error_message = 'Wrong input. Please select one of [' + self.__available_options() + '].'
 
 
-class DoTaskWizard:
+class TaskTransactionWizard:
     """CLI wizard for making new transactions / do a task /update a task."""
 
     def __init__(self, wallet, crypto_helper, network_interface):
         self.wallet = wallet
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
+
+    def __wallet_to_list(self):
+        wallet_list_result = []
+        for key in sorted(self.wallet):
+            wallet_list_result.append([str(key), self.wallet[key][0], self.wallet[key][1]])
+        return wallet_list_result
+
+    def __validate_sender_input(self, usr_input):
+        try:
+            int_usr_input = int(usr_input)
+        except ValueError:
+            return False
+
+        if int_usr_input != 0 and int_usr_input <= len(self.wallet):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def __validate_receiver_input(usr_input):
+        if len(usr_input) > 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def __validate_payload_input(usr_input):
+        if len(usr_input) > 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def __validate_payload_attribute_input(usr_input):
+        if len(usr_input) > 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def __validate_incharge_input(usr_input):
+        if len(usr_input) > 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def __validate_next_incharge_input(usr_input):
+        if len(usr_input) > 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def __ask_for_key_from_wallet(wallet_list):
+        print(u'Current keys in the wallet: ')
+        for counter, key in enumerate(wallet_list, 1):
+            print()
+            print(str(counter) + u':\t' + str(key[0]))
+            print(u'\tPrivate Key: ' + str(key[2]))
+            print(u'\tPublic Key: ' + str(key[1]))
+            print()
+
+        user_input = input('Please choose a sender account (by number) or press enter to return: ')
+        return user_input
+
+    @staticmethod
+    def __ask_for_receiver():
+        usr_input = input('Please type a receiver address: ')
+        return str(usr_input)
+
+    @staticmethod
+    def __ask_for_incharge():
+        usr_input = input('Please type in_charge process ID: ')
+        return str(usr_input)
+
+    @staticmethod
+    def __ask_for_next_incharge():
+        usr_input = input('Please type next in_charge process ID: ')
+        return str(usr_input)
+
+    @staticmethod
+    def __ask_for_payload_attribute():
+        usr_input = input('Please type a payload attribute name: ')
+        return str(usr_input)
+
+    @staticmethod
+    def __ask_for_payload():
+        usr_input = input('Please type a payload: ')
+        return str(usr_input)
+
+    def show(self):
+        """Start the wizard."""
+        clear_screen()
+
+        # convert dict to an ordered list
+        # this needs to be done to get an ordered list that does not change
+        # at runtime of the function
+        wallet_list = self.__wallet_to_list()
+
+        # check if wallet contains any keys
+        # case: wallet not empty
+        if not len(self.wallet) == 0:
+            chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+            if chosen_key == '':
+                return
+
+            # ask for valid sender input in a loop
+            while not self.__validate_sender_input(chosen_key):
+                chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+                if chosen_key == '':
+                    return
+                clear_screen()
+                print('Invalid input! Please choose a correct index!')
+                print()
+
+            clear_screen()
+            print(u'Sender: ' + str(chosen_key))
+            chosen_receiver = self.__ask_for_receiver()
+
+            while not self.__validate_receiver_input(chosen_receiver):
+                # clear_screen()
+                print('Invalid input! Please choose a correct receiver!')
+                print(u'Sender: ' + str(chosen_key))
+                chosen_receiver = self.__ask_for_receiver()
+                print()
+
+            clear_screen()
+            print(u'Sender: ' + str(chosen_key))
+            print(u'Receiver: ' + str(chosen_receiver))
+            chosen_incharge = self.__ask_for_incharge()
+            chosen_next_incharge = self.__ask_for_next_incharge()
+
+            while not ((self.__validate_incharge_input(chosen_incharge))
+                        & (self.__validate_next_incharge_input(chosen_next_incharge)) ):
+                # clear_screen()
+                print('Invalid input! Please choose a correct incharge and next incharge!')
+                print(u'Sender: ' + str(chosen_key))
+                print(u'Receiver: ' + str(chosen_receiver))
+                chosen_incharge = self.__ask_for_incharge()
+                chosen_next_incharge = self.__ask_for_next_incharge()
+                print()
+
+            chosen_payload_attribute = self.__ask_for_payload_attribute()
+            chosen_payload = self.__ask_for_payload()
+            while not ((self.__validate_payload_attribute_input(chosen_payload_attribute)) & (self.validate_payload_input(chosen_payload))):
+                # clear_screen()
+                print('Invalid input! Please choose a correct attribute and payload!')
+                print(u'Sender: ' + str(chosen_key))
+                print(u'Receiver: ' + str(chosen_receiver))
+                chosen_payload_attribute = self.__ask_for_payload_attribute()
+                chosen_payload = self.__ask_for_payload()
+                print()
+
+            clear_screen()
+
+            # Create transaction Object and send to network
+            private_key = wallet_list[int(chosen_key) - 1][2]
+            public_key = wallet_list[int(chosen_key) - 1][1]
+
+            task_transaction_json = {
+                "receiver": public_key,
+                "sender": private_key,
+                "signature": None,
+                "payload": {
+                    "document": {
+                        chosen_payload_attribute: chosen_payload
+                    },
+                    "in_charge": chosen_incharge,
+                    "next_in_charge": chosen_next_incharge,
+                }
+            }
+
+            new_transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+            new_transaction.sign_transaction(self.crypto_helper, private_key)
+            transaction_hash = self.crypto_helper.hash(json.dumps(task_transaction_json))
+            self.network_interface.sendTransaction(new_transaction, 2) # 2 for TaskTransaction
+
+            print('Transaction successfully created!')
+            print()
+            print(u'Sender: ' + public_key)
+            print(u'Receiver: ' + str(chosen_receiver))
+            print(u'Payload: ' + str(chosen_payload))
+            print(u'Hash: ' + str(transaction_hash))
+            print()
+
+        # case: wallet is empty
+        else:
+            print(u'Wallet does not contain any keys! Please create one first!')
+
+        input('Press any key to go back to the main menu!')
 
 
 
@@ -183,7 +378,7 @@ class DocumentFlowClient:
 
     def __do_task(self):
         """Ask for all important information to create a new transaction/task and sends it to the network."""
-        do_task_wizard = DoTaskWizard(self.wallet,
+        do_task_wizard = TaskTransactionWizard(self.wallet,
                                                self.crypto_helper,
                                                self.network_interface)
         do_task_wizard.show()
