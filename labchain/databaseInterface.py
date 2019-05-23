@@ -1,5 +1,6 @@
 import logging
 import sqlite3
+import json
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 
@@ -101,8 +102,11 @@ class Db:
         try:
             self.cursor.execute(insert_into_blockchain, block_data)
             for t in block.transactions:
+                payload = t.payload
+                if isinstance(payload, dict):
+                    payload = json.dumps(payload)
                 self.cursor.execute(insert_into_transactions,
-                                    (t.sender, t.receiver, t.payload, t.signature,
+                                    (t.sender, t.receiver, payload, t.signature,
                                      t.transaction_hash, block_hash))
             self.conn.commit()
             self.conn.close()
