@@ -1,31 +1,12 @@
 import os
 import json
-from collections import OrderedDict
 
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, BlockDoesNotExistException,NoPeersException
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.taskTransaction import WorkflowTransaction, TaskTransaction
 from labchain.datastructure.txpool import TxPool
 from labchain.util.cryptoHelper import CryptoHelper
-
-LABCHAIN_LOGO = """
-          .(##%*
-         ,(%########((#/.                                                                                                         ..
-        ,###(((###%(##(#####((#*              ....                      ...                         ...                          ....
-       .#(((########((####%#######%((##*      ....                      ...                         ...                           ..
-      ,(#(((%######(#######%#%#####(((###     ....           ....       ...   ...          ....     ...   ..          ....                    ...
-     ,/##########((#####(((%############(     ....        ..........    ............    .........   ...........    ..........    ....   ...........
-     ,(###(/#(/(########(((#####(#(#####(     ....               ...    ....    ....   ....         ....    ...           ....   ....   ....    ....
-      /###########/(#((#########(((%#(###     ....          .........   ...      ....  ...          ...     ...       ........   ....   ....     ...
-      /(##################((#(/#####(##(      ....       .....   ....   ...      ...   ...          ...     ...    ....   ....   ....   ....     ...
-           .((/##################((#(#(       ....       ....    ....   ....    ....   ....     .   ...     ...   ....    ....   ....   ....     ...
-                   .#(/############(((        ..........  ...........   ...........     .........   ...     ...    ...........   ....   ....     ...
-                           *#/(####(/
-                                  .#
-"""
-
-LABCHAIN_LOGO_LIST = LABCHAIN_LOGO.splitlines()
-
+from labchain.util.Menu import Menu
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -97,66 +78,6 @@ class Wallet:
         self.wallet_file.seek(0, 0)
         wallet_file_contents = self.wallet_file.read()
         return wallet_file_contents
-
-
-class Menu:
-    """Create a CLI menu with this class."""
-
-    def __init__(self, prompt_text, menu_items, input_text, back_option_label='Go back', fast_exit=False):
-        """
-        :param prompt_text: A list of string that represent each line of the menu text.
-        :param menu_items: A dictionary with the input value as key and a tuple with
-                            ('<option description>', <function reference>, <list of args) as value.
-        :param input_text: The text at the bottom before the prompt.
-        :param back_option_label: The text of the auto created leave menu button.
-        :param fast_exit: Set to True to exit after the first input regardless the value.
-        """
-        self.prompt_text = prompt_text
-        self.menu_items = self.__to_ordered_dict(menu_items)
-        self.__append_back_menu_item(back_option_label)
-        self.input_text = input_text
-        self.error_message = ''
-        self.fast_exit = fast_exit
-
-    @staticmethod
-    def __to_ordered_dict(dictionary):
-        return OrderedDict(sorted(dictionary.items(), key=lambda t: t[0]))
-
-    def __available_options(self):
-        return ','.join(self.menu_items.keys())
-
-    def __print_menu(self):
-        clear_screen()
-        for line in self.prompt_text:
-            print(line)
-        print()
-        print()
-        for opt_index, menu_tuple in self.menu_items.items():
-            print(opt_index + ' - ' + menu_tuple[0])
-        print()
-        print()
-        print(self.error_message)
-
-    def __append_back_menu_item(self, back_option_label):
-        self.back_option_key = 'q'
-        self.menu_items[self.back_option_key] = (back_option_label, None, None)
-
-    def show(self):
-        """Start the menu."""
-        while True:
-            self.__print_menu()
-            input_value = input(self.input_text)
-            if input_value in self.menu_items:
-                if input_value == self.back_option_key:
-                    break
-                menu_tuple = self.menu_items[input_value]
-                # call the menu callback function
-                menu_tuple[1](*menu_tuple[2])
-                self.error_message = ''
-                if self.fast_exit:
-                    break
-            else:
-                self.error_message = 'Wrong input. Please select one of [' + self.__available_options() + '].'
 
 
 class TransactionWizard:
@@ -320,72 +241,17 @@ class BlockchainClient:
             '5': ('Load by sender\'s public key', self._show_transaction_by_public_key,["sender"]),
             '6': ('Show all transactions', self._show_transaction_by_public_key,[])
         }, 'Please select a value: ', 'Exit Load Transaction Menu')
-        self.main_menu = Menu(LABCHAIN_LOGO_LIST + ['Main menu'], {
+        self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
             '2': ('Create Transaction', self.__create_transaction, []),
             '3': ('Load Block', self.load_block_menu.show, []),
             '4': ('Transaction Menu', self.load_transaction_menu.show, []),
             '5': ('Show Connected Peers', self.__load_peers, []),
-            '6': ('Send dummy workflow transaction',self.send_dummy_workflow_transaction,[]),
-            '7': ('Send dummy task transaction',self.send_dummy_task_transaction,[])
         }, 'Please select a value: ', 'Exit Blockchain Client')
 
     def main(self):
         """Entry point for the client console application."""
         self.main_menu.show()
-
-    def send_dummy_task_transaction(self):
-
-        task_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None,
-            "payload":{
-                "workflow-id":"0",
-                "document":{
-                    "stringAttribute":"1234"
-                },
-                "in_charge" : "PID_2",
-                "next_in_charge": "PID_3",
-            }
-        }
-        transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
-        transaction.sign_transaction(self.crypto_helper, task_transaction_json['sender'])
-        self.network_interface.sendTransaction(transaction,2)
-
-    def send_dummy_workflow_transaction(self):
-
-        workflow_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None, 
-            "payload":{
-                "workflow-id":"0",
-                "document":{
-                    "stringAttribute":"stringValue",
-                    "booleanAttribute": 'true',
-                    "integerAttribute" : 1,
-                    "floatAttributes": 1.5
-                },
-                "in_charge" : "PID_0",
-                "next_in_charge": "PID_1",
-                "processes":{
-                    "PID_4" : ["PID_5"],
-                    "PID_2" : ["PID_3"],
-                    "PID_3" : ["PID_4"],
-                    "PID_1" : ["PID_2"]
-                },
-                "permissions":{
-                    "stringAttribute": ["PID_1","PID_2","PID_3"],
-                    "booleanAttribute": ["PID_5"],
-                    "integerAttribute" : ["PID_4"],
-                    "floatAttributes": ["PID_2"]
-                }
-            }
-        }
-        transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
-        transaction.sign_transaction(self.crypto_helper, workflow_transaction_json['sender'])
-        self.network_interface.sendTransaction(transaction,1)
 
     def __create_transaction(self):
         """Ask for all important information to create a new transaction and sends it to the network."""
