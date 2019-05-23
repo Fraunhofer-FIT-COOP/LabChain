@@ -41,6 +41,8 @@ class TaskTransaction(Transaction):
             return super().validate_transaction(crypto_helper)
 
     def _check_permissions_write(self):
+        if not self.workflow_transaction:
+            return False
         permissions = self.workflow_transaction.permissions
         for attributeName in self.document:
             if not attributeName in permissions:
@@ -50,12 +52,16 @@ class TaskTransaction(Transaction):
         return True
 
     def _check_process_definition(self):
+        if not self.workflow_transaction or not self.previous_transaction:
+            return False
+        if self.in_charge != self.previous_transaction.next_in_charge:
+            return False
+        process_definition = self.workflow_transaction.processes
+        if not self.in_charge in process_definition[self.previous_transaction.in_charge]:
+            return False
+        if not self.next_in_charge in process_definition[self.in_charge]:
+            return False
         return True
-        process_definition: Dict = self.workflow_transaction.get_process_definition()
-        previous_transaction: TaskTransaction = self.previous_transaction
-        in_charge = previous_transaction.in_charge
-        possible_receivers = process_definition[in_charge]
-        return True if get_pid_of_receiver(self.receiver) in possible_receivers else False  # TODO associate receiver-public-key to corresponding PID
 
     @staticmethod
     def from_json(json_data):
@@ -75,9 +81,6 @@ class WorkflowTransaction(TaskTransaction):
         super().__init__(sender, receiver, payload, signature)
         self.processes = payload['processes'] # dict
         self.permissions = payload['permissions'] # dict
-
-    def get_process_definition(self) -> Dict:
-        return self.processes
 
     @staticmethod
     def from_json(json_data):

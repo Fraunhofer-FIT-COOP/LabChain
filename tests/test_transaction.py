@@ -176,7 +176,6 @@ class TransactionTestCase(unittest.TestCase):
 class TaskTransactionTestCase(unittest.TestCase):
     
     def test_to_dict(self):
-        """Test task transaction creation from json"""
 
         task_transaction_json = {
             "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
@@ -202,7 +201,6 @@ class TaskTransactionTestCase(unittest.TestCase):
         self.assertEqual(data_dict['payload']['in_charge'], transaction.in_charge)
 
     def test_permissions_write(self):
-        """Test chceck write permissions creation from json"""
 
         workflow_transaction_json = {
             "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
@@ -241,7 +239,7 @@ class TaskTransactionTestCase(unittest.TestCase):
             "payload":{
                 "workflow-id":"0",
                 "document":{
-                    "stringAttribute1":"1234"
+                    "stringAttribute":"1234"
                 },
                 "in_charge" : "PID_2",
                 "next_in_charge": "PID_3",
@@ -252,10 +250,77 @@ class TaskTransactionTestCase(unittest.TestCase):
 
         self.assertEqual(taskTransaction._check_permissions_write(),True)
 
+
+    def test_process_defintion(self):
+
+        workflow_transaction_json = {
+            "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
+            "signature": None, 
+            "payload":{
+                "workflow-id":"0",
+                "document":{
+                    "stringAttribute":"stringValue",
+                    "booleanAttribute": 'true',
+                    "integerAttribute" : 1,
+                    "floatAttributes": 1.5
+                },
+                "in_charge" : "PID_0",
+                "next_in_charge": "PID_1",
+                "processes":{
+                    "PID_4" : ["PID_5"],
+                    "PID_2" : ["PID_3"],
+                    "PID_3" : ["PID_4"],
+                    "PID_1" : ["PID_2"]
+                },
+                "permissions":{
+                    "stringAttribute": ["PID_1","PID_2","PID_3"],
+                    "booleanAttribute": ["PID_5"],
+                    "integerAttribute" : ["PID_4"],
+                    "floatAttributes": ["PID_2"]
+                }
+            }
+        }
+        workflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
+
+        prev_task_transaction_json = {
+  "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
+            "signature": None,
+            "payload":{
+                "workflow-id":"0",
+                "document":{
+                    "stringAttribute":"1234"
+                },
+                "in_charge" : "PID_1",
+                "next_in_charge": "PID_2",
+            }
+        }
+        prev_task_transaction = TaskTransaction.from_json(json.dumps(prev_task_transaction_json))
+
+        task_transaction_json = {
+            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
+            "signature": None,
+            "payload":{
+                "workflow-id":"0",
+                "document":{
+                    "stringAttribute":"1234"
+                },
+                "in_charge" : "PID_2",
+                "next_in_charge": "PID_3",
+            }
+        }
+
+        taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+        taskTransaction.workflow_transaction = workflowTransaction
+        taskTransaction.previous_transaction = prev_task_transaction
+
+        self.assertEqual(taskTransaction._check_process_definition(),True)
+
 class WorkflowTransactionTestCase(unittest.TestCase):
     
     def test_to_dict(self):
-        """Test workflow transaction creation from json"""
 
         workflow_transaction_json = {
             "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
