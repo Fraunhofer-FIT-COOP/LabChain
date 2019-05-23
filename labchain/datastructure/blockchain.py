@@ -194,7 +194,7 @@ class BlockChain:
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
-                if isinstance(_txn, TaskTransaction):
+                if isinstance(_txn, TaskTransaction) and not isinstance(_txn, WorkflowTransaction):
                     task_transactions.append(_txn)
         return task_transactions
 
