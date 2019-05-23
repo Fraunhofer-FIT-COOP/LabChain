@@ -1,6 +1,8 @@
 import os
 import json
 from collections import OrderedDict
+import copy
+from copy import deepcopy
 
 from labchain.datastructure.taskTransaction import TaskTransaction
 
@@ -116,6 +118,8 @@ class Menu:
 
     def __append_back_menu_item(self, back_option_label):
         self.back_option_key = 'q'
+        #max_key = max(self.menu_items, key=int)
+        #self.back_option_key = str(int(max_key) + 1)
         self.menu_items[self.back_option_key] = (back_option_label, None, None)
 
     def show(self):
@@ -139,10 +143,11 @@ class Menu:
 class TaskTransactionWizard:
     """CLI wizard for making new transactions / do a task /update a task."""
 
-    def __init__(self, wallet, crypto_helper, network_interface):
+    def __init__(self, wallet, crypto_helper, network_interface, isInitial = False):
         self.wallet = wallet
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
+        self.isInitial = isInitial
 
     def __wallet_to_list(self):
         wallet_list_result = []
@@ -197,6 +202,46 @@ class TaskTransactionWizard:
             return False
 
     @staticmethod
+    def __validate_string_zero_length(usr_input):
+        if len(usr_input) > 0:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def __validate_data_type(dataType, value):
+        """1 = int, 2 = float, 3 = string, 4 = bool"""
+        if dataType == '1':
+            try:
+                value = int(value)
+                return True, value
+            except ValueError:
+                print(str(value), "can't be int!")
+                return False
+
+        if dataType == '2':
+            try:
+                value = float(value)
+                return True, value
+            except ValueError:
+                print(str(value), "can't be float!")
+                return False
+
+        if dataType == '3':
+                return True, value
+
+        if dataType == '4':
+            if value == 'true':
+                value = True
+                return True, value
+            elif value == 'false':
+                value = False
+                return True, value
+            else:
+                print("We only accept true/false as bool!")
+                return False
+
+    @staticmethod
     def __ask_for_key_from_wallet(wallet_list):
         print(u'Current keys in the wallet: ')
         for counter, key in enumerate(wallet_list, 1):
@@ -231,7 +276,35 @@ class TaskTransactionWizard:
 
     @staticmethod
     def __ask_for_payload():
-        usr_input = input('Please type a payload: ')
+        usr_input = input('Please type a payload (for boolean, please type true/false): ')
+        return str(usr_input)
+
+    @staticmethod
+    def __ask_for_dataType():
+        print("Please specify the data type of the attribute. (int/float/string/bool)")
+        print('1. int')
+        print('2. float')
+        print('3. string')
+        print('4. bool')
+        user_input = input()
+        return user_input
+
+    @staticmethod
+    def __ask_for_process_owner():
+        usr_input = input('Please type a process owner (in charge) (empty input to finish the process owner input):')
+        return str(usr_input)
+
+    @staticmethod
+    def __ask_for_process_receiver(pid_inCharge):
+        print('Please type the next in charge for the pid ', pid_inCharge,  '(empty input to go to next process):')
+        usr_input = input()
+        return str(usr_input)
+
+    @staticmethod
+    def __ask_for_permission(data):
+        print('Please type a pid permitted to change the data "', data, '"')
+        print('empty input to go to next data field')
+        usr_input = input()
         return str(usr_input)
 
     def show(self):
@@ -286,40 +359,192 @@ class TaskTransactionWizard:
                 chosen_next_incharge = self.__ask_for_next_incharge()
                 print()
 
-            chosen_payload_attribute = self.__ask_for_payload_attribute()
-            chosen_payload = self.__ask_for_payload()
-            while not ((self.__validate_payload_attribute_input(chosen_payload_attribute)) & (self.validate_payload_input(chosen_payload))):
-                # clear_screen()
-                print('Invalid input! Please choose a correct attribute and payload!')
-                print(u'Sender: ' + str(chosen_key))
-                print(u'Receiver: ' + str(chosen_receiver))
+            if self.isInitial == False:
                 chosen_payload_attribute = self.__ask_for_payload_attribute()
                 chosen_payload = self.__ask_for_payload()
-                print()
+                while not ((self.__validate_payload_attribute_input(chosen_payload_attribute)) & (self.__validate_payload_input(chosen_payload))):
+                    # clear_screen()
+                    print('Invalid input! Please choose a correct attribute and payload!')
+                    print(u'Sender: ' + str(chosen_key))
+                    print(u'Receiver: ' + str(chosen_receiver))
+                    chosen_payload_attribute = self.__ask_for_payload_attribute()
+                    chosen_payload = self.__ask_for_payload()
+                    print()
 
-            clear_screen()
+            if self.isInitial == True:
+                """ask for document data"""
+                payload_json = {}
+                isPayloadFinish = False
+
+                while isPayloadFinish == False:
+                    chosen_payload_attribute = self.__ask_for_payload_attribute()
+                    isPayloadFinish = self.__validate_string_zero_length(chosen_payload_attribute)
+                    if isPayloadFinish == True:
+                        break
+                    chosen_payload = self.__ask_for_payload()
+                    isPayloadFinish = self.__validate_string_zero_length(chosen_payload)
+                    if isPayloadFinish == True:
+                        break
+                    isValidDataType = False
+                    while isValidDataType == False:
+                        data_type = ''
+                        while data_type == '':
+                            data_type = self.__ask_for_dataType()
+                        isPayloadFinish = self.__validate_string_zero_length(data_type)
+                        if isPayloadFinish == True:
+                            break
+
+                        if data_type != '':
+                            isValidDataType = self.__validate_data_type(data_type, chosen_payload)
+
+                    finalPayload = self.__validate_data_type(data_type, chosen_payload)
+                    payload_json[chosen_payload_attribute] = finalPayload[1]
+                    clear_screen()
+                    print('new attribute added:')
+                    print(payload_json)
+                    print()
+
+                clear_screen()
+
+                """ask for processes"""
+                process_json = {}
+                process_receiver = []
+                isProcessFinish = False
+
+                processOwner = ''
+                while processOwner == '':
+                    processOwner = self.__ask_for_process_owner()
+
+                """add receiver to process receiver array"""
+                isReceiverArrayFinish = False
+                while (isReceiverArrayFinish == False or len(process_receiver) == 0):
+                    receiver = ''
+                    receiver = self.__ask_for_process_receiver()
+                    isReceiverArrayFinish = self.__validate_string_zero_length(receiver)
+                    if (receiver != ''):
+                        process_receiver.append(receiver)
+
+                process_json[processOwner] = process_receiver
+
+                print()
+                print("current processes: ", process_json)
+                print("finish? ")
+                isFinish = input('y/n ')
+                while isFinish != 'y' and isFinish != 'n':
+                    isFinish = input("y/n")
+
+                if isFinish == 'y':
+                    isProcessFinish = True
+                elif isFinish == 'n':
+                    isProcessFinish = False
+
+                #isProcessFinish = False
+
+#TODO because the while loop will check if v not in d, cant break the while loop
+                while isProcessFinish == False:
+                    keys = [k for k in process_json]
+                    d = process_json.copy()
+
+                    for key in d:
+                        for v in d[key]:
+                            if v not in d:
+                                process_receiver = []
+                                """add receiver to process receiver array"""
+                                isReceiverFinish = False
+                                while (isReceiverFinish == False or len(process_receiver) == 0):
+                                    receiver = ''
+                                    receiver = self.__ask_for_process_receiver()
+                                    isReceiverFinish = self.__validate_string_zero_length(receiver)
+                                    if (receiver != ''):
+                                        newOwner = v
+                                        process_receiver.append(receiver)
+
+                                    if process_receiver != []:
+                                        process_json[newOwner] = process_receiver
+                                        print("current processes: ", process_json)
+
+                    print()
+                    print("current processes: ", process_json)
+                    print("finish? ")
+                    isFinish = input('y/n ')
+                    while isFinish != 'y' and isFinish != 'n':
+                        isFinish = input("y/n")
+
+                    if isFinish == 'y':
+                        isProcessFinish = True
+                    elif isFinish == 'n':
+                        isProcessFinish = False
+
+                clear_screen()
+
+                """ask for permission"""
+                permissionData_json = {}
+
+                for key in payload_json:
+                    isPermissionFinish = False
+                    permission_pid = []
+                    while isPermissionFinish == False:
+                        pid = ''
+                        pid = self.__ask_for_permission(key)
+                        isPermissionFinish = self.__validate_string_zero_length(pid)
+                        if pid != '':
+                            permission_pid.append(pid)
+                        if permission_pid != []:
+                            permissionData_json[key] = permission_pid
+                            print('your current permissions: ', permissionData_json)
+                            print()
+                    permissionData_json[key] = permission_pid
+
+                clear_screen()
 
             # Create transaction Object and send to network
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
-            task_transaction_json = {
-                "receiver": public_key,
-                "sender": private_key,
-                "signature": None,
-                "payload": {
-                    "document": {
-                        chosen_payload_attribute: chosen_payload
-                    },
-                    "in_charge": chosen_incharge,
-                    "next_in_charge": chosen_next_incharge,
+            if self.isInitial == False:
+                task_transaction_json = {
+                    "receiver": public_key,
+                    "sender": private_key,
+                    "signature": None,
+                    "payload": {
+                        "document": {
+                            chosen_payload_attribute: chosen_payload
+                        },
+                        "in_charge": chosen_incharge,
+                        "next_in_charge": chosen_next_incharge,
+                    }
                 }
-            }
+
+            elif self.isInitial == True:
+                task_transaction_json = {
+                    "receiver": public_key,
+                    "sender": private_key,
+                    "signature": None,
+                    "payload": {
+                        "document": {
+
+                        },
+                        "in_charge": chosen_incharge,
+                        "next_in_charge": chosen_next_incharge,
+                        "processes":{
+
+                        },
+                        "permissions":{
+
+                        }
+                    }
+                }
+                task_transaction_json["document"] = payload_json
+                task_transaction_json["processes"] = process_json
+                task_transaction_json["permissions"] = permissionData_json
 
             new_transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
             transaction_hash = self.crypto_helper.hash(json.dumps(task_transaction_json))
-            self.network_interface.sendTransaction(new_transaction, 2) # 2 for TaskTransaction
+            if self.isInitial == False:
+                self.network_interface.sendTransaction(new_transaction, 2) # 2 for TaskTransaction
+            elif self.isInitial == True:
+                self.network_interface.sendTransaction(new_transaction, 1) # 1 for WorkFlowTransaction
 
             print('Transaction successfully created!')
             print()
@@ -327,6 +552,12 @@ class TaskTransactionWizard:
             print(u'Receiver: ' + str(chosen_receiver))
             print(u'Payload: ' + str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
+            if self.isInitial == True:
+                print("transaction data: ", task_transaction_json["document"])
+                print("processes: ", task_transaction_json["processes"])
+                print("permissions: ", task_transaction_json["permissions"])
+                #secondWord =  [k for k in task_transaction_json["document"]]
+                #print("2nd is ",secondWord)
             print()
 
         # case: wallet is empty
@@ -345,8 +576,6 @@ class InitialTransactionWizard:
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
 
-
-
 class DocumentFlowClient:
 
     def __init__(self, wallet, network_interface, crypto_helper):
@@ -363,6 +592,7 @@ class DocumentFlowClient:
             '1': ('Manage Persons', self.manage_wallet_menu.show, []),
             '2': ('Create Initial Transaction', self.__create_initial_transaction, []),
             '3': ('doTask', self.__do_task, []),
+            '4': ('Test attribute parser', self.__do_workflow, []),
         }, 'Please select a value: ', 'Exit DocumentFlow Client')
 
     def main(self):
@@ -382,6 +612,14 @@ class DocumentFlowClient:
                                                self.crypto_helper,
                                                self.network_interface)
         do_task_wizard.show()
+
+    def __do_workflow(self):
+        """Ask for all important information to create a new transaction/workflow and sends it to the network."""
+        do_workflow_wizard = TaskTransactionWizard(self.wallet,
+                                               self.crypto_helper,
+                                               self.network_interface,
+                                               True)
+        do_workflow_wizard.show()
 
 
     def __show_my_addresses(self):
@@ -428,5 +666,3 @@ class DocumentFlowClient:
                                'Please select a key to delete: ', 'Exit without deleting any addresses', True)
             delete_menu.show()
         input('Press any key to go back to the main menu!')
-
-
