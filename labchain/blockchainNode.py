@@ -205,19 +205,28 @@ class BlockChainNode:
 
     def on_new_transaction_received(self, transaction):
         if isinstance(transaction, WorkflowTransaction):
+            self.logger.warning ('Recived workflow transaction')
             return self.txpool_obj.add_transaction_if_not_exist(transaction)
         if isinstance(transaction, TaskTransaction):
+            self.logger.warning ('Recived task transaction')
             transaction.previous_transaction = self.get_previous_transaction(transaction)
             transaction.workflow_transaction = self.get_workflow_transaction(transaction)
-            print ('--------------Previous---------------------')
-            print (transaction.previous_transaction)
-            print ('--------------Workflow---------------------')
-            print (transaction.workflow_transaction)
-            print ('-------------------------------------------')
+            if transaction.previous_transaction:
+                self.logger.warning ('--------------Previous transaction---------------------')
+                self.logger.warning (transaction.previous_transaction)
+                self.logger.warning ('-------------------------------------------------------')
+            else:
+                self.logger.warning ('No previous can be found')
+            if transaction.workflow_transaction:
+                self.logger.warning ('--------------Workflow transaction ---------------------')
+                self.logger.warning (transaction.workflow_transaction)
+                self.logger.warning ('--------------------------------------------------------')
+            else:
+                self.logger.warning ('No workflow can be found')
             result = False
-            if transaction.previous_transaction and transaction.workflow_transaction:
+            if transaction.workflow_transaction:
                 result = self.txpool_obj.add_transaction_if_not_exist(transaction)
-            print ("Task transaction result {}".format(result))
+            self.logger.warning ("Task transaction validation result {}".format(result))
             return result
         return self.txpool_obj.add_transaction_if_not_exist(transaction)
 
