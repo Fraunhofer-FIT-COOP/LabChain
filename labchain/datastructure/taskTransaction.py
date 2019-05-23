@@ -23,22 +23,25 @@ class TaskTransaction(Transaction):
         :param result: Receive result of transaction validation.
         :return result: True if transaction is valid
         """
-        previous_transaction: TaskTransaction = self.previous_transaction
-        #import pdb; pdb.set_trace()
-        if not isinstance(self, WorkflowTransaction):
-            owner_valid = True if previous_transaction.receiver == self.sender else False
-            if not self._check_permissions_write():
-                logging.debug('Sender has not the permission to write!')
-                return False
-            if not self._check_process_definition():
-                logging.debug('Transaction does not comply to process definition!')
-                return False
-            if not owner_valid:
-                logging.debug('Sender is not the current owner of the document flow!')
-                return False
+        if isinstance(self, WorkflowTransaction):
             return super().validate_transaction(crypto_helper)
+        previous_transaction = self.previous_transaction
+        workflow_transaction = self.workflow_transaction
+        if not previous_transaction:
+            owner_valid = True if workflow_transaction.receiver == self.sender else False
         else:
-            return super().validate_transaction(crypto_helper)
+            owner_valid = True if previous_transaction.receiver == self.sender else False
+
+        if not owner_valid:
+            logging.warning('Sender is not the current owner of the document flow!')
+            return False
+        if not self._check_permissions_write():
+            logging.warning('Sender has not the permission to write!')
+            return False
+        if not self._check_process_definition():
+            logging.warning('Transaction does not comply to process definition!')
+            return False
+        return super().validate_transaction(crypto_helper)
 
     def _check_permissions_write(self):
         if not self.workflow_transaction:
@@ -52,13 +55,12 @@ class TaskTransaction(Transaction):
         return True
 
     def _check_process_definition(self):
-        if not self.workflow_transaction or not self.previous_transaction:
-            return False
-        if self.in_charge != self.previous_transaction.next_in_charge:
-            return False
         process_definition = self.workflow_transaction.processes
-        if not self.in_charge in process_definition[self.previous_transaction.in_charge]:
-            return False
+        if self.previous_transaction:
+            if self.in_charge != self.previous_transaction.next_in_charge:
+                return False
+            if not self.in_charge in process_definition[self.previous_transaction.in_charge]:
+                return False
         if not self.next_in_charge in process_definition[self.in_charge]:
             return False
         return True
