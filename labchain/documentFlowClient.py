@@ -2,10 +2,8 @@ import os
 import json
 from collections import OrderedDict
 import copy
-from copy import deepcopy
 
 from labchain.datastructure.taskTransaction import TaskTransaction
-
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -140,14 +138,17 @@ class Menu:
                 self.error_message = 'Wrong input. Please select one of [' + self.__available_options() + '].'
 
 
-class TaskTransactionWizard:
-    """CLI wizard for making new transactions / do a task /update a task."""
+class DocTransactionWizard:
+    """CLI wizard for initiate new document transactions / do a task /update a task."""
 
     def __init__(self, wallet, crypto_helper, network_interface, isInitial = False):
         self.wallet = wallet
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
         self.isInitial = isInitial
+        """
+        :param isInitial: set isInitial to true for initial transaction
+        """
 
     def __wallet_to_list(self):
         wallet_list_result = []
@@ -209,39 +210,6 @@ class TaskTransactionWizard:
             return True
 
     @staticmethod
-    def __validate_data_type(dataType, value):
-        """1 = int, 2 = float, 3 = string, 4 = bool"""
-        if dataType == '1':
-            try:
-                value = int(value)
-                return True, value
-            except ValueError:
-                print(str(value), "can't be int!")
-                return False
-
-        if dataType == '2':
-            try:
-                value = float(value)
-                return True, value
-            except ValueError:
-                print(str(value), "can't be float!")
-                return False
-
-        if dataType == '3':
-                return True, value
-
-        if dataType == '4':
-            if value == 'true':
-                value = True
-                return True, value
-            elif value == 'false':
-                value = False
-                return True, value
-            else:
-                print("We only accept true/false as bool!")
-                return False
-
-    @staticmethod
     def __ask_for_key_from_wallet(wallet_list):
         print(u'Current keys in the wallet: ')
         for counter, key in enumerate(wallet_list, 1):
@@ -278,16 +246,6 @@ class TaskTransactionWizard:
     def __ask_for_payload():
         usr_input = input('Please type a payload (for boolean, please type true/false): ')
         return str(usr_input)
-
-    @staticmethod
-    def __ask_for_dataType():
-        print("Please specify the data type of the attribute. (int/float/string/bool)")
-        print('1. int')
-        print('2. float')
-        print('3. string')
-        print('4. bool')
-        user_input = input()
-        return user_input
 
     @staticmethod
     def __ask_for_process_owner():
@@ -457,7 +415,6 @@ class TaskTransactionWizard:
 
                     print()
                     print("current processes: ", process_json)
-                    #print('test values: ', process_json.values())
                     print("finish? ")
                     isFinish = input('y/n ')
                     while isFinish != 'y' and isFinish != 'n':
@@ -506,11 +463,12 @@ class TaskTransactionWizard:
             public_key = wallet_list[int(chosen_key) - 1][1]
 
             if self.isInitial == False:
-                task_transaction_json = {
+                transaction_json = {
                     "receiver": public_key,
                     "sender": private_key,
                     "signature": None,
                     "payload": {
+                        "workflow-id": "0",
                         "document": {
                             chosen_payload_attribute: chosen_payload
                         },
@@ -520,11 +478,12 @@ class TaskTransactionWizard:
                 }
 
             elif self.isInitial == True:
-                task_transaction_json = {
+                transaction_json = {
                     "receiver": public_key,
                     "sender": private_key,
                     "signature": None,
                     "payload": {
+                        "workflow-id":"0",
                         "document": {
 
                         },
@@ -538,13 +497,13 @@ class TaskTransactionWizard:
                         }
                     }
                 }
-                task_transaction_json["payload"]["document"] = payload_json
-                task_transaction_json["payload"]["processes"] = process_json
-                task_transaction_json["payload"]["permissions"] = permissionData_json
+                transaction_json["payload"]["document"] = payload_json
+                transaction_json["payload"]["processes"] = process_json
+                transaction_json["payload"]["permissions"] = permissionData_json
 
-            new_transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+            new_transaction = TaskTransaction.from_json(json.dumps(transaction_json))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
-            transaction_hash = self.crypto_helper.hash(json.dumps(task_transaction_json))
+            transaction_hash = self.crypto_helper.hash(json.dumps(transaction_json))
             if self.isInitial == False:
                 self.network_interface.sendTransaction(new_transaction, 2) # 2 for TaskTransaction
             elif self.isInitial == True:
@@ -554,14 +513,14 @@ class TaskTransactionWizard:
             print()
             print(u'Sender: ' + public_key)
             print(u'Receiver: ' + str(chosen_receiver))
-            print(u'Payload: ' + str(chosen_payload))
+            print("workflow-id: ", transaction_json["payload"]["workflow-id"])
+            if self.isInitial == False:
+                print(u'Payload key value: ' + str(chosen_payload_attribute), " : ", str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
             if self.isInitial == True:
-                print("transaction data: ", task_transaction_json["payload"]["document"])
-                print("processes: ", task_transaction_json["payload"]["processes"])
-                print("permissions: ", task_transaction_json["payload"]["permissions"])
-                #secondWord =  [k for k in task_transaction_json["document"]]
-                #print("2nd is ",secondWord)
+                print("transaction data: ", transaction_json["payload"]["document"])
+                print("processes: ", transaction_json["payload"]["processes"])
+                print("permissions: ", transaction_json["payload"]["permissions"])
             print()
 
         # case: wallet is empty
@@ -569,16 +528,6 @@ class TaskTransactionWizard:
             print(u'Wallet does not contain any keys! Please create one first!')
 
         input('Press any key to go back to the main menu!')
-
-
-
-class InitialTransactionWizard:
-    """CLI wizard for creating initial transactions."""
-
-    def __init__(self, wallet, crypto_helper, network_interface):
-        self.wallet = wallet
-        self.crypto_helper = crypto_helper
-        self.network_interface = network_interface
 
 class DocumentFlowClient:
 
@@ -594,33 +543,25 @@ class DocumentFlowClient:
 
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Persons', self.manage_wallet_menu.show, []),
-            '2': ('Create Initial Transaction', self.__create_initial_transaction, []),
+            '2': ('Create Initial Transaction', self.__do_workflow, []),
             '3': ('doTask', self.__do_task, []),
-            '4': ('Initiate Workflow', self.__do_workflow, []),
-            '5': ('Check Tasks', self.__check_tasks, [])
+            '4': ('Check Tasks', self.__check_tasks, [])
         }, 'Please select a value: ', 'Exit DocumentFlow Client')
 
     def main(self):
         """Entry point for the client console application."""
         self.main_menu.show()
 
-    def __create_initial_transaction(self):
-        """Ask for all important information to create initial transaction"""
-        initial_tx_wizard = InitialTransactionWizard(self.wallet,
-                                               self.crypto_helper,
-                                               self.network_interface)
-        initial_tx_wizard.show()
-
     def __do_task(self):
-        """Ask for all important information to create a new transaction/task and sends it to the network."""
-        do_task_wizard = TaskTransactionWizard(self.wallet,
+        """Ask for all important information to create a new subsequent transaction/task and sends it to the network."""
+        do_task_wizard = DocTransactionWizard(self.wallet,
                                                self.crypto_helper,
                                                self.network_interface)
         do_task_wizard.show()
 
     def __do_workflow(self):
-        """Ask for all important information to create a new transaction/workflow and sends it to the network."""
-        do_workflow_wizard = TaskTransactionWizard(self.wallet,
+        """Ask for all important information to create a new initial transaction/workflow and sends it to the network."""
+        do_workflow_wizard = DocTransactionWizard(self.wallet,
                                                self.crypto_helper,
                                                self.network_interface,
                                                True)
