@@ -108,7 +108,7 @@ class TxPoolTestCase(unittest.TestCase):
         self.assertTrue(status)
 
     def test_get_transaction_by_hash(self):
-        """Test adding transaction by hash in txpool"""
+        """Test getting transaction from txpool by hash"""
         tx_pool_count = self._txPoolObj.get_transaction_count()
         t1 = Transaction(self.public_key1, self.public_key2, "e")
         t1.sign_transaction(self.crypto_helper_obj, self.private_key1)
