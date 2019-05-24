@@ -12,6 +12,7 @@ class TaskTransaction(Transaction):
         self.document = payload['document'] # document is a dict
         self.in_charge = payload['in_charge']
         self.next_in_charge = payload['next_in_charge']
+        self.workflowID = payload['workflow-id']
         self.previous_transaction = None
         self.workflow_transaction = None
 
@@ -22,38 +23,47 @@ class TaskTransaction(Transaction):
         :param result: Receive result of transaction validation.
         :return result: True if transaction is valid
         """
-        previous_transaction: TaskTransaction = self.previous_transaction
-        #import pdb; pdb.set_trace()
-        if not isinstance(self, WorkflowTransaction):
-            owner_valid = True if previous_transaction.receiver == self.sender else False
-            if not self._check_permissions_write():
-                logging.debug('Sender has not the permission to write!')
-                return False
-            if not self._check_process_definition():
-                logging.debug('Transaction does not comply to process definition!')
-                return False
-            if not owner_valid:
-                logging.debug('Sender is not the current owner of the document flow!')
-                return False
+        if isinstance(self, WorkflowTransaction):
             return super().validate_transaction(crypto_helper)
+        previous_transaction = self.previous_transaction
+        workflow_transaction = self.workflow_transaction
+        if not previous_transaction:
+            owner_valid = True if workflow_transaction.receiver == self.sender else False
         else:
-            return super().validate_transaction(crypto_helper)
+            owner_valid = True if previous_transaction.receiver == self.sender else False
+
+        if not owner_valid:
+            logging.warning('Sender is not the current owner of the document flow!')
+            return False
+        if not self._check_permissions_write():
+            logging.warning('Sender has not the permission to write!')
+            return False
+        if not self._check_process_definition():
+            logging.warning('Transaction does not comply to process definition!')
+            return False
+        return super().validate_transaction(crypto_helper)
 
     def _check_permissions_write(self):
-        return True
-        permission = self.workflow_transaction.permission
-        for key in dict:
-            if not self.previous_transaction.in_charge in permission[key]:
+        if not self.workflow_transaction:
+            return False
+        permissions = self.workflow_transaction.permissions
+        for attributeName in self.document:
+            if not attributeName in permissions:
+                return False
+            if not self.in_charge in permissions[attributeName]:
                 return False
         return True
 
     def _check_process_definition(self):
+        process_definition = self.workflow_transaction.processes
+        if self.previous_transaction:
+            if self.in_charge != self.previous_transaction.next_in_charge:
+                return False
+            if not self.in_charge in process_definition[self.previous_transaction.in_charge]:
+                return False
+        if not self.next_in_charge in process_definition[self.in_charge]:
+            return False
         return True
-        process_definition: Dict = self.workflow_transaction.get_process_definition()
-        previous_transaction: TaskTransaction = self.previous_transaction
-        in_charge = previous_transaction.in_charge
-        possible_receivers = process_definition[in_charge]
-        return True if get_pid_of_receiver(self.receiver) in possible_receivers else False  # TODO associate receiver-public-key to corresponding PID
 
     def _check_for_wrong_branching(self):
         # TODO implement
@@ -81,9 +91,6 @@ class WorkflowTransaction(TaskTransaction):
         super().__init__(sender, receiver, payload, signature)
         self.processes = payload['processes'] # dict
         self.permissions = payload['permissions'] # dict
-
-    def get_process_definition(self) -> Dict:
-        pass  # TODO get process definition
 
     @staticmethod
     def from_json(json_data):

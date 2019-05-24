@@ -185,32 +185,48 @@ class BlockChainNode:
     # for workflow transaction utils
     def get_previous_transaction(self, currenttaskTransaction)-> TaskTransaction:
         current_in_charge = currenttaskTransaction.in_charge
-        for task_transaction in self.txpool_obj.get_task_transactions():
-            if task_transaction.next_in_charge == current_in_charge:
-                return task_transaction            
-        for task_transaction in self.blockchain_obj.get_task_transactions():
-            if task_transaction.next_in_charge == current_in_charge:
-                return task_transaction 
+        for transaction in self.txpool_obj.get_task_transactions():
+            if transaction.next_in_charge == current_in_charge:
+                return transaction            
+        for transaction in self.blockchain_obj.get_task_transactions():
+            if transaction.next_in_charge == current_in_charge:
+                return transaction
+        return None
     
     def get_workflow_transaction(self, taskTransaction) -> WorkflowTransaction:
-        transaction = self.get_previous_transaction(taskTransaction)
-        while (isinstance(transaction, WorkflowTransaction) is False):
-            transaction = self.get_previous_transaction(transaction)
-        return transaction
+        workflowID = taskTransaction.workflowID
+        for transaction in self.txpool_obj.get_workflow_transactions():
+            if transaction.workflowID == workflowID:
+                return transaction            
+        for transaction in self.blockchain_obj.get_workflow_transactions():
+            if transaction.workflowID == workflowID:
+                return transaction 
+        return None
 
     def on_new_transaction_received(self, transaction):
         if isinstance(transaction, WorkflowTransaction):
+            self.logger.warning ('Recived workflow transaction')
             return self.txpool_obj.add_transaction_if_not_exist(transaction)
         if isinstance(transaction, TaskTransaction):
+            self.logger.warning ('Recived task transaction')
             transaction.previous_transaction = self.get_previous_transaction(transaction)
-            #transaction.workflow_transaction = self.get_workflow_transaction(transaction)
-            print ('-----------------------------------')
-            print (transaction.previous_transaction)
-            print ('-----------------------------------')
-            result = False
+            transaction.workflow_transaction = self.get_workflow_transaction(transaction)
             if transaction.previous_transaction:
+                self.logger.warning ('--------------Previous transaction---------------------')
+                self.logger.warning (transaction.previous_transaction)
+                self.logger.warning ('-------------------------------------------------------')
+            else:
+                self.logger.warning ('No previous can be found')
+            if transaction.workflow_transaction:
+                self.logger.warning ('--------------Workflow transaction ---------------------')
+                self.logger.warning (transaction.workflow_transaction)
+                self.logger.warning ('--------------------------------------------------------')
+            else:
+                self.logger.warning ('No workflow can be found')
+            result = False
+            if transaction.workflow_transaction:
                 result = self.txpool_obj.add_transaction_if_not_exist(transaction)
-            print ("Task transaction result {}".format(result))
+            self.logger.warning ("Task transaction validation result {}".format(result))
             return result
         return self.txpool_obj.add_transaction_if_not_exist(transaction)
 
