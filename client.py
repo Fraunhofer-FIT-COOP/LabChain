@@ -6,6 +6,7 @@ import os
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
 from labchain.blockchainClient import Wallet, BlockchainClient
+from labchain.workflowClient import WorkflowClient
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -19,10 +20,13 @@ def create_config_directory():
     os.makedirs(CONFIG_DIRECTORY, exist_ok=True)
 
 
-def create_client(wallet_file, node_ip, node_port):
+def create_client(wallet_file, node_ip, node_port,workflow):
     crypto_helper = CryptoHelper.instance()
     network_interface = ClientNetworkInterface(JsonRpcClient(), {node_ip: {node_port: {}}})
-    return BlockchainClient(Wallet(wallet_file), network_interface, crypto_helper)
+    if (workflow):
+        return WorkflowClient(Wallet(wallet_file), network_interface, crypto_helper)
+    else:
+        return BlockchainClient(Wallet(wallet_file), network_interface, crypto_helper)
 
 
 def setup_logging(verbose, very_verbose):
@@ -38,6 +42,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='CLI client for Labchain.')
     parser.add_argument('node_ip', nargs='?',help='The IP address of the Labchain node',default="localhost")
     parser.add_argument('node_port',nargs='?',help='The port address of the Labchain node',default="8080")
+    parser.add_argument('--workflow','-w',help='Flag to open workflow client', action='store_true')
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     return parser.parse_args()
@@ -52,5 +57,5 @@ if __name__ == '__main__':
     else:
         file_mode = 'w+'
     with open(WALLET_FILE_PATH, file_mode) as open_wallet_file:
-        client = create_client(open_wallet_file, args.node_ip, args.node_port)
+        client = create_client(open_wallet_file, args.node_ip, args.node_port,args.workflow)
         client.main()
