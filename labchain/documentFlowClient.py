@@ -419,10 +419,13 @@ class TaskTransactionWizard:
                 isReceiverArrayFinish = False
                 while (isReceiverArrayFinish == False or len(process_receiver) == 0):
                     receiver = ''
-                    receiver = self.__ask_for_process_receiver()
+                    receiver = self.__ask_for_process_receiver(processOwner)
                     isReceiverArrayFinish = self.__validate_string_zero_length(receiver)
                     if (receiver != ''):
                         process_receiver.append(receiver)
+                        process_json[processOwner] = process_receiver
+                        print("current processes: ", process_json)
+                        print()
 
                 process_json[processOwner] = process_receiver
 
@@ -444,17 +447,20 @@ class TaskTransactionWizard:
                 while isProcessFinish == False:
                     keys = [k for k in process_json]
                     d = process_json.copy()
+                    noReceiverList = []
 
                     for key in d:
                         for v in d[key]:
-                            if v not in d:
+                            if (v not in d) and (v not in noReceiverList):
                                 process_receiver = []
                                 """add receiver to process receiver array"""
                                 isReceiverFinish = False
-                                while (isReceiverFinish == False or len(process_receiver) == 0):
+                                while (isReceiverFinish == False):
                                     receiver = ''
-                                    receiver = self.__ask_for_process_receiver()
+                                    receiver = self.__ask_for_process_receiver(v)
                                     isReceiverFinish = self.__validate_string_zero_length(receiver)
+                                    if receiver == '':
+                                        noReceiverList.append(v)
                                     if (receiver != ''):
                                         newOwner = v
                                         process_receiver.append(receiver)
@@ -465,6 +471,7 @@ class TaskTransactionWizard:
 
                     print()
                     print("current processes: ", process_json)
+                    print('test values: ', process_json.values())
                     print("finish? ")
                     isFinish = input('y/n ')
                     while isFinish != 'y' and isFinish != 'n':
@@ -483,10 +490,21 @@ class TaskTransactionWizard:
                 for key in payload_json:
                     isPermissionFinish = False
                     permission_pid = []
+                    pid = ''
                     while isPermissionFinish == False:
                         pid = ''
                         pid = self.__ask_for_permission(key)
                         isPermissionFinish = self.__validate_string_zero_length(pid)
+                        while (isPermissionFinish == False and (pid not in process_json)):
+                            if pid != '':
+                                print('the pid you enter is not contained in the processes!')
+                                print()
+                            pid = ''
+                            print('your processes: ', process_json)
+                            print()
+                            pid = self.__ask_for_permission(key)
+                            isPermissionFinish = self.__validate_string_zero_length(pid)
+
                         if pid != '':
                             permission_pid.append(pid)
                         if permission_pid != []:
@@ -592,7 +610,7 @@ class DocumentFlowClient:
             '1': ('Manage Persons', self.manage_wallet_menu.show, []),
             '2': ('Create Initial Transaction', self.__create_initial_transaction, []),
             '3': ('doTask', self.__do_task, []),
-            '4': ('Test attribute parser', self.__do_workflow, []),
+            '4': ('Initiate Workflow', self.__do_workflow, []),
         }, 'Please select a value: ', 'Exit DocumentFlow Client')
 
     def main(self):
@@ -620,7 +638,6 @@ class DocumentFlowClient:
                                                self.network_interface,
                                                True)
         do_workflow_wizard.show()
-
 
     def __show_my_addresses(self):
         clear_screen()
