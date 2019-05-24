@@ -32,24 +32,16 @@ class BlockChainComponent(unittest.TestCase):
         # get_block_range doesn't consider genesis block so expected length = 0
         blocks = self.blockchain.get_block_range(0)
         self.assertEqual(len(blocks), 0)
-        # try to get invaid range
-        with self.assertRaises(Exception):
-            self.blockchain.get_block_range(0,1)
 
     def test_get_block_by_id(self):
         # fetching first block whose id = 0
         blocks = self.blockchain.get_block_by_id(0)
         for block in blocks:
             self.assertEqual(block._block_id, 0)
-        # try to fetch not existing block
-        with self.assertRaises(Exception):
-            self.blockchain.get_block_by_id(1)
 
     def test_get_block_by_hash(self):
         block_info = json.loads(self.blockchain.get_block_by_hash(self.blockchain._first_block_hash))
         self.assertEqual(block_info['nr'], 0)
-        with self.assertRaises(Exception):
-            json.loads(self.blockchain.get_block_by_hash(self.blockchain._first_block_hash-1))
 
     def test_add_block(self):
         """

@@ -18,8 +18,6 @@ class BootstrapperTestCase(TestCase):
         self.network_interface = network_interface
         self.bootstrapper = Bootstrapper(network_interface)
         self.blockchain = blockchain
-        self.blockchain.add_block = MagicMock(return_value=True)
-        self.blockchain.create_block = MagicMock(return_value=genesis_block)
         self.block1 = block1
         self.block2 = block2
         self.genesis_block = genesis_block

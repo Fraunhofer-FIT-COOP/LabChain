@@ -33,7 +33,7 @@ class MockNetworkInterface:
 
     def requestTransaction(self, hash):
         for transaction in self.transactions:
-            if self.crypto_helper.hash_transaction(transaction) == hash:
+            if self.crypto_helper.hash(transaction.get_json()) == hash:
                 return transaction, 'test_hash'
         return None, None
 
