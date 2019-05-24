@@ -76,7 +76,7 @@ class WorkflowClient:
         workflow_transaction_json["sender"] = self.wallet[sender]["public_key"]
         transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
         transaction.sign_transaction(self.crypto_helper,  self.wallet[sender]["private_key"])
-        self.network_interface.sendTransaction(transaction,1)
+        self.network_interface.sendTransaction(transaction)
 
     def send_dummy_task_transaction(self):
 
@@ -98,7 +98,7 @@ class WorkflowClient:
         task_transaction_json["sender"] = self.wallet[sender]["public_key"]
         transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
         transaction.sign_transaction(self.crypto_helper, self.wallet[sender]["private_key"])
-        self.network_interface.sendTransaction(transaction,2)
+        self.network_interface.sendTransaction(transaction)
 
     def send_dummy_task_transaction2(self):
 
@@ -120,4 +120,4 @@ class WorkflowClient:
         task_transaction_json["sender"] = self.wallet[sender]["public_key"]
         transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
         transaction.sign_transaction(self.crypto_helper, self.wallet[sender]["private_key"])
-        self.network_interface.sendTransaction(transaction,2)
+        self.network_interface.sendTransaction(transaction)

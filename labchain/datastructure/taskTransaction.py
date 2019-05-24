@@ -15,6 +15,8 @@ class TaskTransaction(Transaction):
         self.workflowID = payload['workflow-id']
         self.previous_transaction = None
         self.workflow_transaction = None
+        self.payload['transaction_type'] = '2'
+
 
     def validate_transaction(self, crypto_helper):
         """
@@ -91,6 +93,7 @@ class WorkflowTransaction(TaskTransaction):
         super().__init__(sender, receiver, payload, signature)
         self.processes = payload['processes'] # dict
         self.permissions = payload['permissions'] # dict
+        self.payload['transaction_type'] = '1'
 
     @staticmethod
     def from_json(json_data):

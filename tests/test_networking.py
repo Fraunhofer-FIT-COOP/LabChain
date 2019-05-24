@@ -236,8 +236,7 @@ class SendTransactionTestCase(CommonTestCase):
         last_request_method, last_request_params = self.get_last_request('192.168.2.3', 6666)
         self.assertEqual(last_request_method, 'sendTransaction')
         self.assertEqual(last_request_params, [{"sender": public_key1, "receiver": public_key2,
-                                                "payload": "test_payload", "signature": test_transaction.signature,
-                                                "transaction_type": 0}])
+                                                "payload": "test_payload", "signature": test_transaction.signature}])
 
 class SendBlockTestCase(CommonTestCase):
 

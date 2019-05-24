@@ -13,6 +13,7 @@ from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 
+from labchain.util.TransactionFactory import TransactionFactory
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.taskTransaction import TaskTransaction
@@ -108,10 +109,9 @@ class NetworkInterface:
             for port, info in port_map.items():
                 self.add_peer(ip_address, port, info)
 
-    def sendTransaction(self, transaction,transaction_type = 0):
+    def sendTransaction(self, transaction):
         # send the transaction to all peers
         transaction_dict = transaction.to_dict()
-        transaction_dict['transaction_type'] = transaction_type
         responses = self._bulk_send('sendTransaction', [transaction_dict])
         if not responses:
             logger.warning('No nodes available to send the transaction to!')
@@ -453,16 +453,7 @@ class ServerNetworkInterface(NetworkInterface):
             pass
 
     def __handle_send_transaction(self, transaction_data):
-        if 'transaction_type' in transaction_data:
-            transaction_type = transaction_data['transaction_type']
-            if (transaction_type == 0):
-                transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
-            if (transaction_type == 1):
-                transaction = WorkflowTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'],transaction_data['signature'])
-            if (transaction_type == 2):
-                transaction = TaskTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
-        else:
-            transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
+        transaction = TransactionFactory.create_transcation(transaction_data)
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
         transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
         self.on_transaction_received_callback(transaction)

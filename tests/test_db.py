@@ -5,6 +5,7 @@ from labchain.datastructure.blockchain import BlockChain
 from labchain.consensus.consensus import Consensus
 from labchain.util.cryptoHelper import CryptoHelper as crypto
 from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.taskTransaction import WorkflowTransaction
 from labchain.datastructure.txpool import TxPool
 from labchain.util.configReader import ConfigReader
 from labchain.databaseInterface import Db
@@ -54,10 +55,30 @@ class DbTestCase(unittest.TestCase):
         self.assertTrue(self.database.save_block(block))
         self.assertEqual(self.database.get_blockchain_from_db()[0],block)
 
+    def test_workflow_transaction(self):
+        workflow_block = self.get_workflow_block()
+        self.assertTrue(self.database.save_block(workflow_block))
+        self.assertIsInstance(self.database.get_blockchain_from_db()[1].transactions[0],WorkflowTransaction)
+
     def get_block(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()
         pr_key2, pub_key2 = self.crypto_helper_obj.generate_key_pair()
         self.txn1 = Transaction(pub_key1, pub_key2, "Payload1")
+        self.txn1.sign_transaction(self.crypto_helper_obj, pr_key1)
+        self.txn1.transaction_hash=self.crypto_helper_obj.hash(self.txn1.get_json())
+        return self.blockchain.create_block([self.txn1])
+
+    def get_workflow_block(self):
+        pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()
+        pr_key2, pub_key2 = self.crypto_helper_obj.generate_key_pair()
+        payload =   {}
+        payload['document'] = {}
+        payload['in_charge'] = ''
+        payload['next_in_charge'] = ''
+        payload['workflow-id'] = ''
+        payload['processes'] = {}
+        payload['permissions'] = {}
+        self.txn1 = WorkflowTransaction(pub_key1, pub_key2, payload)
         self.txn1.sign_transaction(self.crypto_helper_obj, pr_key1)
         self.txn1.transaction_hash=self.crypto_helper_obj.hash(self.txn1.get_json())
         return self.blockchain.create_block([self.txn1])
