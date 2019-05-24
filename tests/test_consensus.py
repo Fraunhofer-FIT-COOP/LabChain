@@ -1,4 +1,3 @@
-from unittest.mock import MagicMock
 from labchain.datastructure.block import Block
 from labchain.consensus.consensus import Consensus
 from datetime import datetime
@@ -16,7 +15,6 @@ class Tests(TestCase):
         hash_list_for_nonce_4 = [hash_false, hash_false, hash_false, hash_true]
         #  Consensus instance with Mock
         consensus = Consensus()
-        #consensus.crypto_helper.hash = MagicMock(side_effect=hash_list_for_nonce_4)
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
         self.assertTrue(consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1))
@@ -28,7 +26,6 @@ class Tests(TestCase):
         hash_list_for_nonce_4 = [hash_false, hash_false, hash_false, hash_true]
         #  Consensus instance with Mock
         consensus = Consensus()
-        #consensus.crypto_helper.hash = MagicMock(side_effect=hash_list_for_nonce_4)
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
         consensus.kill_mine = 1
@@ -40,7 +37,6 @@ class Tests(TestCase):
         hash_true = "00054358392586569542654697954676849367548926706893"
         #  Consensus instance with Mock
         consensus = Consensus()
-        #consensus.crypto_helper.hash = MagicMock(return_value=hash_true)
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime(2007, 12, 6, 15, 29, 52))
         _latest_ts = datetime(2007, 12, 6, 15, 29, 52)
@@ -60,7 +56,6 @@ class Tests(TestCase):
         hash_false = "03422354358392586569542654697954676849367548926706893"
         #  Consensus instance with Mock
         consensus = Consensus()
-        #consensus.crypto_helper.hash = MagicMock(return_value=hash_false)
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
         block.nonce = nonce_false
