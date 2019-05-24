@@ -471,7 +471,7 @@ class TaskTransactionWizard:
 
                     print()
                     print("current processes: ", process_json)
-                    print('test values: ', process_json.values())
+                    #print('test values: ', process_json.values())
                     print("finish? ")
                     isFinish = input('y/n ')
                     while isFinish != 'y' and isFinish != 'n':
@@ -552,9 +552,9 @@ class TaskTransactionWizard:
                         }
                     }
                 }
-                task_transaction_json["document"] = payload_json
-                task_transaction_json["processes"] = process_json
-                task_transaction_json["permissions"] = permissionData_json
+                task_transaction_json["payload"]["document"] = payload_json
+                task_transaction_json["payload"]["processes"] = process_json
+                task_transaction_json["payload"]["permissions"] = permissionData_json
 
             new_transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
@@ -571,9 +571,9 @@ class TaskTransactionWizard:
             print(u'Payload: ' + str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
             if self.isInitial == True:
-                print("transaction data: ", task_transaction_json["document"])
-                print("processes: ", task_transaction_json["processes"])
-                print("permissions: ", task_transaction_json["permissions"])
+                print("transaction data: ", task_transaction_json["payload"]["document"])
+                print("processes: ", task_transaction_json["payload"]["processes"])
+                print("permissions: ", task_transaction_json["payload"]["permissions"])
                 #secondWord =  [k for k in task_transaction_json["document"]]
                 #print("2nd is ",secondWord)
             print()
@@ -611,6 +611,7 @@ class DocumentFlowClient:
             '2': ('Create Initial Transaction', self.__create_initial_transaction, []),
             '3': ('doTask', self.__do_task, []),
             '4': ('Initiate Workflow', self.__do_workflow, []),
+            '5': ('Check Tasks', self.__check_tasks, [])
         }, 'Please select a value: ', 'Exit DocumentFlow Client')
 
     def main(self):
@@ -638,6 +639,34 @@ class DocumentFlowClient:
                                                self.network_interface,
                                                True)
         do_workflow_wizard.show()
+
+    def __check_tasks(self):
+        clear_screen()
+
+        public_key = input('Please enter a pid: ')
+
+        transactions = self.network_interface.requestAllTransactions()
+
+        transaction_exist = False
+        clear_screen()
+
+        for transaction in transactions:
+            #payloadArray = transaction.payload:
+            #print(transaction.payload)
+            if 'next_in_charge' in transaction.payload:
+                dict = transaction.payload
+                if dict['next_in_charge'] == public_key:
+                    transaction_exist = True
+                    print("it match")
+                    print(transaction.payload)
+                    #transaction.print()
+                    print()
+
+        if transaction_exist == False:
+            print('Transaction does not exist')
+        # wait for any input before returning to menu
+        input('Press enter to continue...')
+
 
     def __show_my_addresses(self):
         clear_screen()
