@@ -385,20 +385,8 @@ class TaskTransactionWizard:
                     isPayloadFinish = self.__validate_string_zero_length(chosen_payload)
                     if isPayloadFinish == True:
                         break
-                    isValidDataType = False
-                    while isValidDataType == False:
-                        data_type = ''
-                        while data_type == '':
-                            data_type = self.__ask_for_dataType()
-                        isPayloadFinish = self.__validate_string_zero_length(data_type)
-                        if isPayloadFinish == True:
-                            break
 
-                        if data_type != '':
-                            isValidDataType = self.__validate_data_type(data_type, chosen_payload)
-
-                    finalPayload = self.__validate_data_type(data_type, chosen_payload)
-                    payload_json[chosen_payload_attribute] = finalPayload[1]
+                    payload_json[chosen_payload_attribute] = chosen_payload
                     clear_screen()
                     print('new attribute added:')
                     print(payload_json)
@@ -441,9 +429,7 @@ class TaskTransactionWizard:
                 elif isFinish == 'n':
                     isProcessFinish = False
 
-                #isProcessFinish = False
-
-#TODO because the while loop will check if v not in d, cant break the while loop
+                #TODO try a better BFS tree implementation
                 while isProcessFinish == False:
                     keys = [k for k in process_json]
                     d = process_json.copy()
