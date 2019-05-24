@@ -11,7 +11,6 @@ from labchain.blockchainClient import Wallet, BlockchainClient
 if 'TERM' not in os.environ:
     os.environ['TERM'] = 'xterm-color'
 
-
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 WALLET_FILE_PATH = os.path.join(CONFIG_DIRECTORY, 'wallet.csv')
 

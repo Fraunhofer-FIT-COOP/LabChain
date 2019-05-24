@@ -114,7 +114,7 @@ class NetworkInterface:
         transaction_dict['transaction_type'] = transaction_type
         responses = self._bulk_send('sendTransaction', [transaction_dict])
         if not responses:
-            raise NoPeersException('No nodes available to send the transaction to')
+            logger.warning('No nodes available to send the transaction to!')
 
     def sendBlock(self, block):
         # send the block to all peers
