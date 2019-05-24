@@ -179,6 +179,13 @@ class BlockChainNode:
         """Retrieve a list of n last mined transactions from the blockchain"""
         return self.blockchain_obj.get_n_last_transactions(n)
 
+    def on_search_transaction_from_receiver(self, receiver_public_key):
+        return self.blockchain_obj.search_transaction_from_receiver(receiver_public_key)
+        
+
+    def on_search_transaction_from_sender(self, sender_public_key):
+        return self.blockchain_obj.search_transaction_from_sender(sender_public_key)
+
     def on_get_transactions_in_txpool(self):
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
@@ -284,6 +291,8 @@ class BlockChainNode:
                                       self.on_get_all_transactions,
                                       self.on_get_transactions_in_txpool,
                                       self.on_get_last_n_transactions,
+                                      self.on_search_transaction_from_receiver,
+                                      self.on_search_transaction_from_sender,
                                       self.peer_discovery, ip, port)
 
     def reinitialize_blockchain_from_db(self):

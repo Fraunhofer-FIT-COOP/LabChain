@@ -46,6 +46,8 @@ class CommonTestCase(TestCase):
                                         self.empty_function,
                                         self.get_transactions_in_pool,
                                         self.get_n_last_transactions,
+                                        self.search_transaction_from_receiver,
+                                        self.search_transaction_from_sender,
                                         False,
                                         port=6666)
 
@@ -128,6 +130,13 @@ class CommonTestCase(TestCase):
         for transactionHash in list(self.available_transactions)[0:n]:
             total_transactions.append(self.available_transactions[transactionHash])
         return total_transactions
+
+    def search_transaction_from_receiver(self, receiver_public_key):
+        return []
+
+    def search_transaction_from_sender(self, sender_public_key):
+        return []
+    
 
     def get_transactions_in_pool(self):
         return list(self.available_transactions.values())

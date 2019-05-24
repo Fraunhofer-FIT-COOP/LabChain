@@ -236,7 +236,7 @@ class BlockchainClient:
         self.load_transaction_menu = Menu(['Load Transaction'], {
             '1': ('Load by hash', self.__load_transaction_by_hash,[]),
             '2': ('Show Transaction Pool', self.__show_transaction_pool,[]),
-            '3': ('Show n last transactions', self.__load_n_last_transactions,[]),
+            '3': ('Show n last transactions', self.__search_transaction_from_sender,[]),
             '4': ('Load by receiver\'s public key', self._show_transaction_by_public_key,["receiver"]),
             '5': ('Load by sender\'s public key', self._show_transaction_by_public_key,["sender"]),
             '6': ('Show all transactions', self._show_transaction_by_public_key,[])
@@ -383,6 +383,40 @@ class BlockchainClient:
 
         transactions = self.network_interface.get_n_last_transactions(n)
 
+        clear_screen()
+
+        if not transactions:
+            print ("No transactions")
+        else:
+            for transaction in transactions:
+                transaction.print()
+                print()
+        input('Press enter to continue...')
+
+    def __search_transaction_from_receiver(self):
+        """Prompt the user for a public key: public key of the reciver"""
+        clear_screen()
+        receiver_public_key = input('Please enter reciver public key: ')
+        transactions = self.network_interface.search_transaction_from_receiver(receiver_public_key)
+
+        clear_screen()
+
+        if not transactions:
+            print ("No transactions")
+        else:
+            for transaction in transactions:
+                transaction.print()
+                print()
+        input('Press enter to continue...')
+
+
+
+    def __search_transaction_from_sender(self):
+        """Prompt the user for a public key: public key of the reciver"""
+        clear_screen()
+        sender_public_key = input('Please enter sender public key: ')
+        transactions = self.network_interface.search_transaction_from_sender(sender_public_key)
+        
         clear_screen()
 
         if not transactions:

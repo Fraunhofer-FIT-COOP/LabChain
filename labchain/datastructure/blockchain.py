@@ -184,6 +184,24 @@ class BlockChain:
                 res.append(_txn)
         return res
 
+    def search_transaction_from_receiver(self, receiver_public_key):
+        res = []
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if _txn.receiver == receiver_public_key:
+                    res.append(_txn)
+        return res
+
+    def search_transaction_from_sender(self, sender_public_key):
+        res = []
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if _txn.sender == sender_public_key:
+                    res.append(_txn)
+        return res
+
     def get_task_transactions(self):
         task_transactions = []
         for _hash, _block in self._blockchain.items():

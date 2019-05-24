@@ -360,7 +360,8 @@ class WorkflowTransactionTestCase(unittest.TestCase):
         self.assertEqual(data_dict['payload']['document'], transaction.document)
         self.assertEqual(data_dict['payload']['in_charge'], transaction.in_charge)
         self.assertEqual(data_dict['payload']['processes'], transaction.processes)
-        self.assertEqual(data_dict['payload']['permissions'], transaction.permissions)
+        self.assertEqual(data_dict['payload']['permissions'], transaction.permissions):
+
 
 if __name__ == '__main__':
     unittest.main()

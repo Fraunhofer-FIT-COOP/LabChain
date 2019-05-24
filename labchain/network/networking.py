@@ -218,6 +218,32 @@ class NetworkInterface:
             raise NoPeersException('No nodes available to request the transactions from')
         return res
 
+    def search_transaction_from_receiver(self, receiver_public_key):
+        responses = self._bulk_send('searchTransactionFromReceiver', [receiver_public_key], return_on_first_success=True)
+        res = []
+        if responses:
+            if len(responses) > 0:
+                for tx in responses[0]:
+                    res.append(Transaction.from_dict(tx))
+            else:
+                raise Exception('There was a response but it was empty')
+        else:
+            raise NoPeersException('No nodes available to request the transactions from')
+        return res
+
+    def search_transaction_from_sender(self, sender_public_key):
+        responses = self._bulk_send('searchTransactionFromSender', [sender_public_key], return_on_first_success=True)
+        res = []
+        if responses:
+            if len(responses) > 0:
+                for tx in responses[0]:
+                    res.append(Transaction.from_dict(tx))
+            else:
+                raise Exception('There was a response but it was empty')
+        else:
+            raise NoPeersException('No nodes available to request the transactions from')
+        return res
+
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""
         if not Utility.is_valid_ipv4(ip_address) and not Utility.is_valid_ipv6(ip_address):
@@ -317,6 +343,8 @@ class ServerNetworkInterface(NetworkInterface):
                  get_all_transactions_callback,
                  get_transactions_in_pool,
                  get_n_last_transactions_callback,
+                 search_transactions_from_receiver_callback,
+                 search_transactions_from_sender_callback,
                  peer_discovery=True,
                  ip='127.0.0.1', port=8080, block_cache_size=1000,
                  transaction_cache_size=1000):
@@ -348,6 +376,8 @@ class ServerNetworkInterface(NetworkInterface):
         self.transaction_cache_size = transaction_cache_size
         self.get_all_transactions_callback = get_all_transactions_callback
         self.get_n_last_transactions_callback = get_n_last_transactions_callback
+        self.search_transactions_from_receiver_callback = search_transactions_from_receiver_callback
+        self.search_transactions_from_sender_callback = search_transactions_from_sender_callback
 
         if peer_discovery:
 
@@ -409,6 +439,8 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestTransactionsInPool'] = self.__handle_request_transactions_in_pool
         dispatcher['requestAllTransactions'] = self.__handle_request_all_transactions
         dispatcher['requestNLastTransaction'] = self.__handle_request_n_last_transaction
+        dispatcher['searchTransactionFromReceiver'] = self.__handle_search_transaction_from_receiver
+        dispatcher['searchTransactionFromSender'] = self.__handle_search_transaction_from_sender
 
 
         # insert IP address of peer if advertise peer is called
@@ -521,6 +553,18 @@ class ServerNetworkInterface(NetworkInterface):
         transactions = self.get_n_last_transactions_callback(n)
         if transactions:
             return [transaction.to_dict() for transaction in transactions]
+        return []
+
+    def __handle_search_transaction_from_receiver(self, receiver_public_key):
+        receiver_transactions = self.search_transactions_from_receiver_callback(receiver_public_key)
+        if receiver_transactions:
+            return [transaction.to_dict() for transaction in receiver_transactions]
+        return []
+
+    def __handle_search_transaction_from_sender(self, sender_public_key):
+        sender_transactions = self.search_transactions_from_sender_callback(sender_public_key)
+        if sender_transactions:
+            return [transaction.to_dict() for transaction in sender_transactions]
         return []
 
     @staticmethod
