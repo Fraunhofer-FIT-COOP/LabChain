@@ -350,7 +350,8 @@ class BlockChain:
                 self._logger.debug("Branch head updated for node {}".format(self._node_id))
                 self._node_branch_head = _curr_block_hash
 
-            # Check recursively if blocks are parent to some orphans
+            # Check iteratively if blocks are parent to some orphans
+            # Todo: change the function to a recursive one
             _parent_hash = _curr_block_hash
             _parent_block = _curr_block
             while _parent_hash in self._orphan_blocks:
