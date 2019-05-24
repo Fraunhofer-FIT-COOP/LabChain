@@ -223,15 +223,21 @@ class SendTransactionTestCase(CommonTestCase):
         # given
         self.add_peer('192.168.2.3', 6666)
 
-        test_transaction = Transaction('test_sender', 'test_receiver', 'test_payload', 'test_signature')
+        crypto_helper_obj = CryptoHelper.instance()
+        private_key1, public_key1 = crypto_helper_obj.generate_key_pair()
+        private_key2, public_key2 = crypto_helper_obj.generate_key_pair()
+
+        test_transaction = Transaction(public_key1, public_key2, 'test_payload')
+        test_transaction.sign_transaction(crypto_helper_obj, private_key1)
         # when
         self.json_rpc_client.queue_result(True)
         self.network_interface.sendTransaction(test_transaction)
         # then
         last_request_method, last_request_params = self.get_last_request('192.168.2.3', 6666)
         self.assertEqual(last_request_method, 'sendTransaction')
-        self.assertEqual(last_request_params, [{"sender": "test_sender", "receiver": "test_receiver",
-                                                "payload": "test_payload", "signature": "test_signature"}])
+        self.assertEqual(last_request_params, [{"sender": public_key1, "receiver": public_key2,
+                                                "payload": "test_payload", "signature": test_transaction.signature,
+                                                "transaction_type": 0}])
 
 class SendBlockTestCase(CommonTestCase):
 

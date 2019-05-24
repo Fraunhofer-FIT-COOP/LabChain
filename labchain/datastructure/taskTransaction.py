@@ -55,6 +55,14 @@ class TaskTransaction(Transaction):
         possible_receivers = process_definition[in_charge]
         return True if get_pid_of_receiver(self.receiver) in possible_receivers else False  # TODO associate receiver-public-key to corresponding PID
 
+    def _check_for_wrong_branching(self):
+        # TODO implement
+        # latest_transaction_hash = getter???
+        # if self.transaction_hash == latest_transaction_hash:
+        #     return True
+        # return False
+        pass
+
     @staticmethod
     def from_json(json_data):
         """Deserialize a JSON string to a Transaction instance."""
