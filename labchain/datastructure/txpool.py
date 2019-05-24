@@ -1,6 +1,7 @@
 import logging
 
 from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.taskTransaction import TaskTransaction
 
 
 class TxPool:
@@ -34,6 +35,13 @@ class TxPool:
         if remove_result:
             self._transactions = self._transactions[count:]
         return transactions
+
+    def get_task_transactions(self):
+        task_transactions = []
+        for transaction in self._transactions:
+            if isinstance(transaction, TaskTransaction):
+                task_transactions.append(transaction)
+        return task_transactions
 
     def remove_transaction(self, transaction):
         if transaction in self._transactions:
