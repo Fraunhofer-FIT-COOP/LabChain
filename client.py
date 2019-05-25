@@ -6,6 +6,7 @@ import os
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
 from labchain.blockchainClient import Wallet, BlockchainClient
+from labchain.documentFlowClient import DocumentFlowClient
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -25,6 +26,12 @@ def create_client(wallet_file, node_ip, node_port):
     return BlockchainClient(Wallet(wallet_file), network_interface, crypto_helper)
 
 
+def create_document_flow_client(wallet_file, node_ip, node_port):
+    crypto_helper = CryptoHelper.instance()
+    network_interface = ClientNetworkInterface(JsonRpcClient(), {node_ip: {node_port: {}}})
+    return DocumentFlowClient(Wallet(wallet_file), network_interface, crypto_helper)
+
+
 def setup_logging(verbose, very_verbose):
     if very_verbose:
         logging.basicConfig(level=logging.DEBUG)
@@ -40,6 +47,7 @@ def parse_args():
     parser.add_argument('node_port',nargs='?',help='The port address of the Labchain node',default="8080")
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
+    parser.add_argument('df', nargs='?', help='Set true if you want to execute the document flow Blockchain ', default=False)
     return parser.parse_args()
 
 
@@ -52,5 +60,9 @@ if __name__ == '__main__':
     else:
         file_mode = 'w+'
     with open(WALLET_FILE_PATH, file_mode) as open_wallet_file:
-        client = create_client(open_wallet_file, args.node_ip, args.node_port)
-        client.main()
+        if args.df:
+            client = create_document_flow_client(open_wallet_file, args.node_ip, args.node_port)
+            client.main()
+        else:
+            client = create_client(open_wallet_file, args.node_ip, args.node_port)
+            client.main()
