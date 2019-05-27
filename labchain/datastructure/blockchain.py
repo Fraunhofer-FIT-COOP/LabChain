@@ -496,9 +496,9 @@ class BlockChain:
                 self._logger.debug(
                     "Checks if this block is parent to orphan with id {}"
                     .format(orphan_block))
-                self.add_block(block=self._orphan_blocks.get(orphan_block),
-                               db_flag=db_flag)
-            self._orphan_lock.release()
+                oblock = self._orphan_blocks.pop(orphan_block)
+                self._orphan_lock.release()
+                self.add_block(block=oblock, db_flag=db_flag)
 
         # kill mine check
         if not block.is_block_ours(self._node_id):
