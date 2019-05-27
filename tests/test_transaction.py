@@ -1,17 +1,14 @@
-import unittest
-import json
 import io
+import json
 import sys
-
-from Crypto.PublicKey import ECC
-from Crypto.Signature import DSS
-from Crypto.Hash import SHA256
-from base64 import b64encode, b64decode
+import unittest
 from unittest.mock import MagicMock
-from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.taskTransaction import TaskTransaction,WorkflowTransaction
 
+from labchain.datastructure.taskTransaction import TaskTransaction, \
+    WorkflowTransaction
+from labchain.datastructure.transaction import Transaction
 from labchain.util.cryptoHelper import CryptoHelper
+
 
 class TransactionTestCase(unittest.TestCase):
     """Class of testcases for the TxPool module"""
@@ -360,7 +357,8 @@ class WorkflowTransactionTestCase(unittest.TestCase):
         self.assertEqual(data_dict['payload']['document'], transaction.document)
         self.assertEqual(data_dict['payload']['in_charge'], transaction.in_charge)
         self.assertEqual(data_dict['payload']['processes'], transaction.processes)
-        self.assertEqual(data_dict['payload']['permissions'], transaction.permissions):
+        self.assertEqual(data_dict['payload']['permissions'],
+                         transaction.permissions)
 
 
 if __name__ == '__main__':
