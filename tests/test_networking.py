@@ -132,10 +132,19 @@ class CommonTestCase(TestCase):
         return total_transactions
 
     def search_transaction_from_receiver(self, receiver_public_key):
-        return []
+        recived_transaction = []
+        for transaction_hash, transaction in self.available_transactions.items():
+            if (receiver_public_key == transaction.receiver):
+                recived_transaction.append(transaction)
+        return recived_transaction
+        
 
     def search_transaction_from_sender(self, sender_public_key):
-        return []
+        sent_transaction = []
+        for transaction_hash, transaction in self.available_transactions.items():
+            if (sender_public_key == transaction.sender):
+                sent_transaction.append(transaction)
+        return sent_transaction
     
 
     def get_transactions_in_pool(self):
@@ -349,6 +358,34 @@ class RequestTransactionServerTestCase(CommonTestCase):
         # then
         self.assert_json_equal(response,
                                '[{"sender": "test_sender", "receiver": "test_receiver", '
+                               '"payload": "test_payload", "signature": "test_signature"}]')
+
+    def test_search_transaction_from_receiver(self):
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        self.available_transactions['hash_of_transaction_#1'] = Transaction("test_sender",
+                                                                            "123456789",
+                                                                            "test_payload",
+                                                                            "test_signature")
+        # when
+        response = self.make_request("searchTransactionFromReceiver",'["123456789"]')
+        # then
+        self.assert_json_equal(response,
+                               '[{"sender": "test_sender", "receiver": "123456789", '
+                               '"payload": "test_payload", "signature": "test_signature"}]')
+
+    def test_search_transaction_from_sender(self):
+        # given
+        self.add_peer('192.168.100.4', 6666)
+        self.available_transactions['hash_of_transaction_#1'] = Transaction("123456789",
+                                                                            "test_receiver",
+                                                                            "test_payload",
+                                                                            "test_signature")
+        # when
+        response = self.make_request("searchTransactionFromSender",'["123456789"]')
+        # then
+        self.assert_json_equal(response,
+                               '[{"sender": "123456789", "receiver": "test_receiver", '
                                '"payload": "test_payload", "signature": "test_signature"}]')
 
 class RequestTransactionClientTestCase(CommonTestCase):
