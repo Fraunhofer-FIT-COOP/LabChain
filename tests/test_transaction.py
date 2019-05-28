@@ -2,7 +2,6 @@ import io
 import json
 import sys
 import unittest
-from unittest.mock import MagicMock
 
 from labchain.datastructure.taskTransaction import TaskTransaction, \
     WorkflowTransaction
@@ -89,28 +88,18 @@ class TransactionTestCase(unittest.TestCase):
         'dGxQWXE4aE1ZaUZiT2hNUmNWK0lISzJ3dU1BPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t')
         real_receiver = "test"
         real_payload = "1"
-        true_signature = "OdnESUJkgdmFO2T3JpcS/LX88jNOjCsl/Zspx361rpkSt96TjR66rV8Jw6W4VOtCwYGknfzBPjiMvi0mG27u5Q=="
         my_transaction = Transaction(sender = real_pub_key, receiver = real_receiver, payload = real_payload)
-        crypto_helper.sign = MagicMock(return_value = true_signature)
         my_transaction.sign_transaction(crypto_helper, real_pr_key)
         self.assertTrue(my_transaction.validate_transaction(crypto_helper))
 
     def test_validate_transaction_false(self):
         """Test transaction validation"""
         crypto_helper = CryptoHelper.instance()
-        real_pr_key = ('LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUd'+
-        'TTTQ5QXdFSEJHMHdhd0lCQVFRZ0c1R3BEREVaUFpsZHh3bEsKOEhvVm9USUJheXhiRFhacFdVV1VoM2szcGNlaFJBT'+
-        'kNBQVJtM2JJdWp3elhXTytmRmFPK00xMzBWL1huTUtXbApyS0FtamV2UUxabXpqRkRsUEZtS1NuT2VSTVkxcFcyVTl'+
-        'pcnlFeGlJVnM2RXhGeFg0Z2NyYkM0dwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t')
-        real_pub_key = ('LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowRE'+
-        'FRY0RRZ0FFWnQyeUxvOE0xMWp2bnhXanZqTmQ5RmYxNXpDbApwYXlnSm8zcjBDMlpzNHhRNVR4WmlrcHpua1RHTmFW'+
-        'dGxQWXE4aE1ZaUZiT2hNUmNWK0lISzJ3dU1BPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t')
-        fake_receiver = "i_am_fake_receiver"
+        real_pr_key, real_pub_key = crypto_helper.generate_key_pair()
+        fake_pr_key, fake_pub_key = crypto_helper.generate_key_pair()
         real_payload = "1"
-        true_signature = "OdnESUJkgdmFO2T3JpcS/LX88jNOjCsl/Zspx361rpkSt96TjR66rV8Jw6W4VOtCwYGknfzBPjiMvi0mG27u5Q=="
-        my_transaction = Transaction(sender = real_pub_key, receiver = fake_receiver, payload = real_payload)
-        crypto_helper.sign = MagicMock(return_value = true_signature)
-        my_transaction.sign_transaction(crypto_helper, real_pr_key)
+        my_transaction = Transaction(real_pub_key, fake_pub_key, real_payload)
+        my_transaction.sign_transaction(crypto_helper, fake_pr_key)
         self.assertFalse(my_transaction.validate_transaction(crypto_helper))
 
     def test_set_signature(self):
