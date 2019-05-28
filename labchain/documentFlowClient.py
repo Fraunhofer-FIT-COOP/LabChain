@@ -1,14 +1,13 @@
-import os
 import json
+import os
 from collections import OrderedDict
-import copy
-from copy import deepcopy
 
 from labchain.datastructure.taskTransaction import TaskTransaction
 
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
+
 
 class Wallet:
 
@@ -81,7 +80,8 @@ class Wallet:
 class Menu:
     """Create a CLI menu with this class."""
 
-    def __init__(self, prompt_text, menu_items, input_text, back_option_label='Go back', fast_exit=False):
+    def __init__(self, prompt_text, menu_items, input_text,
+                 back_option_label='Go back', fast_exit=False):
         """
         :param prompt_text: A list of string that represent each line of the menu text.
         :param menu_items: A dictionary with the input value as key and a tuple with
@@ -118,8 +118,8 @@ class Menu:
 
     def __append_back_menu_item(self, back_option_label):
         self.back_option_key = 'q'
-        #max_key = max(self.menu_items, key=int)
-        #self.back_option_key = str(int(max_key) + 1)
+        # max_key = max(self.menu_items, key=int)
+        # self.back_option_key = str(int(max_key) + 1)
         self.menu_items[self.back_option_key] = (back_option_label, None, None)
 
     def show(self):
@@ -143,7 +143,8 @@ class Menu:
 class TaskTransactionWizard:
     """CLI wizard for making new transactions / do a task /update a task."""
 
-    def __init__(self, wallet, crypto_helper, network_interface, isInitial = False):
+    def __init__(self, wallet, crypto_helper, network_interface,
+                 isInitial=False):
         self.wallet = wallet
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
@@ -152,7 +153,8 @@ class TaskTransactionWizard:
     def __wallet_to_list(self):
         wallet_list_result = []
         for key in sorted(self.wallet):
-            wallet_list_result.append([str(key), self.wallet[key][0], self.wallet[key][1]])
+            wallet_list_result.append(
+                [str(key), self.wallet[key][0], self.wallet[key][1]])
         return wallet_list_result
 
     def __validate_sender_input(self, usr_input):
@@ -228,7 +230,7 @@ class TaskTransactionWizard:
                 return False
 
         if dataType == '3':
-                return True, value
+            return True, value
 
         if dataType == '4':
             if value == 'true':
@@ -251,7 +253,8 @@ class TaskTransactionWizard:
             print(u'\tPublic Key: ' + str(key[1]))
             print()
 
-        user_input = input('Please choose a sender account (by number) or press enter to return: ')
+        user_input = input(
+            'Please choose a sender account (by number) or press enter to return: ')
         return user_input
 
     @staticmethod
@@ -276,12 +279,14 @@ class TaskTransactionWizard:
 
     @staticmethod
     def __ask_for_payload():
-        usr_input = input('Please type a payload (for boolean, please type true/false): ')
+        usr_input = input(
+            'Please type a payload (for boolean, please type true/false): ')
         return str(usr_input)
 
     @staticmethod
     def __ask_for_dataType():
-        print("Please specify the data type of the attribute. (int/float/string/bool)")
+        print(
+            "Please specify the data type of the attribute. (int/float/string/bool)")
         print('1. int')
         print('2. float')
         print('3. string')
@@ -291,12 +296,14 @@ class TaskTransactionWizard:
 
     @staticmethod
     def __ask_for_process_owner():
-        usr_input = input('Please type a process owner (in charge) (empty input to finish the process owner input):')
+        usr_input = input(
+            'Please type a process owner (in charge) (empty input to finish the process owner input):')
         return str(usr_input)
 
     @staticmethod
     def __ask_for_process_receiver(pid_inCharge):
-        print('Please type the next in charge for the pid ', pid_inCharge,  '(empty input to go to next process):')
+        print('Please type the next in charge for the pid ', pid_inCharge,
+              '(empty input to go to next process):')
         usr_input = input()
         return str(usr_input)
 
@@ -350,9 +357,11 @@ class TaskTransactionWizard:
             chosen_next_incharge = self.__ask_for_next_incharge()
 
             while not ((self.__validate_incharge_input(chosen_incharge))
-                        & (self.__validate_next_incharge_input(chosen_next_incharge)) ):
+                       & (self.__validate_next_incharge_input(
+                        chosen_next_incharge))):
                 # clear_screen()
-                print('Invalid input! Please choose a correct incharge and next incharge!')
+                print(
+                    'Invalid input! Please choose a correct incharge and next incharge!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Receiver: ' + str(chosen_receiver))
                 chosen_incharge = self.__ask_for_incharge()
@@ -362,9 +371,12 @@ class TaskTransactionWizard:
             if self.isInitial == False:
                 chosen_payload_attribute = self.__ask_for_payload_attribute()
                 chosen_payload = self.__ask_for_payload()
-                while not ((self.__validate_payload_attribute_input(chosen_payload_attribute)) & (self.__validate_payload_input(chosen_payload))):
+                while not ((self.__validate_payload_attribute_input(
+                        chosen_payload_attribute)) & (
+                                   self.__validate_payload_input(chosen_payload))):
                     # clear_screen()
-                    print('Invalid input! Please choose a correct attribute and payload!')
+                    print(
+                        'Invalid input! Please choose a correct attribute and payload!')
                     print(u'Sender: ' + str(chosen_key))
                     print(u'Receiver: ' + str(chosen_receiver))
                     chosen_payload_attribute = self.__ask_for_payload_attribute()
@@ -378,11 +390,13 @@ class TaskTransactionWizard:
 
                 while isPayloadFinish == False:
                     chosen_payload_attribute = self.__ask_for_payload_attribute()
-                    isPayloadFinish = self.__validate_string_zero_length(chosen_payload_attribute)
+                    isPayloadFinish = self.__validate_string_zero_length(
+                        chosen_payload_attribute)
                     if isPayloadFinish == True:
                         break
                     chosen_payload = self.__ask_for_payload()
-                    isPayloadFinish = self.__validate_string_zero_length(chosen_payload)
+                    isPayloadFinish = self.__validate_string_zero_length(
+                        chosen_payload)
                     if isPayloadFinish == True:
                         break
                     isValidDataType = False
@@ -390,14 +404,17 @@ class TaskTransactionWizard:
                         data_type = ''
                         while data_type == '':
                             data_type = self.__ask_for_dataType()
-                        isPayloadFinish = self.__validate_string_zero_length(data_type)
+                        isPayloadFinish = self.__validate_string_zero_length(
+                            data_type)
                         if isPayloadFinish == True:
                             break
 
                         if data_type != '':
-                            isValidDataType = self.__validate_data_type(data_type, chosen_payload)
+                            isValidDataType = self.__validate_data_type(
+                                data_type, chosen_payload)
 
-                    finalPayload = self.__validate_data_type(data_type, chosen_payload)
+                    finalPayload = self.__validate_data_type(data_type,
+                                                             chosen_payload)
                     payload_json[chosen_payload_attribute] = finalPayload[1]
                     clear_screen()
                     print('new attribute added:')
@@ -417,10 +434,12 @@ class TaskTransactionWizard:
 
                 """add receiver to process receiver array"""
                 isReceiverArrayFinish = False
-                while (isReceiverArrayFinish == False or len(process_receiver) == 0):
+                while (isReceiverArrayFinish == False or len(
+                        process_receiver) == 0):
                     receiver = ''
                     receiver = self.__ask_for_process_receiver(processOwner)
-                    isReceiverArrayFinish = self.__validate_string_zero_length(receiver)
+                    isReceiverArrayFinish = self.__validate_string_zero_length(
+                        receiver)
                     if (receiver != ''):
                         process_receiver.append(receiver)
                         process_json[processOwner] = process_receiver
@@ -441,9 +460,9 @@ class TaskTransactionWizard:
                 elif isFinish == 'n':
                     isProcessFinish = False
 
-                #isProcessFinish = False
+                # isProcessFinish = False
 
-#TODO because the while loop will check if v not in d, cant break the while loop
+                # TODO because the while loop will check if v not in d, cant break the while loop
                 while isProcessFinish == False:
                     keys = [k for k in process_json]
                     d = process_json.copy()
@@ -457,8 +476,10 @@ class TaskTransactionWizard:
                                 isReceiverFinish = False
                                 while (isReceiverFinish == False):
                                     receiver = ''
-                                    receiver = self.__ask_for_process_receiver(v)
-                                    isReceiverFinish = self.__validate_string_zero_length(receiver)
+                                    receiver = self.__ask_for_process_receiver(
+                                        v)
+                                    isReceiverFinish = self.__validate_string_zero_length(
+                                        receiver)
                                     if receiver == '':
                                         noReceiverList.append(v)
                                     if (receiver != ''):
@@ -466,12 +487,14 @@ class TaskTransactionWizard:
                                         process_receiver.append(receiver)
 
                                     if process_receiver != []:
-                                        process_json[newOwner] = process_receiver
-                                        print("current processes: ", process_json)
+                                        process_json[
+                                            newOwner] = process_receiver
+                                        print("current processes: ",
+                                              process_json)
 
                     print()
                     print("current processes: ", process_json)
-                    #print('test values: ', process_json.values())
+                    # print('test values: ', process_json.values())
                     print("finish? ")
                     isFinish = input('y/n ')
                     while isFinish != 'y' and isFinish != 'n':
@@ -494,22 +517,27 @@ class TaskTransactionWizard:
                     while isPermissionFinish == False:
                         pid = ''
                         pid = self.__ask_for_permission(key)
-                        isPermissionFinish = self.__validate_string_zero_length(pid)
-                        while (isPermissionFinish == False and (pid not in process_json)):
+                        isPermissionFinish = self.__validate_string_zero_length(
+                            pid)
+                        while (isPermissionFinish == False and (
+                                pid not in process_json)):
                             if pid != '':
-                                print('the pid you enter is not contained in the processes!')
+                                print(
+                                    'the pid you enter is not contained in the processes!')
                                 print()
                             pid = ''
                             print('your processes: ', process_json)
                             print()
                             pid = self.__ask_for_permission(key)
-                            isPermissionFinish = self.__validate_string_zero_length(pid)
+                            isPermissionFinish = self.__validate_string_zero_length(
+                                pid)
 
                         if pid != '':
                             permission_pid.append(pid)
                         if permission_pid != []:
                             permissionData_json[key] = permission_pid
-                            print('your current permissions: ', permissionData_json)
+                            print('your current permissions: ',
+                                  permissionData_json)
                             print()
                     permissionData_json[key] = permission_pid
 
@@ -539,30 +567,29 @@ class TaskTransactionWizard:
                     "sender": private_key,
                     "signature": None,
                     "payload": {
-                        "document": {
-
-                        },
+                        "document": {},
                         "in_charge": chosen_incharge,
                         "next_in_charge": chosen_next_incharge,
-                        "processes":{
-
-                        },
-                        "permissions":{
-
-                        }
+                        "processes": {},
+                        "permissions": {}
                     }
                 }
                 task_transaction_json["payload"]["document"] = payload_json
                 task_transaction_json["payload"]["processes"] = process_json
-                task_transaction_json["payload"]["permissions"] = permissionData_json
+                task_transaction_json["payload"][
+                    "permissions"] = permissionData_json
 
-            new_transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+            new_transaction = TaskTransaction.from_json(
+                json.dumps(task_transaction_json))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
-            transaction_hash = self.crypto_helper.hash(json.dumps(task_transaction_json))
+            transaction_hash = self.crypto_helper.hash(
+                json.dumps(task_transaction_json))
             if self.isInitial == False:
-                self.network_interface.sendTransaction(new_transaction, 2) # 2 for TaskTransaction
+                self.network_interface.sendTransaction(new_transaction,
+                                                       2)  # 2 for TaskTransaction
             elif self.isInitial == True:
-                self.network_interface.sendTransaction(new_transaction, 1) # 1 for WorkFlowTransaction
+                self.network_interface.sendTransaction(new_transaction,
+                                                       1)  # 1 for WorkFlowTransaction
 
             print('Transaction successfully created!')
             print()
@@ -571,11 +598,14 @@ class TaskTransactionWizard:
             print(u'Payload: ' + str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
             if self.isInitial == True:
-                print("transaction data: ", task_transaction_json["payload"]["document"])
-                print("processes: ", task_transaction_json["payload"]["processes"])
-                print("permissions: ", task_transaction_json["payload"]["permissions"])
-                #secondWord =  [k for k in task_transaction_json["document"]]
-                #print("2nd is ",secondWord)
+                print("transaction data: ",
+                      task_transaction_json["payload"]["document"])
+                print("processes: ",
+                      task_transaction_json["payload"]["processes"])
+                print("permissions: ",
+                      task_transaction_json["payload"]["permissions"])
+                # secondWord =  [k for k in task_transaction_json["document"]]
+                # print("2nd is ",secondWord)
             print()
 
         # case: wallet is empty
@@ -585,7 +615,6 @@ class TaskTransactionWizard:
         input('Press any key to go back to the main menu!')
 
 
-
 class InitialTransactionWizard:
     """CLI wizard for creating initial transactions."""
 
@@ -593,6 +622,7 @@ class InitialTransactionWizard:
         self.wallet = wallet
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
+
 
 class DocumentFlowClient:
 
@@ -608,7 +638,9 @@ class DocumentFlowClient:
 
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Persons', self.manage_wallet_menu.show, []),
-            '2': ('Create Initial Transaction', self.__create_initial_transaction, []),
+            '2': (
+                'Create Initial Transaction', self.__create_initial_transaction,
+                []),
             '3': ('doTask', self.__do_task, []),
             '4': ('Initiate Workflow', self.__do_workflow, []),
             '5': ('Check Tasks', self.__check_tasks, [])
@@ -621,8 +653,8 @@ class DocumentFlowClient:
     def __create_initial_transaction(self):
         """Ask for all important information to create initial transaction"""
         initial_tx_wizard = InitialTransactionWizard(self.wallet,
-                                               self.crypto_helper,
-                                               self.network_interface)
+                                                     self.crypto_helper,
+                                                     self.network_interface)
         initial_tx_wizard.show()
 
     def __do_task(self):
@@ -635,9 +667,9 @@ class DocumentFlowClient:
     def __do_workflow(self):
         """Ask for all important information to create a new transaction/workflow and sends it to the network."""
         do_workflow_wizard = TaskTransactionWizard(self.wallet,
-                                               self.crypto_helper,
-                                               self.network_interface,
-                                               True)
+                                                   self.crypto_helper,
+                                                   self.network_interface,
+                                                   True)
         do_workflow_wizard.show()
 
     def __check_tasks(self):
@@ -651,22 +683,21 @@ class DocumentFlowClient:
         clear_screen()
 
         for transaction in transactions:
-            #payloadArray = transaction.payload:
-            #print(transaction.payload)
+            # payloadArray = transaction.payload:
+            # print(transaction.payload)
             if 'next_in_charge' in transaction.payload:
                 dict = transaction.payload
                 if dict['next_in_charge'] == public_key:
                     transaction_exist = True
                     print("it match")
                     print(transaction.payload)
-                    #transaction.print()
+                    # transaction.print()
                     print()
 
         if transaction_exist == False:
             print('Transaction does not exist')
         # wait for any input before returning to menu
         input('Press enter to continue...')
-
 
     def __show_my_addresses(self):
         clear_screen()
@@ -709,6 +740,7 @@ class DocumentFlowClient:
                 addresses[str(i)] = (label, self.__delete_by_label, [label, ])
                 i += 1
             delete_menu = Menu(['Delete address'], addresses,
-                               'Please select a key to delete: ', 'Exit without deleting any addresses', True)
+                               'Please select a key to delete: ',
+                               'Exit without deleting any addresses', True)
             delete_menu.show()
         input('Press any key to go back to the main menu!')

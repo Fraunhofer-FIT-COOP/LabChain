@@ -414,91 +414,27 @@ class BlockChain:
             self._blockchain_lock.release()
             return False
 
-        _prev_hash = block.predecessor_hash
-        _curr_block_hash = block.get_computed_hash()
-        _curr_block = block
+        validation_result = self._get_validation_data(block)
 
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
-            self.calculate_diff(block.predecessor_hash)
-
-        validity_level = block.validate_block(_latest_ts, _earliest_ts,
-                                              _num_of_blocks,
-                                              _latest_difficulty)
-
-        if _prev_hash not in self._blockchain:
-            if validity_level == -3:
-                self._logger.debug("Block has been put to orphan pool, "
-                                   "since predecessor was not found")
-                # Protection mechanism for multithreading
-                if not self._orphan_lock.acquire(timeout=5):
-                    self._logger.debug(
-                        "Add block was unable to acquire orphan_lock")
-                    raise TimeoutError
-                self._orphan_blocks[_prev_hash] = _curr_block
-                self._orphan_lock.release()
-                self.request_block_from_neighbour(_prev_hash)
+        if validation_result == 0:
+            self._add_block_to_blockchain(block, db_flag)
+            self._check_for_orphans_with_parent(db_flag)
+        elif validation_result == -1:
+            self._logger.debug("The block received is not valid, discarding this block -- \n {b}".format(b=str(block)))
+            if block.is_block_ours(self._node_id):
+                self._logger.debug("Since this block is ours, returning the transactions back to transaction pool")
+                _txns = block.transactions
+                self._txpool.return_transactions_to_pool(_txns)
+            del block
+            self._logger.debug("Block not valid! Not adding.")
+            self._blockchain_lock.release()
+            return False
+        elif validation_result == -2:
+            self._add_block_to_orphan_pool(block)
         else:
-            if not validity_level == 0:
-                self._logger.debug("The block received is not valid, "
-                                   "discarding this block -- \n {b}".
-                                   format(b=str(block)))
-                if block.is_block_ours(self._node_id):
-                    self._logger.debug("Since this block is ours, returning the "
-                                 "transactions back to transaction pool")
-                    _txns = block.transactions
-                    self._txpool.return_transactions_to_pool(_txns)
-                del block
-                self._logger.debug("Block not valid! Not adding.")
-                self._blockchain_lock.release()
-                return False
-
-            _prev_block = self._blockchain.get(_prev_hash)
-            _prev_block_pos = _prev_block.get_block_pos()
-
-            if _prev_hash in self._current_branch_heads:
-                self._current_branch_heads.remove(_prev_hash)
-            else:
-                if _prev_block_pos < self._furthest_branching_point["position"]:
-                    self._furthest_branching_point["position"] = _prev_block_pos
-                    self._furthest_branching_point["block"] = _prev_block
-
-            _curr_block.set_block_pos(_prev_block_pos + 1)
-            self._blockchain[_curr_block_hash] = _curr_block
-            self._current_branch_heads.append(_curr_block_hash)
-            if db_flag:
-                self._db.save_block(block)
-                self._logger.info('Saved block no. {} to DB'
-                                  .format(block.block_id))
-
-            if _prev_hash == self._node_branch_head:
-                self._logger.debug("Branch head updated for node {}"
-                                   .format(self._node_id))
-                self._node_branch_head = _curr_block_hash
-
-            # Check iteratively if blocks are parent to some orphans
-            # Todo: change the function to a recursive one
-            # _parent_hash = _curr_block_hash
-            # _parent_block = _curr_block
-            # while _parent_hash in self._orphan_blocks:
-            #     _block = self._orphan_blocks[_parent_hash]
-            #     _this_block_hash = _block.get_computed_hash()
-            #     _block.set_block_pos(_parent_block.get_block_pos() + 1)
-            #     self._blockchain[_this_block_hash] = _block
-            #     _parent_hash = _this_block_hash
-            #     _parent_block = _block
-
-            # Protection mechanism for multithreading
-            if not self._orphan_lock.acquire(timeout=5):
-                self._logger.debug(
-                    "Add block was unable to acquire orphan_lock")
-                raise TimeoutError
-            while len(self._orphan_blocks) > 0:  # TODO endless loop
-                oblock_hash, oblock = self._orphan_blocks.popitem()
-                self._logger.debug(
-                    "Checks if this block is parent to orphan with id {}"
-                        .format(oblock_hash))
-                self._orphan_lock.release()
-                self.add_block(block=oblock, db_flag=db_flag)
+            self._logger.error('Unexpected block state')
+            self._blockchain_lock.release()
+            raise ValueError
 
         # kill mine check
         if not block.is_block_ours(self._node_id):
@@ -507,7 +443,6 @@ class BlockChain:
         self._logger.info("Added new block --- \n {h} \n {b} \n"
                           .format(h=str(block.get_computed_hash()),
                                   b=str(block)))
-
         self._logger.debug("Number of branches currently branch heads = {}"
                            .format(len(self._current_branch_heads)))
         i = 0
@@ -519,6 +454,123 @@ class BlockChain:
 
         self.switch_to_longest_branch()
         return True
+
+    def _get_validation_data(self, block: LogicalBlock):
+        """
+        Evaluates block for addition to blockchain
+
+        :param block: block to be checked
+        :return:
+             0 - block is valid
+            -1 - block is invalid and not orphan, discard
+            -2 - block is orphan, might be valid in future
+        """
+        _prev_hash = block.predecessor_hash
+        _curr_block_hash = block.get_computed_hash()
+        _curr_block = block
+
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            self.calculate_diff(block.predecessor_hash)
+
+        validity_level = block.validate_block(_latest_ts, _earliest_ts,
+                                              _num_of_blocks,
+                                              _latest_difficulty)
+        if validity_level == -1:
+            return -1  # discard invalid blocks
+        elif validity_level == -2:
+            return -1  # discard invalid blocks
+        elif validity_level == -3 and _prev_hash in self._blockchain:
+            return -1  # discard invalid block
+        elif validity_level == -3 and _prev_hash not in self._blockchain:
+            return -2  # block might be orphan
+        else:
+            return 0
+
+    def _add_block_to_blockchain(self, block: LogicalBlock, db_flag):
+        _prev_block = self._blockchain.get(block.predecessor_hash)
+        _prev_block_pos = _prev_block.get_block_pos()
+
+        if block.predecessor_hash in self._current_branch_heads:
+            self._current_branch_heads.remove(block.predecessor_hash)
+        else:
+            if _prev_block_pos < self._furthest_branching_point["position"]:
+                self._furthest_branching_point["position"] = _prev_block_pos
+                self._furthest_branching_point["block"] = _prev_block
+
+        block.set_block_pos(_prev_block_pos + 1)
+        self._blockchain[block.get_computed_hash()] = block
+        self._current_branch_heads.append(block.get_computed_hash())
+        if db_flag:
+            self._db.save_block(block)
+            self._logger.info('Saved block no. {} to DB'
+                              .format(block.block_id))
+
+        if block.predecessor_hash == self._node_branch_head:
+            self._logger.debug("Branch head updated for node {}"
+                               .format(self._node_id))
+            self._node_branch_head = block.get_computed_hash()
+
+    def _add_block_to_orphan_pool(self, block: LogicalBlock):
+        self._logger.debug("Block has been put to orphan pool, "
+                           "since predecessor was not found")
+        # Protection mechanism for multithreading
+        if not self._orphan_lock.acquire(timeout=5):
+            self._logger.debug("Add block was unable to acquire orphan_lock")
+            raise TimeoutError
+        if block.predecessor_hash in self._orphan_blocks:
+            self._logger.warning("Orphan with same predecessor already in orphan_pool, overwriting")  # TODO fix logic
+        self._orphan_blocks[block.predecessor_hash] = block
+        self._orphan_lock.release()
+        self.request_block_from_neighbour(block.predecessor_hash)
+
+    def _check_for_orphans_with_parent(self, db_flag):
+        if not self._orphan_lock.acquire(timeout=5):
+            self._logger.debug(
+                "Add block was unable to acquire orphan_lock")
+            raise TimeoutError
+
+        # Get block from orphan_pool that have predecessor in blockchain
+        predecessor_is_in_blockchain = {}
+        for orphan__predecessor_hash in self._orphan_blocks:
+            if orphan__predecessor_hash in self._blockchain:
+                predecessor_is_in_blockchain[orphan__predecessor_hash] = self._orphan_blocks[orphan__predecessor_hash]
+
+        # Add blocks with predecessor in blockchain to blockchain
+        for predecessor_hash in predecessor_is_in_blockchain:
+            block = predecessor_is_in_blockchain[predecessor_hash]
+            validation_result = self._get_validation_data(block)
+            if validation_result == 0:
+                self._add_block_to_blockchain(block, db_flag)
+            elif validation_result == -1:
+                self._logger.debug(
+                    "The block taken from orphan_pool is not valid, discarding this block -- \n {b}".format(
+                        b=str(block)))
+                if block.is_block_ours(self._node_id):
+                    self._logger.debug(
+                        "Since this block is ours, returning the transactions back to transaction pool")
+                    _txns = block.transactions
+                    self._txpool.return_transactions_to_pool(_txns)
+                del block
+                self._logger.debug("Block not valid! Not adding.")
+            else:
+                """
+                    validation_result -2 cannot happen, because block was taken from orphan pool and cannot be an 
+                    orphan again since predecessor is now in blockchain
+                """
+                self._logger.error('Unexpected block state')
+                self._orphan_lock.release()
+                raise ValueError
+
+        # Remove non_orphans from orphan_pool
+        self._orphan_blocks = {k: predecessor_is_in_blockchain[k] for k in
+                               set(predecessor_is_in_blockchain) - set(self._orphan_blocks)}
+        if len(
+                predecessor_is_in_blockchain) == 0:  # All orphans have predecessors not in blockchain, terminate recursion
+            self._orphan_lock.release()
+            return
+        else:  # Check if orphans got a parent in blockchain
+            self._check_for_orphans_with_parent(db_flag)
+            self._orphan_lock.release()
 
     def create_block(self, transactions):
         """Creates a new LogicalBlock instance.
