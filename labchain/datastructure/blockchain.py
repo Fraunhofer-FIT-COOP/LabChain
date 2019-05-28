@@ -492,11 +492,11 @@ class BlockChain:
                 self._logger.debug(
                     "Add block was unable to acquire orphan_lock")
                 raise TimeoutError
-            for orphan_block in self._orphan_blocks:
+            while len(self._orphan_blocks) > 0:  # TODO endless loop
+                oblock_hash, oblock = self._orphan_blocks.popitem()
                 self._logger.debug(
                     "Checks if this block is parent to orphan with id {}"
-                    .format(orphan_block))
-                oblock = self._orphan_blocks.pop(orphan_block)
+                        .format(oblock_hash))
                 self._orphan_lock.release()
                 self.add_block(block=oblock, db_flag=db_flag)
 

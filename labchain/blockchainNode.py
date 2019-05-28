@@ -1,28 +1,26 @@
 import json
 import logging
 import os
-from queue import Queue
 import sys
 import threading
 import time
 import uuid
+from queue import Queue
 
+from labchain.blockchainNodeBootstrap import Bootstrapper
+from labchain.consensus.consensus import Consensus
+from labchain.databaseInterface import Db
 from labchain.datastructure.block import Block
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.blockchain import BlockChain
-from labchain.blockchainNodeBootstrap import Bootstrapper
-from labchain.util.configReader import ConfigReader
-from labchain.util.configReader import ConfigReaderException
-from labchain.consensus.consensus import Consensus
-from labchain.util.cryptoHelper import CryptoHelper
+from labchain.datastructure.taskTransaction import TaskTransaction
+from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.datastructure.txpool import TxPool
 from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
-from labchain.datastructure.txpool import TxPool
-from labchain.databaseInterface import Db
-from labchain.datastructure.taskTransaction import WorkflowTransaction
-from labchain.datastructure.taskTransaction import TaskTransaction
-from labchain.datastructure.transaction import Transaction
-
+from labchain.util.configReader import ConfigReader
+from labchain.util.configReader import ConfigReaderException
+from labchain.util.cryptoHelper import CryptoHelper
 
 
 class BlockChainNode:
@@ -349,8 +347,6 @@ class BlockChainNode:
         # Create tables if not already
         self.db.create_tables()
 
-        self.q = Queue()
-
         self.blockchain_obj = BlockChain(node_id=node_id,
                                          tolerance_value=tolerance_value,
                                          pruning_interval=pruning_interval,
@@ -359,7 +355,7 @@ class BlockChainNode:
                                          crypto_helper_obj=self.crypto_helper_obj,
                                          min_blocks_for_difficulty=min_blocks,
                                          db=self.db,
-                                         q=self.q)
+                                         q=Queue())
 
         self.logger.debug("Initialized web server")
         """init network interface"""
