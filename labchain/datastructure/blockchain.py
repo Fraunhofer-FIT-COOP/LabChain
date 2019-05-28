@@ -469,8 +469,7 @@ class BlockChain:
         _curr_block_hash = block.get_computed_hash()
         _curr_block = block
 
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
-            self.calculate_diff(block.predecessor_hash)
+        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
 
         validity_level = block.validate_block(_latest_ts, _earliest_ts,
                                               _num_of_blocks,
@@ -529,11 +528,7 @@ class BlockChain:
                 "Add block was unable to acquire orphan_lock")
             raise TimeoutError
 
-        # Get block from orphan_pool that have predecessor in blockchain
-        predecessor_is_in_blockchain = {}
-        for orphan__predecessor_hash in self._orphan_blocks:
-            if orphan__predecessor_hash in self._blockchain:
-                predecessor_is_in_blockchain[orphan__predecessor_hash] = self._orphan_blocks[orphan__predecessor_hash]
+        predecessor_is_in_blockchain = self._get_orphans_with_predecessor_in_blockchain()
 
         # Add blocks with predecessor in blockchain to blockchain
         for predecessor_hash in predecessor_is_in_blockchain:
@@ -571,6 +566,13 @@ class BlockChain:
         else:  # Check if orphans got a parent in blockchain
             self._check_for_orphans_with_parent(db_flag)
             self._orphan_lock.release()
+
+    def _get_orphans_with_predecessor_in_blockchain(self):
+        _pred_is_in_blockchain = {}
+        for _orphan_predecessor_hash in self._orphan_blocks:
+            if _orphan_predecessor_hash in self._blockchain:
+                _pred_is_in_blockchain[_orphan_predecessor_hash] = self._orphan_blocks[_orphan_predecessor_hash]
+        return _pred_is_in_blockchain
 
     def create_block(self, transactions):
         """Creates a new LogicalBlock instance.
