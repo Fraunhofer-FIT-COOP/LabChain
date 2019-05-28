@@ -7,42 +7,52 @@ from labchain.datastructure.transaction import Transaction
 
 class TaskTransaction(Transaction):
 
-    def __init__(self, sender, receiver, payload, signature = None):
+    def __init__(self, sender, receiver, payload: Dict, signature=None):
         super().__init__(sender, receiver, payload, signature)
-        self.document = payload['document'] # document is a dict
-        self.in_charge = payload['in_charge']
+        self.document: Dict = payload['document']
+        self.in_charge: str = payload['in_charge']
         self.next_in_charge = payload['next_in_charge']
         self.workflowID = payload['workflow-id']
         self.previous_transaction = None
         self.workflow_transaction = None
         self.payload['transaction_type'] = '2'
 
-
-    def validate_transaction(self, crypto_helper):
+    def validate_transaction(self, crypto_helper) -> bool:
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: CryptoHelper object
-        :param result: Receive result of transaction validation.
         :return result: True if transaction is valid
         """
         if isinstance(self, WorkflowTransaction):
             return super().validate_transaction(crypto_helper)
-        previous_transaction = self.previous_transaction
-        workflow_transaction = self.workflow_transaction
-        if not previous_transaction:
-            owner_valid = True if workflow_transaction.receiver == self.sender else False
-        else:
-            owner_valid = True if previous_transaction.receiver == self.sender else False
+        # IMO we need access to the blockchain here, or at least to the networking_getters
+        previous_transaction: TaskTransaction = self.previous_transaction  # No idea what group-3 is thinking here
+        workflow_transaction: WorkflowTransaction = self.workflow_transaction  # No idea what group-3 is thinking here
+        if previous_transaction is None:
+            raise ValueError(
+                'Corrupted transaction, no previous_transaction found')
 
-        if not owner_valid:
-            logging.warning('Sender is not the current owner of the document flow!')
+        if not previous_transaction.receiver == self.sender:
+            logging.warning(
+                'Sender is not the receiver of the previous transaction!')
+            return False
+        if not previous_transaction.in_charge.split(sep='_')[0] == self.sender:
+            logging.warning(
+                'Sender is not the current owner of the document flow!')
+            return False
+        if not self.in_charge.split(sep='_')[0] == self.receiver:
+            logging.warning('Receiver does not correspond to in_charge flag')
             return False
         if not self._check_permissions_write():
             logging.warning('Sender has not the permission to write!')
             return False
         if not self._check_process_definition():
-            logging.warning('Transaction does not comply to process definition!')
+            logging.warning(
+                'Transaction does not comply to process definition!')
             return False
+
+        # TODO check for duplicate transactions
+
         return super().validate_transaction(crypto_helper)
 
     def _check_permissions_write(self):
@@ -50,9 +60,9 @@ class TaskTransaction(Transaction):
             return False
         permissions = self.workflow_transaction.permissions
         for attributeName in self.document:
-            if not attributeName in permissions:
+            if attributeName not in permissions:
                 return False
-            if not self.in_charge in permissions[attributeName]:
+            if self.in_charge not in permissions[attributeName]:
                 return False
         return True
 
@@ -61,9 +71,10 @@ class TaskTransaction(Transaction):
         if self.previous_transaction:
             if self.in_charge != self.previous_transaction.next_in_charge:
                 return False
-            if not self.in_charge in process_definition[self.previous_transaction.in_charge]:
+            if self.in_charge not in process_definition[
+                self.previous_transaction.in_charge]:
                 return False
-        if not self.next_in_charge in process_definition[self.in_charge]:
+        if self.next_in_charge not in process_definition[self.in_charge]:
             return False
         return True
 
@@ -85,14 +96,15 @@ class TaskTransaction(Transaction):
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
         return TaskTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'],data_dict['signature'])
+                               data_dict['payload'], data_dict['signature'])
+
 
 class WorkflowTransaction(TaskTransaction):
 
-    def __init__(self, sender, receiver, payload, signature = None):
+    def __init__(self, sender, receiver, payload: Dict, signature=None):
         super().__init__(sender, receiver, payload, signature)
-        self.processes = payload['processes'] # dict
-        self.permissions = payload['permissions'] # dict
+        self.processes: Dict = payload['processes']
+        self.permissions: Dict = payload['permissions']
         self.payload['transaction_type'] = '1'
 
     @staticmethod
@@ -103,4 +115,8 @@ class WorkflowTransaction(TaskTransaction):
     @staticmethod
     def from_dict(data_dict):
         return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'], data_dict['signature'])
+                                   data_dict['payload'], data_dict['signature'])
+
+    def validate_transaction(self, crypto_helper):
+        # TODO angeblich sollen wir hier was validieren, aber was eigentlich?
+        return super().validate_transaction(crypto_helper)
