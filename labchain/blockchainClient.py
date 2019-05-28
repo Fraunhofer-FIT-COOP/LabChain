@@ -1,8 +1,11 @@
 import os
+import json
 
+from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, BlockDoesNotExistException,NoPeersException
 from labchain.datastructure.transaction import Transaction
-from labchain.network.networking import TransactionDoesNotExistException, \
-    BlockDoesNotExistException, NoPeersException
+from labchain.datastructure.taskTransaction import WorkflowTransaction, TaskTransaction
+from labchain.datastructure.txpool import TxPool
+from labchain.util.cryptoHelper import CryptoHelper
 from labchain.util.Menu import Menu
 
 
@@ -232,16 +235,12 @@ class BlockchainClient:
             '2': ('Load by hash', self.__load_block, [True])
         }, 'Please select a value: ', 'Exit Load Block Menu')
         self.load_transaction_menu = Menu(['Load Transaction'], {
-            '1': ('Load by hash', self.__load_transaction_by_hash, []),
-            '2': ('Show Transaction Pool', self.__show_transaction_pool, []),
-            '3': ('Show n last transactions',
-                  self.__search_transaction_from_sender, []),
-            '4': ('Load by receiver\'s public key',
-                  self._show_transaction_by_public_key, ["receiver"]),
-            '5': ('Load by sender\'s public key',
-                  self._show_transaction_by_public_key, ["sender"]),
-            '6': ('Show all transactions',
-                  self._show_transaction_by_public_key, [])
+            '1': ('Load by hash', self.__load_transaction_by_hash,[]),
+            '2': ('Show Transaction Pool', self.__show_transaction_pool,[]),
+            '3': ('Show n last transactions', self.__load_n_last_transactions,[]),
+            '4': ('Load by receiver\'s public key', self._show_transaction_by_public_key,["receiver"]),
+            '5': ('Load by sender\'s public key', self._show_transaction_by_public_key,["sender"]),
+            '6': ('Show all transactions', self._show_transaction_by_public_key,[])
         }, 'Please select a value: ', 'Exit Load Transaction Menu')
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
