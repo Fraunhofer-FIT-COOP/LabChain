@@ -469,10 +469,9 @@ class BlockChain:
         _curr_block_hash = block.get_computed_hash()
         _curr_block = block
 
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
-        validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty, self)
-
         if _prev_hash in self._blockchain:
+            _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
+            validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty, self)
             if validity_level == 0:
                 return 0
             elif validity_level == -1:
@@ -481,11 +480,8 @@ class BlockChain:
                 return -1  # discard invalid blocks
             elif validity_level == -3:
                 return -1  # discard invalid blocks
-        else:  # isn't every block whose predecessor is not in the blockchain automatically an orphan? #TODO
-            if validity_level == -3:
-                return -2  # block might be orphan
-            else:
-                return -1
+        else:
+            return -2  # without predecessor it has to be an orphan
 
     def _add_block_to_blockchain(self, block: LogicalBlock, db_flag):
         """
