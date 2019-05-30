@@ -703,7 +703,7 @@ class BlockChain:
             raise TimeoutError
 
         _curr_time = datetime.now()
-        for _hash in self._orphan_blocks:
+        for _hash in self._orphan_blocks.copy():
             _block = self._orphan_blocks[_hash]
             _block_creation_time = datetime.fromtimestamp(_block.timestamp)
             _time_passed = (_curr_time - _block_creation_time).total_seconds()

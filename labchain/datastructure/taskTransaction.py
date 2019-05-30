@@ -11,7 +11,7 @@ class TaskTransaction(Transaction):
         super().__init__(sender, receiver, payload, signature)
         self.payload['transaction_type'] = '2'
 
-    def validate_transaction(self, crypto_helper, blockchain) -> bool:
+    def validate_transaction(self, crypto_helper, blockchain=None) -> bool:
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: CryptoHelper object
