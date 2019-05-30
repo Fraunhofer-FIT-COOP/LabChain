@@ -400,15 +400,15 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
-        # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
-            self._logger.debug("Add block was unable to acquire lock")
-            raise TimeoutError
-
         # Convert block to LogicalBlock if necessary
         if not isinstance(block, LogicalBlock):
             self._logger.debug("Converting block to logical block!")
             block = LogicalBlock.from_block(block, self._consensus)
+
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire(timeout=5):
+            self._logger.debug("Add block was unable to acquire lock")
+            raise TimeoutError
 
         if block.get_computed_hash() in self._blockchain:
             self._logger.debug("Hash already present in blockchain! Not adding.")

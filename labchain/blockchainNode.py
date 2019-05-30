@@ -74,6 +74,7 @@ class BlockChainNode:
         self.db = None
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
+        self.q = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             self.logger.debug("Read config file successfully!")
@@ -347,6 +348,8 @@ class BlockChainNode:
         # Create tables if not already
         self.db.create_tables()
 
+        self.q = Queue()
+
         self.blockchain_obj = BlockChain(node_id=node_id,
                                          tolerance_value=tolerance_value,
                                          pruning_interval=pruning_interval,
@@ -355,7 +358,7 @@ class BlockChainNode:
                                          crypto_helper_obj=self.crypto_helper_obj,
                                          min_blocks_for_difficulty=min_blocks,
                                          db=self.db,
-                                         q=Queue())
+                                         q=self.q)
 
         self.logger.debug("Initialized web server")
         """init network interface"""

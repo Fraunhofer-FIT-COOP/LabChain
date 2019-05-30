@@ -25,6 +25,9 @@ class TaskTransaction(Transaction):
         """
         if isinstance(self, WorkflowTransaction):
             return super().validate_transaction(crypto_helper)
+        if self.payload['transaction_type'] is not '2':
+            logging.warning('Transaction has wrong transaction type')
+            return False
         # IMO we need access to the blockchain here, or at least to the networking_getters
         previous_transaction: TaskTransaction = self.previous_transaction  # No idea what group-3 is thinking here
         workflow_transaction: WorkflowTransaction = self.workflow_transaction  # No idea what group-3 is thinking here
@@ -118,5 +121,8 @@ class WorkflowTransaction(TaskTransaction):
                                    data_dict['payload'], data_dict['signature'])
 
     def validate_transaction(self, crypto_helper):
+        if self.payload['transaction_type'] is not '1':
+            logging.warning('Transaction has wrong transaction type')
+            return False
         # TODO angeblich sollen wir hier was validieren, aber was eigentlich?
         return super().validate_transaction(crypto_helper)
