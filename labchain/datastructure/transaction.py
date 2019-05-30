@@ -58,7 +58,7 @@ class Transaction:
                 and self.payload == other.payload
                 and self.signature == other.signature)
 
-    def validate_transaction(self, crypto_helper) -> bool:
+    def validate_transaction(self, crypto_helper, blockchain) -> bool:
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: Crypto_Helper instance used for validation

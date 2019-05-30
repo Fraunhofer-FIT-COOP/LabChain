@@ -87,10 +87,10 @@ class TransactionTestCase(unittest.TestCase):
         'dGxQWXE4aE1ZaUZiT2hNUmNWK0lISzJ3dU1BPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t')
         real_receiver = "test"
         real_payload = "1"
-        true_signature = "OdnESUJkgdmFO2T3JpcS/LX88jNOjCsl/Zspx361rpkSt96TjR66rV8Jw6W4VOtCwYGknfzBPjiMvi0mG27u5Q=="
         my_transaction = Transaction(sender = real_pub_key, receiver = real_receiver, payload = real_payload)
         my_transaction.sign_transaction(crypto_helper, real_pr_key)
-        self.assertTrue(my_transaction.validate_transaction(crypto_helper))
+        """"For normal transactions, validation should not need a blockchain"""
+        self.assertTrue(my_transaction.validate_transaction(crypto_helper, None))
 
     def test_validate_transaction_false(self):
         """Test transaction validation"""
@@ -108,7 +108,7 @@ class TransactionTestCase(unittest.TestCase):
         real_payload = "testing fake sender"
         my_transaction = Transaction(sender=fake_sender, receiver=real_pub_key, payload=real_payload)
         my_transaction.sign_transaction(crypto_helper, real_pr_key)
-        self.assertFalse(my_transaction.validate_transaction(crypto_helper))
+        self.assertFalse(my_transaction.validate_transaction(crypto_helper, None))
 
     def test_set_signature(self):
         """Test for signature setting"""

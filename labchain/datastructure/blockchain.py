@@ -425,7 +425,7 @@ class BlockChain:
             if block.is_block_ours(self._node_id):
                 self._logger.debug("Since this block is ours, returning the transactions back to transaction pool")
                 _txns = block.transactions
-                self._txpool.return_transactions_to_pool(_txns)
+                self._txpool.return_transactions_to_pool(_txns, self)
             del block
             self._logger.debug("Block not valid! Not adding.")
             self._blockchain_lock.release()
@@ -470,7 +470,7 @@ class BlockChain:
         _curr_block = block
 
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
-        validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty)
+        validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty, self)
 
         if validity_level == -1:
             return -1  # discard invalid blocks
@@ -561,7 +561,7 @@ class BlockChain:
                 if block.is_block_ours(self._node_id):
                     self._logger.debug("Since this block is ours, returning the transactions back to transaction pool")
                     _txns = block.transactions
-                    self._txpool.return_transactions_to_pool(_txns)
+                    self._txpool.return_transactions_to_pool(_txns, self)
                 del block
                 self._logger.debug("Block not valid! Not adding.")
             else:
@@ -676,7 +676,7 @@ class BlockChain:
                     _b = self._blockchain.pop(_b_hash)
                     if _b.is_block_ours(self._node_id):
                         _txns = _b.transactions
-                        self._txpool.return_transactions_to_pool(_txns)
+                        self._txpool.return_transactions_to_pool(_txns, self)
                     _b_hash = _b.predecessor_hash
                     del _b
 
@@ -747,4 +747,4 @@ class BlockChain:
                             t.transaction_hash = thash
                     unmined_transactions = list(
                         set(self._active_mine_block.transactions).difference(set(block.transactions)))
-                self._txpool.return_transactions_to_pool(unmined_transactions)
+                self._txpool.return_transactions_to_pool(unmined_transactions, self)

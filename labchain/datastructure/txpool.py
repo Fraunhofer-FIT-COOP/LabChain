@@ -57,9 +57,10 @@ class TxPool:
             return True
         return False
 
-    def add_transaction_if_not_exist(self, transaction):
+    def add_transaction_if_not_exist(self, transaction, blockchain):
         if isinstance(transaction, Transaction):
-            if transaction not in self._transactions and transaction.validate_transaction(self._crypto_helper):
+            if transaction not in self._transactions and \
+                    transaction.validate_transaction(self._crypto_helper, blockchain):
                 if not transaction.transaction_hash:
                     hash_val = self._crypto_helper.hash(transaction.get_json())
                     transaction.transaction_hash = hash_val
@@ -73,8 +74,8 @@ class TxPool:
     def get_transaction_count(self):
         return len(self._transactions)
 
-    def return_transactions_to_pool(self, transactions):
+    def return_transactions_to_pool(self, transactions, blockchain):
         status = True
         for transaction in transactions:
-            status = status and self.add_transaction_if_not_exist(transaction)
+            status = status and self.add_transaction_if_not_exist(transaction, blockchain)
         return status

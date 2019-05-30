@@ -9,28 +9,20 @@ class TaskTransaction(Transaction):
 
     def __init__(self, sender, receiver, payload: Dict, signature=None):
         super().__init__(sender, receiver, payload, signature)
-        self.document: Dict = payload['document']
-        self.in_charge: str = payload['in_charge']
-        self.next_in_charge = payload['next_in_charge']
-        self.workflowID = payload['workflow-id']
-        self.previous_transaction = None
-        self.workflow_transaction = None
         self.payload['transaction_type'] = '2'
 
-    def validate_transaction(self, crypto_helper) -> bool:
+    def validate_transaction(self, crypto_helper, blockchain) -> bool:
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: CryptoHelper object
         :return result: True if transaction is valid
         """
-        if isinstance(self, WorkflowTransaction):
-            return super().validate_transaction(crypto_helper)
         if self.payload['transaction_type'] is not '2':
             logging.warning('Transaction has wrong transaction type')
             return False
-        # IMO we need access to the blockchain here, or at least to the networking_getters
-        previous_transaction: TaskTransaction = self.previous_transaction  # No idea what group-3 is thinking here
-        workflow_transaction: WorkflowTransaction = self.workflow_transaction  # No idea what group-3 is thinking here
+
+        previous_transaction = blockchain.get_transaction(self.payload['previous_transaction'])
+        workflow_transaction = blockchain.get_transaction(self.payload['workflow_transaction'])
         if previous_transaction is None:
             raise ValueError(
                 'Corrupted transaction, no previous_transaction found')
@@ -46,7 +38,7 @@ class TaskTransaction(Transaction):
         if not self.in_charge.split(sep='_')[0] == self.receiver:
             logging.warning('Receiver does not correspond to in_charge flag')
             return False
-        if not self._check_permissions_write():
+        if not self._check_permissions_write(workflow_transaction):
             logging.warning('Sender has not the permission to write!')
             return False
         if not self._check_process_definition():
@@ -58,10 +50,10 @@ class TaskTransaction(Transaction):
 
         return super().validate_transaction(crypto_helper)
 
-    def _check_permissions_write(self):
-        if not self.workflow_transaction:
+    def _check_permissions_write(self, workflow_transaction):
+        if not workflow_transaction:
             return False
-        permissions = self.workflow_transaction.permissions
+        permissions = workflow_transaction.permissions
         for attributeName in self.document:
             if attributeName not in permissions:
                 return False
@@ -69,13 +61,12 @@ class TaskTransaction(Transaction):
                 return False
         return True
 
-    def _check_process_definition(self):
-        process_definition = self.workflow_transaction.processes
-        if self.previous_transaction:
-            if self.in_charge != self.previous_transaction.next_in_charge:
+    def _check_process_definition(self, workflow_transaction, previous_transaction):
+        process_definition = workflow_transaction.processes
+        if previous_transaction:
+            if self.in_charge != previous_transaction.next_in_charge:
                 return False
-            if self.in_charge not in process_definition[
-                self.previous_transaction.in_charge]:
+            if self.in_charge not in process_definition[previous_transaction.in_charge]:
                 return False
         if self.next_in_charge not in process_definition[self.in_charge]:
             return False
@@ -88,6 +79,22 @@ class TaskTransaction(Transaction):
         #     return True
         # return False
         pass
+
+    @property
+    def document(self):
+        return self.payload['document']
+
+    @property
+    def in_charge(self):
+        return self.payload['in_charge']
+
+    @property
+    def next_in_charge(self):
+        return self.payload['next_in_charge']
+
+    @property
+    def workflow_ID(self):
+        return self.payload['next_in_charge']
 
     @staticmethod
     def from_json(json_data):
@@ -106,8 +113,6 @@ class WorkflowTransaction(TaskTransaction):
 
     def __init__(self, sender, receiver, payload: Dict, signature=None):
         super().__init__(sender, receiver, payload, signature)
-        self.processes: Dict = payload['processes']
-        self.permissions: Dict = payload['permissions']
         self.payload['transaction_type'] = '1'
 
     @staticmethod
@@ -120,9 +125,17 @@ class WorkflowTransaction(TaskTransaction):
         return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
                                    data_dict['payload'], data_dict['signature'])
 
-    def validate_transaction(self, crypto_helper):
+    def validate_transaction(self, crypto_helper, blockchain):
         if self.payload['transaction_type'] is not '1':
             logging.warning('Transaction has wrong transaction type')
             return False
         # TODO angeblich sollen wir hier was validieren, aber was eigentlich?
         return super().validate_transaction(crypto_helper)
+
+    @property
+    def processes(self):
+        return self.payload['processes']
+
+    @property
+    def permissions(self):
+        return self.payload['permissions']
