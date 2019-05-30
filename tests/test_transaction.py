@@ -174,147 +174,7 @@ class TransactionTestCase(unittest.TestCase):
                          , capturedOutput.getvalue())
 
 
-class TaskTransactionTestCase(unittest.TestCase):
-
-    def test_to_dict(self):
-        task_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None,
-            "payload": {
-                "workflow-id": "0",
-                "document": {
-                    "stringAttribute": "1234"
-                },
-                "in_charge": "PID_2",
-                "next_in_charge": "PID_3",
-            }
-        }
-        transaction: TaskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
-        self.assertTrue(isinstance(transaction, TaskTransaction))
-        data_dict = transaction.to_dict()
-        self.assertEqual(data_dict['sender'], transaction.sender)
-        self.assertEqual(data_dict['receiver'], transaction.receiver)
-        self.assertEqual(data_dict['payload'], transaction.payload)
-        self.assertEqual(data_dict['signature'], transaction.signature)
-        self.assertEqual(data_dict['payload']['document'], transaction.document)
-        self.assertEqual(data_dict['payload']['in_charge'], transaction.in_charge)
-
-    def test_permissions_write(self):
-        workflow_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None,
-            "payload": {
-                "workflow-id": "0",
-                "document": {
-                    "stringAttribute": "stringValue",
-                    "booleanAttribute": 'true',
-                    "integerAttribute": 1,
-                    "floatAttributes": 1.5
-                },
-                "in_charge": "PID_0",
-                "next_in_charge": "PID_1",
-                "processes": {
-                    "PID_4": ["PID_5"],
-                    "PID_2": ["PID_3"],
-                    "PID_3": ["PID_4"],
-                    "PID_1": ["PID_2"]
-                },
-                "permissions": {
-                    "stringAttribute": ["PID_1", "PID_2", "PID_3"],
-                    "booleanAttribute": ["PID_5"],
-                    "integerAttribute": ["PID_4"],
-                    "floatAttributes": ["PID_2"]
-                }
-            }
-        }
-        workflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
-
-        task_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None,
-            "payload": {
-                "workflow-id": "0",
-                "document": {
-                    "stringAttribute": "1234"
-                },
-                "in_charge" : "PID_2",
-                "next_in_charge": "PID_3"
-            }
-        }
-        taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
-
-        self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction))
-
-    def test_process_definition(self):
-        workflow_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None,
-            "payload": {
-                "workflow-id": "0",
-                "document": {
-                    "stringAttribute": "stringValue",
-                    "booleanAttribute": 'true',
-                    "integerAttribute": 1,
-                    "floatAttributes": 1.5
-                },
-                "in_charge": "PID_0",
-                "next_in_charge": "PID_1",
-                "processes": {
-                    "PID_4": ["PID_5"],
-                    "PID_2": ["PID_3"],
-                    "PID_3": ["PID_4"],
-                    "PID_1": ["PID_2"]
-                },
-                "permissions": {
-                    "stringAttribute": ["PID_1", "PID_2", "PID_3"],
-                    "booleanAttribute": ["PID_5"],
-                    "integerAttribute": ["PID_4"],
-                    "floatAttributes": ["PID_2"]
-                }
-            }
-        }
-        workflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
-
-        prev_task_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None,
-            "payload": {
-                "workflow-id": "0",
-                "document": {
-                    "stringAttribute": "1234"
-                },
-                "in_charge": "PID_1",
-                "next_in_charge": "PID_2",
-            }
-        }
-        prev_task_transaction = TaskTransaction.from_json(json.dumps(prev_task_transaction_json))
-
-        task_transaction_json = {
-            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFSWQ2TWtGMEhLQkRIVUthZHlWdDVtYkRzWjhLaApyYVFFOXBPcVowL0NWSEdRS2dhd0ZPL1NQVTF6akdjVE1JeFRKNEFFUkQ4L3V2Y2lNMlFKVzdWbzB3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
-            "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
-            "signature": None,
-            "payload": {
-                "workflow-id": "0",
-                "document": {
-                    "stringAttribute": "1234"
-                },
-                "in_charge": "PID_2",
-                "next_in_charge": "PID_3",
-            }
-        }
-
-        taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
-
-        self.assertTrue(taskTransaction._check_process_definition(workflowTransaction, prev_task_transaction))
-
-
-class WorkflowTransactionTestCase(unittest.TestCase):
-
+class TaskTransactionCommon(unittest.TestCase):
     def setUp(self):
         self.init_blockchain();
 
@@ -380,13 +240,81 @@ class WorkflowTransactionTestCase(unittest.TestCase):
         return workflow_transaction_json
 
     @staticmethod
-    def getDummyWorkflow() -> WorkflowTransaction:
-        workflow_transaction_json = WorkflowTransactionTestCase.getDummyWorkflowJson()
+    def getDummyWorkflow(sender_key, receiver_key) -> WorkflowTransaction:
+        workflow_transaction_json = WorkflowTransactionTestCase.getDummyWorkflowJson(sender_key, receiver_key)
         transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
         return transaction
 
+    @staticmethod
+    def getDummyTask(sender_key, receiver_key, in_charge, next_in_charge):
+        task_transaction_json = {
+            "receiver": receiver_key,
+            "sender": sender_key,
+            "signature": None,
+            "payload": {
+                "workflow-id": "0",
+                "document": {
+                    "stringAttribute": "1234"
+                },
+                "in_charge": in_charge,
+                "next_in_charge": next_in_charge,
+            }
+        }
+        return task_transaction_json
+
+
+class TaskTransactionTestCase(TaskTransactionCommon):
+
     def test_to_dict(self):
-        transaction: WorkflowTransaction = WorkflowTransactionTestCase.getDummyWorkflow()
+        pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
+        pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
+        task_transaction_json = self.getDummyTask(pu_key1, pu_key2, "PID_2", "PID_3")
+        transaction: TaskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+        self.assertTrue(isinstance(transaction, TaskTransaction))
+        data_dict = transaction.to_dict()
+        self.assertEqual(data_dict['sender'], transaction.sender)
+        self.assertEqual(data_dict['receiver'], transaction.receiver)
+        self.assertEqual(data_dict['payload'], transaction.payload)
+        self.assertEqual(data_dict['signature'], transaction.signature)
+        self.assertEqual(data_dict['payload']['document'], transaction.document)
+        self.assertEqual(data_dict['payload']['in_charge'], transaction.in_charge)
+
+    def test_permissions_write(self):
+        pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
+        pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
+        workflow_transaction_json = self.getDummyWorkflowJson(pu_key1, pu_key2)
+        workflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
+
+        pr_key3, pu_key3 = self.crypto_helper_obj.generate_key_pair()
+        task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "PID_2", "PID_3")
+        taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+
+        self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction))
+
+    def test_process_definition(self):
+        pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
+        pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
+        workflow_transaction_json = self.getDummyWorkflowJson(pu_key1, pu_key2)
+        workflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
+
+        pr_key3, pu_key3 = self.crypto_helper_obj.generate_key_pair()
+        prev_task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "PID_1", "PID_2")
+        prev_task_transaction = TaskTransaction.from_json(json.dumps(prev_task_transaction_json))
+
+        pr_key4, pu_key4 = self.crypto_helper_obj.generate_key_pair()
+        task_transaction_json = self.getDummyTask(pu_key3, pu_key4, "PID_2", "PID_3")
+
+        taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+
+        self.assertTrue(taskTransaction._check_process_definition(workflowTransaction, prev_task_transaction))
+
+
+class WorkflowTransactionTestCase(TaskTransactionCommon):
+
+    def test_to_dict(self):
+        pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
+        pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
+        transaction: WorkflowTransaction = WorkflowTransactionTestCase.getDummyWorkflow(pu_key1, pu_key2)
         self.assertTrue(isinstance(transaction, WorkflowTransaction))
         data_dict = transaction.to_dict()
         self.assertEqual(data_dict['sender'], transaction.sender)
@@ -535,6 +463,7 @@ class WorkflowTransactionTestCase(unittest.TestCase):
         transaction.sign_transaction(self.crypto_helper_obj, pr_key1)
         result = transaction.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
         self.assertTrue(result)
+
 
 if __name__ == '__main__':
     unittest.main()
