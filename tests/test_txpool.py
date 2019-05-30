@@ -8,6 +8,7 @@ from labchain.datastructure.blockchain import BlockChain
 from labchain.util.configReader import ConfigReader
 from labchain.consensus.consensus import Consensus
 
+
 class TxPoolTestCase(unittest.TestCase):
     """Class of testcases for the TxPool module"""
 
@@ -29,13 +30,13 @@ class TxPoolTestCase(unittest.TestCase):
         consensus = Consensus()
         self.block_list = []
         self.blockchain_obj = BlockChain(node_id="nodeId1", tolerance_value=tolerance,
-                                     pruning_interval=pruning,
-                                     consensus_obj=consensus,
-                                     txpool_obj=self._txPoolObj,
-                                     crypto_helper_obj=self.crypto_helper_obj,
-                                     min_blocks_for_difficulty=min_blocks,
-                                     db=None,
-                                     q=None)
+                                         pruning_interval=pruning,
+                                         consensus_obj=consensus,
+                                         txpool_obj=self._txPoolObj,
+                                         crypto_helper_obj=self.crypto_helper_obj,
+                                         min_blocks_for_difficulty=min_blocks,
+                                         db=None,
+                                         q=None)
 
     def setUp(self):
         self.crypto_helper_obj = CryptoHelper.instance()
@@ -153,6 +154,7 @@ class TxPoolTestCase(unittest.TestCase):
         hash_val = t1.transaction_hash
         transaction = self._txPoolObj.get_transaction_by_hash(hash_val)[0]
         self.assertEqual(t1, transaction)
+
 
 if __name__ == '__main__':
     unittest.main()

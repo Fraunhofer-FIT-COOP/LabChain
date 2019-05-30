@@ -12,7 +12,6 @@ from labchain.util.cryptoHelper import CryptoHelper as crypto
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.txpool import TxPool
 
-
 logger = logging.getLogger()
 logger.level = logging.DEBUG
 stream_handler = logging.StreamHandler(sys.stdout)
@@ -108,7 +107,8 @@ class BlockChainComponent(unittest.TestCase):
         previous_granular_factor = self.consensus.granular_factor
         self.consensus.granular_factor = 0.25
         block1: Block = Block(block_id=42, merkle_tree_root=None,
-                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc', # Hash of genesis block
+                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc',
+                              # Hash of genesis block
                               block_creator_id=42, transactions=[],
                               nonce=42)
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
@@ -131,7 +131,8 @@ class BlockChainComponent(unittest.TestCase):
         previous_granular_factor = self.consensus.granular_factor
         self.consensus.granular_factor = 0.25
         block1 = LogicalBlock(block_id=23, merkle_tree_root=None,
-                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc', # Hash of genesis block
+                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc',
+                              # Hash of genesis block
                               block_creator_id=23, transactions=[], nonce=23,
                               consensus_obj=self.consensus)
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
@@ -142,7 +143,8 @@ class BlockChainComponent(unittest.TestCase):
                             num_of_blocks=_num_of_blocks,
                             prev_difficulty=0)
         block2 = LogicalBlock(block_id=42, merkle_tree_root=None,
-                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc', # Hash of genesis block
+                              predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc',
+                              # Hash of genesis block
                               block_creator_id=42, transactions=[], nonce=42,
                               consensus_obj=self.consensus)
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
@@ -160,8 +162,8 @@ class BlockChainComponent(unittest.TestCase):
 
         block3 = None
         for i in range(1, 3):
-            block3 = LogicalBlock(block_id=42+i, merkle_tree_root=None,
-                                  predecessor_hash=block2.get_computed_hash(), # Hash of genesis block
+            block3 = LogicalBlock(block_id=42 + i, merkle_tree_root=None,
+                                  predecessor_hash=block2.get_computed_hash(),  # Hash of genesis block
                                   block_creator_id=42, transactions=[],
                                   nonce=42, consensus_obj=self.consensus)
             _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \

@@ -11,15 +11,16 @@ from labchain.util.configReader import ConfigReader
 from labchain.databaseInterface import Db
 
 test_resources_dic_path = os.path.abspath(os.path.join(os.path.dirname(__file__), './resources'))
-test_db_file            = test_resources_dic_path + '/labchaindb.sqlite'
-test_node_config_file   = test_resources_dic_path + '/node_configuration.ini'
+test_db_file = test_resources_dic_path + '/labchaindb.sqlite'
+test_node_config_file = test_resources_dic_path + '/node_configuration.ini'
+
 
 class DbTestCase(unittest.TestCase):
-     
+
     def setUp(self):
         self.database = Db(test_db_file)
         self.init_components()
-    
+
     def init_components(self):
         config_reader = ConfigReader(test_node_config_file)
 
@@ -53,25 +54,25 @@ class DbTestCase(unittest.TestCase):
     def test_save_block(self):
         block = self.get_block()
         self.assertTrue(self.database.save_block(block))
-        self.assertEqual(self.database.get_blockchain_from_db()[0],block)
+        self.assertEqual(self.database.get_blockchain_from_db()[0], block)
 
     def test_workflow_transaction(self):
         workflow_block = self.get_workflow_block()
         self.assertTrue(self.database.save_block(workflow_block))
-        self.assertIsInstance(self.database.get_blockchain_from_db()[1].transactions[0],WorkflowTransaction)
+        self.assertIsInstance(self.database.get_blockchain_from_db()[1].transactions[0], WorkflowTransaction)
 
     def get_block(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()
         pr_key2, pub_key2 = self.crypto_helper_obj.generate_key_pair()
         self.txn1 = Transaction(pub_key1, pub_key2, "Payload1")
         self.txn1.sign_transaction(self.crypto_helper_obj, pr_key1)
-        self.txn1.transaction_hash=self.crypto_helper_obj.hash(self.txn1.get_json())
+        self.txn1.transaction_hash = self.crypto_helper_obj.hash(self.txn1.get_json())
         return self.blockchain.create_block([self.txn1])
 
     def get_workflow_block(self):
         pr_key1, pub_key1 = self.crypto_helper_obj.generate_key_pair()
         pr_key2, pub_key2 = self.crypto_helper_obj.generate_key_pair()
-        payload =   {}
+        payload = {}
         payload['document'] = {}
         payload['in_charge'] = ''
         payload['next_in_charge'] = ''
@@ -80,7 +81,7 @@ class DbTestCase(unittest.TestCase):
         payload['permissions'] = {}
         self.txn1 = WorkflowTransaction(pub_key1, pub_key2, payload)
         self.txn1.sign_transaction(self.crypto_helper_obj, pr_key1)
-        self.txn1.transaction_hash=self.crypto_helper_obj.hash(self.txn1.get_json())
+        self.txn1.transaction_hash = self.crypto_helper_obj.hash(self.txn1.get_json())
         return self.blockchain.create_block([self.txn1])
 
     @classmethod
@@ -88,6 +89,7 @@ class DbTestCase(unittest.TestCase):
         # clean up test database
         if os.path.exists(test_db_file):
             os.remove(test_db_file)
-        
+
+
 if __name__ == '__main__':
     unittest.main()
