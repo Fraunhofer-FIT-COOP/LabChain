@@ -21,8 +21,8 @@ class TaskTransaction(Transaction):
             logging.warning('Transaction has wrong transaction type')
             return False
 
-        previous_transaction = blockchain.get_transaction(self.payload['previous_transaction'])
-        workflow_transaction = blockchain.get_transaction(self.payload['workflow_transaction'])
+        previous_transaction = blockchain.get_transaction(self.previous_transaction)
+        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)
         if previous_transaction is None:
             raise ValueError(
                 'Corrupted transaction, no previous_transaction found')
@@ -94,7 +94,15 @@ class TaskTransaction(Transaction):
 
     @property
     def workflow_ID(self):
-        return self.payload['next_in_charge']
+        return self.payload['workflow-id']
+
+    @property
+    def previous_transaction(self):
+        return self.payload['previous_transaction']
+
+    @property
+    def workflow_transaction(self):
+        return self.payload['workflow_transaction']
 
     @staticmethod
     def from_json(json_data):

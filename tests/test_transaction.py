@@ -236,13 +236,12 @@ class TaskTransactionTestCase(unittest.TestCase):
                     "stringAttribute":"1234"
                 },
                 "in_charge" : "PID_2",
-                "next_in_charge": "PID_3",
+                "next_in_charge": "PID_3"
             }
         }
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
-        taskTransaction.workflow_transaction = workflowTransaction
 
-        self.assertEqual(taskTransaction._check_permissions_write(),True)
+        self.assertEqual(taskTransaction._check_permissions_write(workflowTransaction), True)
 
 
     def test_process_defintion(self):
@@ -307,10 +306,8 @@ class TaskTransactionTestCase(unittest.TestCase):
         }
 
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
-        taskTransaction.workflow_transaction = workflowTransaction
-        taskTransaction.previous_transaction = prev_task_transaction
 
-        self.assertEqual(taskTransaction._check_process_definition(),True)
+        self.assertEqual(taskTransaction._check_process_definition(workflowTransaction, prev_task_transaction), True)
 
 class WorkflowTransactionTestCase(unittest.TestCase):
     
