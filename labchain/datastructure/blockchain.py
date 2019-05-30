@@ -104,7 +104,7 @@ class BlockChain:
         if range_start or range_end is not found in chain, returns None
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug("get_block_by_range was unable to acquire lock")
             raise TimeoutError
 
@@ -132,7 +132,7 @@ class BlockChain:
     def get_block_by_id(self, block_id):
         """Returns the block if found in blockchain, else returns None"""
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug("get_block_by_id was unable to acquire lock")
             raise TimeoutError
 
@@ -159,7 +159,7 @@ class BlockChain:
 
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug("get_block_by_hash was unable to acquire lock")
             raise TimeoutError
 
@@ -182,7 +182,7 @@ class BlockChain:
             (Transaction obj, Block_hash)
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug("get_transaction was unable to acquire lock")
             raise TimeoutError
 
@@ -208,7 +208,7 @@ class BlockChain:
             (Transaction obj, Block_hash)
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug(
                 "get_all_transactions was unable to acquire lock")
             raise TimeoutError
@@ -223,7 +223,7 @@ class BlockChain:
 
     def search_transaction_from_receiver(self, receiver_public_key):
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug(
                 "search_transaction_from_receiver was unable to acquire lock")
             raise TimeoutError
@@ -239,7 +239,7 @@ class BlockChain:
 
     def search_transaction_from_sender(self, sender_public_key):
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug(
                 "search_transaction_from_sender was unable to acquire lock")
             raise TimeoutError
@@ -255,7 +255,7 @@ class BlockChain:
 
     def get_task_transactions(self):
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug(
                 "get_task_transactions was unable to acquire lock")
             raise TimeoutError
@@ -271,7 +271,7 @@ class BlockChain:
 
     def get_workflow_transactions(self):
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug(
                 "get_workflow_transaction was unable to acquire lock")
             raise TimeoutError
@@ -295,7 +295,7 @@ class BlockChain:
         array of transactions
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug(
                 "get_n_last_transactions was unable to acquire lock")
             raise TimeoutError
@@ -335,7 +335,7 @@ class BlockChain:
             difficulty of the latest block
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug("calculate_diff was unable to acquire lock")
             raise TimeoutError
 
@@ -406,7 +406,7 @@ class BlockChain:
             block = LogicalBlock.from_block(block, self._consensus)
 
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug("Add block was unable to acquire lock")
             raise TimeoutError
 
@@ -472,16 +472,20 @@ class BlockChain:
         _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
         validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty, self)
 
-        if validity_level == -1:
-            return -1  # discard invalid blocks
-        elif validity_level == -2:
-            return -1  # discard invalid blocks
-        elif validity_level == -3 and _prev_hash in self._blockchain:
-            return -1  # discard invalid block
-        elif validity_level == -3 and _prev_hash not in self._blockchain:
-            return -2  # block might be orphan
-        else:
-            return 0
+        if _prev_hash in self._blockchain:
+            if validity_level == 0:
+                return 0
+            elif validity_level == -1:
+                return -1  # discard invalid blocks
+            elif validity_level == -2:
+                return -1  # discard invalid blocks
+            elif validity_level == -3:
+                return -1  # discard invalid blocks
+        else:  # isn't every block whose predecessor is not in the blockchain automatically an orphan? #TODO
+            if validity_level == -3:
+                return -2  # block might be orphan
+            else:
+                return -1
 
     def _add_block_to_blockchain(self, block: LogicalBlock, db_flag):
         """
@@ -489,7 +493,7 @@ class BlockChain:
         :param block:   the block to be added to the blockchain
         :param db_flag: True, if block should be added to database
         """
-        _prev_block = self._blockchain.get(block.predecessor_hash)
+        _prev_block: LogicalBlock = self._blockchain.get(block.predecessor_hash)
         _prev_block_pos = _prev_block.get_block_pos()
 
         if block.predecessor_hash in self._current_branch_heads:
@@ -518,7 +522,7 @@ class BlockChain:
         """
         self._logger.debug("Block has been put to orphan pool, since predecessor was not found")
         # Protection mechanism for multithreading
-        if not self._orphan_lock.acquire(timeout=5):
+        if not self._orphan_lock.acquire():
             self._logger.debug("Add block was unable to acquire orphan_lock")
             raise TimeoutError
         """
@@ -542,7 +546,7 @@ class BlockChain:
         :raises ValueError if orphan is still considered in orphan although predecessor is in blockchain
         """
         # Protection mechanism for multithreading
-        if not self._orphan_lock.acquire(timeout=5):
+        if not self._orphan_lock.acquire():
             self._logger.debug(
                 "Add block was unable to acquire orphan_lock")
             raise TimeoutError
@@ -610,7 +614,7 @@ class BlockChain:
 
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug("create_block was unable to acquire lock")
             raise TimeoutError
 
@@ -632,7 +636,7 @@ class BlockChain:
 
         """
         # Protection mechanism for multithreading
-        if not self._blockchain_lock.acquire(timeout=5):
+        if not self._blockchain_lock.acquire():
             self._logger.debug(
                 "Switch_to_longest_branch was unable to acquire lock")
             raise TimeoutError
@@ -694,7 +698,7 @@ class BlockChain:
         interval as defined in config has crossed
         """
         # Protection mechanism for multithreading
-        if not self._orphan_lock.acquire(timeout=5):
+        if not self._orphan_lock.acquire():
             self._logger.debug("get_block_by_hash was unable to acquire lock")
             raise TimeoutError
 
