@@ -3,7 +3,7 @@ import os
 
 from labchain.datastructure.blockchain import BlockChain
 from labchain.consensus.consensus import Consensus
-from labchain.util.cryptoHelper import CryptoHelper as crypto
+from labchain.util.cryptoHelper import CryptoHelper
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.taskTransaction import WorkflowTransaction
 from labchain.datastructure.txpool import TxPool
@@ -35,7 +35,7 @@ class DbTestCase(unittest.TestCase):
             option='NUM_OF_BLOCKS_FOR_DIFFICULTY')
 
         self.consensus = Consensus()
-        self.crypto_helper_obj = crypto.instance()
+        self.crypto_helper_obj = CryptoHelper.instance()
         self.txpool = TxPool(self.crypto_helper_obj)
         self.block_list = []
         self.blockchain = BlockChain(node_id="nodeId1", tolerance_value=tolerance,

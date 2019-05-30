@@ -241,9 +241,9 @@ class TaskTransactionTestCase(unittest.TestCase):
         }
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
 
-        self.assertEqual(taskTransaction._check_permissions_write(workflowTransaction), True)
+        self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction))
 
-    def test_process_defintion(self):
+    def test_process_definition(self):
         workflow_transaction_json = {
             "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
             "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
@@ -305,7 +305,7 @@ class TaskTransactionTestCase(unittest.TestCase):
 
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
 
-        self.assertEqual(taskTransaction._check_process_definition(workflowTransaction, prev_task_transaction), True)
+        self.assertTrue(taskTransaction._check_process_definition(workflowTransaction, prev_task_transaction))
 
 
 class WorkflowTransactionTestCase(unittest.TestCase):

@@ -150,7 +150,7 @@ class CommonTestCase(TestCase):
     def get_transactions_in_pool(self):
         return list(self.available_transactions.values())
 
-    def empty_function():
+    def empty_function(self):
         """Empty function for unneeded functionality."""
         pass
 
