@@ -346,12 +346,12 @@ class ManageWalletTestCase(CommonTestCase):
         self.client.wallet["test key 2"] = (pub_key, pr_key)
 
         # when
-        self.queue_input('1') # Manage Wallet
-        self.queue_input('3') # Delete Address
-        self.queue_input('2') # Select '2' address
-        self.queue_input('') # Press enter
-        self.queue_input('q') # Exit Wallet menue
-        self.queue_input('q') # Exit blockchain client
+        self.queue_input('1')  # Manage Wallet
+        self.queue_input('3')  # Delete Address
+        self.queue_input('2')  # Select '2' address
+        self.queue_input('')  # Press enter
+        self.queue_input('q')  # Exit Wallet menue
+        self.queue_input('q')  # Exit blockchain client
         self.client.main()
         # then
         addresses = self.get_wallet_key_pairs()
@@ -372,7 +372,7 @@ class CreateTransactionTestCase(CommonTestCase):
         receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
         self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
         self.client.wallet['Receiver'] = (
-        receiver_public_key, receiver_private_key)
+            receiver_public_key, receiver_private_key)
         payload = json.dumps({
             'sender': sender_public_key,
             'receiver': receiver_public_key,
@@ -406,7 +406,7 @@ class CreateTransactionTestCase(CommonTestCase):
         receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
         self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
         self.client.wallet['Receiver'] = (
-        receiver_public_key, receiver_private_key)
+            receiver_public_key, receiver_private_key)
         # when
         self.queue_input('2')
         self.queue_input('3')
@@ -430,7 +430,7 @@ class CreateTransactionTestCase(CommonTestCase):
         receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
         self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
         self.client.wallet['Receiver'] = (
-        receiver_public_key, receiver_private_key)
+            receiver_public_key, receiver_private_key)
         # when
         self.queue_input('2')
         self.queue_input('2')
@@ -454,7 +454,7 @@ class CreateTransactionTestCase(CommonTestCase):
         receiver_private_key, receiver_public_key = self.crypto_helper.generate_key_pair()
         self.client.wallet['Sender'] = (sender_public_key, sender_private_key)
         self.client.wallet['Receiver'] = (
-        receiver_public_key, receiver_private_key)
+            receiver_public_key, receiver_private_key)
         # when
         self.queue_input('2')
         self.queue_input('2')
