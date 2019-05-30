@@ -62,6 +62,7 @@ class Transaction:
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: Crypto_Helper instance used for validation
+        :param blockchain: Blockchain object
         :returns: Receives result of transaction validation.
         """
         data = json.dumps({
