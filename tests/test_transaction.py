@@ -310,7 +310,8 @@ class TaskTransactionTestCase(unittest.TestCase):
 
 class WorkflowTransactionTestCase(unittest.TestCase):
 
-    def test_to_dict(self):
+    @staticmethod
+    def getDummyWorkflowJson():
         workflow_transaction_json = {
             "receiver": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
             "sender": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ0lCVW01RnpJRjF6T1BBa2MKNERxdUU1cWhYeE9KTk0ybmFXTHVRV0NBL0V1aFJBTkNBQVRrU0lyeiswNkJua3FhcjBiTGpsZVVOSEN1ZWR2eAo0ZkxqZms1WmsreTdiSDBOb2Q3SGRYYnZpUmdRQ3ZzczZDMkhMUFRKSzdYV2NSK1FDNTlid3NaKwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t",
@@ -339,7 +340,16 @@ class WorkflowTransactionTestCase(unittest.TestCase):
                 }
             }
         }
+        return workflow_transaction_json
+
+    @staticmethod
+    def getDummyWorkflow() -> WorkflowTransaction:
+        workflow_transaction_json = WorkflowTransactionTestCase.getDummyWorkflowJson()
         transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
+        return transaction
+
+    def test_to_dict(self):
+        transaction: WorkflowTransaction = WorkflowTransactionTestCase.getDummyWorkflow()
         self.assertTrue(isinstance(transaction, WorkflowTransaction))
         data_dict = transaction.to_dict()
         self.assertEqual(data_dict['sender'], transaction.sender)
@@ -351,6 +361,15 @@ class WorkflowTransactionTestCase(unittest.TestCase):
         self.assertEqual(data_dict['payload']['processes'], transaction.processes)
         self.assertEqual(data_dict['payload']['permissions'], transaction.permissions)
 
+
+    def _ignore_test_wft_wrong_in_charge(self):
+        json_dict = WorkflowTransactionTestCase.getDummyWorkflowJson()
+        json_dict['in_charge'] = 'PID_0_1' #wrong PID format
+
+        transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(json_dict))
+        bchain = None  # TODO fill
+        result = transaction.validate_transaction(CryptoHelper.instance(), bchain)
+        self.assertFalse(result)
 
 if __name__ == '__main__':
     unittest.main()
