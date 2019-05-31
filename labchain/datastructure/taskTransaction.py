@@ -5,7 +5,6 @@ from typing import Dict
 
 from Crypto.PublicKey import ECC
 
-from labchain.datastructure.blockchain import BlockChain
 from labchain.datastructure.transaction import Transaction
 
 
@@ -90,7 +89,7 @@ class TaskTransaction(Transaction):
                 return False
         return True
 
-    def _check_for_duplicate_transactions(self, blockchain: BlockChain):
+    def _check_for_duplicate_transactions(self, blockchain):
         parallel_transactions = list(
             set(blockchain.search_transaction_from_sender(self.sender))
             & set(blockchain.search_transaction_to_receiver(self.receiver)))
