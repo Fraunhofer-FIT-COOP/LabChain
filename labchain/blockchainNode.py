@@ -210,6 +210,7 @@ class BlockChainNode:
         return None
 
     def on_new_transaction_received(self, transaction):
+<<<<<<< Updated upstream
         if isinstance(transaction, WorkflowTransaction):
             self.logger.warning ('Recived workflow transaction')
             return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
@@ -235,6 +236,13 @@ class BlockChainNode:
             self.logger.warning ("Task transaction validation result {}".format(result))
             return result
         return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
+=======
+        validation_result = self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
+        self.logger.warning("----------------------------------------------")
+        self.logger.warning("Validation Result {}".format(validation_result))
+        self.logger.warning("----------------------------------------------")
+        return validation_result
+>>>>>>> Stashed changes
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""

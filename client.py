@@ -7,6 +7,7 @@ from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
 from labchain.blockchainClient import Wallet, BlockchainClient
 from labchain.documentFlowClient import DocumentFlowClient
+from labchain.workflowClient import WorkflowClient
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -29,7 +30,7 @@ def create_client(wallet_file, node_ip, node_port):
 def create_document_flow_client(wallet_file, node_ip, node_port):
     crypto_helper = CryptoHelper.instance()
     network_interface = ClientNetworkInterface(JsonRpcClient(), {node_ip: {node_port: {}}})
-    return DocumentFlowClient(Wallet(wallet_file), network_interface, crypto_helper)
+    return WorkflowClient(Wallet(wallet_file), network_interface, crypto_helper)
 
 
 def setup_logging(verbose, very_verbose):

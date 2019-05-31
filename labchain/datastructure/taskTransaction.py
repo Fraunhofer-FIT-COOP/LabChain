@@ -59,6 +59,7 @@ class TaskTransaction(Transaction):
         return super().validate_transaction(crypto_helper, blockchain)
 
     def _check_permissions_write(self, workflow_transaction):
+        import pdb; pdb.set_trace()
         if not workflow_transaction:
             return False
         permissions = workflow_transaction.permissions
