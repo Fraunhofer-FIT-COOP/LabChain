@@ -34,22 +34,31 @@ class TaskTransaction(Transaction):
                 'Corrupted transaction, no previous_transaction found')
 
         if self.workflow_ID != previous_transaction.workflow_ID:
-            logging.warning('Workflow-IDs of new transactions does not match with previous one')
+            logging.warning('Workflow-ID of the new transaction does not match with the previous transaction.')
             return False
+
+        if self.workflow_ID != workflow_transaction.workflow_ID:
+            logging.warning('Workflow-ID of the new transaction does not match with the initial transaction.')
+            return False
+
         if not previous_transaction.receiver == self.sender:
             logging.warning(
                 'Sender is not the receiver of the previous transaction!')
             return False
+
         if not previous_transaction.in_charge.split(sep='_')[0] == self.sender:
             logging.warning(
                 'Sender is not the current owner of the document flow!')
             return False
+
         if not self.in_charge.split(sep='_')[0] == self.receiver:
             logging.warning('Receiver does not correspond to in_charge flag')
             return False
+
         if not self._check_permissions_write(workflow_transaction):
             logging.warning('Sender has not the permission to write!')
             return False
+
         if not self._check_process_definition(workflow_transaction, previous_transaction):
             logging.warning(
                 'Transaction does not comply to process definition!')
