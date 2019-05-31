@@ -219,19 +219,18 @@ class TaskTransactionCommon(unittest.TestCase):
                     "integerAttribute": 1,
                     "floatAttributes": 1.5
                 },
-                "in_charge": "PID_0",
-                "next_in_charge": "PID_1",
+                "in_charge": "{}_1".format(receiver_key),
                 "processes": {
-                    "PID_4": ["PID_5"],
-                    "PID_2": ["PID_3"],
-                    "PID_3": ["PID_4", "PID_6"],
-                    "PID_1": ["PID_2"]
+                    "{}_4".format(receiver_key): ["{}_5".format(receiver_key)],
+                    "{}_2".format(receiver_key): ["{}_3".format(receiver_key)],
+                    "{}_3".format(receiver_key): ["{}_4".format(receiver_key), "{}_6".format(receiver_key)],
+                    "{}_1".format(receiver_key): ["{}_2".format(receiver_key)]
                 },
                 "permissions": {
-                    "stringAttribute": ["PID_1", "PID_2", "PID_3"],
-                    "booleanAttribute": ["PID_5"],
-                    "integerAttribute": ["PID_4"],
-                    "floatAttributes": ["PID_2"]
+                    "stringAttribute": ["{}_1".format(receiver_key), "{}_2".format(receiver_key), "{}_3".format(receiver_key)],
+                    "booleanAttribute": ["{}_5".format(receiver_key)],
+                    "integerAttribute": ["{}_4".format(receiver_key)],
+                    "floatAttributes": ["{}_2".format(receiver_key)]
                 },
                 "previous_transaction": "",
                 "workflow_transaction": ""
@@ -246,7 +245,7 @@ class TaskTransactionCommon(unittest.TestCase):
         return transaction
 
     @staticmethod
-    def getDummyTask(sender_key, receiver_key, in_charge, next_in_charge):
+    def getDummyTask(sender_key, receiver_key, in_charge):
         task_transaction_json = {
             "receiver": receiver_key,
             "sender": sender_key,
@@ -257,7 +256,6 @@ class TaskTransactionCommon(unittest.TestCase):
                     "stringAttribute": "1234"
                 },
                 "in_charge": in_charge,
-                "next_in_charge": next_in_charge,
             }
         }
         return task_transaction_json
@@ -268,7 +266,7 @@ class TaskTransactionTestCase(TaskTransactionCommon):
     def test_to_dict(self):
         pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
         pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
-        task_transaction_json = self.getDummyTask(pu_key1, pu_key2, "PID_2", "PID_3")
+        task_transaction_json = self.getDummyTask(pu_key1, pu_key2, "{}_2".format(pu_key2))
         transaction: TaskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
         self.assertTrue(isinstance(transaction, TaskTransaction))
         data_dict = transaction.to_dict()
@@ -286,7 +284,7 @@ class TaskTransactionTestCase(TaskTransactionCommon):
         workflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
 
         pr_key3, pu_key3 = self.crypto_helper_obj.generate_key_pair()
-        task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "PID_2", "PID_3")
+        task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "{}_2".format(pu_key2))
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
 
         self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction))
@@ -298,11 +296,11 @@ class TaskTransactionTestCase(TaskTransactionCommon):
         workflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
 
         pr_key3, pu_key3 = self.crypto_helper_obj.generate_key_pair()
-        prev_task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "PID_1", "PID_2")
+        prev_task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "{}_1".format(pu_key2))
         prev_task_transaction = TaskTransaction.from_json(json.dumps(prev_task_transaction_json))
 
         pr_key4, pu_key4 = self.crypto_helper_obj.generate_key_pair()
-        task_transaction_json = self.getDummyTask(pu_key3, pu_key4, "PID_2", "PID_3")
+        task_transaction_json = self.getDummyTask(pu_key3, pu_key4, "{}_2".format(pu_key2))
 
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
 
@@ -332,7 +330,7 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
         json_dict = WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2)
 
         payload = json_dict['payload']
-        payload['in_charge'] = 'PID_0_1'  # wrong PID format
+        payload['in_charge'] = '{}_0_1'.format(pu_key2)  # wrong PID format
         json_dict['payload'] = payload
 
         # check that json fields didnt change
@@ -352,7 +350,7 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
         json_dict = WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2)
 
         payload = json_dict['payload']
-        payload['next_in_charge'] = 'PID__0'  # wrong PID format
+        payload['in_charge'] = '{}__0'.format(pu_key2)  # wrong PID format
         json_dict['payload'] = payload
 
         # check that json fields didnt change
@@ -373,7 +371,7 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
 
         payload = json_dict['payload']
         processes = payload['processes']
-        processes['PID_4'] = ['PID_5_']
+        processes['{}_4'.format(pu_key2)] = ['{}_5_'.format(pu_key2)]
         payload['processes'] = processes
         json_dict['payload'] = payload
 
@@ -395,7 +393,7 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
 
         payload = json_dict['payload']
         processes = payload['processes']
-        processes['5_PID'] = ['PID_6']
+        processes['5_{}'.format(pu_key2)] = ['{}_6'.format(pu_key2)]
         payload['processes'] = processes
         json_dict['payload'] = payload
 
@@ -417,7 +415,7 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
 
         payload = json_dict['payload']
         permissions = payload['permissions']
-        permissions['booleanAttribute'] = ['PID 5']
+        permissions['booleanAttribute'] = ['{} 5'.format(pu_key2)]
         payload['permissions'] = permissions
         json_dict['payload'] = payload
 
@@ -439,7 +437,7 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
 
         payload = json_dict['payload']
         permissions = payload['permissions']
-        permissions['longAttribute'] = ['PID 5']
+        permissions['longAttribute'] = ['{} 5'.format(pu_key2)]
         payload['permissions'] = permissions
         json_dict['payload'] = payload
 
@@ -454,13 +452,13 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
         result = transaction.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
         self.assertFalse(result)
 
-    def test_wrong_permission_attribute(self):
+    def test_DummyWorkflow_valid(self):
         pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
         pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
-        json_dict = WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2)
 
-        transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(json_dict))
+        transaction = WorkflowTransactionTestCase.getDummyWorkflow(pu_key1, pu_key2)
         transaction.sign_transaction(self.crypto_helper_obj, pr_key1)
+
         result = transaction.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
         self.assertTrue(result)
 
