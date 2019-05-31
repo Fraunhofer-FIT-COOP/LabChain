@@ -1,14 +1,10 @@
-import os
 import json
-from collections import OrderedDict
+import os
 
-from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, BlockDoesNotExistException,NoPeersException
-from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction, TaskTransaction
-from labchain.datastructure.txpool import TxPool
-from labchain.util.cryptoHelper import CryptoHelper
+from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.util.Menu import Menu
 from labchain.util.TransactionFactory import TransactionFactory
+
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -67,9 +63,10 @@ class WorkflowClient:
 
 
         workflow_transaction_json["payload"]["in_charge"] = process_1
-        workflow_transaction_json["payload"]["processes"][process_1] = [process_2]
+        workflow_transaction_json["payload"]["processes"][process_1] = [process_2,
+                                                                        (self.wallet["person2"]["public_key"] + "_2")]
 
-        workflow_transaction_json["payload"]["permissions"]["strName"] = [process_1,process_2]
+        workflow_transaction_json["payload"]["permissions"]["strName"] = [process_1, process_2]
 
         transaction = TransactionFactory.create_transcation(workflow_transaction_json)
         transaction.sign_transaction(self.crypto_helper,  self.wallet[sender]["private_key"])

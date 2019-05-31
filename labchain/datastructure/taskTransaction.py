@@ -1,7 +1,8 @@
 import json
 import logging
-from typing import Dict
 from base64 import b64decode
+from typing import Dict
+
 from Crypto.PublicKey import ECC
 
 from labchain.datastructure.transaction import Transaction
@@ -42,7 +43,7 @@ class TaskTransaction(Transaction):
         if not self.in_charge.split(sep='_')[0] == self.receiver:
             logging.warning('Receiver does not correspond to in_charge flag')
             return False
-        if not self._check_permissions_write(workflow_transaction):
+        if not self._check_permissions_write(previous_transaction, workflow_transaction):
             logging.warning('Sender has not the permission to write!')
             return False
         if not self._check_process_definition(workflow_transaction, previous_transaction):
@@ -58,14 +59,14 @@ class TaskTransaction(Transaction):
             return False
         return super().validate_transaction(crypto_helper, blockchain)
 
-    def _check_permissions_write(self, workflow_transaction):
+    def _check_permissions_write(self, previous_transaction, workflow_transaction):
         if not workflow_transaction:
             return False
         permissions = workflow_transaction.permissions
         for attributeName in self.document:
             if attributeName not in permissions:
                 return False
-            if self.in_charge not in permissions[attributeName]:
+            if previous_transaction.in_charge not in permissions[attributeName]:
                 return False
         return True
 
