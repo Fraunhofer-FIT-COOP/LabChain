@@ -317,6 +317,7 @@ class DocTransactionWizard(TransactionWizard):
                     "signature": None,
                     "payload": {
                         "workflow-id": "0",
+                        "transaction_type": "0",
                         "document": {
                             chosen_payload_attribute: chosen_payload
                         },
@@ -331,6 +332,7 @@ class DocTransactionWizard(TransactionWizard):
                     "signature": None,
                     "payload": {
                         "workflow-id":"0",
+                        "transaction_type": "1",
                         "document": {
 
                         },
