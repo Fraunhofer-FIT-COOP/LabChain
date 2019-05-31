@@ -94,11 +94,6 @@ class DocTransactionWizard(TransactionWizard):
         return str(usr_input)
 
     @staticmethod
-    def __ask_for_next_incharge():
-        usr_input = input('Please type next in_charge process ID: ')
-        return str(usr_input)
-
-    @staticmethod
     def __ask_for_payload_attribute():
         usr_input = input('Please type a payload attribute name: ')
         return str(usr_input)
@@ -161,16 +156,13 @@ class DocTransactionWizard(TransactionWizard):
             print(u'Sender: ' + str(chosen_key))
             print(u'Receiver: ' + str(chosen_receiver))
             chosen_incharge = self.__ask_for_incharge()
-            chosen_next_incharge = self.__ask_for_next_incharge()
 
-            while ((self.__validate_string_zero_length(chosen_incharge))
-                        & (self.__validate_string_zero_length(chosen_next_incharge)) ):
+            while ((self.__validate_string_zero_length(chosen_incharge)) ):
                 # clear_screen()
                 print('Invalid input! Please choose a correct incharge and next incharge!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Receiver: ' + str(chosen_receiver))
                 chosen_incharge = self.__ask_for_incharge()
-                chosen_next_incharge = self.__ask_for_next_incharge()
                 print()
 
             if self.isInitial == False:
@@ -328,8 +320,7 @@ class DocTransactionWizard(TransactionWizard):
                         "document": {
                             chosen_payload_attribute: chosen_payload
                         },
-                        "in_charge": chosen_incharge,
-                        "next_in_charge": chosen_next_incharge,
+                        "in_charge": chosen_incharge
                     }
                 }
 
@@ -344,7 +335,6 @@ class DocTransactionWizard(TransactionWizard):
 
                         },
                         "in_charge": chosen_incharge,
-                        "next_in_charge": chosen_next_incharge,
                         "processes":{
 
                         },
@@ -426,7 +416,7 @@ class DocumentFlowClient:
     def __check_tasks(self):
         clear_screen()
 
-        public_key = input('Please enter the PID of \'next_in_charge\': ')
+        public_key = input('Please enter the PID of \'in_charge\': ')
 
         transactions = self.network_interface.requestAllTransactions()
 
@@ -436,9 +426,9 @@ class DocumentFlowClient:
         for transaction in transactions:
             #payloadArray = transaction.payload:
             #print(transaction.payload)
-            if 'next_in_charge' in transaction.payload:
+            if 'in_charge' in transaction.payload:
                 dict = transaction.payload
-                if dict['next_in_charge'] == public_key:
+                if dict['in_charge'] == public_key:
                     transaction_exist = True
                     print(public_key, "is responsible for this transaction: ")
                     print()
