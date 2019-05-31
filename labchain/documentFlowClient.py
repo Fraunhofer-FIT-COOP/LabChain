@@ -4,10 +4,9 @@ from collections import OrderedDict
 import copy
 
 from labchain.datastructure.taskTransaction import TaskTransaction
-
+from labchain.blockchainClient import TransactionWizard
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
-
 
 class Menu:
     """Create a CLI menu with this class."""
@@ -70,8 +69,7 @@ class Menu:
             else:
                 self.error_message = 'Wrong input. Please select one of [' + self.__available_options() + '].'
 
-
-class DocTransactionWizard:
+class DocTransactionWizard(TransactionWizard):
     """CLI wizard for initiate new document transactions / do a task /update a task."""
 
     def __init__(self, wallet, crypto_helper, network_interface, isInitial = False):
@@ -83,82 +81,12 @@ class DocTransactionWizard:
         :param isInitial: set isInitial to true for initial transaction
         """
 
-    def __wallet_to_list(self):
-        wallet_list_result = []
-        for key in sorted(self.wallet):
-            wallet_list_result.append([str(key), self.wallet[key][0], self.wallet[key][1]])
-        return wallet_list_result
-
-    def __validate_sender_input(self, usr_input):
-        try:
-            int_usr_input = int(usr_input)
-        except ValueError:
-            return False
-
-        if int_usr_input != 0 and int_usr_input <= len(self.wallet):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def __validate_receiver_input(usr_input):
-        if len(usr_input) > 0:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def __validate_payload_input(usr_input):
-        if len(usr_input) > 0:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def __validate_payload_attribute_input(usr_input):
-        if len(usr_input) > 0:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def __validate_incharge_input(usr_input):
-        if len(usr_input) > 0:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def __validate_next_incharge_input(usr_input):
-        if len(usr_input) > 0:
-            return True
-        else:
-            return False
-
     @staticmethod
     def __validate_string_zero_length(usr_input):
         if len(usr_input) > 0:
             return False
         else:
             return True
-
-    @staticmethod
-    def __ask_for_key_from_wallet(wallet_list):
-        print(u'Current keys in the wallet: ')
-        for counter, key in enumerate(wallet_list, 1):
-            print()
-            print(str(counter) + u':\t' + str(key[0]))
-            print(u'\tPrivate Key: ' + str(key[2]))
-            print(u'\tPublic Key: ' + str(key[1]))
-            print()
-
-        user_input = input('Please choose a sender account (by number) or press enter to return: ')
-        return user_input
-
-    @staticmethod
-    def __ask_for_receiver():
-        usr_input = input('Please type a receiver address: ')
-        return str(usr_input)
 
     @staticmethod
     def __ask_for_incharge():
@@ -173,11 +101,6 @@ class DocTransactionWizard:
     @staticmethod
     def __ask_for_payload_attribute():
         usr_input = input('Please type a payload attribute name: ')
-        return str(usr_input)
-
-    @staticmethod
-    def __ask_for_payload():
-        usr_input = input('Please type a payload (for boolean, please type true/false): ')
         return str(usr_input)
 
     @staticmethod
@@ -205,18 +128,18 @@ class DocTransactionWizard:
         # convert dict to an ordered list
         # this needs to be done to get an ordered list that does not change
         # at runtime of the function
-        wallet_list = self.__wallet_to_list()
+        wallet_list = self.wallet_to_list()
 
         # check if wallet contains any keys
         # case: wallet not empty
         if not len(self.wallet) == 0:
-            chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+            chosen_key = self.ask_for_key_from_wallet(wallet_list)
             if chosen_key == '':
                 return
 
             # ask for valid sender input in a loop
-            while not self.__validate_sender_input(chosen_key):
-                chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+            while not self.validate_sender_input(chosen_key):
+                chosen_key = self.ask_for_key_from_wallet(wallet_list)
                 if chosen_key == '':
                     return
                 clear_screen()
@@ -225,13 +148,13 @@ class DocTransactionWizard:
 
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
-            chosen_receiver = self.__ask_for_receiver()
+            chosen_receiver = self.ask_for_receiver()
 
-            while not self.__validate_receiver_input(chosen_receiver):
+            while self.__validate_string_zero_length(chosen_receiver):
                 # clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
-                chosen_receiver = self.__ask_for_receiver()
+                chosen_receiver = self.ask_for_receiver()
                 print()
 
             clear_screen()
@@ -240,8 +163,8 @@ class DocTransactionWizard:
             chosen_incharge = self.__ask_for_incharge()
             chosen_next_incharge = self.__ask_for_next_incharge()
 
-            while not ((self.__validate_incharge_input(chosen_incharge))
-                        & (self.__validate_next_incharge_input(chosen_next_incharge)) ):
+            while ((self.__validate_string_zero_length(chosen_incharge))
+                        & (self.__validate_string_zero_length(chosen_next_incharge)) ):
                 # clear_screen()
                 print('Invalid input! Please choose a correct incharge and next incharge!')
                 print(u'Sender: ' + str(chosen_key))
@@ -252,14 +175,14 @@ class DocTransactionWizard:
 
             if self.isInitial == False:
                 chosen_payload_attribute = self.__ask_for_payload_attribute()
-                chosen_payload = self.__ask_for_payload()
-                while not ((self.__validate_payload_attribute_input(chosen_payload_attribute)) & (self.__validate_payload_input(chosen_payload))):
+                chosen_payload = self.ask_for_payload()
+                while ((self.__validate_string_zero_length(chosen_payload_attribute)) & (self.__validate_string_zero_length(chosen_payload))):
                     # clear_screen()
                     print('Invalid input! Please choose a correct attribute and payload!')
                     print(u'Sender: ' + str(chosen_key))
                     print(u'Receiver: ' + str(chosen_receiver))
                     chosen_payload_attribute = self.__ask_for_payload_attribute()
-                    chosen_payload = self.__ask_for_payload()
+                    chosen_payload = self.ask_for_payload()
                     print()
 
             if self.isInitial == True:
@@ -272,7 +195,7 @@ class DocTransactionWizard:
                     isPayloadFinish = self.__validate_string_zero_length(chosen_payload_attribute)
                     if isPayloadFinish == True:
                         break
-                    chosen_payload = self.__ask_for_payload()
+                    chosen_payload = self.ask_for_payload()
                     isPayloadFinish = self.__validate_string_zero_length(chosen_payload)
                     if isPayloadFinish == True:
                         break
@@ -478,7 +401,8 @@ class DocumentFlowClient:
             '1': ('Manage Persons', self.manage_wallet_menu.show, []),
             '2': ('Create Initial Transaction', self.__do_workflow, []),
             '3': ('doTask', self.__do_task, []),
-            '4': ('Check Tasks', self.__check_tasks, [])
+            '4': ('Check Tasks', self.__check_tasks, []),
+            '5': ('Import Transactions From File (labchain/transactionsJSON.txt)', self.__readDictFromFile, [])
         }, 'Please select a value: ', 'Exit DocumentFlow Client')
 
     def main(self):
@@ -503,7 +427,7 @@ class DocumentFlowClient:
     def __check_tasks(self):
         clear_screen()
 
-        public_key = input('Please enter a pid: ')
+        public_key = input('Please enter the PID of \'next_in_charge\': ')
 
         transactions = self.network_interface.requestAllTransactions()
 
@@ -517,7 +441,8 @@ class DocumentFlowClient:
                 dict = transaction.payload
                 if dict['next_in_charge'] == public_key:
                     transaction_exist = True
-                    print("it match")
+                    print(public_key, "is responsible for this transaction: ")
+                    print()
                     print(transaction.payload)
                     #transaction.print()
                     print()
@@ -572,3 +497,34 @@ class DocumentFlowClient:
                                'Please select a key to delete: ', 'Exit without deleting any addresses', True)
             delete_menu.show()
         input('Press any key to go back to the main menu!')
+
+    def __readDictFromFile(self):
+        clear_screen();
+        with open("labchain/transactionsJSON.txt") as json_file:
+            transaction_json = json.load(json_file)
+
+            for tx in transaction_json['transactions']:
+                new_transaction = TaskTransaction.from_dict(tx)
+                #new_transaction.sign_transaction(self.crypto_helper, private_key)
+                transaction_hash = self.crypto_helper.hash(json.dumps(tx))
+                self.network_interface.sendTransaction(new_transaction, 1)
+                print("The transaction json: ")
+                print()
+                print(tx)
+                print()
+                print('successfully created the below transaction:')
+                print()
+                print(u'Sender: ' + tx["sender"])
+                print(u'Receiver: ' + tx["receiver"])
+                print("workflow-id: ", tx["payload"]["workflow-id"])
+                #if self.isInitial == False:
+                #    print(u'Payload key value: ' + str(chosen_payload_attribute), " : ", str(chosen_payload))
+                print(u'Hash: ' + str(transaction_hash))
+                #if self.isInitial == True:
+                print("transaction data: ", tx["payload"]["document"])
+                print("processes: ", tx["payload"]["processes"])
+                print("permissions: ", tx["payload"]["permissions"])
+
+                print()
+
+            input('Press any key to go back to the main menu!')

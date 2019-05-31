@@ -88,13 +88,13 @@ class TransactionWizard:
         self.crypto_helper = crypto_helper
         self.network_interface = network_interface
 
-    def __wallet_to_list(self):
+    def wallet_to_list(self):
         wallet_list_result = []
         for key in sorted(self.wallet):
             wallet_list_result.append([str(key), self.wallet[key][0], self.wallet[key][1]])
         return wallet_list_result
 
-    def __validate_sender_input(self, usr_input):
+    def validate_sender_input(self, usr_input):
         try:
             int_usr_input = int(usr_input)
         except ValueError:
@@ -120,7 +120,7 @@ class TransactionWizard:
             return False
 
     @staticmethod
-    def __ask_for_key_from_wallet(wallet_list):
+    def ask_for_key_from_wallet(wallet_list):
         print(u'Current keys in the wallet: ')
         for counter, key in enumerate(wallet_list, 1):
             print()
@@ -133,12 +133,12 @@ class TransactionWizard:
         return user_input
 
     @staticmethod
-    def __ask_for_receiver():
+    def ask_for_receiver():
         usr_input = input('Please type in a receiver address: ')
         return str(usr_input)
 
     @staticmethod
-    def __ask_for_payload():
+    def ask_for_payload():
         usr_input = input('Please type in a payload: ')
         return str(usr_input)
 
@@ -149,18 +149,18 @@ class TransactionWizard:
         # convert dict to an ordered list
         # this needs to be done to get an ordered list that does not change
         # at runtime of the function
-        wallet_list = self.__wallet_to_list()
+        wallet_list = self.wallet_to_list()
 
         # check if wallet contains any keys
         # case: wallet not empty
         if not len(self.wallet) == 0:
-            chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+            chosen_key = self.ask_for_key_from_wallet(wallet_list)
             if chosen_key == '':
                 return
 
             # ask for valid sender input in a loop
-            while not self.__validate_sender_input(chosen_key):
-                chosen_key = self.__ask_for_key_from_wallet(wallet_list)
+            while not self.validate_sender_input(chosen_key):
+                chosen_key = self.ask_for_key_from_wallet(wallet_list)
                 if chosen_key == '':
                     return
                 clear_screen()
@@ -169,26 +169,26 @@ class TransactionWizard:
 
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
-            chosen_receiver = self.__ask_for_receiver()
+            chosen_receiver = self.ask_for_receiver()
 
             while not self.__validate_receiver_input(chosen_receiver):
                 # clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
-                chosen_receiver = self.__ask_for_receiver()
+                chosen_receiver = self.ask_for_receiver()
                 print()
 
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
             print(u'Receiver: ' + str(chosen_receiver))
-            chosen_payload = self.__ask_for_payload()
+            chosen_payload = self.ask_for_payload()
 
             while not self.__validate_payload_input(chosen_payload):
                 # clear_screen()
                 print('Invalid input! Please choose a correct payload!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Receiver: ' + str(chosen_receiver))
-                chosen_payload = self.__ask_for_payload()
+                chosen_payload = self.ask_for_payload()
                 print()
 
             clear_screen()

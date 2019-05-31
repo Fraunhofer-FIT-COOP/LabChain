@@ -47,7 +47,8 @@ def parse_args():
     parser.add_argument('node_port',nargs='?',help='The port address of the Labchain node',default="8080")
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
-    parser.add_argument('df', nargs='?', help='Set true if you want to execute the document flow Blockchain ', default=False)
+    parser.add_argument('--doc', help='Use this argument if you want to use the document flow client.', action='store_true')
+
     return parser.parse_args()
 
 
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     else:
         file_mode = 'w+'
     with open(WALLET_FILE_PATH, file_mode) as open_wallet_file:
-        if args.df:
+        if args.doc:
             client = create_document_flow_client(open_wallet_file, args.node_ip, args.node_port)
             client.main()
         else:

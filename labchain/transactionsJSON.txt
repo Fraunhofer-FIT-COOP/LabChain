@@ -1,0 +1,48 @@
+{"transactions":
+  [
+  {
+    "receiver": "PID_2",
+    "sender": "PID_0",
+    "signature": "",
+    "payload": {
+        "workflow-id":"0",
+        "document": {
+          "strName": "iPhone",
+          "floatPrice": "999",
+          "intQuantity": "123"},
+        "in_charge": "PID_0",
+        "next_in_charge": "PID_2",
+        "processes":{
+          "PID_0": ["PID_2"]
+        },
+        "permissions":{
+          "strName": ["PID_0", "PID_2"],
+          "floatPrice": ["PID_0", "PID_2"],
+          "intQuantity": ["PID_0", "PID_2"]
+        }
+      }
+  },
+  {
+    "receiver": "PID_4",
+    "sender": "PID_2",
+    "signature": "",
+    "payload": {
+        "workflow-id":"0",
+        "document": {
+          "strName": "iPhone",
+          "floatPrice": "999",
+          "intQuantity": "123"},
+        "in_charge": "PID_0",
+        "next_in_charge": "PID_2",
+        "processes":{
+          "PID_0": ["PID_2"]
+        },
+        "permissions":{
+          "strName": ["PID_0", "PID_2"],
+          "floatPrice": ["PID_0", "PID_2"],
+          "intQuantity": ["PID_0", "PID_2"]
+        }
+      }
+  }
+  ]
+}
