@@ -360,10 +360,9 @@ class DocTransactionWizard(TransactionWizard):
             new_transaction = TaskTransaction.from_json(json.dumps(transaction_json))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
             transaction_hash = self.crypto_helper.hash(json.dumps(transaction_json))
-            if self.isInitial == False:
-                self.network_interface.sendTransaction(new_transaction, 2) # 2 for TaskTransaction
-            elif self.isInitial == True:
-                self.network_interface.sendTransaction(new_transaction, 1) # 1 for WorkFlowTransaction
+
+            self.network_interface.sendTransaction(new_transaction)
+
 
             print('Transaction successfully created!')
             print()
@@ -507,7 +506,7 @@ class DocumentFlowClient:
                 new_transaction = TaskTransaction.from_dict(tx)
                 #new_transaction.sign_transaction(self.crypto_helper, private_key)
                 transaction_hash = self.crypto_helper.hash(json.dumps(tx))
-                self.network_interface.sendTransaction(new_transaction, 1)
+                self.network_interface.sendTransaction(new_transaction)
                 print("The transaction json: ")
                 print()
                 print(tx)
