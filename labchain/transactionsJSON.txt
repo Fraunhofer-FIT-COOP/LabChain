@@ -1,54 +1,62 @@
 {"transactions":
   [
-  {
-    "receiver": "PID_2",
-    "sender": "PID_0",
-    "signature": "",
-    "payload": {
-        "transaction_type": "1",
-        "previous_transaction": "",
-        "workflow_transaction": "",
-        "workflow-id":"0",
-        "document": {
-          "strName": "iPhone",
-          "floatPrice": "999",
-          "intQuantity": "123"},
-        "in_charge": "PID_0",
-        "next_in_charge": "PID_2",
-        "processes":{
-          "PID_0": ["PID_2"]
-        },
-        "permissions":{
-          "strName": ["PID_0", "PID_2"],
-          "floatPrice": ["PID_0", "PID_2"],
-          "intQuantity": ["PID_0", "PID_2"]
-        }
-      }
-  },
-  {
-    "receiver": "PID_4",
-    "sender": "PID_2",
-    "signature": "",
-    "payload": {
-        "transaction_type": "1",
-        "previous_transaction": "",
-        "workflow_transaction": "",
-        "workflow-id":"1",
-        "document": {
-          "strName": "iPhone",
-          "floatPrice": "999",
-          "intQuantity": "123"},
-        "in_charge": "PID_0",
-        "next_in_charge": "PID_2",
-        "processes":{
-          "PID_0": ["PID_2"]
-        },
-        "permissions":{
-          "strName": ["PID_0", "PID_2"],
-          "floatPrice": ["PID_0", "PID_2"],
-          "intQuantity": ["PID_0", "PID_2"]
-        }
-      }
-  }
+      [
+          {
+            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNHlqTUhWdEpKR0k2KzAzMTZ5QTJLMTdLTjh6WQo2bURCM0Q2RW1HMkgwVFkxRkJYeXpNVmQvL2wwNXRheGJKY1VIYUZDeGtZeDFMVFVQUGQxRkNNSHNnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFbzAwT0ZFWWJLQXFEam40UzJob29tbHFLa2RoZwpkUUxmTkp2M1M2NkErNGU4dktWWGNVSlBQVGgwZFFFdVhKL2tDQjBxUFBveVV5Q1pISVJXS0NHdTZRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "signature": "",
+            "payload": {
+                "transaction_type": "1",
+                "previous_transaction": "",
+                "workflow_transaction": "",
+                "workflow-id":"0",
+                "document": {
+                  "strName": "iPhone",
+                  "floatPrice": "999",
+                  "intQuantity": "123"},
+                "in_charge": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNHlqTUhWdEpKR0k2KzAzMTZ5QTJLMTdLTjh6WQo2bURCM0Q2RW1HMkgwVFkxRkJYeXpNVmQvL2wwNXRheGJKY1VIYUZDeGtZeDFMVFVQUGQxRkNNSHNnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0",
+                "processes":{
+                  "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNHlqTUhWdEpKR0k2KzAzMTZ5QTJLMTdLTjh6WQo2bURCM0Q2RW1HMkgwVFkxRkJYeXpNVmQvL2wwNXRheGJKY1VIYUZDeGtZeDFMVFVQUGQxRkNNSHNnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFbzAwT0ZFWWJLQXFEam40UzJob29tbHFLa2RoZwpkUUxmTkp2M1M2NkErNGU4dktWWGNVSlBQVGgwZFFFdVhKL2tDQjBxUFBveVV5Q1pISVJXS0NHdTZRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_2"]
+                },
+                "permissions":{
+                  "strName": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNHlqTUhWdEpKR0k2KzAzMTZ5QTJLMTdLTjh6WQo2bURCM0Q2RW1HMkgwVFkxRkJYeXpNVmQvL2wwNXRheGJKY1VIYUZDeGtZeDFMVFVQUGQxRkNNSHNnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0", "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFbzAwT0ZFWWJLQXFEam40UzJob29tbHFLa2RoZwpkUUxmTkp2M1M2NkErNGU4dktWWGNVSlBQVGgwZFFFdVhKL2tDQjBxUFBveVV5Q1pISVJXS0NHdTZRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_2"],
+                  "floatPrice": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNHlqTUhWdEpKR0k2KzAzMTZ5QTJLMTdLTjh6WQo2bURCM0Q2RW1HMkgwVFkxRkJYeXpNVmQvL2wwNXRheGJKY1VIYUZDeGtZeDFMVFVQUGQxRkNNSHNnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0", "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFbzAwT0ZFWWJLQXFEam40UzJob29tbHFLa2RoZwpkUUxmTkp2M1M2NkErNGU4dktWWGNVSlBQVGgwZFFFdVhKL2tDQjBxUFBveVV5Q1pISVJXS0NHdTZRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_2"],
+                  "intQuantity": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNHlqTUhWdEpKR0k2KzAzMTZ5QTJLMTdLTjh6WQo2bURCM0Q2RW1HMkgwVFkxRkJYeXpNVmQvL2wwNXRheGJKY1VIYUZDeGtZeDFMVFVQUGQxRkNNSHNnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0", "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFbzAwT0ZFWWJLQXFEam40UzJob29tbHFLa2RoZwpkUUxmTkp2M1M2NkErNGU4dktWWGNVSlBQVGgwZFFFdVhKL2tDQjBxUFBveVV5Q1pISVJXS0NHdTZRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_2"]
+                }
+              }
+          },
+          {
+            "private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZzk0dTBpc1NMWFljaHFZbmwKanZmMWxqWWlpZHhNUjNYdkg3ZkJtWWJYTjNHaFJBTkNBQVNqVFE0VVJoc29Db09PZmhMYUdpaWFXb3FSMkdCMQpBdDgwbS9kTHJvRDdoN3k4cFZkeFFrODlPSFIxQVM1Y24rUUlIU284K2pKVElKa2NoRllvSWE3cAotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t"
+          }
+      ],
+      [
+          {
+            "receiver": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFRzYvVmtjY3hpTnhuU0ZkQzhRSWh3N0NRWGxTcwo3MXg4WU5SeW9GeTRTckl0cTRRaXd1TnV1aW1xUjZWWmZwVU1JUGNPbEdhdk5TSFlyNHA2c01TbWxRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "sender": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFOUxHR3JXTjFyZ2tGTmhyVHpadVdYaVVJRmlyLwo1bVZkdFl6UDZia0pMK1FWZy9HeTNzU281bm1qQ3ZQeGpnVHh6NXpTS0lvUG0yUEZMbE5DUWp2M1JnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t",
+            "signature": "",
+            "payload": {
+                "transaction_type": "1",
+                "previous_transaction": "",
+                "workflow_transaction": "",
+                "workflow-id":"1",
+                "document": {
+                  "strName": "iPhone",
+                  "floatPrice": "999",
+                  "intQuantity": "123"},
+                "in_charge": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFRzYvVmtjY3hpTnhuU0ZkQzhRSWh3N0NRWGxTcwo3MXg4WU5SeW9GeTRTckl0cTRRaXd1TnV1aW1xUjZWWmZwVU1JUGNPbEdhdk5TSFlyNHA2c01TbWxRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0",
+                "processes":{
+                  "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFOUxHR3JXTjFyZ2tGTmhyVHpadVdYaVVJRmlyLwo1bVZkdFl6UDZia0pMK1FWZy9HeTNzU281bm1qQ3ZQeGpnVHh6NXpTS0lvUG0yUEZMbE5DUWp2M1JnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFRzYvVmtjY3hpTnhuU0ZkQzhRSWh3N0NRWGxTcwo3MXg4WU5SeW9GeTRTckl0cTRRaXd1TnV1aW1xUjZWWmZwVU1JUGNPbEdhdk5TSFlyNHA2c01TbWxRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_1"]
+                },
+                "permissions":{
+                  "strName": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFRzYvVmtjY3hpTnhuU0ZkQzhRSWh3N0NRWGxTcwo3MXg4WU5SeW9GeTRTckl0cTRRaXd1TnV1aW1xUjZWWmZwVU1JUGNPbEdhdk5TSFlyNHA2c01TbWxRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0"],
+                  "floatPrice": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFRzYvVmtjY3hpTnhuU0ZkQzhRSWh3N0NRWGxTcwo3MXg4WU5SeW9GeTRTckl0cTRRaXd1TnV1aW1xUjZWWmZwVU1JUGNPbEdhdk5TSFlyNHA2c01TbWxRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_2"],
+                  "intQuantity": ["LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFRzYvVmtjY3hpTnhuU0ZkQzhRSWh3N0NRWGxTcwo3MXg4WU5SeW9GeTRTckl0cTRRaXd1TnV1aW1xUjZWWmZwVU1JUGNPbEdhdk5TSFlyNHA2c01TbWxRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0", "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFRzYvVmtjY3hpTnhuU0ZkQzhRSWh3N0NRWGxTcwo3MXg4WU5SeW9GeTRTckl0cTRRaXd1TnV1aW1xUjZWWmZwVU1JUGNPbEdhdk5TSFlyNHA2c01TbWxRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_2"]
+                }
+              }
+          },
+          {
+            "private_key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ3JIelVvcC9NUjNRQWZadlgKeE9uaDRHQkdjSHpuQnI2ZlYzT2NKM21zQ3NtaFJBTkNBQVQwc1lhdFkzV3VDUVUyR3RQTm01WmVKUWdXS3YvbQpaVjIxak0vcHVRa3Y1QldEOGJMZXhLam1lYU1LOC9HT0JQSFBuTklvaWcrYlk4VXVVMEpDTy9kRwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t"
+          }
+      ]
   ]
 }

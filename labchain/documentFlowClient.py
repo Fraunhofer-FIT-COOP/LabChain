@@ -6,6 +6,8 @@ import copy
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.blockchainClient import TransactionWizard
 from labchain.util.TransactionFactory import TransactionFactory
+from labchain.util.cryptoHelper import CryptoHelper
+
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -504,27 +506,31 @@ class DocumentFlowClient:
             transaction_json = json.load(json_file)
 
             for tx in transaction_json['transactions']:
-                new_transaction = TransactionFactory.create_transcation(tx)
-                #new_transaction.sign_transaction(self.crypto_helper, private_key)
-                print(new_transaction)
-                transaction_hash = self.crypto_helper.hash(json.dumps(tx))
+                new_transaction = TransactionFactory.create_transcation(tx[0])
+                pr_key = tx[1]["private_key"]
+                new_transaction.sign_transaction(self.crypto_helper, pr_key)
+                data = json.dumps({
+                    'sender': new_transaction.sender,
+                    'receiver': new_transaction.receiver,
+                    'payload': new_transaction.payload
+                })
                 self.network_interface.sendTransaction(new_transaction)
                 print("The transaction json: ")
                 print()
-                print(tx)
+                print(tx[0])
                 print()
                 print('successfully created the below transaction:')
                 print()
-                print(u'Sender: ' + tx["sender"])
-                print(u'Receiver: ' + tx["receiver"])
-                print("workflow-id: ", tx["payload"]["workflow-id"])
+                print(u'Sender: ' + tx[0]["sender"])
+                print(u'Receiver: ' + tx[0]["receiver"])
+                print("workflow-id: ", tx[0]["payload"]["workflow-id"])
                 #if self.isInitial == False:
                 #    print(u'Payload key value: ' + str(chosen_payload_attribute), " : ", str(chosen_payload))
-                print(u'Hash: ' + str(transaction_hash))
+                print(u'Hash: ' + str(new_transaction.transaction_hash))
                 #if self.isInitial == True:
-                print("transaction data: ", tx["payload"]["document"])
-                print("processes: ", tx["payload"]["processes"])
-                print("permissions: ", tx["payload"]["permissions"])
+                print("transaction data: ", tx[0]["payload"]["document"])
+                print("processes: ", tx[0]["payload"]["processes"])
+                print("permissions: ", tx[0]["payload"]["permissions"])
 
                 print()
 
