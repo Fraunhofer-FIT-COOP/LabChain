@@ -210,39 +210,11 @@ class BlockChainNode:
         return None
 
     def on_new_transaction_received(self, transaction):
-<<<<<<< Updated upstream
-        if isinstance(transaction, WorkflowTransaction):
-            self.logger.warning ('Recived workflow transaction')
-            return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
-        if isinstance(transaction, TaskTransaction):
-            self.logger.warning ('Recived task transaction')
-            transaction.previous_transaction = self.get_previous_transaction(transaction)
-            transaction.workflow_transaction = self.get_workflow_transaction(transaction)
-            if transaction.previous_transaction:
-                self.logger.warning ('--------------Previous transaction---------------------')
-                self.logger.warning (transaction.previous_transaction)
-                self.logger.warning ('-------------------------------------------------------')
-            else:
-                self.logger.warning ('No previous can be found')
-            if transaction.workflow_transaction:
-                self.logger.warning ('--------------Workflow transaction ---------------------')
-                self.logger.warning (transaction.workflow_transaction)
-                self.logger.warning ('--------------------------------------------------------')
-            else:
-                self.logger.warning ('No workflow can be found')
-            result = False
-            if transaction.workflow_transaction:
-                result = self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
-            self.logger.warning ("Task transaction validation result {}".format(result))
-            return result
-        return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
-=======
         validation_result = self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
         self.logger.warning("----------------------------------------------")
         self.logger.warning("Validation Result {}".format(validation_result))
         self.logger.warning("----------------------------------------------")
         return validation_result
->>>>>>> Stashed changes
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""
