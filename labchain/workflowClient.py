@@ -8,6 +8,7 @@ from labchain.datastructure.taskTransaction import WorkflowTransaction, TaskTran
 from labchain.datastructure.txpool import TxPool
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.util.Menu import Menu
+from labchain.util.TransactionFactory import TransactionFactory
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -46,36 +47,36 @@ class WorkflowClient:
         sender = "person1"
         reciver = "person1"
 
+        process_1 = self.wallet[reciver]["public_key"] + "_1"
+        process_2 = self.wallet[reciver]["public_key"] + "_2"
+
         workflow_transaction_json = {
             "signature": None, 
-            "payload":{
-                "workflow-id":"0",
-                "document":{
-                    "stringAttribute":"stringValue",
-                    "booleanAttribute": 'true',
-                    "integerAttribute" : 1,
-                    "floatAttributes": 1.5
+            "payload": {
+                "transaction_type": "1",
+                "workflow_id":"0",
+                "document": {
+                    "strName": "Value1"
                 },
-                "in_charge" : "PID_0",
-                "next_in_charge": "PID_1",
-                "processes":{
-                    "PID_4" : ["PID_5"],
-                    "PID_2" : ["PID_3"],
-                    "PID_3" : ["PID_4"],
-                    "PID_1" : ["PID_2"]
-                },
-                "permissions":{
-                    "stringAttribute": ["PID_1","PID_2","PID_3"],
-                    "booleanAttribute": ["PID_5"],
-                    "integerAttribute" : ["PID_4"],
-                    "floatAttributes": ["PID_2"]
-                }
+                "processes":{},
+                "permissions": {}
             }
         }
         workflow_transaction_json["receiver"] = self.wallet[reciver]["public_key"]
         workflow_transaction_json["sender"] = self.wallet[sender]["public_key"]
-        transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(workflow_transaction_json))
+
+
+        workflow_transaction_json["payload"]["in_charge"] = process_1
+        workflow_transaction_json["payload"]["processes"][process_1] = [process_2]
+
+        workflow_transaction_json["payload"]["permissions"]["strName"] = [process_1,process_2]
+
+        transaction = TransactionFactory.create_transcation(workflow_transaction_json)
         transaction.sign_transaction(self.crypto_helper,  self.wallet[sender]["private_key"])
+        self.workflow_transaction_hash = self.crypto_helper.hash(transaction.get_json())
+        
+        print(workflow_transaction_json)
+
         self.network_interface.sendTransaction(transaction)
 
     def send_dummy_task_transaction(self):
@@ -83,21 +84,35 @@ class WorkflowClient:
         sender = "person1"
         reciver = "person2"
 
+        process_1 = self.wallet[reciver]["public_key"] + "_1"
+        process_2 = self.wallet[reciver]["public_key"] + "_2"
+
         task_transaction_json = {
             "signature": None,
             "payload":{
+                "transaction_type": "2",
                 "workflow-id":"0",
                 "document":{
-                    "stringAttribute":"1234"
-                },
-                "in_charge" : "PID_1",
-                "next_in_charge": "PID_2",
+                    "strName" : "Value2"
+                }
             }
         }
+
+        task_transaction_json["payload"]["workflow_transaction"] = self.workflow_transaction_hash
+        task_transaction_json["payload"]["previous_transaction"] = self.workflow_transaction_hash
+
         task_transaction_json["receiver"] = self.wallet[reciver]["public_key"]
         task_transaction_json["sender"] = self.wallet[sender]["public_key"]
-        transaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
+
+        task_transaction_json["payload"]["in_charge"] = process_2
+
+        transaction =TransactionFactory.create_transcation(task_transaction_json)
         transaction.sign_transaction(self.crypto_helper, self.wallet[sender]["private_key"])
+
+        self.task_1_hash = self.crypto_helper.hash(transaction.get_json())
+
+        print(self.task_1_hash)
+
         self.network_interface.sendTransaction(transaction)
 
     def send_dummy_task_transaction2(self):

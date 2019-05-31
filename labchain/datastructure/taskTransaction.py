@@ -1,6 +1,8 @@
 import json
 import logging
 from typing import Dict
+from base64 import b64decode
+from Crypto.PublicKey import ECC
 
 from labchain.datastructure.transaction import Transaction
 
@@ -23,8 +25,8 @@ class TaskTransaction(Transaction):
             return False
 
         ""
-        previous_transaction = blockchain.get_transaction(self.previous_transaction)
-        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)
+        previous_transaction = blockchain.get_transaction(self.previous_transaction)[0]
+        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)[0]
         if previous_transaction is None:
             raise ValueError(
                 'Corrupted transaction, no previous_transaction found')
@@ -54,8 +56,6 @@ class TaskTransaction(Transaction):
     def validate_transaction_common(self, crypto_helper, blockchain):
         if not self._check_PID_well_formedness(self.in_charge):
             return False
-        if not self._check_PID_well_formedness(self.next_in_charge):
-            return False
         return super().validate_transaction(crypto_helper, blockchain)
 
     def _check_permissions_write(self, workflow_transaction):
@@ -72,12 +72,8 @@ class TaskTransaction(Transaction):
     def _check_process_definition(self, workflow_transaction, previous_transaction):
         process_definition = workflow_transaction.processes
         if previous_transaction:
-            if self.in_charge != previous_transaction.next_in_charge:
-                return False
             if self.in_charge not in process_definition[previous_transaction.in_charge]:
                 return False
-        if self.next_in_charge not in process_definition[self.in_charge]:
-            return False
         return True
 
     def _check_for_wrong_branching(self):
@@ -95,7 +91,24 @@ class TaskTransaction(Transaction):
         try:
             i = int(parts[1])
         except ValueError:
+            logging.debug("Number in PID wrong!")
             return False
+
+        publicKey = parts[0]
+
+        decodedKey = ""
+        try:
+            decodedKey = b64decode(publicKey).decode('utf-8')
+        except TypeError:
+            logging.debug("Public Key in PID wrong!")
+            return False
+
+        try:
+            pk = ECC.import_key(decodedKey)  # Get the public key object using public key string
+        except ValueError:
+            logging.debug("Given Public Key in PID is not a key!")
+            return False
+
         #TODO more rules regarding well formedness?
         return True
 
@@ -106,10 +119,6 @@ class TaskTransaction(Transaction):
     @property
     def in_charge(self):
         return self.payload['in_charge']
-
-    @property
-    def next_in_charge(self):
-        return self.payload['next_in_charge']
 
     @property
     def workflow_ID(self):
