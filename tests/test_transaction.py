@@ -453,16 +453,15 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
         result = transaction.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
         self.assertFalse(result)
 
-    def test_wrong_permission_attribute(self):
+    def test_DummyWorkflow_valid(self):
         pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
         pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
-        json_dict = WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2)
 
-        transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(json_dict))
+        transaction = WorkflowTransactionTestCase.getDummyWorkflow(pu_key1, pu_key2)
         transaction.sign_transaction(self.crypto_helper_obj, pr_key1)
+
         result = transaction.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
         self.assertTrue(result)
-
 
 if __name__ == '__main__':
     unittest.main()
