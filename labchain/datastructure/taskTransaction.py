@@ -1,6 +1,8 @@
 import json
 import logging
 from typing import Dict
+from base64 import b64decode
+from Crypto.PublicKey import ECC
 
 from labchain.datastructure.transaction import Transaction
 
@@ -89,7 +91,24 @@ class TaskTransaction(Transaction):
         try:
             i = int(parts[1])
         except ValueError:
+            logging.debug("Number in PID wrong!")
             return False
+
+        publicKey = parts[0]
+
+        decodedKey = ""
+        try:
+            decodedKey = b64decode(publicKey).decode('utf-8')
+        except TypeError:
+            logging.debug("Public Key in PID wrong!")
+            return False
+
+        try:
+            pk = ECC.import_key(decodedKey)  # Get the public key object using public key string
+        except ValueError:
+            logging.debug("Given Public Key in PID is not a key!")
+            return False
+
         #TODO more rules regarding well formedness?
         return True
 
