@@ -189,7 +189,7 @@ class BlockChainNode:
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
     # for workflow transaction utils
-    def get_previous_transaction(self, currenttaskTransaction)-> TaskTransaction:
+    def get_previous_transaction(self, currenttaskTransaction) -> TaskTransaction:
         current_in_charge = currenttaskTransaction.in_charge
         for transaction in self.txpool_obj.get_task_transactions():
             if transaction.next_in_charge == current_in_charge:

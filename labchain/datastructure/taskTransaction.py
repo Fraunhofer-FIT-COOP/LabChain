@@ -102,30 +102,33 @@ class TaskTransaction(Transaction):
 
     def _check_PID_well_formedness(self, PID):
         parts = PID.split(sep='_')
+        pid_pubkey = parts[0]
+        pid_number = parts[1]
+
         if not len(parts) == 2:
             return False
         try:
-            i = int(parts[1])
+            i = int(pid_number)
         except ValueError:
-            logging.debug("Number in PID wrong!")
+            logging.warning("Number in PID wrong!")
+            logging.debug("Number in PID is: {}".format(parts[1]))
             return False
 
-        publicKey = parts[0]
-
-        decodedKey = ""
+        decoded_key = ""
         try:
-            decodedKey = b64decode(publicKey).decode('utf-8')
+            decoded_key = b64decode(pid_pubkey).decode('utf-8')
+            pk = ECC.import_key(decoded_key)  # Get the public key object using public key string
         except TypeError:
-            logging.debug("Public Key in PID wrong!")
+            logging.warning("Public Key in PID is wrong!")
+            logging.debug("^ Public Key in PID is: {}".format(pid_pubkey))
             return False
-
-        try:
-            pk = ECC.import_key(decodedKey)  # Get the public key object using public key string
         except ValueError:
-            logging.debug("Given Public Key in PID is not a key!")
+            logging.warning("Public Key in PID is not a key!")
+            logging.debug("^ ------- Public Key in PID is: {}".format(pid_pubkey))
+            logging.debug("^ Decoded Public Key in PID is: {}".format(decoded_key))
             return False
 
-        #TODO more rules regarding well formedness?
+        # TODO more rules regarding well-formedness?
         return True
 
     @property
