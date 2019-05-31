@@ -179,7 +179,7 @@ class BlockChainNode:
         return self.blockchain_obj.get_n_last_transactions(n)
 
     def on_search_transaction_from_receiver(self, receiver_public_key):
-        return self.blockchain_obj.search_transaction_from_receiver(receiver_public_key)
+        return self.blockchain_obj.search_transaction_to_receiver(receiver_public_key)
         
 
     def on_search_transaction_from_sender(self, sender_public_key):
@@ -189,7 +189,7 @@ class BlockChainNode:
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
     # for workflow transaction utils
-    def get_previous_transaction(self, currenttaskTransaction)-> TaskTransaction:
+    def get_previous_transaction(self, currenttaskTransaction) -> TaskTransaction:
         current_in_charge = currenttaskTransaction.in_charge
         for transaction in self.txpool_obj.get_task_transactions():
             if transaction.next_in_charge == current_in_charge:
