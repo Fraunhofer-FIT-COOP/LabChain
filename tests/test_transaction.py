@@ -219,8 +219,7 @@ class TaskTransactionCommon(unittest.TestCase):
                     "integerAttribute": 1,
                     "floatAttributes": 1.5
                 },
-                "in_charge": "PID_0",
-                "next_in_charge": "PID_1",
+                "in_charge": "PID_1",
                 "processes": {
                     "PID_4": ["PID_5"],
                     "PID_2": ["PID_3"],
@@ -352,7 +351,7 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
         json_dict = WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2)
 
         payload = json_dict['payload']
-        payload['next_in_charge'] = 'PID__0'  # wrong PID format
+        payload['in_charge'] = 'PID__0'  # wrong PID format
         json_dict['payload'] = payload
 
         # check that json fields didnt change

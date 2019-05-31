@@ -54,8 +54,6 @@ class TaskTransaction(Transaction):
     def validate_transaction_common(self, crypto_helper, blockchain):
         if not self._check_PID_well_formedness(self.in_charge):
             return False
-        if not self._check_PID_well_formedness(self.next_in_charge):
-            return False
         return super().validate_transaction(crypto_helper, blockchain)
 
     def _check_permissions_write(self, workflow_transaction):
@@ -72,12 +70,8 @@ class TaskTransaction(Transaction):
     def _check_process_definition(self, workflow_transaction, previous_transaction):
         process_definition = workflow_transaction.processes
         if previous_transaction:
-            if self.in_charge != previous_transaction.next_in_charge:
-                return False
             if self.in_charge not in process_definition[previous_transaction.in_charge]:
                 return False
-        if self.next_in_charge not in process_definition[self.in_charge]:
-            return False
         return True
 
     def _check_for_wrong_branching(self):
@@ -106,10 +100,6 @@ class TaskTransaction(Transaction):
     @property
     def in_charge(self):
         return self.payload['in_charge']
-
-    @property
-    def next_in_charge(self):
-        return self.payload['next_in_charge']
 
     @property
     def workflow_ID(self):
