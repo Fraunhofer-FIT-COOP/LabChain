@@ -5,6 +5,7 @@ import copy
 
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.blockchainClient import TransactionWizard
+from labchain.util.TransactionFactory import TransactionFactory
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -503,8 +504,9 @@ class DocumentFlowClient:
             transaction_json = json.load(json_file)
 
             for tx in transaction_json['transactions']:
-                new_transaction = TaskTransaction.from_dict(tx)
+                new_transaction = TransactionFactory.create_transcation(tx)
                 #new_transaction.sign_transaction(self.crypto_helper, private_key)
+                print(new_transaction)
                 transaction_hash = self.crypto_helper.hash(json.dumps(tx))
                 self.network_interface.sendTransaction(new_transaction)
                 print("The transaction json: ")

@@ -5,6 +5,9 @@
     "sender": "PID_0",
     "signature": "",
     "payload": {
+        "transaction_type": "1",
+        "previous_transaction": "",
+        "workflow_transaction": "",
         "workflow-id":"0",
         "document": {
           "strName": "iPhone",
@@ -27,7 +30,10 @@
     "sender": "PID_2",
     "signature": "",
     "payload": {
-        "workflow-id":"0",
+        "transaction_type": "1",
+        "previous_transaction": "",
+        "workflow_transaction": "",
+        "workflow-id":"1",
         "document": {
           "strName": "iPhone",
           "floatPrice": "999",

@@ -23,8 +23,8 @@ class TaskTransaction(Transaction):
             return False
 
         ""
-        previous_transaction = blockchain.get_transaction(self.previous_transaction)
-        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)
+        previous_transaction = blockchain.get_transaction(self.previous_transaction)[0]
+        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)[0]
         if previous_transaction is None:
             raise ValueError(
                 'Corrupted transaction, no previous_transaction found')
