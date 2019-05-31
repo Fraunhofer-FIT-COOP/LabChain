@@ -26,13 +26,16 @@ class TaskTransaction(Transaction):
             logging.warning('Transaction has wrong transaction type')
             return False
 
-        ""
-        previous_transaction = blockchain.get_transaction(self.previous_transaction)[0]
-        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)[0]
+        previous_transaction: TaskTransaction = blockchain.get_transaction(self.previous_transaction)[0]
+        workflow_transaction: WorkflowTransaction = blockchain.get_transaction(self.workflow_transaction)[0]
+
         if previous_transaction is None:
             raise ValueError(
                 'Corrupted transaction, no previous_transaction found')
 
+        if self.workflow_ID != previous_transaction.workflow_ID:
+            logging.warning('Workflow-IDs of new transactions does not match with previous one')
+            return False
         if not previous_transaction.receiver == self.sender:
             logging.warning(
                 'Sender is not the receiver of the previous transaction!')
