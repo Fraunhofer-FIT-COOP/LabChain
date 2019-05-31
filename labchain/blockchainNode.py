@@ -1,28 +1,26 @@
 import json
 import logging
 import os
-from queue import Queue
 import sys
 import threading
 import time
 import uuid
+from queue import Queue
 
+from labchain.blockchainNodeBootstrap import Bootstrapper
+from labchain.consensus.consensus import Consensus
+from labchain.databaseInterface import Db
 from labchain.datastructure.block import Block
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.blockchain import BlockChain
-from labchain.blockchainNodeBootstrap import Bootstrapper
-from labchain.util.configReader import ConfigReader
-from labchain.util.configReader import ConfigReaderException
-from labchain.consensus.consensus import Consensus
-from labchain.util.cryptoHelper import CryptoHelper
+from labchain.datastructure.taskTransaction import TaskTransaction
+from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.datastructure.txpool import TxPool
 from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
-from labchain.datastructure.txpool import TxPool
-from labchain.databaseInterface import Db
-from labchain.datastructure.taskTransaction import WorkflowTransaction
-from labchain.datastructure.taskTransaction import TaskTransaction
-from labchain.datastructure.transaction import Transaction
-
+from labchain.util.configReader import ConfigReader
+from labchain.util.configReader import ConfigReaderException
+from labchain.util.cryptoHelper import CryptoHelper
 
 
 class BlockChainNode:
@@ -76,6 +74,7 @@ class BlockChainNode:
         self.db = None
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
+        self.q = None
         try:
             self.config_reader = ConfigReader(config_file_path)
             self.logger.debug("Read config file successfully!")
@@ -179,6 +178,13 @@ class BlockChainNode:
         """Retrieve a list of n last mined transactions from the blockchain"""
         return self.blockchain_obj.get_n_last_transactions(n)
 
+    def on_search_transaction_from_receiver(self, receiver_public_key):
+        return self.blockchain_obj.search_transaction_from_receiver(receiver_public_key)
+        
+
+    def on_search_transaction_from_sender(self, sender_public_key):
+        return self.blockchain_obj.search_transaction_from_sender(sender_public_key)
+
     def on_get_transactions_in_txpool(self):
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
@@ -206,7 +212,7 @@ class BlockChainNode:
     def on_new_transaction_received(self, transaction):
         if isinstance(transaction, WorkflowTransaction):
             self.logger.warning ('Recived workflow transaction')
-            return self.txpool_obj.add_transaction_if_not_exist(transaction)
+            return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
         if isinstance(transaction, TaskTransaction):
             self.logger.warning ('Recived task transaction')
             transaction.previous_transaction = self.get_previous_transaction(transaction)
@@ -225,10 +231,10 @@ class BlockChainNode:
                 self.logger.warning ('No workflow can be found')
             result = False
             if transaction.workflow_transaction:
-                result = self.txpool_obj.add_transaction_if_not_exist(transaction)
+                result = self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
             self.logger.warning ("Task transaction validation result {}".format(result))
             return result
-        return self.txpool_obj.add_transaction_if_not_exist(transaction)
+        return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""
@@ -284,6 +290,8 @@ class BlockChainNode:
                                       self.on_get_all_transactions,
                                       self.on_get_transactions_in_txpool,
                                       self.on_get_last_n_transactions,
+                                      self.on_search_transaction_from_receiver,
+                                      self.on_search_transaction_from_sender,
                                       self.peer_discovery, ip, port)
 
     def reinitialize_blockchain_from_db(self):

@@ -7,61 +7,76 @@ from labchain.datastructure.transaction import Transaction
 
 class TaskTransaction(Transaction):
 
-    def __init__(self, sender, receiver, payload, signature = None):
+    def __init__(self, sender, receiver, payload: Dict, signature=None):
         super().__init__(sender, receiver, payload, signature)
-        self.document = payload['document'] # document is a dict
-        self.in_charge = payload['in_charge']
-        self.next_in_charge = payload['next_in_charge']
-        self.workflowID = payload['workflow-id']
-        self.previous_transaction = None
-        self.workflow_transaction = None
+        self.payload['transaction_type'] = '2'
 
-    def validate_transaction(self, crypto_helper):
+    def validate_transaction(self, crypto_helper, blockchain) -> bool:
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: CryptoHelper object
-        :param result: Receive result of transaction validation.
+        :param blockchain: Blockchain object
         :return result: True if transaction is valid
         """
-        if isinstance(self, WorkflowTransaction):
-            return super().validate_transaction(crypto_helper)
-        previous_transaction = self.previous_transaction
-        workflow_transaction = self.workflow_transaction
-        if not previous_transaction:
-            owner_valid = True if workflow_transaction.receiver == self.sender else False
-        else:
-            owner_valid = True if previous_transaction.receiver == self.sender else False
-
-        if not owner_valid:
-            logging.warning('Sender is not the current owner of the document flow!')
+        if self.payload['transaction_type'] is not '2' and self.payload['transaction_type'] is not '1':
+            logging.warning('Transaction has wrong transaction type')
             return False
-        if not self._check_permissions_write():
+
+        ""
+        previous_transaction = blockchain.get_transaction(self.previous_transaction)
+        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)
+        if previous_transaction is None:
+            raise ValueError(
+                'Corrupted transaction, no previous_transaction found')
+
+        if not previous_transaction.receiver == self.sender:
+            logging.warning(
+                'Sender is not the receiver of the previous transaction!')
+            return False
+        if not previous_transaction.in_charge.split(sep='_')[0] == self.sender:
+            logging.warning(
+                'Sender is not the current owner of the document flow!')
+            return False
+        if not self.in_charge.split(sep='_')[0] == self.receiver:
+            logging.warning('Receiver does not correspond to in_charge flag')
+            return False
+        if not self._check_permissions_write(workflow_transaction):
             logging.warning('Sender has not the permission to write!')
             return False
-        if not self._check_process_definition():
-            logging.warning('Transaction does not comply to process definition!')
+        if not self._check_process_definition(workflow_transaction, previous_transaction):
+            logging.warning(
+                'Transaction does not comply to process definition!')
             return False
-        return super().validate_transaction(crypto_helper)
 
-    def _check_permissions_write(self):
-        if not self.workflow_transaction:
+        # TODO check for duplicate transactions
+        return self.validate_transaction_common(crypto_helper, blockchain)
+
+    def validate_transaction_common(self, crypto_helper, blockchain):
+        if not self._check_PID_well_formedness(self.in_charge):
             return False
-        permissions = self.workflow_transaction.permissions
+        if not self._check_PID_well_formedness(self.next_in_charge):
+            return False
+        return super().validate_transaction(crypto_helper, blockchain)
+
+    def _check_permissions_write(self, workflow_transaction):
+        if not workflow_transaction:
+            return False
+        permissions = workflow_transaction.permissions
         for attributeName in self.document:
-            if not attributeName in permissions:
+            if attributeName not in permissions:
                 return False
-            if not self.in_charge in permissions[attributeName]:
+            if self.in_charge not in permissions[attributeName]:
                 return False
         return True
 
-    def _check_process_definition(self):
-        process_definition = self.workflow_transaction.processes
-        if self.previous_transaction:
-            if self.in_charge != self.previous_transaction.next_in_charge:
+    def _check_process_definition(self, workflow_transaction, previous_transaction):
+        process_definition = workflow_transaction.processes
+        if previous_transaction:
+            if self.in_charge != previous_transaction.next_in_charge:
                 return False
-            if not self.in_charge in process_definition[self.previous_transaction.in_charge]:
+            if self.in_charge not in process_definition[previous_transaction.in_charge]:
                 return False
-        if not self.next_in_charge in process_definition[self.in_charge]:
+        if self.next_in_charge not in process_definition[self.in_charge]:
             return False
         return True
 
@@ -73,6 +88,41 @@ class TaskTransaction(Transaction):
         # return False
         pass
 
+    def _check_PID_well_formedness(self, PID):
+        parts = PID.split(sep='_')
+        if not len(parts) == 2:
+            return False
+        try:
+            i = int(parts[1])
+        except ValueError:
+            return False
+        #TODO more rules regarding well formedness?
+        return True
+
+    @property
+    def document(self):
+        return self.payload['document']
+
+    @property
+    def in_charge(self):
+        return self.payload['in_charge']
+
+    @property
+    def next_in_charge(self):
+        return self.payload['next_in_charge']
+
+    @property
+    def workflow_ID(self):
+        return self.payload['workflow-id']
+
+    @property
+    def previous_transaction(self):
+        return self.payload['previous_transaction']
+
+    @property
+    def workflow_transaction(self):
+        return self.payload['workflow_transaction']
+
     @staticmethod
     def from_json(json_data):
         """Deserialize a JSON string to a Transaction instance."""
@@ -83,14 +133,14 @@ class TaskTransaction(Transaction):
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
         return TaskTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'],data_dict['signature'])
+                               data_dict['payload'], data_dict['signature'])
+
 
 class WorkflowTransaction(TaskTransaction):
 
-    def __init__(self, sender, receiver, payload, signature = None):
+    def __init__(self, sender, receiver, payload: Dict, signature=None):
         super().__init__(sender, receiver, payload, signature)
-        self.processes = payload['processes'] # dict
-        self.permissions = payload['permissions'] # dict
+        self.payload['transaction_type'] = '1'
 
     @staticmethod
     def from_json(json_data):
@@ -100,4 +150,33 @@ class WorkflowTransaction(TaskTransaction):
     @staticmethod
     def from_dict(data_dict):
         return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'], data_dict['signature'])
+                                   data_dict['payload'], data_dict['signature'])
+
+    def validate_transaction(self, crypto_helper, blockchain):
+        if self.payload['transaction_type'] is not '1':
+            logging.warning('Transaction has wrong transaction type')
+            return False
+
+        for sender, receivers in self.processes.items():
+            if not self._check_PID_well_formedness(sender):
+                return False
+            for receiver in receivers:
+                if not self._check_PID_well_formedness(receiver):
+                    return False
+        document_keys = self.document.keys()
+        for attr, pids in self.permissions.items():
+            for pid in pids:
+                if not self._check_PID_well_formedness(pid):
+                    return False
+            if attr not in document_keys:
+                return False
+
+        return super().validate_transaction_common(crypto_helper, blockchain)
+
+    @property
+    def processes(self):
+        return self.payload['processes']
+
+    @property
+    def permissions(self):
+        return self.payload['permissions']

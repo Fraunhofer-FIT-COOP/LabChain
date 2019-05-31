@@ -13,6 +13,7 @@ from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 
+from labchain.util.TransactionFactory import TransactionFactory
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.taskTransaction import TaskTransaction
@@ -108,10 +109,9 @@ class NetworkInterface:
             for port, info in port_map.items():
                 self.add_peer(ip_address, port, info)
 
-    def sendTransaction(self, transaction,transaction_type = 0):
+    def sendTransaction(self, transaction):
         # send the transaction to all peers
         transaction_dict = transaction.to_dict()
-        transaction_dict['transaction_type'] = transaction_type
         responses = self._bulk_send('sendTransaction', [transaction_dict])
         if not responses:
             logger.warning('No nodes available to send the transaction to!')
@@ -207,6 +207,32 @@ class NetworkInterface:
     def get_n_last_transactions(self,n):
         """return a list of n last mined transactions"""
         responses = self._bulk_send('requestNLastTransaction', [n], return_on_first_success=True)
+        res = []
+        if responses:
+            if len(responses) > 0:
+                for tx in responses[0]:
+                    res.append(Transaction.from_dict(tx))
+            else:
+                raise Exception('There was a response but it was empty')
+        else:
+            raise NoPeersException('No nodes available to request the transactions from')
+        return res
+
+    def search_transaction_from_receiver(self, receiver_public_key):
+        responses = self._bulk_send('searchTransactionFromReceiver', [receiver_public_key], return_on_first_success=True)
+        res = []
+        if responses:
+            if len(responses) > 0:
+                for tx in responses[0]:
+                    res.append(Transaction.from_dict(tx))
+            else:
+                raise Exception('There was a response but it was empty')
+        else:
+            raise NoPeersException('No nodes available to request the transactions from')
+        return res
+
+    def search_transaction_from_sender(self, sender_public_key):
+        responses = self._bulk_send('searchTransactionFromSender', [sender_public_key], return_on_first_success=True)
         res = []
         if responses:
             if len(responses) > 0:
@@ -317,6 +343,8 @@ class ServerNetworkInterface(NetworkInterface):
                  get_all_transactions_callback,
                  get_transactions_in_pool,
                  get_n_last_transactions_callback,
+                 search_transactions_from_receiver_callback,
+                 search_transactions_from_sender_callback,
                  peer_discovery=True,
                  ip='127.0.0.1', port=8080, block_cache_size=1000,
                  transaction_cache_size=1000):
@@ -348,6 +376,8 @@ class ServerNetworkInterface(NetworkInterface):
         self.transaction_cache_size = transaction_cache_size
         self.get_all_transactions_callback = get_all_transactions_callback
         self.get_n_last_transactions_callback = get_n_last_transactions_callback
+        self.search_transactions_from_receiver_callback = search_transactions_from_receiver_callback
+        self.search_transactions_from_sender_callback = search_transactions_from_sender_callback
 
         if peer_discovery:
 
@@ -409,6 +439,8 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestTransactionsInPool'] = self.__handle_request_transactions_in_pool
         dispatcher['requestAllTransactions'] = self.__handle_request_all_transactions
         dispatcher['requestNLastTransaction'] = self.__handle_request_n_last_transaction
+        dispatcher['searchTransactionFromReceiver'] = self.__handle_search_transaction_from_receiver
+        dispatcher['searchTransactionFromSender'] = self.__handle_search_transaction_from_sender
 
 
         # insert IP address of peer if advertise peer is called
@@ -453,16 +485,7 @@ class ServerNetworkInterface(NetworkInterface):
             pass
 
     def __handle_send_transaction(self, transaction_data):
-        if 'transaction_type' in transaction_data:
-            transaction_type = transaction_data['transaction_type']
-            if (transaction_type == 0):
-                transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
-            if (transaction_type == 1):
-                transaction = WorkflowTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'],transaction_data['signature'])
-            if (transaction_type == 2):
-                transaction = TaskTransaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
-        else:
-            transaction = Transaction(transaction_data['sender'], transaction_data['receiver'],transaction_data['payload'], transaction_data['signature'])
+        transaction = TransactionFactory.create_transcation(transaction_data)
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
         transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
         self.on_transaction_received_callback(transaction)
@@ -530,6 +553,18 @@ class ServerNetworkInterface(NetworkInterface):
         transactions = self.get_n_last_transactions_callback(n)
         if transactions:
             return [transaction.to_dict() for transaction in transactions]
+        return []
+
+    def __handle_search_transaction_from_receiver(self, receiver_public_key):
+        receiver_transactions = self.search_transactions_from_receiver_callback(receiver_public_key)
+        if receiver_transactions:
+            return [transaction.to_dict() for transaction in receiver_transactions]
+        return []
+
+    def __handle_search_transaction_from_sender(self, sender_public_key):
+        sender_transactions = self.search_transactions_from_sender_callback(sender_public_key)
+        if sender_transactions:
+            return [transaction.to_dict() for transaction in sender_transactions]
         return []
 
     @staticmethod

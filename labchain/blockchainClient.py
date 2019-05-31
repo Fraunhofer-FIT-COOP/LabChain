@@ -3,10 +3,8 @@ import json
 
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, BlockDoesNotExistException,NoPeersException
 from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction, TaskTransaction
-from labchain.datastructure.txpool import TxPool
-from labchain.util.cryptoHelper import CryptoHelper
 from labchain.util.Menu import Menu
+
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -301,7 +299,8 @@ class BlockchainClient:
                 addresses[str(i)] = (label, self.__delete_by_label, [label, ])
                 i += 1
             delete_menu = Menu(['Delete address'], addresses,
-                               'Please select a key to delete: ', 'Exit without deleting any addresses', True)
+                               'Please select a key to delete: ',
+                               'Exit without deleting any addresses', True)
             delete_menu.show()
         input('Press any key to go back to the main menu!')
 
@@ -383,6 +382,40 @@ class BlockchainClient:
 
         transactions = self.network_interface.get_n_last_transactions(n)
 
+        clear_screen()
+
+        if not transactions:
+            print ("No transactions")
+        else:
+            for transaction in transactions:
+                transaction.print()
+                print()
+        input('Press enter to continue...')
+
+    def __search_transaction_from_receiver(self):
+        """Prompt the user for a public key: public key of the reciver"""
+        clear_screen()
+        receiver_public_key = input('Please enter reciver public key: ')
+        transactions = self.network_interface.search_transaction_from_receiver(receiver_public_key)
+
+        clear_screen()
+
+        if not transactions:
+            print ("No transactions")
+        else:
+            for transaction in transactions:
+                transaction.print()
+                print()
+        input('Press enter to continue...')
+
+
+
+    def __search_transaction_from_sender(self):
+        """Prompt the user for a public key: public key of the reciver"""
+        clear_screen()
+        sender_public_key = input('Please enter sender public key: ')
+        transactions = self.network_interface.search_transaction_from_sender(sender_public_key)
+        
         clear_screen()
 
         if not transactions:

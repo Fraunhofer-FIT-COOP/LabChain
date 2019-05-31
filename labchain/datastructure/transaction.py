@@ -41,8 +41,7 @@ class Transaction:
         """
         Passing the arguments for signature with given private key.
         :param private_key: Private key of the signer in the string format.
-        :param payload: JSON of the data to be signed.
-        :param signature: Receeives signed transaction.
+        :param crypto_helper: Crypto_Helper instance used for signing
         """
         data = json.dumps({
             'sender': self.__sender,
@@ -54,15 +53,17 @@ class Transaction:
     def __eq__(self, other):
         if not other:
             return None
-        return self.sender == other.sender and self.receiver == other.receiver and self.payload == other.payload \
-               and self.signature == other.signature
+        return (self.sender == other.sender
+                and self.receiver == other.receiver
+                and self.payload == other.payload
+                and self.signature == other.signature)
 
-    def validate_transaction(self, crypto_helper):
+    def validate_transaction(self, crypto_helper, blockchain) -> bool:
         """
         Passing the arguments for validation with given public key and signature.
-        :param public_key: Public key of the signer in the string format.
-        :param payload: JSON of the data to be signed.
-        :param result: Receeives result of transaction validation.
+        :param crypto_helper: Crypto_Helper instance used for validation
+        :param blockchain: Blockchain object
+        :returns: Receives result of transaction validation.
         """
         data = json.dumps({
             'sender': self.__sender,

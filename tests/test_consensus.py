@@ -29,7 +29,8 @@ class Tests(TestCase):
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
         consensus.kill_mine = 1
-        self.assertFalse(consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 3))
+        self.assertFalse(
+            consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 3))
 
     def test_show_validate_true(self):
         #  Values Dumped
@@ -44,9 +45,9 @@ class Tests(TestCase):
         _num_of_blocks = 1
         # Mine block to get correct Nonce
         consensus.mine(block=block, latest_timestamp=_latest_ts,
-                            earliest_timestamp=_earliest_ts,
-                            num_of_blocks=_num_of_blocks,
-                            prev_difficulty=0)
+                       earliest_timestamp=_earliest_ts,
+                       num_of_blocks=_num_of_blocks,
+                       prev_difficulty=0)
 
         self.assertTrue(consensus.validate(block, _latest_ts, _earliest_ts, 1))
 
@@ -59,4 +60,5 @@ class Tests(TestCase):
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
         block.nonce = nonce_false
-        self.assertFalse(consensus.validate(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 2))
+        self.assertFalse(
+            consensus.validate(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 2))

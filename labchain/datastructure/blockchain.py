@@ -1,12 +1,12 @@
-from datetime import datetime
 import json
 import logging
-import sys
+import threading
+from datetime import datetime
 
 from labchain.datastructure.block import LogicalBlock
-from labchain.datastructure.transaction import NoHashError
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.datastructure.transaction import NoHashError
 
 
 class BlockChain:
@@ -65,7 +65,8 @@ class BlockChain:
         self._orphan_blocks = {}
         self._current_branch_heads = []
         self._node_branch_head = None
-        self._furthest_branching_point = {"block": None, "position": float("inf")}
+        self._furthest_branching_point = {"block": None,
+                                          "position": float("inf")}
         self._tolerance_level = tolerance_value
         self._pruning_interval = pruning_interval * 3600
         self._consensus = consensus_obj
@@ -75,6 +76,11 @@ class BlockChain:
         self._active_mine_block = None
         self._db = db
         self._q = q
+
+        # RLock allows for recursive use of add_block
+        self._blockchain_lock = threading.RLock()
+        self._orphan_lock = threading.RLock()
+
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=0, timestamp=0)
@@ -82,13 +88,12 @@ class BlockChain:
         self._first_block_hash = _first_block.get_computed_hash()
         self._blockchain[self._first_block_hash] = _first_block
 
-        self._logger.debug("Added Genesis block --- \n {b} \n".
-                     format(b=str(_first_block)))
+        self._logger.debug("Added Genesis block --- \n {b} \n"
+                           .format(b=str(_first_block)))
 
         self._node_branch_head = self._first_block_hash
         self._current_branch_heads = [self._first_block_hash, ]
         self._logger.debug("BlockChain initialized with genesis block")
-
 
     def get_block_range(self, range_start=None, range_end=None):
         """Returns a list of Logicalblock objects from the blockchain range_start and range_end inclusive.
@@ -98,6 +103,11 @@ class BlockChain:
         if chain couldn't be traversed at some point we have bigger bugs in code
         if range_start or range_end is not found in chain, returns None
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug("get_block_by_range was unable to acquire lock")
+            raise TimeoutError
+
         if not range_start:
             range_start = self._first_block_hash
         if not range_end:
@@ -106,6 +116,7 @@ class BlockChain:
 
         if any([range_start not in self._blockchain,
                 range_end not in self._blockchain]):
+            self._blockchain_lock.release()
             return None
 
         blocks_range = []
@@ -115,14 +126,21 @@ class BlockChain:
             blocks_range.append(_b)
         if not _b_hash == self._first_block_hash:
             blocks_range.append(self._blockchain.get(_b_hash))
+        self._blockchain_lock.release()
         return blocks_range
 
     def get_block_by_id(self, block_id):
         """Returns the block if found in blockchain, else returns None"""
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug("get_block_by_id was unable to acquire lock")
+            raise TimeoutError
+
         block_list = []
         for _, _block in self._blockchain.items():
             if _block.block_id == block_id:
                 block_list.append(_block)
+        self._blockchain_lock.release()
         return block_list
 
     def get_block_by_hash(self, block_hash):
@@ -140,11 +158,16 @@ class BlockChain:
             None if Block was not found in node's chain.
 
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug("get_block_by_hash was unable to acquire lock")
+            raise TimeoutError
 
         block_info = None
         _req_block = self._blockchain.get(block_hash, None)
         if _req_block:
             block_info = _req_block.get_json()
+        self._blockchain_lock.release()
         return block_info
 
     def get_transaction(self, transaction_hash):
@@ -158,16 +181,23 @@ class BlockChain:
         Tuple
             (Transaction obj, Block_hash)
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug("get_transaction was unable to acquire lock")
+            raise TimeoutError
 
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
                 if transaction_hash == _txn.transaction_hash:
+                    self._blockchain_lock.release()
                     return _txn, _hash
         pool_transaction = self._txpool.get_transaction_by_hash(transaction_hash)[0]
         if pool_transaction:
-                return pool_transaction,"No block hash - this transaction still in the pool"
+            self._blockchain_lock.release()
+            return pool_transaction, "No block hash - this transaction still in the pool"
         else:
+            self._blockchain_lock.release()
             return None, None
 
     def get_all_transactions(self):
@@ -177,32 +207,85 @@ class BlockChain:
         Tuple
             (Transaction obj, Block_hash)
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug(
+                "get_all_transactions was unable to acquire lock")
+            raise TimeoutError
+
         res = []
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
                 res.append(_txn)
+        self._blockchain_lock.release()
+        return res
+
+    def search_transaction_from_receiver(self, receiver_public_key):
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug(
+                "search_transaction_from_receiver was unable to acquire lock")
+            raise TimeoutError
+
+        res = []
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if _txn.receiver == receiver_public_key:
+                    res.append(_txn)
+        self._blockchain_lock.release()
+        return res
+
+    def search_transaction_from_sender(self, sender_public_key):
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug(
+                "search_transaction_from_sender was unable to acquire lock")
+            raise TimeoutError
+
+        res = []
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if _txn.sender == sender_public_key:
+                    res.append(_txn)
+        self._blockchain_lock.release()
         return res
 
     def get_task_transactions(self):
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug(
+                "get_task_transactions was unable to acquire lock")
+            raise TimeoutError
+
         task_transactions = []
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
                 if isinstance(_txn, TaskTransaction) and not isinstance(_txn, WorkflowTransaction):
                     task_transactions.append(_txn)
+        self._blockchain_lock.release()
         return task_transactions
 
     def get_workflow_transactions(self):
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug(
+                "get_workflow_transaction was unable to acquire lock")
+            raise TimeoutError
+
         task_transactions = []
         for _hash, _block in self._blockchain.items():
             _txns = _block.transactions
             for _txn in _txns:
                 if isinstance(_txn, WorkflowTransaction):
                     task_transactions.append(_txn)
+        self._blockchain_lock.release()
         return task_transactions
 
-    def get_n_last_transactions(self,n):
+    def get_n_last_transactions(self, n):
         """
         Parameters
         ----------
@@ -211,16 +294,24 @@ class BlockChain:
         -------
         array of transactions
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug(
+                "get_n_last_transactions was unable to acquire lock")
+            raise TimeoutError
+
         n = int(n)
         number_of_transactions = 0
         total_transactions = []
         current_block_hash = self._node_branch_head
-        while(number_of_transactions < n and self._blockchain[current_block_hash].block_id != 0):
+        while (number_of_transactions < n
+               and self._blockchain[current_block_hash].block_id != 0):
             remained_transactions = n - number_of_transactions
             block_transactions = self._blockchain[current_block_hash].transactions[:remained_transactions]
             current_block_hash = self._blockchain[current_block_hash].predecessor_hash
             total_transactions.extend(block_transactions)
             number_of_transactions += len(block_transactions)
+        self._blockchain_lock.release()
         return total_transactions
 
     def calculate_diff(self, _hash=None):
@@ -243,17 +334,24 @@ class BlockChain:
         latest_difficulty: Integer
             difficulty of the latest block
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug("calculate_diff was unable to acquire lock")
+            raise TimeoutError
+
         if not _hash:
             _hash = self._node_branch_head
         last_block_json = self.get_block_by_hash(_hash)
         if last_block_json:
             _last_block = json.loads(last_block_json)
         else:
+            self._blockchain_lock.release()
             return -1, -1, -1, -1
 
         # if only genesis block present in chain return 0 as timestamps
         # and 1 as difficulty
         if _last_block["nr"] == 0:
+            self._blockchain_lock.release()
             return 0, 0, 1, 1
 
         avg_difficulty = 0
@@ -281,6 +379,7 @@ class BlockChain:
             avg_difficulty += _block['difficulty']
             _number_of_blocks += 1
         avg_difficulty = float(avg_difficulty) / _number_of_blocks
+        self._blockchain_lock.release()
         return _latest_timestamp, _earliest_timestamp, _number_of_blocks, avg_difficulty
 
     def add_block(self, block, db_flag=True):
@@ -301,92 +400,200 @@ class BlockChain:
             Return False if block validation fails and it is deleted.
 
         """
+        # Convert block to LogicalBlock if necessary
         if not isinstance(block, LogicalBlock):
             self._logger.debug("Converting block to logical block!")
             block = LogicalBlock.from_block(block, self._consensus)
 
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug("Add block was unable to acquire lock")
+            raise TimeoutError
+
         if block.get_computed_hash() in self._blockchain:
             self._logger.debug("Hash already present in blockchain! Not adding.")
+            self._blockchain_lock.release()
             return False
 
-        _prev_hash = block.predecessor_hash
-        _curr_block_hash = block.get_computed_hash()
-        _curr_block = block
+        validation_result = self._get_validation_data(block)
 
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
-            self.calculate_diff(block.predecessor_hash)
-
-        validity_level = block.validate_block(_latest_ts, _earliest_ts,
-                                              _num_of_blocks, _latest_difficulty)
-
-        if _prev_hash not in self._blockchain:
-            if validity_level == -3:
-                self._logger.debug("Block has been put to orphan pool, "
-                                   "since predecessor was not found")
-                self._orphan_blocks[_prev_hash] = _curr_block
-                self.request_block_from_neighbour(_prev_hash)
-        else:
-            if not validity_level == 0:
-                self._logger.debug("The block received is not valid, "
-                                   "discarding this block -- \n {b}".
-                                   format(b=str(block)))
-                if block.is_block_ours(self._node_id):
-                    self._logger.debug("Since this block is ours, returning the "
-                                 "transactions back to transaction pool")
-                    _txns = block.transactions
-                    self._txpool.return_transactions_to_pool(_txns)
-                del block
-                self._logger.debug("Block not valid! Not adding.")
-                return False
-
-            _prev_block = self._blockchain.get(_prev_hash)
-            _prev_block_pos = _prev_block.get_block_pos()
-
-            if _prev_hash in self._current_branch_heads:
-                self._current_branch_heads.remove(_prev_hash)
-            else:
-                if _prev_block_pos < self._furthest_branching_point["position"]:
-                    self._furthest_branching_point["position"] = _prev_block_pos
-                    self._furthest_branching_point["block"] = _prev_block
-
-            _curr_block.set_block_pos(_prev_block_pos + 1)
-            self._blockchain[_curr_block_hash] = _curr_block
-            self._current_branch_heads.append(_curr_block_hash)
-            if db_flag:
-                self._db.save_block(block)
-                self._logger.info('Saved block no. {} to DB'.format(block.block_id))
-
-            if _prev_hash == self._node_branch_head:
-                self._logger.debug("Branch head updated for node {}".format(self._node_id))
-                self._node_branch_head = _curr_block_hash
-
-            # Check iteratively if blocks are parent to some orphans
-            # Todo: change the function to a recursive one
-            _parent_hash = _curr_block_hash
-            _parent_block = _curr_block
-            while _parent_hash in self._orphan_blocks:
-                _block = self._orphan_blocks[_parent_hash]
-                _this_block_hash = _block.get_computed_hash()
-                _block.set_block_pos(_parent_block.get_block_pos() + 1)
-                self._blockchain[_this_block_hash] = _block
-                _parent_hash = _this_block_hash
-                _parent_block = _block
+        if validation_result == 0:  # Block is valid and can be added
+            self._add_block_to_blockchain(block, db_flag)
+            self._check_for_orphans_with_parent(db_flag)  # New block might be predecessor of orphans
+        elif validation_result == -1:  # Block is invalid and has to be discarded
+            self._logger.debug("The block received is not valid, discarding this block -- \n {b}".format(b=str(block)))
+            if block.is_block_ours(self._node_id):
+                self._logger.debug("Since this block is ours, returning the transactions back to transaction pool")
+                _txns = block.transactions
+                self._txpool.return_transactions_to_pool(_txns, self)
+            del block
+            self._logger.debug("Block not valid! Not adding.")
+            self._blockchain_lock.release()
+            return False
+        elif validation_result == -2:  # Blocks seems to be an orphan and is added to orphan_pool
+            self._add_block_to_orphan_pool(block)
+        else:  # This case could be relevant in future and informs about possible bugs
+            self._logger.error('Unexpected block state')
+            self._blockchain_lock.release()
+            raise ValueError
 
         # kill mine check
         if not block.is_block_ours(self._node_id):
             self.check_block_in_mining(block)
 
-        self._logger.info("Added new block --- \n {h} \n {b} \n".
-                    format(h=str(block.get_computed_hash()), b=str(block)))
-
+        self._logger.info("Added new block --- \n {h} \n {b} \n"
+                          .format(h=str(block.get_computed_hash()),
+                                  b=str(block)))
         self._logger.debug("Number of branches currently branch heads = {}"
                            .format(len(self._current_branch_heads)))
         i = 0
         for branch in self._current_branch_heads:
             self._logger.debug("Branch {} : {}".format(i + 1, branch))
             i += 1
+
+        self._blockchain_lock.release()
+
         self.switch_to_longest_branch()
         return True
+
+    def _get_validation_data(self, block: LogicalBlock):
+        """
+        Evaluates block for addition to blockchain
+        :param block: block to be checked
+        :return:
+             0 - block is valid
+            -1 - block is invalid and not orphan, discard
+            -2 - block is orphan, might be valid in future
+        """
+        _prev_hash = block.predecessor_hash
+        _curr_block_hash = block.get_computed_hash()
+        _curr_block = block
+
+        if _prev_hash in self._blockchain:
+            _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
+            validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty, self)
+            if validity_level == 0:
+                return 0
+            elif validity_level == -1:
+                return -1  # discard invalid blocks
+            elif validity_level == -2:
+                return -1  # discard invalid blocks
+            elif validity_level == -3:
+                return -1  # discard invalid blocks
+        else:
+            return -2  # without predecessor it has to be an orphan
+
+    def _add_block_to_blockchain(self, block: LogicalBlock, db_flag):
+        """
+        A valid block is added to the blockchain
+        :param block:   the block to be added to the blockchain
+        :param db_flag: True, if block should be added to database
+        """
+        _prev_block: LogicalBlock = self._blockchain.get(block.predecessor_hash)
+        _prev_block_pos = _prev_block.get_block_pos()
+
+        if block.predecessor_hash in self._current_branch_heads:
+            self._current_branch_heads.remove(block.predecessor_hash)
+        else:
+            if _prev_block_pos < self._furthest_branching_point["position"]:
+                self._furthest_branching_point["position"] = _prev_block_pos
+                self._furthest_branching_point["block"] = _prev_block
+
+        block.set_block_pos(_prev_block_pos + 1)
+        self._blockchain[block.get_computed_hash()] = block
+        self._current_branch_heads.append(block.get_computed_hash())
+        if db_flag:
+            self._db.save_block(block)
+            self._logger.info('Saved block no. {} to DB'.format(block.block_id))
+
+        if block.predecessor_hash == self._node_branch_head:
+            self._logger.debug("Branch head updated for node {}".format(self._node_id))
+            self._node_branch_head = block.get_computed_hash()
+
+    def _add_block_to_orphan_pool(self, block: LogicalBlock):
+        """
+        A orphan is added to the orphan_pool
+        :param block: the block to be added to the orphan_pool
+        :raises TimeoutError if orphan_pool cannot be accessed
+        """
+        self._logger.debug("Block has been put to orphan pool, since predecessor was not found")
+        # Protection mechanism for multithreading
+        if not self._orphan_lock.acquire():
+            self._logger.debug("Add block was unable to acquire orphan_lock")
+            raise TimeoutError
+        """
+        The case that multiple orphans could have the same predecessor block was not considered in the previous
+        version of the code. In this refactoring, the logic to add orphans to the blockchain if predecessors arrive
+        has been added. Idea to implement this would be to modify the dictionary so that a list of orphans is saved
+        for each predecessor-hash
+        """
+        if block.predecessor_hash in self._orphan_blocks:
+            self._logger.warning("Orphan with same predecessor already in orphan_pool, overwriting")  # TODO fix logic
+        self._orphan_blocks[block.predecessor_hash] = block
+        self._orphan_lock.release()
+        self.request_block_from_neighbour(block.predecessor_hash)
+
+    def _check_for_orphans_with_parent(self, db_flag):
+        """
+        Checks, if adding orphans to the blockchain results in other orphans finding their predecessor. If so, these
+        blocks should be added too.
+        :param db_flag: flag passed to _add_block_to_blockchain (due to recursive calls)
+        :raises TimeoutError if orphan_pool cannot be accessed
+        :raises ValueError if orphan is still considered in orphan although predecessor is in blockchain
+        """
+        # Protection mechanism for multithreading
+        if not self._orphan_lock.acquire():
+            self._logger.debug(
+                "Add block was unable to acquire orphan_lock")
+            raise TimeoutError
+
+        predecessor_is_in_blockchain = self._get_orphans_with_predecessor_in_blockchain()
+
+        # Add blocks with predecessor in blockchain to blockchain
+        for predecessor_hash in predecessor_is_in_blockchain:  # Checks each block in orphan_pool
+            block = predecessor_is_in_blockchain[predecessor_hash]
+            validation_result = self._get_validation_data(block)  # Revalidation of block
+            if validation_result == 0:  # former orphan is now a valid block and is added
+                self._add_block_to_blockchain(block, db_flag)
+            elif validation_result == -1:  # former orphan is invalid and should be discarded
+                self._logger.debug("The block taken from orphan_pool is not valid, discarding this block -- \n {b}"
+                                   .format(b=str(block)))
+                if block.is_block_ours(self._node_id):
+                    self._logger.debug("Since this block is ours, returning the transactions back to transaction pool")
+                    _txns = block.transactions
+                    self._txpool.return_transactions_to_pool(_txns, self)
+                del block
+                self._logger.debug("Block not valid! Not adding.")
+            else:
+                """
+                    validation_result -2 cannot happen, because block was taken from orphan pool and cannot be an 
+                    orphan again since predecessor is now in blockchain
+                """
+                self._logger.error('Unexpected block state')
+                self._orphan_lock.release()
+                raise ValueError
+
+        # Remove non-orphans from orphan_pool
+        self._orphan_blocks = {k: predecessor_is_in_blockchain[k] for k in
+                               set(predecessor_is_in_blockchain) - set(self._orphan_blocks)}
+        if len(
+                predecessor_is_in_blockchain) == 0:  # All orphans have predecessors not in blockchain, terminate recursion
+            self._orphan_lock.release()
+            return
+        else:  # Check if orphans got a parent in blockchain
+            self._check_for_orphans_with_parent(db_flag)
+            self._orphan_lock.release()
+
+    def _get_orphans_with_predecessor_in_blockchain(self):
+        """
+        Searches for orphans where a predecessor can be found
+        :return: list of orphans with predecessor
+        """
+        _pred_is_in_blockchain = {}
+        for _orphan_predecessor_hash in self._orphan_blocks:
+            if _orphan_predecessor_hash in self._blockchain:
+                _pred_is_in_blockchain[_orphan_predecessor_hash] = self._orphan_blocks[_orphan_predecessor_hash]
+        return _pred_is_in_blockchain
 
     def create_block(self, transactions):
         """Creates a new LogicalBlock instance.
@@ -402,6 +609,10 @@ class BlockChain:
             The New Block created from the transactions given
 
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug("create_block was unable to acquire lock")
+            raise TimeoutError
 
         _curr_head = self._blockchain[self._node_branch_head]
         _new_block_id = _curr_head.block_id + 1
@@ -410,6 +621,7 @@ class BlockChain:
                                  predecessor_hash=self._node_branch_head,
                                  block_creator_id=self._node_id,
                                  consensus_obj=self._consensus)
+        self._blockchain_lock.release()
         return new_block
 
     def switch_to_longest_branch(self):
@@ -419,8 +631,15 @@ class BlockChain:
         the tolerance level defined.
 
         """
+        # Protection mechanism for multithreading
+        if not self._blockchain_lock.acquire():
+            self._logger.debug(
+                "Switch_to_longest_branch was unable to acquire lock")
+            raise TimeoutError
+
         if len(self._current_branch_heads) == 1:
             # No Branching happened yet, nothing to do here
+            self._blockchain_lock.release()
             return
 
         _check_point_pos = self._furthest_branching_point['position']
@@ -457,28 +676,37 @@ class BlockChain:
                     _b = self._blockchain.pop(_b_hash)
                     if _b.is_block_ours(self._node_id):
                         _txns = _b.transactions
-                        self._txpool.return_transactions_to_pool(_txns)
+                        self._txpool.return_transactions_to_pool(_txns, self)
                     _b_hash = _b.predecessor_hash
                     del _b
 
             self._current_branch_heads = [_new_head_hash, ]
             self._node_branch_head = _new_head_hash
-            self._furthest_branching_point = {"block": None, "position": float("inf")}
-            self._logger.debug("Branch switching successful, new node branch head : {}".
-                         format(self._node_branch_head))
+            self._furthest_branching_point = {"block": None,
+                                              "position": float("inf")}
+            self._logger.debug(
+                "Branch switching successful, new node branch head : {}"
+                .format(self._node_branch_head))
+            self._blockchain_lock.release()
 
     def prune_orphans(self):
         """Delete orphans stored in the orphan store once the pruning
         interval as defined in config has crossed
         """
+        # Protection mechanism for multithreading
+        if not self._orphan_lock.acquire():
+            self._logger.debug("get_block_by_hash was unable to acquire lock")
+            raise TimeoutError
+
         _curr_time = datetime.now()
-        for _hash in self._orphan_blocks:
+        for _hash in self._orphan_blocks.copy():
             _block = self._orphan_blocks[_hash]
             _block_creation_time = datetime.fromtimestamp(_block.timestamp)
             _time_passed = (_curr_time - _block_creation_time).total_seconds()
             if _time_passed >= self._pruning_interval:
                 self._orphan_blocks.pop(_hash)
                 del _block
+        self._orphan_lock.release()
 
     def request_block_from_neighbour(self, requested_block_hash):
         """Requests a block from other nodes connected with.
@@ -519,4 +747,4 @@ class BlockChain:
                             t.transaction_hash = thash
                     unmined_transactions = list(
                         set(self._active_mine_block.transactions).difference(set(block.transactions)))
-                self._txpool.return_transactions_to_pool(unmined_transactions)
+                self._txpool.return_transactions_to_pool(unmined_transactions, self)

@@ -3,6 +3,7 @@ import sqlite3
 import json
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
+from labchain.util.TransactionFactory import TransactionFactory
 
 
 class Db:
@@ -137,7 +138,19 @@ class Db:
             txns_db = self.cursor.fetchall()
             if len(txns_db) != 0:
                 for txn_db in txns_db:
-                    txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                    try:
+                        json_payload = json.loads(txn_db[2])
+                        if isinstance(json_payload,dict):
+                            transaction_data = {}
+                            transaction_data['payload'] = json_payload
+                            transaction_data['signature'] = txn_db[3]
+                            transaction_data['sender'] = txn_db[0]
+                            transaction_data['receiver'] = txn_db[1]
+                            txn = TransactionFactory.create_transcation(transaction_data)
+                        elif isinstance(json_payload,int):
+                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])        
+                    except json.JSONDecodeError:
+                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                     txn.transaction_hash = txn_db[4]
                     txns.append(txn)
                 #txns=[]
