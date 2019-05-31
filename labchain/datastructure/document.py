@@ -97,6 +97,7 @@ class Document:
             pid_history = dict_data['pid_history'],
             dict_permission=dict_data['dict_permission']
         )
+
     @staticmethod
     def from_json(json_data):
         dict_data = json.loads(json_data)

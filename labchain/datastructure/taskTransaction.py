@@ -1,9 +1,11 @@
 import json
 import logging
-from typing import Dict
 from base64 import b64decode
+from typing import Dict
+
 from Crypto.PublicKey import ECC
 
+from labchain.datastructure.blockchain import BlockChain
 from labchain.datastructure.transaction import Transaction
 
 
@@ -76,13 +78,16 @@ class TaskTransaction(Transaction):
                 return False
         return True
 
-    def _check_for_wrong_branching(self):
-        # TODO implement
-        # latest_transaction_hash = getter???
-        # if self.transaction_hash == latest_transaction_hash:
-        #     return True
-        # return False
-        pass
+    def _check_for_duplicate_transactions(self, blockchain: BlockChain):
+        parallel_transactions = list(
+            set(blockchain.search_transaction_from_sender(self.sender))
+            & set(blockchain.search_transaction_to_receiver(self.receiver)))
+        parallel_transactions = [t for t in parallel_transactions if
+                                 isinstance(t, TaskTransaction) or isinstance(t, WorkflowTransaction)]
+        parallel_transactions = [t for t in parallel_transactions if t.workflow_ID == self.workflow_ID]
+        parallel_transactions = [t for t in parallel_transactions if
+                                 t.previous_transaction == self.previous_transaction]
+        return False if len(parallel_transactions) > 0 else True
 
     def _check_PID_well_formedness(self, PID):
         parts = PID.split(sep='_')

@@ -179,7 +179,7 @@ class BlockChainNode:
         return self.blockchain_obj.get_n_last_transactions(n)
 
     def on_search_transaction_from_receiver(self, receiver_public_key):
-        return self.blockchain_obj.search_transaction_from_receiver(receiver_public_key)
+        return self.blockchain_obj.search_transaction_to_receiver(receiver_public_key)
         
 
     def on_search_transaction_from_sender(self, sender_public_key):
