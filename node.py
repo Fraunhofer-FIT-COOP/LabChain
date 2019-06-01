@@ -47,6 +47,7 @@ def parse_args():
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     parser.add_argument('--peer-discovery', action='store_true')
     parser.add_argument('--localhost', action='store_false')
+    parser.add_argument('--drop_db','-d',action='store_true')
     return parser.parse_args()
 
 
@@ -112,5 +113,10 @@ if __name__ == '__main__':
     Utility.print_labchain_logo()
 
     ip = '127.0.0.1' if not args.localhost else get_private_ip()
+
+    if (args.drop_db):
+        db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), './labchain/resources/labchaindb.sqlite'))
+        if os.path.exists(db_path):
+            os.remove(db_path)
 
     node = create_node(ip, args.port, initial_peers, args.peer_discovery)
