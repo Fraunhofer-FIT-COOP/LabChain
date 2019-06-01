@@ -81,7 +81,7 @@ class JsonRpcClient:
         }
         logger.debug('Sending request {} to {}'.format(str(payload), url))
         try:
-            response = requests.post(url, data=json.dumps(payload),
+            response = requests.post(url, data=json.dumps([payload]),
                                      headers=headers).json()
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as e:
@@ -445,7 +445,7 @@ class ServerNetworkInterface(NetworkInterface):
 
         # insert IP address of peer if advertise peer is called
         try:
-            request_body_dict = json.loads(request.data.decode())
+            request_body_dict = json.loads(request.data.decode())[0]
         except ValueError:
             return Response(status=HTTP_BAD_REQUEST)
         if request_body_dict['method'] == 'advertisePeer':

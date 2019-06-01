@@ -179,7 +179,7 @@ class BlockChainNode:
         return self.blockchain_obj.get_n_last_transactions(n)
 
     def on_search_transaction_from_receiver(self, receiver_public_key):
-        return self.blockchain_obj.search_transaction_from_receiver(receiver_public_key)
+        return self.blockchain_obj.search_transaction_to_receiver(receiver_public_key)
         
 
     def on_search_transaction_from_sender(self, sender_public_key):
@@ -210,11 +210,7 @@ class BlockChainNode:
         return None
 
     def on_new_transaction_received(self, transaction):
-        validation_result = self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
-        self.logger.warning("----------------------------------------------")
-        self.logger.warning("Validation Result {}".format(validation_result))
-        self.logger.warning("----------------------------------------------")
-        return validation_result
+        return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""
