@@ -36,7 +36,6 @@ class TransactionTestCase(unittest.TestCase):
         self.assertEqual(data_dict['sender'], 's')
         self.assertEqual(data_dict['receiver'], 'r')
         self.assertEqual(data_dict['payload'], '1')
-        self.assertEqual(data_dict['signature'], 'sig')
 
     def test_from_json(self):
         """Test transaction creation from json"""
@@ -287,7 +286,7 @@ class TaskTransactionTestCase(TaskTransactionCommon):
         task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "{}_2".format(pu_key2))
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
 
-        self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction))
+        self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction,workflowTransaction))
 
     def test_process_definition(self):
         pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()

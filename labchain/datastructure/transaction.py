@@ -1,5 +1,7 @@
 import json
 
+from labchain.util.publicKeyNameMaping import PublicKeyNamesMapping
+
 
 class Transaction:
     """Represents a single transaction within the blockchain.
@@ -23,7 +25,19 @@ class Transaction:
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
-        return json.dumps(self.to_dict())
+        return json.dumps({
+            'sender': self.__sender,
+            'receiver': self.__receiver,
+            'payload': self.__payload
+        })
+
+    def get_json_without_signature(self):
+        """Serialize this instance to a JSON string."""
+        return json.dumps({
+            'sender': self.__sender,
+            'receiver': self.__receiver,
+            'payload': self.__payload
+        })
 
     @staticmethod
     def from_json(json_data):
@@ -73,7 +87,8 @@ class Transaction:
         return crypto_helper.validate(self.sender, data, self.signature)
 
     def __str__(self):
-        return str(self.to_dict())
+        dict_with_names = PublicKeyNamesMapping.replace_public_keys_with_names(self.to_dict())
+        return str(dict_with_names)
 
     @property
     def sender(self):
