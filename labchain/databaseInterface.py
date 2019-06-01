@@ -1,13 +1,15 @@
-import logging
-import sqlite3
 import json
+import logging
+import os
+import sqlite3
+
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 from labchain.util.TransactionFactory import TransactionFactory
 
 
 class Db:
-    def __init__(self, block_chain_db_file):
+    def __init__(self, block_chain_db_file, create_new_database=False):
         """
         Constructor for Database
 
@@ -24,6 +26,13 @@ class Db:
         """
         # Creates or opens a file called mydb with a SQLite3 DB
         self.logger = logging.getLogger(__name__)
+        if create_new_database:
+            self.logger.debug('Removing database...')
+            if os.path.exists(block_chain_db_file):
+                os.remove(block_chain_db_file)
+                self.logger.debug('Database removed.')
+            else:
+                self.logger.debug('Database not found.')
         self.db_file = block_chain_db_file
         self.open_connection(block_chain_db_file)
         self.blockchain_table = 'blockchain'

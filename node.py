@@ -3,6 +3,7 @@ import logging
 import os
 import socket
 import sys
+
 import dns.resolver
 
 # append project dir to python path
@@ -21,9 +22,9 @@ CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_ip, node_port, peer_list, peer_discovery):
+def create_node(node_ip, node_port, peer_list, peer_discovery, new_database):
     return BlockChainNode(CONFIG_FILE, node_ip, node_port, peer_list,
-                          peer_discovery)
+                          peer_discovery, new_database)
 
 
 def setup_logging(verbose, very_verbose):
@@ -46,7 +47,8 @@ def parse_args():
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     parser.add_argument('--peer-discovery', action='store_true')
-    parser.add_argument('--localhost', action='store_false')
+    parser.add_argument('--localhost', action='store_true')
+    parser.add_argument('--new-database', action='store_true')
     return parser.parse_args()
 
 
@@ -111,6 +113,6 @@ if __name__ == '__main__':
     initial_peers = parse_peers(args.peers)
     Utility.print_labchain_logo()
 
-    ip = '127.0.0.1' if not args.localhost else get_private_ip()
+    ip = '127.0.0.1' if args.localhost else get_private_ip()
 
-    node = create_node(ip, args.port, initial_peers, args.peer_discovery)
+    node = create_node(ip, args.port, initial_peers, args.peer_discovery, args.new_database)

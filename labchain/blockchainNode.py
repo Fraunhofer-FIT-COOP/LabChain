@@ -26,7 +26,7 @@ from labchain.util.cryptoHelper import CryptoHelper
 class BlockChainNode:
 
     def __init__(self, config_file_path, node_ip="127.0.0.1", node_port=None,
-                 peer_list=None, peer_discovery=True):
+                 peer_list=None, peer_discovery=True, new_database=False):
         """Constructor for BlockChainNode
 
         Parameters
@@ -83,7 +83,7 @@ class BlockChainNode:
             self.logger.error("Exiting Node startup ..!! \n")
             sys.exit(0)
 
-        self.initialize_components()
+        self.initialize_components(new_database)
 
     def fetch_prev_blocks(self, q, interval):
         """Fetch the blocks requested at regular intervals, and try to
@@ -189,7 +189,7 @@ class BlockChainNode:
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
     # for workflow transaction utils
-    def get_previous_transaction(self, currenttaskTransaction)-> TaskTransaction:
+    def get_previous_transaction(self, currenttaskTransaction) -> TaskTransaction:
         current_in_charge = currenttaskTransaction.in_charge
         for transaction in self.txpool_obj.get_task_transactions():
             if transaction.next_in_charge == current_in_charge:
@@ -278,14 +278,14 @@ class BlockChainNode:
         """Restore DB by fetching entries from Blockchain"""
         return self.db.get_blockchain_from_db()
 
-    def initialize_components(self):
+    def initialize_components(self, new_database):
         """ Initialize every componenent of the node"""
         self.logger.debug("Initialized every component for the node")
         self.consensus_obj = Consensus()
         self.crypto_helper_obj = CryptoHelper.instance()
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
         self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(
-                     os.path.dirname(__file__), 'resources/labchaindb.sqlite')))
+            os.path.dirname(__file__), 'resources/labchaindb.sqlite')), create_new_database=new_database)
 
         """init blockchain"""
         # Generate the node ID using host ID

@@ -46,7 +46,7 @@ class TaskTransaction(Transaction):
         if not self._check_permissions_write(previous_transaction, workflow_transaction):
             logging.warning('Sender has not the permission to write!')
             return False
-        if not self._check_process_definition(workflow_transaction, previous_transaction):
+        if not self._check_process_definition(previous_transaction, workflow_transaction):
             logging.warning(
                 'Transaction does not comply to process definition!')
             return False
@@ -70,7 +70,7 @@ class TaskTransaction(Transaction):
                 return False
         return True
 
-    def _check_process_definition(self, workflow_transaction, previous_transaction):
+    def _check_process_definition(self, previous_transaction, workflow_transaction):
         process_definition = workflow_transaction.processes
         if previous_transaction:
             if self.in_charge not in process_definition[previous_transaction.in_charge]:
