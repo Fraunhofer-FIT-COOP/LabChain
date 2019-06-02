@@ -164,7 +164,7 @@ class TaskTransaction(Transaction):
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
-        type = data_dict.get('transaction_type', '0')
+        type = data_dict['payload'].get('transaction_type', '0')
         if type == '1':
             return WorkflowTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
                                        payload=data_dict['payload'], signature=data_dict['signature'])

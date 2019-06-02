@@ -1,5 +1,6 @@
 import json
 import os
+from typing import List
 
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.util.Menu import Menu
@@ -41,16 +42,18 @@ class WorkflowClient:
         """Entry point for the client console application."""
         self.main_menu.show()
 
-    def check_tasks(self, public_key):
+    def check_tasks(self, public_key) -> List[TaskTransaction]:
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
         received_task_transaction = [TaskTransaction.from_json(t.get_json()) for t in received if
                                      'workflow_id' in t.payload]
         send_task_transaction = [TaskTransaction.from_json(t.get_json()) for t in send if 'workflow_id' in t.payload]
         send_task_transaction = [t for t in send_task_transaction if t.type == '2']
-        raceived_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
+        received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
-
+        diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)
+                - set(send_task_transaction_dict)}
+        return [diff[k] for k in diff]
 
     def send_dummy_workflow_transaction(self):
        

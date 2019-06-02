@@ -303,7 +303,7 @@ class BlockChainComponent(unittest.TestCase):
 
         self.assertEqual(len(self.blockchain._orphan_blocks), 0, msg='Orphan was not move to blockchain')
 
-        self.assertEqual(len(self.blockchain._blockchain), 3, msg='Blockchain has not expected length')
+        self.assertEqual(len(self.blockchain._blockchain), 3 + 1, msg='Blockchain has not expected length')
 
         # Restore granular_factor
         self.consensus.granular_factor = previous_granular_factor
