@@ -213,6 +213,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "signature": None,
             "payload": {
                 "workflow-id": "0",
+                "transaction_type": "1",
                 "document": {
                     "stringAttribute": "stringValue",
                     "booleanAttribute": 'true',
@@ -252,6 +253,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "signature": None,
             "payload": {
                 "workflow-id": "0",
+                "transaction_type": "2",
                 "document": {
                     "stringAttribute": "1234"
                 },
