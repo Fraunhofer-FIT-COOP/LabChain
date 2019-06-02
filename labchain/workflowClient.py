@@ -47,6 +47,7 @@ class WorkflowClient:
         received_task_transaction = [TaskTransaction.from_json(t.get_json()) for t in received if
                                      'workflow_id' in t.payload]
         send_task_transaction = [TaskTransaction.from_json(t.get_json()) for t in send if 'workflow_id' in t.payload]
+        send_task_transaction = [t for t in send_task_transaction if t.type == '2']
         raceived_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
 

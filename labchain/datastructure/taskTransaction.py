@@ -67,7 +67,7 @@ class TaskTransaction(Transaction):
         return self.validate_transaction_common(crypto_helper, blockchain)
 
     def validate_transaction_common(self, crypto_helper, blockchain):
-        if not self._check_PID_well_formedness(self.in_charge):
+        if not self._check_pid_well_formedness(self.in_charge):
             return False
         return super().validate_transaction(crypto_helper, blockchain)
 
@@ -100,7 +100,7 @@ class TaskTransaction(Transaction):
                                  t.previous_transaction == self.previous_transaction]
         return False if len(parallel_transactions) > 0 else True
 
-    def _check_PID_well_formedness(self, PID):
+    def _check_pid_well_formedness(self, PID):
         parts = PID.split(sep='_')
         pid_pubkey = parts[0]
         pid_number = parts[1]
@@ -132,6 +132,10 @@ class TaskTransaction(Transaction):
         return True
 
     @property
+    def type(self):
+        return self.payload['transaction_type']
+
+    @property
     def document(self):
         return self.payload['document']
 
@@ -160,8 +164,16 @@ class TaskTransaction(Transaction):
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
-        return TaskTransaction(data_dict['sender'], data_dict['receiver'],
-                               data_dict['payload'], data_dict['signature'])
+        type = data_dict.get('transaction_type', '0')
+        if type == '1':
+            return WorkflowTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
+                                       payload=data_dict['payload'], signature=data_dict['signature'])
+        elif type == '2':
+            return TaskTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
+                                   payload=data_dict['payload'], signature=data_dict['signature'])
+        else:
+            return Transaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
+                               payload=data_dict['payload'], signature=data_dict['signature'])
 
 
 class WorkflowTransaction(TaskTransaction):
@@ -186,15 +198,15 @@ class WorkflowTransaction(TaskTransaction):
             return False
 
         for sender, receivers in self.processes.items():
-            if not self._check_PID_well_formedness(sender):
+            if not self._check_pid_well_formedness(sender):
                 return False
             for receiver in receivers:
-                if not self._check_PID_well_formedness(receiver):
+                if not self._check_pid_well_formedness(receiver):
                     return False
         document_keys = self.document.keys()
         for attr, pids in self.permissions.items():
             for pid in pids:
-                if not self._check_PID_well_formedness(pid):
+                if not self._check_pid_well_formedness(pid):
                     return False
             if attr not in document_keys:
                 return False

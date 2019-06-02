@@ -23,7 +23,7 @@ class Transaction:
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(), sort_keys=True)
 
     @staticmethod
     def from_json(json_data):
