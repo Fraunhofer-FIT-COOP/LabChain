@@ -1,8 +1,7 @@
 import os
-import json
 
-from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, BlockDoesNotExistException,NoPeersException
 from labchain.datastructure.transaction import Transaction
+from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, NoPeersException
 from labchain.util.Menu import Menu
 
 
@@ -396,7 +395,7 @@ class BlockchainClient:
         """Prompt the user for a public key: public key of the reciver"""
         clear_screen()
         receiver_public_key = input('Please enter reciver public key: ')
-        transactions = self.network_interface.search_transaction_from_receiver(receiver_public_key)
+        transactions = self.network_interface.search_transaction_to_receiver(receiver_public_key)
 
         clear_screen()
 

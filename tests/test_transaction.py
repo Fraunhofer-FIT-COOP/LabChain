@@ -461,6 +461,14 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
         result = transaction.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
         self.assertTrue(result)
 
+    def test_print(self):
+        pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
+        pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
+        print(pr_key1)
+        print(pr_key2)
+        print(pu_key1)
+        print(pu_key2)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -221,7 +221,7 @@ class BlockChain:
         self._blockchain_lock.release()
         return res
 
-    def search_transaction_from_receiver(self, receiver_public_key):
+    def search_transaction_to_receiver(self, receiver_public_key):
         # Protection mechanism for multithreading
         if not self._blockchain_lock.acquire():
             self._logger.debug(
