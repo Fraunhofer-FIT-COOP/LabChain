@@ -145,7 +145,7 @@ class TaskTransaction(Transaction):
 
     @property
     def workflow_ID(self):
-        return self.payload['workflow-id']
+        return self.payload['workflow_id']
 
     @property
     def previous_transaction(self):
