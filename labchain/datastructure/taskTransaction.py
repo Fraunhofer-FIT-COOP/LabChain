@@ -102,11 +102,11 @@ class TaskTransaction(Transaction):
 
     def _check_pid_well_formedness(self, PID):
         parts = PID.split(sep='_')
-        pid_pubkey = parts[0]
-        pid_number = parts[1]
 
         if not len(parts) == 2:
             return False
+        pid_pubkey = parts[0]
+        pid_number = parts[1]
         try:
             i = int(pid_number)
         except ValueError:
