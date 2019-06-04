@@ -1,3 +1,5 @@
+from typing import Dict
+
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.datastructure.taskTransaction import WorkflowTransaction
 from labchain.datastructure.transaction import Transaction
@@ -8,7 +10,10 @@ class TransactionFactory:
 
     @staticmethod
     def create_transcation(transaction_data):
-        transaction_type = transaction_data['payload'].get('transaction_type', '0')
+        if isinstance(transaction_data['payload'], Dict):
+            transaction_type = transaction_data['payload'].get('transaction_type', '0')
+        else:
+            transaction_type = '0'
         if transaction_type == '1':
             t = WorkflowTransaction(transaction_data['sender'], transaction_data['receiver'],
                                     transaction_data['payload'], transaction_data['signature'])

@@ -44,10 +44,7 @@ class Transaction:
     @staticmethod
     def from_json(json_data):
         """Deserialize a JSON string to a Transaction instance."""
-        data_dict = json.loads(json_data)
-        t = Transaction.from_dict(data_dict)
-        t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
-        return t
+        return Transaction.from_dict(json.loads(json_data))
 
     @staticmethod
     def from_dict(data_dict):
