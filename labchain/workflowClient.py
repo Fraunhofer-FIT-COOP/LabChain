@@ -85,7 +85,7 @@ class WorkflowClient:
         for k,v in  self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
                 transaction.sign_transaction(self.crypto_helper,  v["private_key"])
-        print(self.crypto_helper.hash(transaction.get_json_without_signature()))
+        print(self.crypto_helper.hash(transaction.get_json))
         self.network_interface.sendTransaction(transaction)
 
     def send_task_transaction(self):
@@ -94,7 +94,7 @@ class WorkflowClient:
         for k,v in  self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
                 transaction.sign_transaction(self.crypto_helper,  v["private_key"])
-        print(self.crypto_helper.hash(transaction.get_json_without_signature()))
+        print(self.crypto_helper.hash(transaction.get_json()))
         self.network_interface.sendTransaction(transaction)
 
     def read_workflow_json(self):
@@ -104,4 +104,4 @@ class WorkflowClient:
     def get_transaction_hash(self):
         transaction = input('which workflow,task1,task2,task3,invalid_task1?')
         transaction = TransactionFactory.create_transcation(self.workflow_json[transaction])
-        print(self.crypto_helper.hash(transaction.get_json_without_signature()))
+        print(self.crypto_helper.hash(transaction.get_json()))

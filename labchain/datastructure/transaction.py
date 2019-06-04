@@ -23,7 +23,7 @@ class Transaction:
             'signature': self.__signature,
         }
 
-    def get_json(self):
+    def get_json_with_signature(self):
         """Serialize this instance to a JSON string."""
         return json.dumps({
             'sender': self.__sender,
@@ -32,7 +32,7 @@ class Transaction:
             'signature': self.__signature
         }, sort_keys=True)
 
-    def get_json_without_signature(self):
+    def get_json(self):
         """Serialize this instance to a JSON string."""
         return json.dumps({
             'sender': self.__sender,
@@ -58,11 +58,7 @@ class Transaction:
         :param private_key: Private key of the signer in the string format.
         :param crypto_helper: Crypto_Helper instance used for signing
         """
-        data = json.dumps({
-            'sender': self.__sender,
-            'receiver': self.__receiver,
-            'payload': self.__payload
-        })
+        data = self.get_json()
         self.signature = crypto_helper.sign(private_key, data)
 
     def __eq__(self, other):

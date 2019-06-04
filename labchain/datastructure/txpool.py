@@ -62,7 +62,7 @@ class TxPool:
             if transaction not in self._transactions and \
                     transaction.validate_transaction(self._crypto_helper, blockchain):
                 if not transaction.transaction_hash:
-                    hash_val = self._crypto_helper.hash(transaction.get_json_without_signature())
+                    hash_val = self._crypto_helper.hash(transaction.get_json())
                     transaction.transaction_hash = hash_val
                 self._transactions.append(transaction)
                 logging.info('Added transaction to pool: {}'.format(transaction))
