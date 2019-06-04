@@ -28,7 +28,8 @@ class Transaction:
         return json.dumps({
             'sender': self.__sender,
             'receiver': self.__receiver,
-            'payload': self.__payload
+            'payload': self.__payload,
+            'signature': self.__signature
         }, sort_keys=True)
 
     def get_json_without_signature(self):
