@@ -5,7 +5,6 @@ from typing import List
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.util.Menu import Menu
 from labchain.util.TransactionFactory import TransactionFactory
-from labchain.blockchainClient import TransactionWizard
 
 
 def clear_screen():
@@ -38,8 +37,13 @@ class WorkflowClient:
             wallet_id = self.ask_for_key(wallet_dict)
             wallet = wallet_dict[wallet_id]
             tasks = self.check_tasks(wallet[1])
+            from ast import literal_eval
             for task in tasks:
-                task.print()
+                d = literal_eval(str(task))
+                print('Sender Address:   {}'.format(d['sender']))
+                print('Receiver Address: {}'.format(d['receiver']))
+                print('Payload:          {}'.format(d['payload']))
+                print('Signature:        {}'.format(d['signature']))
             input('Press any key to return: ')
 
     def ask_for_key(self, wallet_dict: dict):
@@ -65,9 +69,10 @@ class WorkflowClient:
     def check_tasks(self, public_key) -> List[TaskTransaction]:
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
-        received_task_transaction = [TaskTransaction.from_json(t.get_json()) for t in received if
+        received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
                                      'workflow_id' in t.payload]
-        send_task_transaction = [TaskTransaction.from_json(t.get_json()) for t in send if 'workflow_id' in t.payload]
+        send_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
+                                 'workflow_id' in t.payload]
         send_task_transaction = [t for t in send_task_transaction if t.type == '2']
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
@@ -85,7 +90,7 @@ class WorkflowClient:
         for k,v in  self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
                 transaction.sign_transaction(self.crypto_helper,  v["private_key"])
-        print(self.crypto_helper.hash(transaction.get_json))
+        print(self.crypto_helper.hash(transaction.get_json()))
         self.network_interface.sendTransaction(transaction)
 
     def send_task_transaction(self):

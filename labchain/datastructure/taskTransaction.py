@@ -64,7 +64,11 @@ class TaskTransaction(Transaction):
                 'Transaction does not comply to process definition!')
             return False
 
-        # TODO check for duplicate transactions
+        if not self._check_for_duplicate_transactions(blockchain):
+            logging.warning(
+                'Duplicated transaction found!')
+            return False
+
         return self.validate_transaction_common(crypto_helper, blockchain)
 
     def validate_transaction_common(self, crypto_helper, blockchain):
