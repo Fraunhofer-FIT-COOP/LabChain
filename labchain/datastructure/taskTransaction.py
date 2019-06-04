@@ -6,6 +6,7 @@ from typing import Dict
 from Crypto.PublicKey import ECC
 
 from labchain.datastructure.transaction import Transaction
+from labchain.util.cryptoHelper import CryptoHelper
 
 
 class TaskTransaction(Transaction):
@@ -166,14 +167,16 @@ class TaskTransaction(Transaction):
         """Instantiate a Transaction from a data dictionary."""
         type = data_dict['payload'].get('transaction_type', '0')
         if type == '1':
-            return WorkflowTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                                       payload=data_dict['payload'], signature=data_dict['signature'])
+            t = WorkflowTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
+                                    payload=data_dict['payload'], signature=data_dict['signature'])
         elif type == '2':
-            return TaskTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                                   payload=data_dict['payload'], signature=data_dict['signature'])
+            t = TaskTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
+                                payload=data_dict['payload'], signature=data_dict['signature'])
         else:
-            return Transaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                               payload=data_dict['payload'], signature=data_dict['signature'])
+            t = Transaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
+                            payload=data_dict['payload'], signature=data_dict['signature'])
+        t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
+        return t
 
 
 class WorkflowTransaction(TaskTransaction):

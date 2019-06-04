@@ -157,7 +157,9 @@ class Db:
                             transaction_data['receiver'] = txn_db[1]
                             txn = TransactionFactory.create_transcation(transaction_data)
                         elif isinstance(json_payload,int):
-                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])        
+                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                        else:
+                            txn = None
                     except json.JSONDecodeError:
                             txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                     txn.transaction_hash = txn_db[4]
@@ -170,6 +172,3 @@ class Db:
             blocks.append(block)
         self.conn.close()
         return blocks
-        
-        
-        
