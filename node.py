@@ -3,6 +3,7 @@ import logging
 import os
 import socket
 import sys
+
 import dns.resolver
 
 # append project dir to python path
@@ -46,8 +47,8 @@ def parse_args():
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     parser.add_argument('--peer-discovery', action='store_true')
-    parser.add_argument('--localhost', action='store_false')
-    parser.add_argument('--drop_db','-d',action='store_true')
+    parser.add_argument('--drop_db', '-d', action='store_true')
+    parser.add_argument('--localhost', action='store_true')
     return parser.parse_args()
 
 
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     initial_peers = parse_peers(args.peers)
     Utility.print_labchain_logo()
 
-    ip = '127.0.0.1' if not args.localhost else get_private_ip()
+    ip = '127.0.0.1' if args.localhost else get_private_ip()
 
     if (args.drop_db):
         db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), './labchain/resources/labchaindb.sqlite'))

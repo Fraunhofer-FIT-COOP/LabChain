@@ -1,16 +1,16 @@
 import io
-import os
 import json
+import os
 import sys
 import unittest
 
+from labchain.consensus.consensus import Consensus
+from labchain.datastructure.blockchain import BlockChain
 from labchain.datastructure.taskTransaction import TaskTransaction, WorkflowTransaction
 from labchain.datastructure.transaction import Transaction
-from labchain.util.cryptoHelper import CryptoHelper
-from labchain.datastructure.blockchain import BlockChain
-from labchain.util.configReader import ConfigReader
-from labchain.consensus.consensus import Consensus
 from labchain.datastructure.txpool import TxPool
+from labchain.util.configReader import ConfigReader
+from labchain.util.cryptoHelper import CryptoHelper
 
 
 class TransactionTestCase(unittest.TestCase):
@@ -212,6 +212,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "signature": None,
             "payload": {
                 "workflow-id": "0",
+                "transaction_type": "1",
                 "document": {
                     "stringAttribute": "stringValue",
                     "booleanAttribute": 'true',
@@ -251,6 +252,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "signature": None,
             "payload": {
                 "workflow-id": "0",
+                "transaction_type": "2",
                 "document": {
                     "stringAttribute": "1234"
                 },
@@ -286,7 +288,7 @@ class TaskTransactionTestCase(TaskTransactionCommon):
         task_transaction_json = self.getDummyTask(pu_key2, pu_key3, "{}_2".format(pu_key2))
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
 
-        self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction,workflowTransaction))
+        self.assertTrue(taskTransaction._check_permissions_write(workflowTransaction, workflowTransaction))
 
     def test_process_definition(self):
         pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
@@ -303,7 +305,7 @@ class TaskTransactionTestCase(TaskTransactionCommon):
 
         taskTransaction = TaskTransaction.from_json(json.dumps(task_transaction_json))
 
-        self.assertTrue(taskTransaction._check_process_definition(workflowTransaction, prev_task_transaction))
+        self.assertTrue(taskTransaction._check_process_definition(prev_task_transaction, workflowTransaction))
 
 
 class WorkflowTransactionTestCase(TaskTransactionCommon):

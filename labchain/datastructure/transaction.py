@@ -29,7 +29,7 @@ class Transaction:
             'sender': self.__sender,
             'receiver': self.__receiver,
             'payload': self.__payload
-        })
+        }, sort_keys=True)
 
     def get_json_without_signature(self):
         """Serialize this instance to a JSON string."""
@@ -37,7 +37,7 @@ class Transaction:
             'sender': self.__sender,
             'receiver': self.__receiver,
             'payload': self.__payload
-        })
+        }, sort_keys=True)
 
     @staticmethod
     def from_json(json_data):
