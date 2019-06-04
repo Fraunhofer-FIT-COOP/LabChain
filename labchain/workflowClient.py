@@ -5,7 +5,6 @@ from typing import List
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.util.Menu import Menu
 from labchain.util.TransactionFactory import TransactionFactory
-from labchain.util.publicKeyNameMaping import PublicKeyNamesMapping
 
 
 def clear_screen():
@@ -19,14 +18,16 @@ class WorkflowClient:
     def __init__(self, wallet, network_interface, crypto_helper):
         self.network_interface = network_interface
         self.crypto_helper = crypto_helper
+        self.read_workflow_json()
+        self.wallet = self.workflow_json['wallet']
         self.main_menu = Menu(['Main menu'], {
             '1': ('Create workflow transaction', self.send_workflow_transaction, []),
             '2': ('Send task transaction', self.send_task_transaction, []),
             '3': ('Get transaction hash', self.get_transaction_hash, [])
         }, 'Please select a value: ', 'Exit Workflow Client')
+        self.workflow_json = None
 
     def main(self):
-        self.read_workflow_json()
         """Entry point for the client console application."""
         self.main_menu.show()
 
