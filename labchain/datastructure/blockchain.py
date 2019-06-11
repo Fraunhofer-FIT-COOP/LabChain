@@ -277,7 +277,7 @@ class BlockChain:
                 if (t.transaction_type == Transaction_Types().method_call
                     or t.transaction_type == Transaction_Types().contract_termination
                     or t.transaction_type == Transaction_Types().contract_restoration):
-                    _contracts[t.receiver] = self.worldState.get_contract(t.receiver)
+                    _contracts[t.transaction_hash] = self.worldState.get_contract(t.receiver)
                     
         validity_level = block.validate_block(_latest_ts, _earliest_ts,
                                               _num_of_blocks, _latest_difficulty, _contracts)
@@ -481,7 +481,7 @@ class BlockChain:
             if (txType == txTypes_instance.contract_restoration):
                 print("\nContract Restoration tx detected in Block #" + 
                     str(block.block_id) + " with tx.hash " + txHash)
-                self.worldState.restore_contract(tx)
+                self.worldState.restore_contract(tx, block.block_id)
                 print('Contract Restored')
 
 

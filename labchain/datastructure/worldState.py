@@ -45,13 +45,15 @@ class WorldState:
                     return True
         return False
     
-    def restore_contract(self, tx):
+    def restore_contract(self, tx, blockID):
         """Returns the smartContract that has the specified address if it exists."""
         contract_address = tx.receiver
         sender = tx.sender
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
         new_code = payload['contractCode']
         new_address = tx.transaction_hash
+        if new_address == None:
+            new_address = self._crypto_helper.hash(tx.get_json())
         
         #Add sender at the beginning of the arguments
         arguments = json.dumps(payload['arguments'])
@@ -71,7 +73,7 @@ class WorldState:
                         r = requests.post(url,json=data).json()
                         if(r['success'] == True):
                             new_state = r['encodedNewState']
-                            contract.state = new_state
+                            contract.states[blockID] = new_state
                         if(r['success'] == False):
                                 print(r['error'])
                     except:
@@ -264,14 +266,16 @@ class WorldState:
         data = {'code': contract.code,
                 'state': contract.get_last_state()}
         r = requests.post(url,json=data).json()
-        try:
-            if(r['success'] == True):
-                return r['state']
-            if(r['success'] == False):
-                return r['error']
-        except:
-            logging.error('Could not get readable state from contract with id: ' + str(contract.id))
-            return None
+        # try:
+        if(r['success'] == True):
+            response = r['state']
+            response['addresses'] = contract.addresses
+            return response
+        if(r['success'] == False):
+            return r['error']
+        # except:
+        #     logging.error('Could not get readable state from contract.')
+        #     return None
 
 
     def get_parameters(self, contract_address, methodName):
@@ -317,10 +321,6 @@ class WorldState:
         """Returns the methods that a contract has."""
         contract = self.get_contract(contract_address)
         url = 'http://localhost:' + str(contract.port) + '/getMethods'
-
-        print('TEST')
-        print(type(contract))
-        print('')
 
         data = {'code': contract.code,
                 'state': contract.get_last_state()}

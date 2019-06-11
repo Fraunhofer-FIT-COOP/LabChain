@@ -346,20 +346,20 @@ class LogicalBlock(Block):
                         return t
                 elif t.transaction_type == Transaction_Types().method_call:
                     try:
-                        contract = _contracts[t.receiver]
+                        contract = _contracts[t.transaction_hash]
                     except:
                         return t
                     valid_state = self.validate_method_call(t, contract)
                     if valid_state == None:
                         return t
                     else:
-                        _contracts[t.receiver].state = valid_state
+                        _contracts[t.transaction_hash].state = valid_state
                 elif t.transaction_type == Transaction_Types().contract_termination:
-                    contract = _contracts[t.receiver]
+                    contract = _contracts[t.transaction_hash]
                     if not self.validate_contract_termination(t, contract):
                         return t
                 elif t.transaction_type == Transaction_Types().contract_restoration:
-                    contract = _contracts[t.receiver]
+                    contract = _contracts[t.transaction_hash]
                     if not self.validate_contract_restoration(t, contract):
                         return t
         return None
@@ -493,7 +493,11 @@ class LogicalBlock(Block):
 
     
     def validate_contract_restoration(self, tx, contract):
+        print()
         print("Validating contract restoration")
+        print('Contract is not None: ' + str(contract != None))
+        print('Contract is terminated: ' + str(contract.terminated == True))
+        print()
         if (contract != None 
             and contract.terminated == True
             and tx.sender in contract.contract_owners
