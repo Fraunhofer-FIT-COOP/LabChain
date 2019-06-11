@@ -6,7 +6,7 @@ import socket
 import threading
 import requests
 
-CONTAINER_IMAGE = ""
+CONTAINER_IMAGE = "bit_blockchain_image"
 DOCKER_FILE_PATH = os.path.join(os.path.dirname(__file__),
                         'dockerResources', 'Dockerfile')
 DOCKER_RESOURCES_PATH = os.path.join(os.path.dirname(__file__),
