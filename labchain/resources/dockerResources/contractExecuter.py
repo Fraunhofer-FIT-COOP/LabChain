@@ -107,7 +107,7 @@ def callMethod():
 	
 	# Fetch received data
 	data_dict = request.json
-	code = data_dict['code']
+	#code = data_dict['code']
 	state = data_dict['state']
 	methods = data_dict['methods']
 	contract_file_name = data_dict['contract_file_name']
@@ -125,9 +125,9 @@ def callMethod():
 		errorMessage = "Contract file could not be found. (callMethod function)"
 		return jsonError(errorMessage)
 	
-	createContractErrorMessage = createContractHelper(code, contract_file_name)
-	if createContractErrorMessage != None:
-		return createContractErrorMessage
+	# createContractErrorMessage = createContractHelper(code, contract_file_name)
+	# if createContractErrorMessage != None:
+	# 	return createContractErrorMessage
 
 	# Create a contracts instance with the fetched state
 	try:
@@ -208,7 +208,7 @@ def getState():
 	response = {
 		"success": True,
 		"state": updatedState,
-		"encodedState": encodedInstance
+		#"encodedState": encodedInstance
 	}
 	return json.dumps(response, indent=4, sort_keys=False)
 

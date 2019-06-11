@@ -442,7 +442,7 @@ class LogicalBlock(Block):
                     }
             r = requests.post(url,json=data).json()
             contract.terminate()
-            if(r['success'] == True and r['newState']['bad_exec'] == False):
+            if(r['success'] == True and r['newState']['bad_state'] == False):
                 print('\nContract creation tx was validated.\n')
                 return True
             else:
@@ -468,7 +468,7 @@ class LogicalBlock(Block):
             r = requests.post(url,json=data).json()
             if(r['success'] == True 
                 and r['encodedUpdatedState'] != contract.state 
-                and r['updatedState']['bad_exec'] == False):
+                and r['updatedState']['bad_state'] == False):
                     print('\nMethod call was validated.\n')
                     return r['encodedUpdatedState']
             #If the execution wasn't successfull or the tx didn't create any state changes return false

@@ -6,9 +6,10 @@ import socket
 import threading
 import requests
 
-CONTAINER_NAME = "bit_blockchain_container"
-DOCKER_FILES_PATH = os.path.join(os.path.dirname(__file__),
-                        'labchain', 'resources',
+CONTAINER_IMAGE = ""
+DOCKER_FILE_PATH = os.path.join(os.path.dirname(__file__),
+                        'dockerResources', 'Dockerfile')
+DOCKER_RESOURCES_PATH = os.path.join(os.path.dirname(__file__),
                         'dockerResources')
 CONTAINER_TIMEOUT = 10
 
@@ -178,12 +179,13 @@ class SmartContract:
         """Creates a docker container to run the code of the contract."""
         client = docker.from_env()
         try:
-            client.images.get(CONTAINER_NAME)
-        except:
+            client.images.get(CONTAINER_IMAGE)
+        except docker.errors.ImageNotFound:
             print("\nNo image found. Creating image...")
-            client.images.build(path=DOCKER_FILES_PATH)
+            print(DOCKER_FILE_PATH)
+            client.images.build(tag=CONTAINER_IMAGE, path=DOCKER_RESOURCES_PATH, dockerfile=DOCKER_FILE_PATH)
             print("Image created,\n")
-        container = client.containers.run(image=str(CONTAINER_NAME), ports={"80/tcp": self._port}, detach=True)
+        container = client.containers.run(image=str(CONTAINER_IMAGE), ports={"80/tcp": self._port}, detach=True)
         print("Running container\n")
 
         #Check if the container works
