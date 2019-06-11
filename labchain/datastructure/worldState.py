@@ -77,12 +77,12 @@ class WorldState:
                     except:
                         logging.error('Contract from transaction could not be restored')
 
-    def update_contract_state(self, contract_address, new_state, new_encoded_state):
+    def update_contract_state(self, contract_address, new_state, new_encoded_state, blockID):
         """Updates the state of a contract."""
         contract = self.get_contract(contract_address)
         if contract:
             contract.contract_owners = new_state['contract_owners']
-            contract.state = new_encoded_state
+            contract.add_new_state(new_encoded_state, blockID)
             return True
         else:
             return False
@@ -145,7 +145,7 @@ class WorldState:
         return all_addresses
 
 
-    def create_contract(self, tx):
+    def create_contract(self, tx, blockID):
         """Creates a new contract and adds it to the contract_list."""
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
         txHash = tx.transaction_hash
@@ -173,7 +173,7 @@ class WorldState:
                     }
             r = requests.post(url,json=data).json()
             if(r['success'] == True):
-                contract.state = r['encodedNewState']
+                contract.states[blockID] = r['encodedNewState']
                 self._contract_list.append(contract)
             if(r['success'] == False):
                     print(r['error'])
@@ -207,7 +207,7 @@ class WorldState:
         # container.remove(force=True)
 
 
-    def call_method(self, tx):
+    def call_method(self, tx, blockID):
         """Calls a method or methods on an existing contract from the _contract_list."""
         contract = self.get_contract(tx.to_dict()['receiver'])
         url = 'http://localhost:' + str(contract.port) + '/callMethod'
@@ -215,7 +215,7 @@ class WorldState:
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
 
         data = {'code': contract.code,
-                'state': contract.state,
+                'state': contract.get_last_state(),
                 'contract_file_name': payload['contract_file_name'],
                 'methods': payload['methods'],
                 'sender': tx.sender}
@@ -224,8 +224,7 @@ class WorldState:
 
         try:
             if(r['success'] == True):
-                self.update_contract_state(tx.receiver, r['updatedState'], r['encodedUpdatedState'])
-
+                self.update_contract_state(tx.receiver, r['updatedState'], r['encodedUpdatedState'], blockID)
             if(r["success"] == False):
                 print(r["error"])
         except:
@@ -263,7 +262,7 @@ class WorldState:
         url = 'http://localhost:' + str(contract.port) + '/getState'
 
         data = {'code': contract.code,
-                'state': contract.state}
+                'state': contract.get_last_state()}
         r = requests.post(url,json=data).json()
         try:
             if(r['success'] == True):
@@ -280,7 +279,7 @@ class WorldState:
         contract = self.get_contract(contract_address)
         url = 'http://localhost:' + str(contract.port) + '/getParameters'
         data = {'code': contract.code,
-                'state': contract.state,
+                'state': contract.get_last_state(),
                 'methodName': methodName}
         r = requests.post(url,json=data).json()
 
@@ -319,8 +318,12 @@ class WorldState:
         contract = self.get_contract(contract_address)
         url = 'http://localhost:' + str(contract.port) + '/getMethods'
 
+        print('TEST')
+        print(type(contract))
+        print('')
+
         data = {'code': contract.code,
-                'state': contract.state}
+                'state': contract.get_last_state()}
         r = requests.post(url,json=data).json()
         try:
             if(r['success'] == True):

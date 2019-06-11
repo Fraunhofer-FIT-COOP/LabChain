@@ -628,7 +628,8 @@ class BlockchainClient:
             input('Press enter to continue...')
             return
         contract_state = self.network_interface.requestContractState(contract_address)
-        contract_state_encoded = contract['state']
+        contract_states_encoded = contract['states']
+        contract_state_encoded = contract_states_encoded[max(list(contract_states_encoded.keys()))]
         contract_code = contract['code']
         #contract_address = contract['addresses'][-1]
         # except:

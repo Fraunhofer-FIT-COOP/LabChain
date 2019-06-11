@@ -466,12 +466,12 @@ class BlockChain:
             if (txType == txTypes_instance.contract_creation):
                 print("\nContract creation tx detected in Block #" + 
                     str(block.block_id) + " with tx.hash " + str(txHash))
-                self.worldState.create_contract(tx)
+                self.worldState.create_contract(tx, block.block_id)
                 print('Contract created')
             if (txType == txTypes_instance.method_call):
                 print("\nmethod call tx detected in Block #" + 
                     str(block.block_id) + " with tx.hash " + txHash)
-                self.worldState.call_method(tx)
+                self.worldState.call_method(tx, block.block_id)
                 print('Method called on contract')
             if (txType == txTypes_instance.contract_termination):
                 print("\nContract Termination tx detected in Block #" + 

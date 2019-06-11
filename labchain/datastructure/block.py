@@ -460,14 +460,14 @@ class LogicalBlock(Block):
             payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
 
             data = {'code': contract.code,
-                    'state': contract.state,
+                    'state': contract.get_last_state(),
                     'contract_file_name': payload['contract_file_name'],
                     'methods': payload['methods'],
                     'sender': tx.sender}
             
             r = requests.post(url,json=data).json()
             if(r['success'] == True 
-                and r['encodedUpdatedState'] != contract.state 
+                and r['encodedUpdatedState'] != contract.get_last_state() 
                 and r['updatedState']['bad_state'] == False):
                     print('\nMethod call was validated.\n')
                     return r['encodedUpdatedState']

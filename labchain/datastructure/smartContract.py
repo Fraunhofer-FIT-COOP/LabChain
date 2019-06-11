@@ -55,7 +55,7 @@ class SmartContract:
         self._contract_owners = contract_owners
         self._addresses = addresses
         self._code = code
-        self._state = None
+        self._states = {}
         self._terminated = terminated
         self._port = self.find_free_port()
         self._container = self.create_container()
@@ -68,7 +68,7 @@ class SmartContract:
             self._port = None
             self._code = None
             self._terminated = True
-            self._state = None
+            self._states = {}
 
     def restore(self, new_address, new_code):
         """Restarts a terminated contract with a new address.
@@ -87,7 +87,7 @@ class SmartContract:
             'contract_owners' : self._contract_owners,
             'addresses': self._addresses,
             'code': self._code,
-            'state': self._state,
+            'states': self._states,
             #'container': self._container,
             'port': self._port,
             'terminated': self._terminated
@@ -111,7 +111,7 @@ class SmartContract:
                 data_dict['addresses'],
                 data_dict['code'],
                 data_dict['terminated'])
-        smartContract.state = data_dict['state']
+        smartContract.states = data_dict['states']
         #smartContract.container = data_dict['container']
         smartContract.port = data_dict['port']
         return smartContract
@@ -132,8 +132,8 @@ class SmartContract:
         return self._code
 
     @property
-    def state(self):
-        return self._state
+    def states(self):
+        return self._states
     
     @property
     def container(self):
@@ -147,9 +147,12 @@ class SmartContract:
     def terminated(self):
         return self._terminated
 
-    @state.setter
-    def state(self, state):
-        self._state = state
+    # @state.setter
+    # def state(self, state):
+    #     self._state = state
+    
+    def addState(self, state, blockID):
+        self._states[blockID] = state
 
     @code.setter
     def code(self, code):
@@ -205,3 +208,11 @@ class SmartContract:
         s = socket.socket()
         s.bind(('', 0))            # Bind to a free port provided by the host.
         return s.getsockname()[1]  # Return the port number assigned.
+
+    def get_last_state(self):
+        last_state_blockID = max(list(self._states.keys()))
+        last_state = self.states[last_state_blockID]
+        return last_state
+
+    def add_new_state(self, new_state, blockID):
+        self.states[blockID] = new_state
