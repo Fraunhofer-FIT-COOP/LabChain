@@ -355,3 +355,7 @@ class WorldState:
         #     logging.error('Could not get methods')
         #     return None
         # container.remove(force=True)
+
+    def remove_contract_states(self, from_blockID):
+        for contract in self._contract_list:
+            contract.remove_contract_states(from_blockID)

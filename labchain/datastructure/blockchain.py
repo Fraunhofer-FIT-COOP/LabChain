@@ -437,6 +437,12 @@ class BlockChain:
             self._furthest_branching_point = {"block": None, "position": float("inf")}
             self._logger.debug("Branch switching successful, new node branch head : {}".
                          format(self._node_branch_head))
+            
+            # Update contract states to the new branch
+            self.worldState.remove_contract_states(_check_point_pos)
+            for block in self._blockchain.values():
+                if block.block_id > _check_point_pos:
+                    self.update_worldState(block)
 
     def prune_orphans(self):
         """Delete orphans stored in the orphan store once the pruning

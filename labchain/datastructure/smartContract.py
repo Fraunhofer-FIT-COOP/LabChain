@@ -151,8 +151,8 @@ class SmartContract:
     # def state(self, state):
     #     self._state = state
     
-    def addState(self, state, blockID):
-        self._states[blockID] = state
+    # def addState(self, state, blockchain_position):
+    #     self._states[blockchain_position] = state
 
     @code.setter
     def code(self, code):
@@ -216,3 +216,10 @@ class SmartContract:
 
     def add_new_state(self, new_state, blockID):
         self.states[blockID] = new_state
+
+    def remove_states(self, from_blockID):
+        new_dict = {}
+        for key, value in self._states:
+            if key <= from_blockID:
+                new_dict[key] = value
+        self._states = new_dict
