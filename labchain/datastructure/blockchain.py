@@ -13,6 +13,9 @@ class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
                  min_blocks_for_difficulty, db, q):
+        self.contract_counter = 1
+        self.method_counter = 1
+        self.start_time = 0
         """Constructor for BlockChain
 
         Parameters
@@ -439,10 +442,10 @@ class BlockChain:
                          format(self._node_branch_head))
             
             # Update contract states to the new branch
-            self.worldState.remove_contract_states(_check_point_pos)
-            for block in self._blockchain.values():
-                if block.block_id > _check_point_pos:
-                    self.update_worldState(block)
+            # self.worldState.remove_contract_states(_check_point.block_id)
+            # for block in self._blockchain.values():
+            #     if block.block_id > _check_point.block_id:
+            #         self.update_worldState(block)
 
     def prune_orphans(self):
         """Delete orphans stored in the orphan store once the pruning
@@ -472,11 +475,18 @@ class BlockChain:
             if (txType == txTypes_instance.contract_creation):
                 print("\nContract creation tx detected in Block #" + 
                     str(block.block_id) + " with tx.hash " + str(txHash))
+                print('Contract # ' + str(self.contract_counter))
+                self.contract_counter = self.contract_counter + 1
                 self.worldState.create_contract(tx, block.block_id)
-                print('Contract created')
+                print('Contract created\n')
             if (txType == txTypes_instance.method_call):
-                print("\nmethod call tx detected in Block #" + 
-                    str(block.block_id) + " with tx.hash " + txHash)
+                # print("\nmethod call tx detected in Block #" + 
+                #     str(block.block_id) + " with tx.hash " + txHash)
+                if self.method_counter == 1:
+                    self.start_time = time.time()
+                elapsed_time = time.time() - self.start_time
+                print('Method call # ' + str(self.method_counter) + '. Elapsed time: ' + str(elapsed_time))
+                self.method_counter = self.method_counter + 1
                 self.worldState.call_method(tx, block.block_id)
                 print('Method called on contract')
             if (txType == txTypes_instance.contract_termination):
@@ -488,7 +498,7 @@ class BlockChain:
                 print("\nContract Restoration tx detected in Block #" + 
                     str(block.block_id) + " with tx.hash " + txHash)
                 self.worldState.restore_contract(tx, block.block_id)
-                print('Contract Restored')
+                print('Contract Restored\n')
 
 
     def request_block_from_neighbour(self, requested_block_hash):

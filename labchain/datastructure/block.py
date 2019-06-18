@@ -417,6 +417,7 @@ class LogicalBlock(Block):
     
     def validate_contract_creation(self, tx):
         """Checks if the tx can create a new contract successfully."""
+        print("\nValidating contract creation tx...")
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
         txHash = tx.transaction_hash
         if txHash == None:
@@ -443,17 +444,18 @@ class LogicalBlock(Block):
             r = requests.post(url,json=data).json()
             contract.terminate()
             if(r['success'] == True and r['newState']['bad_state'] == False):
-                print('\nContract creation tx was validated.\n')
+                print('Contract creation tx was validated.')
                 return True
             else:
-                print('\nContract creation tx was not validated.\n')
+                print('Contract creation tx was not validated.\n')
                 return False
         except:
-            logging.error('\nContract creation tx was not validated2.\n')
+            logging.error('Contract creation tx was not validated2.\n')
             return False
 
     def validate_method_call(self, tx, contract):
         """Checks if a tx can call a method or methods on an existing contract successfully."""
+        print("\nValidating method call tx...")
         try:
             url = 'http://localhost:' + str(contract.port) + '/callMethod'
 
@@ -464,40 +466,37 @@ class LogicalBlock(Block):
                     'contract_file_name': payload['contract_file_name'],
                     'methods': payload['methods'],
                     'sender': tx.sender}
-            
+
             r = requests.post(url,json=data).json()
+
             if(r['success'] == True 
                 and r['encodedUpdatedState'] != contract.get_last_state() 
                 and r['updatedState']['bad_state'] == False):
-                    print('\nMethod call was validated.\n')
+                    print('\nMethod call tx was validated.\n')
                     return r['encodedUpdatedState']
             #If the execution wasn't successfull or the tx didn't create any state changes return false
             else:
-                print('\nMethod call was not validated.\n')
+                print('Method call was not validated.\n')
                 return None
         except:
-            logging.error('Method call verification could not be completed')
+            print('Method call verification could not be completed')
             return None
 
     def validate_contract_termination(self, tx, contract):
-        print("Validating contract termination")
+        print("\nValidating contract termination tx...")
         if (contract != None 
             and contract.terminated == False
             and tx.sender in contract.contract_owners):
-            print("Contract termination validated")
+            print("Contract termination tx was validated")
             return True
         else:
-            print("Contract termination not validated")
+            print("Contract termination tx was not validated")
             return False
 
 
     
     def validate_contract_restoration(self, tx, contract):
-        print()
-        print("Validating contract restoration")
-        print('Contract is not None: ' + str(contract != None))
-        print('Contract is terminated: ' + str(contract.terminated == True))
-        print()
+        print("\nValidating contract restoration tx...")
         if (contract != None 
             and contract.terminated == True
             and tx.sender in contract.contract_owners
@@ -505,5 +504,5 @@ class LogicalBlock(Block):
             print("Contract restoration validated")
             return True
         else:
-            print("Contract restoration not validated")
+            print("Contract restoration tx was not validated")
             return False

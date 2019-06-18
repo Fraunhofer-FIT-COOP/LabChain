@@ -282,9 +282,6 @@ class BlockChainNode:
             pruning_interval = self.config_reader.get_config(
                 section='BLOCK_CHAIN',
                 option='TIME_TO_PRUNE')
-            worldState_update_interval = self.config_reader.get_config(
-                section='BLOCK_CHAIN',
-                option='TIME_TO_UPDATE_WORLDSTATE')
             fetch_prev_interval = self.config_reader.get_config(
                                   section='BLOCK_CHAIN',
                                   option='FETCH_PREV_INTERVAL')
@@ -382,9 +379,5 @@ class BlockChainNode:
             target=self.schedule_orphans_killing,
             kwargs=dict(interval=pruning_interval))
         self.logger.debug("Starting worldState thread...")
-        # self.update_worldState = threading.Thread(
-        #     target=self.schedule_worldState_update,
-        #     kwargs=dict(interval=worldState_update_interval))
 
         self.orphan_killer.start()
-        #self.update_worldState.start()

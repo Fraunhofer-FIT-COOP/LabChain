@@ -73,7 +73,7 @@ class WorldState:
                         r = requests.post(url,json=data).json()
                         if(r['success'] == True):
                             new_state = r['encodedNewState']
-                            contract.states[blockID] = new_state
+                            contract.add_new_state(new_state, blockID)
                         if(r['success'] == False):
                                 print(r['error'])
                     except:
@@ -175,13 +175,12 @@ class WorldState:
                     }
             r = requests.post(url,json=data).json()
             if(r['success'] == True):
-                contract.states[blockID] = r['encodedNewState']
+                contract.states[blockID] = [r['encodedNewState']]
                 self._contract_list.append(contract)
             if(r['success'] == False):
                     print(r['error'])
         except:
             logging.error('Contract from transaction could not be created')
-
 
         # """Creates a new contract and adds it to the list _contracts."""
         # port = self.find_free_port()
@@ -230,7 +229,7 @@ class WorldState:
             if(r["success"] == False):
                 print(r["error"])
         except:
-            logging.error('Method call from transaction could not be completed')
+            print('Method call from transaction could not be completed')
 
 
         # """Calls a method or methods on an existing contract from the _contract_list."""
@@ -359,3 +358,6 @@ class WorldState:
     def remove_contract_states(self, from_blockID):
         for contract in self._contract_list:
             contract.remove_contract_states(from_blockID)
+            if contract.states == {}:
+                contract.terminate()
+                self._contract_list.remove(contract)

@@ -158,6 +158,10 @@ class SmartContract:
     def code(self, code):
         self._code = code
 
+    @states.setter
+    def states(self, states):
+        self._states = states
+
     @container.setter
     def container(self, container):
         self._container = container
@@ -189,7 +193,7 @@ class SmartContract:
             client.images.build(tag=CONTAINER_IMAGE, path=DOCKER_RESOURCES_PATH, dockerfile=DOCKER_FILE_PATH)
             print("Image created,\n")
         container = client.containers.run(image=str(CONTAINER_IMAGE), ports={"80/tcp": self._port}, detach=True)
-        print("Running container\n")
+        #print("Running container")
 
         #Check if the container works
         timeout = time.time() + CONTAINER_TIMEOUT
@@ -206,20 +210,23 @@ class SmartContract:
     def find_free_port(self):
         """Returns a free port to be used."""
         s = socket.socket()
-        s.bind(('', 0))            # Bind to a free port provided by the host.
+        s.bind(('0.0.0.0', 0))            # Bind to a free port provided by the host.
         return s.getsockname()[1]  # Return the port number assigned.
 
     def get_last_state(self):
-        last_state_blockID = max(list(self._states.keys()))
-        last_state = self.states[last_state_blockID]
-        return last_state
+        last_state_blockID = max(list(self.states.keys()))
+        last_state_list = self.states[last_state_blockID]
+        return last_state_list[-1]
 
     def add_new_state(self, new_state, blockID):
-        self.states[blockID] = new_state
+        if self.states.keys().__contains__(blockID):
+            self.states[blockID].append(new_state)
+        else:
+            self.states[blockID] = [new_state]
 
-    def remove_states(self, from_blockID):
+    def remove_contract_states(self, from_blockID):
         new_dict = {}
-        for key, value in self._states:
+        for key, value in self.states.items():
             if key <= from_blockID:
                 new_dict[key] = value
-        self._states = new_dict
+        self.states = new_dict
