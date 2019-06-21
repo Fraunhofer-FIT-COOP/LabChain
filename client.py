@@ -67,3 +67,13 @@ if __name__ == '__main__':
         else:
             client = create_client(open_wallet_file, args.node_ip, args.node_port)
             client.main()
+
+def create_document_flow_client_instance():
+    args = parse_args()
+    create_config_directory()
+    if os.path.exists(WALLET_FILE_PATH):
+        file_mode = 'r+'
+    else:
+        file_mode = 'w+'
+    with open(WALLET_FILE_PATH, file_mode) as open_wallet_file:
+        return create_document_flow_client(open_wallet_file, args.node_ip, args.node_port)
