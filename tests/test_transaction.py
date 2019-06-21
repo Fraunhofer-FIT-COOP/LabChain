@@ -36,7 +36,6 @@ class TransactionTestCase(unittest.TestCase):
         self.assertEqual(data_dict['sender'], 's')
         self.assertEqual(data_dict['receiver'], 'r')
         self.assertEqual(data_dict['payload'], '1')
-        self.assertEqual(data_dict['signature'], 'sig')
 
     def test_from_json(self):
         """Test transaction creation from json"""

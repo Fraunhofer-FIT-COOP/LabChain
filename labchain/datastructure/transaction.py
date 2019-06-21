@@ -1,5 +1,8 @@
 import json
 
+from labchain.util.cryptoHelper import CryptoHelper
+from labchain.util.publicKeyNameMaping import PublicKeyNamesMapping
+
 
 class Transaction:
     """Represents a single transaction within the blockchain.
@@ -21,21 +24,35 @@ class Transaction:
             'signature': self.__signature,
         }
 
+    def get_json_with_signature(self):
+        """Serialize this instance to a JSON string."""
+        return json.dumps({
+            'sender': self.__sender,
+            'receiver': self.__receiver,
+            'payload': self.__payload,
+            'signature': self.__signature
+        }, sort_keys=True)
+
     def get_json(self):
         """Serialize this instance to a JSON string."""
-        return json.dumps(self.to_dict(), sort_keys=True)
+        return json.dumps({
+            'sender': self.__sender,
+            'receiver': self.__receiver,
+            'payload': self.__payload
+        }, sort_keys=True)
 
     @staticmethod
     def from_json(json_data):
         """Deserialize a JSON string to a Transaction instance."""
-        data_dict = json.loads(json_data)
-        return Transaction.from_dict(data_dict)
+        return Transaction.from_dict(json.loads(json_data))
 
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
-        return Transaction(data_dict['sender'], data_dict['receiver'],
-                           data_dict['payload'], data_dict['signature'])
+        t = Transaction(data_dict['sender'], data_dict['receiver'],
+                        data_dict['payload'], data_dict['signature'])
+        t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
+        return t
 
     def sign_transaction(self, crypto_helper, private_key):
         """
@@ -43,12 +60,7 @@ class Transaction:
         :param private_key: Private key of the signer in the string format.
         :param crypto_helper: Crypto_Helper instance used for signing
         """
-        data = json.dumps({
-            'sender': self.__sender,
-            'receiver': self.__receiver,
-            'payload': self.__payload
-        })
-        self.signature = crypto_helper.sign(private_key, data)
+        self.signature = crypto_helper.sign(private_key, self.get_json())
 
     def __eq__(self, other):
         if not other:
@@ -65,15 +77,11 @@ class Transaction:
         :param blockchain: Blockchain object
         :returns: Receives result of transaction validation.
         """
-        data = json.dumps({
-            'sender': self.__sender,
-            'receiver': self.__receiver,
-            'payload': self.__payload
-        })
-        return crypto_helper.validate(self.sender, data, self.signature)
+        return crypto_helper.validate(self.sender, self.get_json(), self.signature)
 
     def __str__(self):
-        return str(self.to_dict())
+        dict_with_names = PublicKeyNamesMapping.replace_public_keys_with_names(self.to_dict())
+        return str(dict_with_names)
 
     @property
     def sender(self):

@@ -149,18 +149,18 @@ class Db:
                 for txn_db in txns_db:
                     try:
                         json_payload = json.loads(txn_db[2])
-                        if isinstance(json_payload,dict):
-                            transaction_data = {}
-                            transaction_data['payload'] = json_payload
-                            transaction_data['signature'] = txn_db[3]
-                            transaction_data['sender'] = txn_db[0]
-                            transaction_data['receiver'] = txn_db[1]
+                        if isinstance(json_payload, dict):
+                            transaction_data = {'payload': json_payload, 'signature': txn_db[3], 'sender': txn_db[0],
+                                                'receiver': txn_db[1]}
                             txn = TransactionFactory.create_transcation(transaction_data)
-                        elif isinstance(json_payload,int):
-                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])        
+                        elif isinstance(json_payload, int):
+                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                        else:
+                            txn = None
                     except json.JSONDecodeError:
                             txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
-                    txn.transaction_hash = txn_db[4]
+                    if not txn.transaction_hash:
+                        txn.transaction_hash = txn_db[4]
                     txns.append(txn)
                 #txns=[]
             block = Block(block_id=block_db[1], merkle_tree_root=block_db[2],
@@ -170,6 +170,3 @@ class Db:
             blocks.append(block)
         self.conn.close()
         return blocks
-        
-        
-        
