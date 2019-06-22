@@ -221,7 +221,7 @@ class BlockChain:
         self._blockchain_lock.release()
         return res
 
-    def search_transaction_from_receiver(self, receiver_public_key):
+    def search_transaction_to_receiver(self, receiver_public_key):
         # Protection mechanism for multithreading
         if not self._blockchain_lock.acquire():
             self._logger.debug(
@@ -574,8 +574,8 @@ class BlockChain:
                 raise ValueError
 
         # Remove non-orphans from orphan_pool
-        self._orphan_blocks = {k: predecessor_is_in_blockchain[k] for k in
-                               set(predecessor_is_in_blockchain) - set(self._orphan_blocks)}
+        self._orphan_blocks = {k: self._orphan_blocks[k] for k in
+                               set(self._orphan_blocks) - set(predecessor_is_in_blockchain)}
         if len(
                 predecessor_is_in_blockchain) == 0:  # All orphans have predecessors not in blockchain, terminate recursion
             self._orphan_lock.release()

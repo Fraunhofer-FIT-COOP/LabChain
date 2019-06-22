@@ -1,13 +1,15 @@
-import logging
-import sqlite3
 import json
+import logging
+import os
+import sqlite3
+
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
 from labchain.util.TransactionFactory import TransactionFactory
 
 
 class Db:
-    def __init__(self, block_chain_db_file):
+    def __init__(self, block_chain_db_file, create_new_database=False):
         """
         Constructor for Database
 
@@ -24,6 +26,13 @@ class Db:
         """
         # Creates or opens a file called mydb with a SQLite3 DB
         self.logger = logging.getLogger(__name__)
+        if create_new_database:
+            self.logger.debug('Removing database...')
+            if os.path.exists(block_chain_db_file):
+                os.remove(block_chain_db_file)
+                self.logger.debug('Database removed.')
+            else:
+                self.logger.debug('Database not found.')
         self.db_file = block_chain_db_file
         self.open_connection(block_chain_db_file)
         self.blockchain_table = 'blockchain'
@@ -140,18 +149,18 @@ class Db:
                 for txn_db in txns_db:
                     try:
                         json_payload = json.loads(txn_db[2])
-                        if isinstance(json_payload,dict):
-                            transaction_data = {}
-                            transaction_data['payload'] = json_payload
-                            transaction_data['signature'] = txn_db[3]
-                            transaction_data['sender'] = txn_db[0]
-                            transaction_data['receiver'] = txn_db[1]
+                        if isinstance(json_payload, dict):
+                            transaction_data = {'payload': json_payload, 'signature': txn_db[3], 'sender': txn_db[0],
+                                                'receiver': txn_db[1]}
                             txn = TransactionFactory.create_transcation(transaction_data)
-                        elif isinstance(json_payload,int):
-                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])        
+                        elif isinstance(json_payload, int):
+                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                        else:
+                            txn = None
                     except json.JSONDecodeError:
                             txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
-                    txn.transaction_hash = txn_db[4]
+                    if not txn.transaction_hash:
+                        txn.transaction_hash = txn_db[4]
                     txns.append(txn)
                 #txns=[]
             block = Block(block_id=block_db[1], merkle_tree_root=block_db[2],
@@ -161,6 +170,3 @@ class Db:
             blocks.append(block)
         self.conn.close()
         return blocks
-        
-        
-        

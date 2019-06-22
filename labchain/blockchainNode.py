@@ -26,7 +26,7 @@ from labchain.util.cryptoHelper import CryptoHelper
 class BlockChainNode:
 
     def __init__(self, config_file_path, node_ip="127.0.0.1", node_port=None,
-                 peer_list=None, peer_discovery=True):
+                 peer_list=None, peer_discovery=True, new_database=False):
         """Constructor for BlockChainNode
 
         Parameters
@@ -83,7 +83,7 @@ class BlockChainNode:
             self.logger.error("Exiting Node startup ..!! \n")
             sys.exit(0)
 
-        self.initialize_components()
+        self.initialize_components(new_database)
 
     def fetch_prev_blocks(self, q, interval):
         """Fetch the blocks requested at regular intervals, and try to
@@ -179,7 +179,7 @@ class BlockChainNode:
         return self.blockchain_obj.get_n_last_transactions(n)
 
     def on_search_transaction_from_receiver(self, receiver_public_key):
-        return self.blockchain_obj.search_transaction_from_receiver(receiver_public_key)
+        return self.blockchain_obj.search_transaction_to_receiver(receiver_public_key)
         
 
     def on_search_transaction_from_sender(self, sender_public_key):
@@ -189,7 +189,7 @@ class BlockChainNode:
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
     # for workflow transaction utils
-    def get_previous_transaction(self, currenttaskTransaction)-> TaskTransaction:
+    def get_previous_transaction(self, currenttaskTransaction) -> TaskTransaction:
         current_in_charge = currenttaskTransaction.in_charge
         for transaction in self.txpool_obj.get_task_transactions():
             if transaction.next_in_charge == current_in_charge:
@@ -210,11 +210,7 @@ class BlockChainNode:
         return None
 
     def on_new_transaction_received(self, transaction):
-        validation_result = self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
-        self.logger.warning("----------------------------------------------")
-        self.logger.warning("Validation Result {}".format(validation_result))
-        self.logger.warning("----------------------------------------------")
-        return validation_result
+        return self.txpool_obj.add_transaction_if_not_exist(transaction, self.blockchain_obj)
 
     def on_new_block_received(self, block):
         """Callback method to pass to network, call add block method in block chain"""
@@ -278,14 +274,14 @@ class BlockChainNode:
         """Restore DB by fetching entries from Blockchain"""
         return self.db.get_blockchain_from_db()
 
-    def initialize_components(self):
+    def initialize_components(self, new_database):
         """ Initialize every componenent of the node"""
         self.logger.debug("Initialized every component for the node")
         self.consensus_obj = Consensus()
         self.crypto_helper_obj = CryptoHelper.instance()
         self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
         self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(
-                     os.path.dirname(__file__), 'resources/labchaindb.sqlite')))
+            os.path.dirname(__file__), 'resources/labchaindb.sqlite')), create_new_database=new_database)
 
         """init blockchain"""
         # Generate the node ID using host ID

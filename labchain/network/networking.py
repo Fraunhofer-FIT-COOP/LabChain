@@ -13,12 +13,10 @@ from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 
-from labchain.util.TransactionFactory import TransactionFactory
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.taskTransaction import TaskTransaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction
 from labchain.network.discover import PeerDiscoverySystem
+from labchain.util.TransactionFactory import TransactionFactory
 from labchain.util.utility import Utility
 
 logger = logging.getLogger(__name__)
