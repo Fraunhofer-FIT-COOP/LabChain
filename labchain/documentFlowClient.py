@@ -410,6 +410,9 @@ class DocumentFlowClient:
                                                self.network_interface)
         do_task_wizard.show()
 
+    def demo(self):
+        print('demo text')
+
     def __do_workflow(self):
         """Ask for all important information to create a new initial transaction/workflow and sends it to the network."""
         do_workflow_wizard = DocTransactionWizard(self.wallet,
