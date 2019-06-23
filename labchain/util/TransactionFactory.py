@@ -25,3 +25,25 @@ class TransactionFactory:
                             transaction_data['signature'])
         t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
         return t
+
+    @staticmethod
+    def create_case_transaction(controller_public_key,physician_public_key,doctor_public_key,chef_public_key):
+        workflow_transaction = {}
+        workflow_transaction['sender'] = controller_public_key
+        workflow_transaction['receiver'] = physician_public_key
+        workflow_transaction['signature'] = None
+        workflow_transaction['payload'] = {}
+        workflow_transaction['payload']['transaction_type'] = '1'
+        workflow_transaction['payload']['workflow_id'] = '34'
+        workflow_transaction['payload']['document'] = {}
+        workflow_transaction['payload']['document']['assumed_diagnosis'] = 'None'
+        workflow_transaction['payload']['document']['real_diagnosis'] = 'None'
+        workflow_transaction['payload']['in_charge'] = physician_public_key+ '_1'
+        workflow_transaction['payload']['processes'] = {}
+        workflow_transaction['payload']['processes'][physician_public_key + '_1'] = [doctor_public_key + '_1']
+        workflow_transaction['payload']['processes'][doctor_public_key + '_1'] = [chef_public_key + '_1']
+
+        workflow_transaction['payload']['permissions'] = {}
+        workflow_transaction['payload']['permissions']['assumed_diagnosis'] = [physician_public_key + '_1']
+        workflow_transaction['payload']['permissions']['real_diagnosis'] = [doctor_public_key + '_1']
+        return TransactionFactory.create_transcation(workflow_transaction)
