@@ -7,3 +7,5 @@ dnspython
 plotly==2.7.0
 Jinja2==2.10.1
 zeroconf>=0.22.0
+Flask==1.0.3
+Flask-RESTful==0.3.7
