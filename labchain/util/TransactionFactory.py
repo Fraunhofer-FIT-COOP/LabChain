@@ -62,7 +62,7 @@ class TransactionFactory:
         task_transaction['payload']['document']['assumed_diagnosis'] = assumed_diagnosis
         task_transaction['payload']['document']['real_diagnosis'] = real_diagnosis
         task_transaction['payload']['in_charge'] = receiver_public_key+ '_1'
-        task_transaction['payload']['workflow_transaction'] = "TODO: put transaction hash here"
-        task_transaction['payload']['previous_transaction'] = "TODO: put transaction hash here"
+        task_transaction['payload']['workflow_transaction'] = '3438b6a92c5343b552acfa425b76fa85366b233adaaa33fa1c043ca78e5a3712'
+        task_transaction['payload']['previous_transaction'] = None
 
         return TransactionFactory.create_transcation(task_transaction)

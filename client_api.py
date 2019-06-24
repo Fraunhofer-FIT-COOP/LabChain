@@ -40,10 +40,11 @@ def createCase():
 
     transaction = TransactionFactory.create_case_transaction(controller_public_key,physician_public_key,doctor_public_key,chef_public_key)
     transaction.sign_transaction(app.crypto_helper, controller_private_key)
+    transaction_hash = app.crypto_helper.hash(transaction.get_json())
 
     try:
         app.network_interface.sendTransaction(transaction)
-        return jsonify(message='success')
+        return jsonify(message='success', transaction_hash=transaction_hash)
     except Exception as e:
         return jsonify(message='fail', description=str(e))
 
@@ -60,11 +61,14 @@ def send_assumed_diagnosis():
         if 'diagnosis' in data:
             assumed_diagnosis = data['diagnosis']
         transaction = TransactionFactory.send_diagnosis(physician_public_key,doctor_public_key,assumed_diagnosis, None)
+        previous_transaction = app.network_interface.search_transaction_from_receiver(physician_public_key)
+        transaction.payload['previous_transaction'] = previous_transaction[0].transaction_hash
         transaction.sign_transaction(app.crypto_helper, physician_private_key)
+        transaction_hash = app.crypto_helper.hash(transaction.get_json())
 
         try:
             app.network_interface.sendTransaction(transaction)
-            return jsonify(message='success')
+            return jsonify(message='success', transaction_hash=transaction_hash)
         except Exception as e:
             return jsonify(message='fail', description=str(e))
 
@@ -81,11 +85,14 @@ def send_real_diagnosis():
         if 'diagnosis' in data:
             real_diagnosis = data['diagnosis']
         transaction = TransactionFactory.send_diagnosis(doctor_public_key, chef_public_key, None, real_diagnosis)
+        previous_transaction = app.network_interface.search_transaction_from_receiver(doctor_public_key)
+        transaction.payload['previous_transaction'] = previous_transaction[0].transaction_hash
         transaction.sign_transaction(app.crypto_helper, doctor_private_key)
+        transaction_hash = app.crypto_helper.hash(transaction.get_json())
 
         try:
             app.network_interface.sendTransaction(transaction)
-            return jsonify(message='success')
+            return jsonify(message='success', transaction_hash=transaction_hash)
         except Exception as e:
             return jsonify(message='fail', description=str(e))
 
