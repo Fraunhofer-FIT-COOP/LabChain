@@ -37,13 +37,13 @@ class TasksManeger:
             if isinstance(t.payload, Dict):
                 if t.payload['transaction_type'] == '1':
                     workflow_id = t.payload['workflow_id']
-                    workflow_transaction_hash = crypto_helper.hash(t.get_json_with_signature())
+                    workflow_transaction_hash = crypto_helper.hash(t.get_json())
                     task = Task(workflow_id,workflow_transaction_hash,workflow_transaction_hash)
                     tasks.append(task)
                 if t.payload['transaction_type'] == '2':
                     workflow_id = t.payload['workflow_id']
                     workflow_transaction_hash = t.payload['workflow_transaction']
-                    previous_transaction_hash = crypto_helper.hash(t.get_json_with_signature())
+                    previous_transaction_hash = crypto_helper.hash(t.get_json())
                     task = Task(workflow_id,workflow_transaction_hash,previous_transaction_hash)
                     tasks.append(task)
         return tasks

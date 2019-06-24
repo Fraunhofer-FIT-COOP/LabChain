@@ -31,21 +31,21 @@ def create_app():
 
 app = create_app()
 
-@app.route('/init',methods=['POST'])
+@app.route('/createCase',methods=['POST'])
 def createCase():
     data = request.get_json(force=True)
 
+    case_ID = data['case_id'] if 'case_id' in data else '0'
     controller_public_key = app.wallet[data['controller']]['public_key']
     controller_private_key = app.wallet[data['controller']]['private_key']
     physician_public_key = app.wallet[data['physician']]['public_key']
     doctor_public_key = app.wallet[data['doctor']]['public_key']
     chef_public_key = app.wallet[data['chef']]['public_key']
 
-    transaction = TransactionFactory.create_case_transaction(controller_public_key,physician_public_key,doctor_public_key,chef_public_key)
+    transaction = TransactionFactory.create_case_transaction(case_ID,controller_public_key,physician_public_key,doctor_public_key,chef_public_key)
     transaction.sign_transaction(app.crypto_helper, controller_private_key)
 
-    try:
-        workflow_transaction_hash = app.crypto_helper.hash(transaction.get_json_with_signature())
+    try:        
         app.network_interface.sendTransaction(transaction)
         return jsonify(message='success')
     except Exception as e:
@@ -56,37 +56,45 @@ def send_assumed_diagnosis():
     if request.method == 'POST':
         data = request.get_json(force=True)
 
+        case_ID = data['case_id'] if 'case_id' in data else '0'
         physician_private_key = app.wallet[data['physician']]['private_key']
         physician_public_key = app.wallet[data['physician']]['public_key']
         doctor_public_key = app.wallet[data['doctor']]['public_key']
-
-        assumed_diagnosis = None
-        if 'diagnosis' in data:
-            assumed_diagnosis = data['diagnosis']
-        transaction = TransactionFactory.create_assumed_diagnosis_transaction(physician_public_key,doctor_public_key,assumed_diagnosis)
-        transaction.sign_transaction(app.crypto_helper, physician_private_key)
+        workflow_transaction = data['workflow_transaction']
+        previous_transaction = data['previous_transaction']
+        assumed_diagnosis = data['diagnosis']
         try:
+            transaction = TransactionFactory.create_assumed_diagnosis_transaction(case_ID,physician_public_key,
+                                                                        doctor_public_key,
+                                                                        assumed_diagnosis,
+                                                                        workflow_transaction,
+                                                                        previous_transaction)
+            transaction.sign_transaction(app.crypto_helper, physician_private_key)
             app.network_interface.sendTransaction(transaction)
             return jsonify(message='success')
         except Exception as e:
             return jsonify(message='fail', description=str(e))
 
-@app.route('/doctor', methods=['POST'])
+@app.route('/sendRealDiagnosis', methods=['POST'])
 def send_real_diagnosis():
     if request.method == 'POST':
         data = request.get_json(force=True)
 
+        case_ID = data['case_id'] if 'case_id' in data else '0'
         doctor_private_key = app.wallet[data['doctor']]['private_key']
         doctor_public_key = app.wallet[data['doctor']]['public_key']
         chef_public_key = app.wallet[data['chef']]['public_key']
-
-        real_diagnosis = None
-        if 'diagnosis' in data:
-            real_diagnosis = data['diagnosis']
-        transaction = TransactionFactory.send_diagnosis(doctor_public_key, chef_public_key, None, real_diagnosis)
-        transaction.sign_transaction(app.crypto_helper, doctor_private_key)
-
+        workflow_transaction = data['workflow_transaction']
+        previous_transaction = data['previous_transaction']
+        real_diagnosis = data['diagnosis']
         try:
+            transaction = TransactionFactory.create_real_diagnosis_transaction(case_ID,doctor_public_key,
+                                                                                    chef_public_key,
+                                                                                    real_diagnosis,
+                                                                                    workflow_transaction,
+                                                                                    previous_transaction)
+        
+            transaction.sign_transaction(app.crypto_helper, doctor_private_key)
             app.network_interface.sendTransaction(transaction)
             return jsonify(message='success')
         except Exception as e:
@@ -111,10 +119,9 @@ def checkTasks():
     try:
         transactions = TasksManeger.check_tasks(app.network_interface,public_key)
         tasks = TasksManeger.get_tasks_objects_from_task_transactions(transactions)
-        result = json.dumps([ob.__dict__ for ob in tasks])
-        return result
+        return json.dumps([ob.__dict__ for ob in tasks])
     except Exception as e:
-        return str(e)
+        return jsonify(message='fail', description=str(e))
 
 if __name__ == '__main__':
     app.run(debug=True)
