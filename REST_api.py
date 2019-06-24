@@ -55,7 +55,7 @@ def initialCase():
         return jsonify(message='fail')
 
 @app.route('/physician', methods=['GET', 'POST'])
-def physician():
+def send_assumed_diagnosis():
     if request.method == 'GET':
         """GET real diagnosis"""
         "TODO:methods to check sent transaction, and get real diagnosis"

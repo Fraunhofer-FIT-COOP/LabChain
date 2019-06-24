@@ -47,3 +47,22 @@ class TransactionFactory:
         workflow_transaction['payload']['permissions']['assumed_diagnosis'] = [physician_public_key + '_1']
         workflow_transaction['payload']['permissions']['real_diagnosis'] = [doctor_public_key + '_1']
         return TransactionFactory.create_transcation(workflow_transaction)
+
+    @staticmethod
+    def send_diagnosis(sender_public_key,receiver_public_key,assumed_diagnosis,real_diagnosis):
+        """method for sending assumed diagnosis or real diagnosis"""
+        task_transaction = {}
+        task_transaction['sender'] = sender_public_key
+        task_transaction['receiver'] = receiver_public_key
+        task_transaction['signature'] = None
+        task_transaction['payload'] = {}
+        task_transaction['payload']['transaction_type'] = '2'
+        task_transaction['payload']['workflow_id'] = '34'
+        task_transaction['payload']['document'] = {}
+        task_transaction['payload']['document']['assumed_diagnosis'] = assumed_diagnosis
+        task_transaction['payload']['document']['real_diagnosis'] = real_diagnosis
+        task_transaction['payload']['in_charge'] = receiver_public_key+ '_1'
+        task_transaction['payload']['workflow_transaction'] = "TODO: put transaction hash here"
+        task_transaction['payload']['previous_transaction'] = "TODO: put transaction hash here"
+
+        return TransactionFactory.create_transcation(task_transaction)
