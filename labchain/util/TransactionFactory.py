@@ -49,7 +49,7 @@ class TransactionFactory:
         return TransactionFactory.create_transcation(workflow_transaction)
 
     @staticmethod
-    def send_diagnosis(sender_public_key,receiver_public_key,assumed_diagnosis,real_diagnosis):
+    def create_assumed_diagnosis_transaction(sender_public_key,receiver_public_key,assumed_diagnosis):
         """method for sending assumed diagnosis or real diagnosis"""
         task_transaction = {}
         task_transaction['sender'] = sender_public_key
@@ -60,7 +60,6 @@ class TransactionFactory:
         task_transaction['payload']['workflow_id'] = '34'
         task_transaction['payload']['document'] = {}
         task_transaction['payload']['document']['assumed_diagnosis'] = assumed_diagnosis
-        task_transaction['payload']['document']['real_diagnosis'] = real_diagnosis
         task_transaction['payload']['in_charge'] = receiver_public_key+ '_1'
         task_transaction['payload']['workflow_transaction'] = "TODO: put transaction hash here"
         task_transaction['payload']['previous_transaction'] = "TODO: put transaction hash here"
