@@ -17,8 +17,7 @@ from flask_restful import Api, Resource
 app = Flask(__name__)
 api = Api(app)
 
-"""Assume all webclients will connect to the same node,
-if not, we can launch one node for every new web client"""
+"""Assume all webclients will connect to the same node"""
 
 CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 WALLET_FILE_PATH = os.path.join(CONFIG_DIRECTORY, 'wallet.csv')
@@ -60,7 +59,11 @@ def physician():
     if request.method == 'GET':
         """GET real diagnosis"""
         "TODO:methods to check sent transaction, and get real diagnosis"
-
+        try:
+            "methods here"
+            return jsonify(message='success', assumed_diagnosis='heart_attack', real_diagnosis='not_a_heart_attack')
+        except:
+            return jsonify(message='fail')
     if request.method == 'POST':
         """POST assumed diagnosis
         parameter: diagnosis: string
