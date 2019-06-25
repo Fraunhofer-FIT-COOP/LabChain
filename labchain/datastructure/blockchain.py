@@ -687,7 +687,7 @@ class BlockChain:
             self._logger.debug(
                 "Branch switching successful, new node branch head : {}"
                 .format(self._node_branch_head))
-            self._blockchain_lock.release()
+        self._blockchain_lock.release()
 
     def prune_orphans(self):
         """Delete orphans stored in the orphan store once the pruning

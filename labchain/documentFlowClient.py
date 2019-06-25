@@ -327,7 +327,7 @@ class DocTransactionWizard(TransactionWizard):
                     "sender": private_key,
                     "signature": None,
                     "payload": {
-                        "workflow-id": "0",
+                        "workflow_id": "0",
                         "document": {
                             chosen_payload_attribute: chosen_payload
                         },
@@ -342,7 +342,7 @@ class DocTransactionWizard(TransactionWizard):
                     "sender": private_key,
                     "signature": None,
                     "payload": {
-                        "workflow-id":"0",
+                        "workflow_id":"0",
                         "document": {
 
                         },
@@ -371,7 +371,7 @@ class DocTransactionWizard(TransactionWizard):
             print()
             print(u'Sender: ' + public_key)
             print(u'Receiver: ' + str(chosen_receiver))
-            print("workflow-id: ", transaction_json["payload"]["workflow-id"])
+            print("workflow_id: ", transaction_json["payload"]["workflow_id"])
             if self.isInitial == False:
                 print(u'Payload key value: ' + str(chosen_payload_attribute), " : ", str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
@@ -523,7 +523,7 @@ class DocumentFlowClient:
                 print()
                 print(u'Sender: ' + tx[0]["sender"])
                 print(u'Receiver: ' + tx[0]["receiver"])
-                print("workflow-id: ", tx[0]["payload"]["workflow-id"])
+                print("workflow_id: ", tx[0]["payload"]["workflow_id"])
                 #if self.isInitial == False:
                 #    print(u'Payload key value: ' + str(chosen_payload_attribute), " : ", str(chosen_payload))
                 print(u'Hash: ' + str(new_transaction.transaction_hash))
