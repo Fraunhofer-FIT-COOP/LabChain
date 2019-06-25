@@ -100,15 +100,21 @@ def send_real_diagnosis():
         except Exception as e:
             return jsonify(message='fail', description=str(e))
 
-@app.route('/show-all-diagnosis', methods=['GET'])
+@app.route('/showAllDiagnosis', methods=['POST'])
 def show_all_diagnosis():
-    "GET assumed and real diagnosis, for base controller to check the performance of physicians"
+    data = request.get_json(force=True)
+    public_key = app.wallet[data['username']]['public_key']
     try:
-        transaction_to_chef = app.network_interface.search_transaction_from_receiver(app.wallet['chef']['public_key'])
-        real_diagnosis = transaction_to_chef[0].payload['document']['real_diagnosis']
-        assumed_diagnosis = transaction_to_chef[0].payload['document']['assumed_diagnosis']
-
-        return jsonify(message='success', assumed_diagnosis=assumed_diagnosis, real_diagnosis=real_diagnosis)
+        real_diagnosis_transactions = app.network_interface.search_transaction_from_receiver(public_key)
+        diaggnosis_list = []
+        for real_diagnosis_transaction in real_diagnosis_transactions:
+            previous_transaction = real_diagnosis_transaction.payload['previous_transaction']
+            assumed_diagnossis_transaction = app.network_interface.requestTransaction(previous_transaction)[0]
+            diaggnosis = {}
+            diaggnosis['real_diagnosis'] = real_diagnosis_transaction.payload['document']['real_diagnosis']
+            diaggnosis['assumed_diagnosis'] = assumed_diagnossis_transaction.payload['document']['assumed_diagnosis']
+            diaggnosis_list.append(diaggnosis)
+        return json.dumps(diaggnosis_list)
     except Exception as e:
         return jsonify(message='fail', description=str(e))
 
