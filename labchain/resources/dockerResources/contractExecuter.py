@@ -17,14 +17,16 @@ def index():
 def createContract():
 	"""JSON FORMAT FOR CREATING A CONTRACT
 	{
-	"code": "Encoded string in base64 containing the contract's code",
-    "arguments": { 
-    	"Arg1Name": "Arg1", 
-    	"Arg2Name": "Arg2", 
-    	"Arg3Name": Arg3
-		...
-    }
-}
+	"contractCode": "Encoded string in base64 containing the contract's code",
+    "arguments": 
+		{ 
+			"Arg1Name": "Arg1", 
+			"Arg2Name": "Arg2", 
+			"Arg3Name": Arg3
+			...
+    	},
+	"contract_file_name": "my_contract_name.py"
+	}
 	Note: the "arguments" here are the arguments for the constructor.
 	May also be left empty if the constructor doesn't need any.
 	"""
@@ -76,28 +78,30 @@ def createContract():
 @app.route('/callMethod', methods=['POST'])
 def callMethod():
 	"""JSON FORMAT FOR CALLING A METHOD
-	{
-	"code": "Encoded string in base64 containing the contract's code",
-	"state": "Encoded string in base64 containing the contract's state",
-	"methods": [
-    {
-        "methodName": "method1Name",
-        "arguments": {
-        	"method1Arg1Name": method1Arg1
-			"method1Arg2Name": method1Arg2
+{
+	"methods": 
+		[
+			{
+				"methodName": method_1_name,
+				"arguments": 
+				{
+					"method1Arg1Name": method_1_Arg1
+					"method1Arg2Name": method_1_Arg2
+					...
+				}
+			},
+			{
+				"methodName": method_2_name,
+				"arguments": 
+				{
+					"method2Arg1Name": method_2_Arg1
+					"method2Arg2Name": method_2_Arg2
+					...
+				}
+			},
 			...
-        }
-    },
-    {
-    	"methodName": "method2Name",
-        "arguments": {
-        	"method2Arg1Name": method2Arg1
-			"method2Arg2Name": method2Arg2
-			...
-        }
-    }
-	...
-    ]
+		],
+	"contract_file_name": "my_contract_name.py"
 }
 	Note: the "arguments" here are the arguments for each method.
 	May also be left empty if the method doesn't need any.

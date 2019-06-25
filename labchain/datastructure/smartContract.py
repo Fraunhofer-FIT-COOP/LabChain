@@ -68,7 +68,6 @@ class SmartContract:
             self._port = None
             self._code = None
             self._terminated = True
-            self._states = {}
 
     def restore(self, new_address, new_code):
         """Restarts a terminated contract with a new address.
@@ -224,9 +223,9 @@ class SmartContract:
         else:
             self.states[blockID] = [new_state]
 
-    def remove_contract_states(self, from_blockID):
+    def remove_contract_states(self, from_blockID_onwards):
         new_dict = {}
         for key, value in self.states.items():
-            if key <= from_blockID:
+            if key <= from_blockID_onwards:
                 new_dict[key] = value
         self.states = new_dict

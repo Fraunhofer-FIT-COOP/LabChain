@@ -81,7 +81,7 @@ class BlockChain:
         self._q = q
         self.worldState = WorldState()
         # self._ws_next_block_id_to_check = 0
-        # self._worldState_is_updating = False
+        # self.worldState_is_updating = False
         # Create the very first Block, add it to Blockchain
         # This should be part of the bootstrap/initial node only
         _first_block = LogicalBlock(block_id=0, timestamp=0)
@@ -442,10 +442,10 @@ class BlockChain:
                          format(self._node_branch_head))
             
             # Update contract states to the new branch
-            # self.worldState.remove_contract_states(_check_point.block_id)
-            # for block in self._blockchain.values():
-            #     if block.block_id > _check_point.block_id:
-            #         self.update_worldState(block)
+            self.worldState.remove_contract_states(_check_point.block_id)
+            for block in self._blockchain.values():
+                if block.block_id > _check_point.block_id:
+                    self.update_worldState(block)
 
     def prune_orphans(self):
         """Delete orphans stored in the orphan store once the pruning
@@ -473,9 +473,15 @@ class BlockChain:
                 print("\nNormal tx detected in Block #" + str(block.block_id) + " with tx.hash " + txHash)
                 continue
             if (txType == txTypes_instance.contract_creation):
-                print("\nContract creation tx detected in Block #" + 
-                    str(block.block_id) + " with tx.hash " + str(txHash))
-                print('Contract # ' + str(self.contract_counter))
+                # print("\nContract creation tx detected in Block #" + 
+                #     str(block.block_id) + " with tx.hash " + str(txHash))
+                
+                if self.contract_counter == 1:
+                    self.start_time = time.time()
+                elapsed_time = time.time() - self.start_time
+                print('Contract creation # ' + str(self.contract_counter) + '. Elapsed time: ' + str(elapsed_time))
+
+                #print('Contract # ' + str(self.contract_counter))
                 self.contract_counter = self.contract_counter + 1
                 self.worldState.create_contract(tx, block.block_id)
                 print('Contract created\n')

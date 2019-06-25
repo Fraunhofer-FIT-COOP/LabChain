@@ -355,9 +355,9 @@ class WorldState:
         #     return None
         # container.remove(force=True)
 
-    def remove_contract_states(self, from_blockID):
+    def remove_contract_states(self, from_blockID_onwards):
         for contract in self._contract_list:
-            contract.remove_contract_states(from_blockID)
+            contract.remove_contract_states(from_blockID_onwards)
             if contract.states == {}:
                 contract.terminate()
                 self._contract_list.remove(contract)

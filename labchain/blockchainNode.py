@@ -19,6 +19,7 @@ from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
 from labchain.datastructure.txpool import TxPool
 from labchain.databaseInterface import Db
+from labchain import blockchainClient
 
 
 class BlockChainNode:
@@ -381,3 +382,5 @@ class BlockChainNode:
         self.logger.debug("Starting worldState thread...")
 
         self.orphan_killer.start()
+
+        self.client = blockchainClient(0.0.0.0, 8000)
