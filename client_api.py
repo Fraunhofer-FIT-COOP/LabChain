@@ -5,6 +5,7 @@ import os
 from typing import List
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
@@ -20,7 +21,7 @@ wallet_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'wall
 
 def create_app():
     app = Flask(__name__)
-
+    CORS(app)
     with open(wallet_file_path, 'r') as file:
         app.wallet = json.load(file)[0]['wallet']
 
@@ -127,7 +128,7 @@ def checkTasks():
         tasks = TasksManeger.get_tasks_objects_from_task_transactions(transactions)
         return json.dumps([ob.__dict__ for ob in tasks])
     except Exception as e:
-        return jsonify(message='fail', description=str(e))
+        return jsonify(message='fail', description=str(e))	
 
 if __name__ == '__main__':
     app.run(debug=True)
