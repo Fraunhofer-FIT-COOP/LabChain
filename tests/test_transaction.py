@@ -6,6 +6,7 @@ import unittest
 
 from labchain.consensus.consensus import Consensus
 from labchain.datastructure.blockchain import BlockChain
+from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.taskTransaction import TaskTransaction, WorkflowTransaction
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.txpool import TxPool
@@ -211,7 +212,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "sender": sender_key,
             "signature": None,
             "payload": {
-                "workflow-id": "0",
+                "workflow_id": "0",
                 "transaction_type": "1",
                 "document": {
                     "stringAttribute": "stringValue",
@@ -251,7 +252,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "sender": sender_key,
             "signature": None,
             "payload": {
-                "workflow-id": "0",
+                "workflow_id": "0",
                 "transaction_type": "2",
                 "document": {
                     "stringAttribute": "1234"
@@ -451,6 +452,26 @@ class WorkflowTransactionTestCase(TaskTransactionCommon):
         transaction: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(json_dict))
         transaction.sign_transaction(self.crypto_helper_obj, pr_key1)
         result = transaction.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
+        self.assertFalse(result)
+
+    def test_wrong_permission_attribute(self):
+        pr_key1, pu_key1 = self.crypto_helper_obj.generate_key_pair()
+        pr_key2, pu_key2 = self.crypto_helper_obj.generate_key_pair()
+        json_dict1 = WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2)
+        json_dict2 = WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2)
+
+        # check that json fields didnt change
+        assert set(json_dict1.keys()) == set(WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2).keys())
+        assert set(json_dict2.keys()) == set(WorkflowTransactionTestCase.getDummyWorkflowJson(pu_key1, pu_key2).keys())
+
+        transaction1: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(json_dict1))
+        transaction2: WorkflowTransaction = WorkflowTransaction.from_json(json.dumps(json_dict2))
+        transaction1.sign_transaction(self.crypto_helper_obj, pr_key1)
+        transaction2.sign_transaction(self.crypto_helper_obj, pr_key1)
+        result = transaction1.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
+        self.assertTrue(result)
+        self.blockchain_obj._blockchain[123456] = LogicalBlock(transactions=[transaction1])
+        result = transaction2.validate_transaction(CryptoHelper.instance(), self.blockchain_obj)
         self.assertFalse(result)
 
     def test_DummyWorkflow_valid(self):
