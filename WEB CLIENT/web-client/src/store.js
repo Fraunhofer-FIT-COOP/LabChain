@@ -44,7 +44,7 @@ export default new Vuex.Store({
     },
     requestPatientDiagnosisData({ commit }) {
       Vue.http
-        .get(`http://dummy.restapiexample.com/api/v1/employees`)
+        .get(`http://localhost:5000/show-all-diagnosis`)
         .then(response => {
           console.log(response);
           commit("setPatientDiagnosisData", response.body);
