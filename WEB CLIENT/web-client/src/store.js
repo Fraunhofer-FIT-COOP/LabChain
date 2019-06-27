@@ -5,19 +5,14 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    patientDiagnosisData: [],
-    physicianOpenTask: [],
+    patientDiagnosisData: []
   },
   getters: {
-    getPatientDiagnosisData: state => state.patientDiagnosisData,
-    getPhysicianOpenTask: state => state.physicianOpenTask
+    getPatientDiagnosisData: state => state.patientDiagnosisData
   },
   mutations: {
     setPatientDiagnosisData(state, data = []) {
       state.patientDiagnosisData = data;
-    },
-    setPhysicianOpenTask(state, data = []) {
-      state.physicianOpenTask = data;
     }
   },
   actions: {
@@ -39,16 +34,16 @@ export default new Vuex.Store({
       Vue.http
         //backup of this unknown url
         //.post(`https://reqres.in/api/users`, [
-        .post(`https://127.0.0.1:5000/createCase`, [
+        .post(`http://127.0.0.1:5000/createCase`,
           {
             //name: payload.dr_name ? payload.dr_name : "default",
             //job: payload.e_physician ? payload.e_physician : "111"
-            controller: payload["controller_name"] ? payload["controller_name"] : "controller",
-            physician: payload["e_physician"] ? payload["e_physician"] : "physician",
-            doctor: payload["dr_name"] ? payload["dr_name"] : "doctor",
-            chef: payload["dpt_chief"] ? payload["dpt_chief"] : "chef"
+            "controller": payload["controller_name"] ? payload["controller_name"] : "controller",
+            "physician": payload["e_physician"] ? payload["e_physician"] : "physician",
+            "doctor": payload["dr_name"] ? payload["dr_name"] : "doctor",
+            "chef": payload["dpt_chief"] ? payload["dpt_chief"] : "chef"
           }
-        ])
+        )
         .then(res => {
           console.log(res);
         });
@@ -57,19 +52,13 @@ export default new Vuex.Store({
       Vue.http
         .post(`http://localhost:5000/showAllDiagnosis`, [
           {
-            username: "chef"
+            "username": "chef"
           }
         ])
         .then(response => {
           console.log(response);
           commit("setPatientDiagnosisData", response.body);
         });
-    },
-    requestPhysicianOpenTask({ commit }) {
-      Vue.http.get(`http://localhost:5000/demo`).then(response => {
-        console.log(response);
-        commit("setPhysicianOpenTask", response.body);
-      });
     }
   }
 });
