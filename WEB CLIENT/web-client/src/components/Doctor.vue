@@ -3,7 +3,7 @@
     <b-card-text>
       <p class="doctor-send-diagnosis">Send Diagnosis</p>
       <b-container fluid>
-        <b-row class="hospital-tbl-row ">
+        <b-row class="hospital-tbl-row">
           <b-col sm="4" class="bottom-space doctor-form">
             <label :for="`type-text`">Case ID:</label>
           </b-col>
@@ -19,6 +19,20 @@
           </b-col>
           <b-col cols="3" class="bottom-space doctor-form"></b-col>
           <b-col sm="4" class="bottom-space doctor-form">
+            <label :for="`type-text`">Workflow Transaction:</label>
+          </b-col>
+          <b-col sm="5" class="bottom-space doctor-form">
+            <b-form-input v-model="workflow_transaction"></b-form-input>
+          </b-col>
+          <b-col cols="3" class="bottom-space doctor-form"></b-col>
+          <b-col sm="4" class="bottom-space doctor-form">
+            <label :for="`type-text`">Previous Transaction:</label>
+          </b-col>
+          <b-col sm="5" class="bottom-space doctor-form">
+            <b-form-input v-model="previous_transaction"></b-form-input>
+          </b-col>
+          <b-col cols="3" class="bottom-space doctor-form"></b-col>
+          <b-col sm="4" class="bottom-space doctor-form">
             <label :for="`type-text`">Diagnosis:</label>
           </b-col>
           <b-col sm="5" class="bottom-space doctor-form">
@@ -29,6 +43,14 @@
         <b-button class="send-btn bottom-space" variant="success" @click="sendDiagnosis()">Send</b-button>
       </b-container>
     </b-card-text>
+    <b-alert
+      class="alert"
+      :show="dismissCountDown"
+      dismissible
+      :variant="alertVariant"
+      @dismissed="dismissCountDown=0"
+      @dismiss-count-down="countDownChanged"
+    >{{ alertMsg }}</b-alert>
   </div>
 </template>
 
@@ -39,18 +61,46 @@ export default {
     return {
       caseID: "",
       dr_name: "",
-      diagnosis: ""
+      chief_name: "",
+      workflow_transaction: "",
+      previous_transaction: "",
+      diagnosis: "",
+      dismissSecs: 2,
+      dismissCountDown: 0,
+      alertVariant: "success",
+      alertMsg: ""
     };
   },
   mounted() {},
   methods: {
     sendDiagnosis() {
       let payload = {
-        caseID: this.caseID,
-        dr_name: this.dr_name,
+        case_id: this.caseID,
+        doctor: this.dr_name,
+        chief: this.chief_name,
+        workflow_transaction: this.workflow_transaction,
+        previous_transaction: this.previous_transaction,
         diagnosis: this.diagnosis
       };
-      //this.$store.dispatch("createCaseDemo", payload);
+      this.$store.dispatch("sendRealDiagnosis", payload).then(
+        response => {
+          console.log(response);
+          this.alertMsg = "Diagnosis is successfully updated.";
+          this.showAlert("success");
+        },
+        error => {
+          console.log(error);
+          this.alertMsg = "Something went wrong.";
+          this.showAlert("danger");
+        }
+      );
+    },
+    showAlert(alertType) {
+      this.alertVariant = alertType;
+      this.dismissCountDown = this.dismissSecs;
+    },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
     }
   }
 };
@@ -84,5 +134,9 @@ a {
 }
 .doctor-form {
   text-align: left;
+}
+
+.alert {
+  margin-top: 50px;
 }
 </style>

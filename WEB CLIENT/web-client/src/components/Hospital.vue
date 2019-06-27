@@ -5,12 +5,19 @@
       <b-container fluid>
         <b-row class="hospital-tbl-row">
           <b-col sm="4" class="bottom-space hospital-form">
+            <label :for="`type-text`">Controller Name:</label>
+          </b-col>
+          <b-col sm="5" class="bottom-space hospital-form">
+            <b-form-input v-model="controller_name"></b-form-input>
+          </b-col>
+          <b-col cols="3" class="bottom-space"></b-col>
+          <b-col sm="4" class="bottom-space hospital-form">
             <label :for="`type-text`">Doctor Name:</label>
           </b-col>
           <b-col sm="5" class="bottom-space hospital-form">
             <b-form-input v-model="dr_name"></b-form-input>
           </b-col>
-          <b-col cols="3" class="bottom-space "></b-col>
+          <b-col cols="3" class="bottom-space"></b-col>
           <b-col sm="4" class="bottom-space hospital-form">
             <label :for="`type-text`">Physician Name:</label>
           </b-col>
@@ -29,6 +36,14 @@
         <b-button class="create-btn bottom-space" variant="success" @click="createCase()">Create</b-button>
       </b-container>
     </b-card-text>
+    <b-alert
+      class="alert"
+      :show="dismissCountDown"
+      dismissible
+      :variant="alertVariant"
+      @dismissed="dismissCountDown=0"
+      @dismiss-count-down="countDownChanged"
+    >{{ alertMsg }}</b-alert>
   </div>
 </template>
 
@@ -37,20 +52,44 @@ export default {
   name: "hospital",
   data() {
     return {
+      controller_name: "",
       dr_name: "",
       e_physician_name: "",
-      dpt_chief_name: ""
+      dpt_chief_name: "",
+      dismissSecs: 2,
+      dismissCountDown: 0,
+      alertVariant: "success",
+      alertMsg: ""
     };
   },
   mounted() {},
   methods: {
     createCase() {
       let payload = {
+        controller_name: this.controller_name,
         dr_name: this.dr_name,
-        e_physician: this.e_physician_name,
-        dpt_chief: this.dpt_chief_name
+        e_physician_name: this.e_physician_name,
+        dpt_chief_name: this.dpt_chief_name
       };
-      this.$store.dispatch("createCaseDemo", payload);
+      this.$store.dispatch("createCase", payload).then(
+        response => {
+          console.log(response);
+          this.alertMsg = "Case is successfully created.";
+          this.showAlert("success");
+        },
+        error => {
+          console.log(error);
+          this.alertMsg = "Something went wrong.";
+          this.showAlert("danger");
+        }
+      );
+    },
+    showAlert(alertType) {
+      this.alertVariant = alertType;
+      this.dismissCountDown = this.dismissSecs;
+    },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
     }
   }
 };
@@ -84,5 +123,9 @@ a {
 }
 .hospital-form {
   text-align: left;
+}
+
+.alert {
+  margin-top: 50px;
 }
 </style>

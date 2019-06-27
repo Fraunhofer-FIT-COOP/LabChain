@@ -16,49 +16,65 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    createCase({commit}, payload) {
-      Vue.http
-        .post(`api/article/countPerMonth`, [
-          {
-            dr_name: payload["dr_name"] ? payload["dr_name"] : "",
-            e_physician: payload["e_physician"] ? payload["e_physician"] : "",
-            dpt_chief: payload["dpt_chief"] ? payload["dpt_chief"] : ""
-          }
-        ])
-        .promise.always(response => {
-          console.log(response);
-        });
+    createCase(context, payload) {
+      return new Promise((resolve, reject) => {
+        Vue.http
+          .post(`http://127.0.0.1:5000/createCase`, {
+            controller: payload["controller_name"]
+              ? payload["controller_name"]
+              : "controller",
+            doctor: payload["dr_name"] ? payload["dr_name"] : "doctor",
+            physician: payload["e_physician_name"]
+              ? payload["e_physician_name"]
+              : "physician",
+            chief: payload["dpt_chief_name"]
+              ? payload["dpt_chief_name"]
+              : "chief"
+          })
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
     },
-    createCaseDemo({commit},payload) {
-      console.log(payload)
-      Vue.http
-        //backup of this unknown url
-        //.post(`https://reqres.in/api/users`, [
-        .post(`http://127.0.0.1:5000/createCase`,
-          {
-            //name: payload.dr_name ? payload.dr_name : "default",
-            //job: payload.e_physician ? payload.e_physician : "111"
-            "controller": payload["controller_name"] ? payload["controller_name"] : "controller",
-            "physician": payload["e_physician"] ? payload["e_physician"] : "physician",
-            "doctor": payload["dr_name"] ? payload["dr_name"] : "doctor",
-            "chef": payload["dpt_chief"] ? payload["dpt_chief"] : "chef"
-          }
-        )
-        .then(res => {
-          console.log(res);
-        });
+    sendRealDiagnosis(context, payload) {
+      return new Promise((resolve, reject) => {
+        Vue.http
+          .post(`http://127.0.0.1:5000/sendRealDiagnosis`, {
+            case_id: payload["case_id"] ? payload["case_id"] : "case_id",
+            doctor: payload["doctor"] ? payload["doctor"] : "doctor",
+            chief: payload["chief"] ? payload["chief"] : "chief",
+            workflow_transaction: payload["workflow_transaction"]
+              ? payload["workflow_transaction"]
+              : "workflow_transaction",
+            previous_transaction: payload["previous_transaction"]
+              ? payload["previous_transaction"]
+              : "previous_transaction",
+            diagnosis: payload["diagnosis"] ? payload["diagnosis"] : "diagnosis"
+          })
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
     },
-    requestPatientDiagnosisData({ commit }) {
-      Vue.http
-        .post(`http://localhost:5000/showAllDiagnosis`, [
-          {
-            "username": "chef"
-          }
-        ])
-        .then(response => {
-          console.log(response);
-          commit("setPatientDiagnosisData", response.body);
-        });
+    showAllDiagnosis(context, payload) {
+      return new Promise((resolve, reject) => {
+        Vue.http
+          .post(`http://127.0.0.1:5000/showAllDiagnosis`, {
+            chief: payload["chief"] ? payload["chief"] : "chief"
+          })
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
     }
   }
 });

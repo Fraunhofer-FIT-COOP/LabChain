@@ -41,7 +41,7 @@ def createCase():
     controller_private_key = app.wallet[data['controller']]['private_key']
     physician_public_key = app.wallet[data['physician']]['public_key']
     doctor_public_key = app.wallet[data['doctor']]['public_key']
-    chef_public_key = app.wallet[data['chef']]['public_key']
+    chef_public_key = app.wallet[data['chief']]['public_key']
 
     transaction = TransactionFactory.create_case_transaction(case_ID,controller_public_key,physician_public_key,doctor_public_key,chef_public_key)
     transaction.sign_transaction(app.crypto_helper, controller_private_key)
@@ -84,7 +84,7 @@ def send_real_diagnosis():
         case_ID = data['case_id'] if 'case_id' in data else '0'
         doctor_private_key = app.wallet[data['doctor']]['private_key']
         doctor_public_key = app.wallet[data['doctor']]['public_key']
-        chef_public_key = app.wallet[data['chef']]['public_key']
+        chef_public_key = app.wallet[data['chief']]['public_key']
         workflow_transaction = data['workflow_transaction']
         previous_transaction = data['previous_transaction']
         real_diagnosis = data['diagnosis']
