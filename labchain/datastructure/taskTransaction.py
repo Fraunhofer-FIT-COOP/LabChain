@@ -39,12 +39,12 @@ class TaskTransaction(Transaction):
                 'Corrupted transaction, no previous_transaction found')
 
         if self.workflow_ID != previous_transaction.workflow_ID:
-            logging.warning('Workflow-ID of the new transaction does not match with the previous transaction.')
+            logging.warning('Workflow_ID of the new transaction does not match with the previous transaction.')
             TaskTransaction._validation_lock.release()
             return False
 
         if self.workflow_ID != workflow_transaction.workflow_ID:
-            logging.warning('Workflow-ID of the new transaction does not match with the initial transaction.')
+            logging.warning('Workflow_ID of the new transaction does not match with the initial transaction.')
             TaskTransaction._validation_lock.release()
             return False
 
@@ -225,7 +225,7 @@ class WorkflowTransaction(TaskTransaction):
                                     for t in list_of_transactions if 'workflow_id' in t.payload]
         list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '2']
         for workflow_tuple in list_of_workflow_transactions:
-            workflow = workflow_tuple[0]
+            workflow = workflow_tuple
             if self.payload['workflow_id'] == workflow.payload['workflow_id']:
                 TaskTransaction._validation_lock.release()
                 return False  # TODO write a test!

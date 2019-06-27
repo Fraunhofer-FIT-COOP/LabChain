@@ -7,7 +7,7 @@
 			"signature":"test",
 			"payload":{
 				"transaction_type":"1",
-				"workflow-id":"0",
+				"workflow_id":"0",
 				"document":{
 					"strName":"iPhone",
 					"floatPrice":"999",
@@ -48,7 +48,7 @@
                 "transaction_type": "1",
                 "previous_transaction": "",
                 "workflow_transaction": "",
-                "workflow-id":"1",
+                "workflow_id":"1",
                 "document": {
                   "strName": "iPhone",
                   "floatPrice": "999",
