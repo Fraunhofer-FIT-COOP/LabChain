@@ -13,7 +13,7 @@
         </b-col>
       </b-row>
     </div>
-    <b-table :fields="tableTitle" :items="items"></b-table>
+    <b-table ref="table" :fields="tableTitle" :items="items"></b-table>
     <b-alert
       class="alert"
       :show="dismissCountDown"
@@ -29,25 +29,19 @@
 export default {
   name: "fire-department",
   data() {
-    return {
+    return{
       chief_name: "",
       dismissSecs: 2,
       dismissCountDown: 0,
       alertVariant: "success",
       alertMsg: "",
       tableTitle: [
-        { key: "id", label: "ID" },
+        //{ key: "id", label: "ID" },
         { key: "real_diagnosis", label: "Real Diagnosis" },
         { key: "assumed_diagnosis", label: "Assumed Diagnosis" }
       ],
       items: [
-        { id: "123", real_diagnosis: "True", assumed_diagnosis: "False" },
-        { id: "123", real_diagnosis: "True", assumed_diagnosis: "False" },
-        { id: "123", real_diagnosis: "True", assumed_diagnosis: "False" },
-        { id: "123", real_diagnosis: "True", assumed_diagnosis: "False" },
-        { id: "123", real_diagnosis: "True", assumed_diagnosis: "False" },
-        { id: "123", real_diagnosis: "True", assumed_diagnosis: "False" },
-        { id: "123", real_diagnosis: "True", assumed_diagnosis: "False" }
+
       ]
     };
   },
@@ -58,8 +52,9 @@ export default {
       };
       this.$store.dispatch("showAllDiagnosis", payload).then(
         response => {
-          console.log(response);
-        },
+          this.items=response.data;
+          this.$refs.table.refresh();
+      },
         error => {
           console.log(error);
           this.alertMsg = "Something went wrong.";

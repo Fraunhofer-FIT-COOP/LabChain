@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import axios from 'axios'
 
 Vue.use(Vuex);
 
@@ -64,9 +65,9 @@ export default new Vuex.Store({
     },
     showAllDiagnosis(context, payload) {
       return new Promise((resolve, reject) => {
-        Vue.http
+        axios
           .post(`http://127.0.0.1:5000/showAllDiagnosis`, {
-            chief: payload["chief"] ? payload["chief"] : "chief"
+            "username": payload["chief"] ? payload["chief"] : "chief"
           })
           .then(res => {
             resolve(res);
