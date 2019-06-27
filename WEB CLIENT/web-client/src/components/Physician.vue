@@ -9,7 +9,7 @@
       :items="items"
     >
       <template slot="assumed_diagnosis" slot-scope="row">
-        <b-form-input @change="inputValueChanged" placeholder="Enter your name">Update</b-form-input>
+        <b-form-input @change="inputValueChanged" placeholder="Enter your diagnosis">Update</b-form-input>
       </template>
 
       <template slot="update_diagnosis" slot-scope="row">
@@ -60,9 +60,7 @@ export default {
   },
   methods: {
     update_diagnosis(item, index, e) {
-      console.log(item);
-      console.log(index);
-      console.log(e);
+      this.$store.dispatch("requestPhysicianOpenTask");
     },
     rowClicked(item, index, e) {
       console.log(item);

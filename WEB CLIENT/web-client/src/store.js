@@ -5,14 +5,19 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    patientDiagnosisData: []
+    patientDiagnosisData: [],
+    physicianOpenTask: [],
   },
   getters: {
-    getPatientDiagnosisData: state => state.patientDiagnosisData
+    getPatientDiagnosisData: state => state.patientDiagnosisData,
+    getPhysicianOpenTask: state => state.physicianOpenTask
   },
   mutations: {
     setPatientDiagnosisData(state, data = []) {
       state.patientDiagnosisData = data;
+    },
+    setPhysicianOpenTask(state, data = []) {
+      state.physicianOpenTask = data;
     }
   },
   actions: {
@@ -59,6 +64,12 @@ export default new Vuex.Store({
           console.log(response);
           commit("setPatientDiagnosisData", response.body);
         });
+    },
+    requestPhysicianOpenTask({ commit }) {
+      Vue.http.get(`http://localhost:5000/demo`).then(response => {
+        console.log(response);
+        commit("setPhysicianOpenTask", response.body);
+      });
     }
   }
 });

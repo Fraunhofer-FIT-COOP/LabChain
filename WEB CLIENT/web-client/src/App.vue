@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <div id="nav">
+      <p class='project-title'>Feedback Loop - Labchain</p>
     </div>
     <router-view />
   </div>
@@ -25,5 +26,9 @@
 
 #nav a.router-link-exact-active {
   color: #42b983;
+}
+.project-title{
+  font-size: 30px;
+  font-family: sans-serif;
 }
 </style>
