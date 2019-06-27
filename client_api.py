@@ -119,6 +119,33 @@ def show_all_diagnosis():
     except Exception as e:
         return jsonify(message='fail', description=str(e))
 
+@app.route('/showDiagnosisWithPhysicianID', methods=['POST'])
+def show_all_diagnosis_with_pyhsicianID():
+    data = request.get_json(force=True)
+    public_key = app.wallet[data['username']]['public_key'] # physicainID
+    true_diagnosis_transactions = []
+    cases = {}
+    try:
+        assumed_diagnosis_transactions = app.network_interface.search_transaction_from_sender(public_key)
+        for assumed_diagnosis_transaction in assumed_diagnosis_transactions:
+            doctorID = assumed_diagnosis_transaction.receiver
+            true_diagnosis_transactions.extend(app.network_interface.search_transaction_from_receiver(doctorID))
+        # Match the case ID between assumed diagnosis
+        for assumed_diagnosis_transaction in assumed_diagnosis_transactions:
+            case_id = assumed_diagnosis_transaction.payload['workflow_id']
+            if case_id not in cases:
+                cases[case_id] = [assumed_diagnosis_transaction.payload['document']['assumed_diagnosis'],'']
+            else:
+                cases[case_id][0] = assumed_diagnosis_transaction.payload['document']['assumed_diagnosis']
+            for true_diagnosis_transaction in true_diagnosis_transactions:
+                if case_id not in cases:
+                    cases[case_id] = ['',true_diagnosis_transaction.payload['document']['true_diagnosis']]
+                else:
+                    cases[case_id][1] = true_diagnosis_transaction.payload['document']['assumed_diagnosis']
+        return json.dumps(cases)
+    except Exception as e:
+        return jsonify(message='fail', description=str(e))
+
 @app.route('/checkTasks',methods=['POST'])
 def checkTasks():
     data = request.get_json(force=True)
