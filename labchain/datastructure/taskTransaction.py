@@ -223,7 +223,7 @@ class WorkflowTransaction(TaskTransaction):
         list_of_transactions = blockchain.get_all_transactions()
         list_of_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature())
                                     for t in list_of_transactions if 'workflow_id' in t.payload]
-        list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '2']
+        list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '1']
         for workflow_tuple in list_of_workflow_transactions:
             workflow = workflow_tuple
             if self.payload['workflow_id'] == workflow.payload['workflow_id']:

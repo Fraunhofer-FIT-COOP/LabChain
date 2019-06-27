@@ -32,10 +32,16 @@ export default new Vuex.Store({
     createCaseDemo({commit},payload) {
       console.log(payload)
       Vue.http
-        .post(`https://reqres.in/api/users`, [
+        //backup of this unknown url
+        //.post(`https://reqres.in/api/users`, [
+        .post(`https://127.0.0.1:5000/createCase`, [
           {
-            name: payload.dr_name ? payload.dr_name : "default",
-            job: payload.e_physician ? payload.e_physician : "111"
+            //name: payload.dr_name ? payload.dr_name : "default",
+            //job: payload.e_physician ? payload.e_physician : "111"
+            controller: payload["controller_name"] ? payload["controller_name"] : "controller",
+            physician: payload["e_physician"] ? payload["e_physician"] : "physician",
+            doctor: payload["dr_name"] ? payload["dr_name"] : "doctor",
+            chef: payload["dpt_chief"] ? payload["dpt_chief"] : "chef"
           }
         ])
         .then(res => {
@@ -44,7 +50,11 @@ export default new Vuex.Store({
     },
     requestPatientDiagnosisData({ commit }) {
       Vue.http
-        .get(`http://localhost:5000/show-all-diagnosis`)
+        .post(`http://localhost:5000/showAllDiagnosis`, [
+          {
+            username: "chef"
+          }
+        ])
         .then(response => {
           console.log(response);
           commit("setPatientDiagnosisData", response.body);
