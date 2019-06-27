@@ -1,32 +1,32 @@
 <template>
   <div class="hospital">
     <b-card-text>
-      <p>Create Case</p>
+      <p class="hospital-create-case">Create Case</p>
       <b-container fluid>
         <b-row class="hospital-tbl-row">
-          <b-col sm="4">
+          <b-col sm="4" class="bottom-space hospital-form">
             <label :for="`type-text`">Doctor Name:</label>
           </b-col>
-          <b-col sm="5">
+          <b-col sm="5" class="bottom-space hospital-form">
             <b-form-input v-model="dr_name"></b-form-input>
           </b-col>
-          <b-col cols="3"></b-col>
-          <b-col sm="4">
+          <b-col cols="3" class="bottom-space "></b-col>
+          <b-col sm="4" class="bottom-space hospital-form">
             <label :for="`type-text`">Physician Name:</label>
           </b-col>
-          <b-col sm="5">
+          <b-col sm="5" class="bottom-space hospital-form">
             <b-form-input v-model="e_physician_name"></b-form-input>
           </b-col>
-          <b-col cols="3"></b-col>
-          <b-col sm="4">
+          <b-col cols="3" class="bottom-space"></b-col>
+          <b-col sm="4" class="bottom-space hospital-form">
             <label :for="`type-text`">Fire Dpt. Chief Name:</label>
           </b-col>
-          <b-col sm="5">
+          <b-col sm="5" class="bottom-space hospital-form">
             <b-form-input v-model="dpt_chief_name"></b-form-input>
           </b-col>
-          <b-col cols="3"></b-col>
+          <b-col cols="3" class="bottom-space"></b-col>
         </b-row>
-        <b-button variant="success" @click="createCase()">Create</b-button>
+        <b-button class="create-btn bottom-space" variant="success" @click="createCase()">Create</b-button>
       </b-container>
     </b-card-text>
   </div>
@@ -71,5 +71,18 @@ li {
 }
 a {
   color: #42b983;
+}
+.bottom-space {
+  margin-bottom: 10px;
+}
+.create-btn {
+  float: right;
+}
+.hospital-create-case {
+  font-size: 20px;
+  font-family: initial;
+}
+.hospital-form {
+  text-align: left;
 }
 </style>
