@@ -76,7 +76,7 @@ class DbTestCase(unittest.TestCase):
         payload['document'] = {}
         payload['in_charge'] = ''
         payload['next_in_charge'] = ''
-        payload['workflow-id'] = ''
+        payload['workflow_id'] = ''
         payload['processes'] = {}
         payload['permissions'] = {}
         self.txn1 = WorkflowTransaction(pub_key1, pub_key2, payload)

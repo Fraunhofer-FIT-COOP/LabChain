@@ -574,8 +574,8 @@ class BlockChain:
                 raise ValueError
 
         # Remove non-orphans from orphan_pool
-        self._orphan_blocks = {k: predecessor_is_in_blockchain[k] for k in
-                               set(predecessor_is_in_blockchain) - set(self._orphan_blocks)}
+        self._orphan_blocks = {k: self._orphan_blocks[k] for k in
+                               set(self._orphan_blocks) - set(predecessor_is_in_blockchain)}
         if len(
                 predecessor_is_in_blockchain) == 0:  # All orphans have predecessors not in blockchain, terminate recursion
             self._orphan_lock.release()
@@ -687,7 +687,7 @@ class BlockChain:
             self._logger.debug(
                 "Branch switching successful, new node branch head : {}"
                 .format(self._node_branch_head))
-            self._blockchain_lock.release()
+        self._blockchain_lock.release()
 
     def prune_orphans(self):
         """Delete orphans stored in the orphan store once the pruning
