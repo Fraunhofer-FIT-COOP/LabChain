@@ -19,20 +19,6 @@
           </b-col>
           <b-col cols="3" class="bottom-space doctor-form"></b-col>
           <b-col sm="4" class="bottom-space doctor-form">
-            <label :for="`type-text`">Workflow Transaction:</label>
-          </b-col>
-          <b-col sm="5" class="bottom-space doctor-form">
-            <b-form-input v-model="workflow_transaction"></b-form-input>
-          </b-col>
-          <b-col cols="3" class="bottom-space doctor-form"></b-col>
-          <b-col sm="4" class="bottom-space doctor-form">
-            <label :for="`type-text`">Previous Transaction:</label>
-          </b-col>
-          <b-col sm="5" class="bottom-space doctor-form">
-            <b-form-input v-model="previous_transaction"></b-form-input>
-          </b-col>
-          <b-col cols="3" class="bottom-space doctor-form"></b-col>
-          <b-col sm="4" class="bottom-space doctor-form">
             <label :for="`type-text`">Diagnosis:</label>
           </b-col>
           <b-col sm="5" class="bottom-space doctor-form">
@@ -74,10 +60,13 @@ export default {
   mounted() {},
   methods: {
     sendDiagnosis() {
+      this.checkMyTask();
+    },
+    sendDiagnosisToServer() {
       let payload = {
         case_id: this.caseID,
         doctor: this.dr_name,
-        chief: this.chief_name,
+        chef: this.chief_name,
         workflow_transaction: this.workflow_transaction,
         previous_transaction: this.previous_transaction,
         diagnosis: this.diagnosis
@@ -92,6 +81,28 @@ export default {
           console.log(error);
           this.alertMsg = "Something went wrong.";
           this.showAlert("danger");
+        }
+      );
+    },
+    checkMyTask() {
+      let payload = {
+        username: this.dr_name
+      };
+      this.$store.dispatch("checkTasks", payload).then(
+        response => {
+          console.log(response.body);
+          if (response.body && response.body[0]) {
+            this.workflow_transaction = response.body[0]
+              ? response.body[0].workflow_transaction_hash
+              : null;
+            this.previous_transaction = response.body[0]
+              ? response.body[0].previous_transaction_hash
+              : null;
+            this.sendDiagnosisToServer();
+          }
+        },
+        error => {
+          console.log(error);
         }
       );
     },

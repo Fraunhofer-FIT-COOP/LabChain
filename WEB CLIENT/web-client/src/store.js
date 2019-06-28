@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import axios from 'axios'
+import axios from "axios";
 
 Vue.use(Vuex);
 
@@ -28,7 +28,7 @@ export default new Vuex.Store({
             physician: payload["e_physician_name"]
               ? payload["e_physician_name"]
               : "physician",
-            chief: payload["dpt_chief_name"]
+            chef: payload["dpt_chief_name"]
               ? payload["dpt_chief_name"]
               : "chief"
           })
@@ -67,7 +67,21 @@ export default new Vuex.Store({
       return new Promise((resolve, reject) => {
         axios
           .post(`http://127.0.0.1:5000/showAllDiagnosis`, {
-            "username": payload["chief"] ? payload["chief"] : "chief"
+            username: payload["chief"] ? payload["chief"] : "chief"
+          })
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
+    },
+    checkTasks(context, payload) {
+      return new Promise((resolve, reject) => {
+        axios
+          .post(`http://127.0.0.1:5000/checkTasks`, {
+            username: payload["username"] ? payload["username"] : "username"
           })
           .then(res => {
             resolve(res);
