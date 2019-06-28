@@ -1,32 +1,43 @@
 <template>
   <div class="doctor">
     <b-card-text>
-      <p class="doctor-send-diagnosis">Send Diagnosis</p>
+      <p class="doctor-send-diagnosis"></p>
       <b-container fluid>
         <b-row class="hospital-tbl-row">
-          <b-col sm="4" class="bottom-space doctor-form">
-            <label :for="`type-text`">Case ID:</label>
-          </b-col>
-          <b-col sm="5" class="bottom-space doctor-form">
-            <b-form-input v-model="caseID"></b-form-input>
-          </b-col>
-          <b-col cols="3" class="bottom-space doctor-form"></b-col>
           <b-col sm="4" class="bottom-space doctor-form">
             <label :for="`type-text`">Doctor Name:</label>
           </b-col>
           <b-col sm="5" class="bottom-space doctor-form">
             <b-form-input v-model="dr_name"></b-form-input>
           </b-col>
-          <b-col cols="3" class="bottom-space doctor-form"></b-col>
-          <b-col sm="4" class="bottom-space doctor-form">
-            <label :for="`type-text`">Diagnosis:</label>
+          <b-col cols="3" class="bottom-space doctor-form">
+            <b-button
+              class="send-btn bottom-space"
+              variant="success"
+              @click="findDiagnosisData()"
+            >FIND</b-button>
           </b-col>
-          <b-col sm="5" class="bottom-space doctor-form">
-            <b-form-input v-model="diagnosis"></b-form-input>
-          </b-col>
-          <b-col cols="3" class="bottom-space doctor-form"></b-col>
         </b-row>
-        <b-button class="send-btn bottom-space" variant="success" @click="sendDiagnosis()">Send</b-button>
+
+        <b-table
+          selectable
+          :select-mode="selectMode"
+          selectedVariant="success"
+          :fields="tableTitle"
+          :items="taskData"
+        >
+          <template slot="real_diagnosis" slot-scope="row">
+            <b-form-input @change="inputValueChanged" placeholder="Enter your diagnosis">Update</b-form-input>
+          </template>
+
+          <template slot="update_diagnosis" slot-scope="row">
+            <b-button
+              size="sm"
+              @click="update_diagnosis(row.item, row.index, $event.target)"
+              class="mr-1"
+            >Update</b-button>
+          </template>
+        </b-table>
       </b-container>
     </b-card-text>
     <b-alert
@@ -54,22 +65,32 @@ export default {
       dismissSecs: 2,
       dismissCountDown: 0,
       alertVariant: "success",
-      alertMsg: ""
+      alertMsg: "",
+      tableTitle: [
+        { key: "workflow_id", label: "ID" },
+        { key: "time", label: "Time" },
+        { key: "real_diagnosis", label: "Real Diagnosis" },
+        { key: "update_diagnosis", label: "Update Diagnosis" }
+      ],
+      taskData: [],
+      selectMode: "single",
+      updated_diagnosis_value: ""
     };
   },
   mounted() {},
   methods: {
-    sendDiagnosis() {
+    findDiagnosisData() {
       this.checkMyTask();
     },
-    sendDiagnosisToServer() {
+    sendDiagnosisToServer(data, index) {
+      console.log(data.value);
       let payload = {
-        case_id: this.caseID,
+        case_id: data.workflow_id,
         doctor: this.dr_name,
-        chef: this.chief_name,
-        workflow_transaction: this.workflow_transaction,
-        previous_transaction: this.previous_transaction,
-        diagnosis: this.diagnosis
+        chef: this.chief_name, // need to change after api change
+        workflow_transaction: data.workflow_transaction,
+        previous_transaction: data.previous_transaction,
+        diagnosis: this.updated_diagnosis_value
       };
       this.$store.dispatch("sendRealDiagnosis", payload).then(
         response => {
@@ -90,19 +111,18 @@ export default {
       };
       this.$store.dispatch("checkTasks", payload).then(
         response => {
-          console.log(response.body);
-          if (response.body && response.body[0]) {
-            this.workflow_transaction = response.body[0]
-              ? response.body[0].workflow_transaction_hash
-              : null;
-            this.previous_transaction = response.body[0]
-              ? response.body[0].previous_transaction_hash
-              : null;
-            this.sendDiagnosisToServer();
+          console.log("checkTasks: ", response.data);
+          if (response.data) {
+            response.data.forEach(element => {
+              element.real_diagnosis = '<input type="text">';
+            });
+            this.taskData = response.data;
           }
         },
         error => {
           console.log(error);
+          this.alertMsg = "Something went wrong.";
+          this.showAlert("danger");
         }
       );
     },
@@ -112,6 +132,14 @@ export default {
     },
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
+    },
+    inputValueChanged(val) {
+      this.updated_diagnosis_value = val;
+      console.log(val);
+    },
+    update_diagnosis(item, index, e) {
+      console.log(item, index);
+      this.sendDiagnosisToServer(item, index);
     }
   }
 };

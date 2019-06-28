@@ -36,13 +36,11 @@ export default {
       alertVariant: "success",
       alertMsg: "",
       tableTitle: [
-        //{ key: "id", label: "ID" },
+        { key: "workflow_id", label: "ID" },
         { key: "real_diagnosis", label: "Real Diagnosis" },
         { key: "assumed_diagnosis", label: "Assumed Diagnosis" }
       ],
-      items: [
-
-      ]
+      items: []
     };
   },
   methods: {
@@ -53,7 +51,6 @@ export default {
       this.$store.dispatch("showAllDiagnosis", payload).then(
         response => {
           this.items=response.data;
-          this.$refs.table.refresh();
       },
         error => {
           console.log(error);

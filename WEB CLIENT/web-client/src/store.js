@@ -63,11 +63,50 @@ export default new Vuex.Store({
           });
       });
     },
+    showDiagnosisWithPhysicianID(context, payload) {
+      return new Promise((resolve, reject) => {
+        Vue.http
+          .post(`http://127.0.0.1:5000/showDiagnosisWithPhysicianID`, {
+            username: payload["username"] ? payload["username"] : "username"
+          })
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
+    },
     showAllDiagnosis(context, payload) {
       return new Promise((resolve, reject) => {
         axios
           .post(`http://127.0.0.1:5000/showAllDiagnosis`, {
             username: payload["chief"] ? payload["chief"] : "chief"
+          })
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
+    },
+    sendAssumedDiagnosis(context, payload) {
+      return new Promise((resolve, reject) => {
+        axios
+          .post(`http://127.0.0.1:5000/sendAssumedDiagnosis`, {
+            case_id: payload["case_id"] ? payload["case_id"] : "case_id",
+            doctor: payload["doctor"] ? payload["doctor"] : "doctor",
+            physician: payload["physician"]
+              ? payload["physician"]
+              : "physician",
+            workflow_transaction: payload["workflow_transaction"]
+              ? payload["workflow_transaction"]
+              : "workflow_transaction",
+            previous_transaction: payload["previous_transaction"]
+              ? payload["previous_transaction"]
+              : "previous_transaction",
+            diagnosis: payload["diagnosis"] ? payload["diagnosis"] : "diagnosis"
           })
           .then(res => {
             resolve(res);

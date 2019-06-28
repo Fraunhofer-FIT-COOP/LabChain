@@ -33,6 +33,7 @@
           </b-col>
           <b-col cols="3" class="bottom-space"></b-col>
         </b-row>
+        <p v-if="caseIsCreated" class="caseIsCreated">Created case ID is</p>
         <b-button class="create-btn bottom-space" variant="success" @click="createCase()">Create</b-button>
       </b-container>
     </b-card-text>
@@ -59,10 +60,13 @@ export default {
       dismissSecs: 2,
       dismissCountDown: 0,
       alertVariant: "success",
-      alertMsg: ""
+      alertMsg: "",
+      caseIsCreated: false
     };
   },
-  mounted() {},
+  mounted() {
+    this.caseIsCreated = false;
+  },
   methods: {
     createCase() {
       let payload = {
@@ -116,6 +120,9 @@ a {
 }
 .create-btn {
   float: right;
+}
+.caseIsCreated {
+  float: left;
 }
 .hospital-create-case {
   font-size: 20px;

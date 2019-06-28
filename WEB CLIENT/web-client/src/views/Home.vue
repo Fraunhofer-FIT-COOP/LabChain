@@ -2,8 +2,7 @@
   <div class="home">
     <b-container class="bv-example-row">
       <b-row>
-        <b-col cols="2"></b-col>
-        <b-col cols="8">
+        <b-col cols="12">
           <div>
             <b-card no-body>
               <b-tabs card>
@@ -23,7 +22,6 @@
             </b-card>
           </div>
         </b-col>
-        <b-col cols="2"></b-col>
       </b-row>
     </b-container>
   </div>
