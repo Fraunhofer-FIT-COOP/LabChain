@@ -121,11 +121,12 @@ def show_all_diagnosis():
         return jsonify(message='fail', description=str(e))
 
 @app.route('/showDiagnosisWithPhysicianID', methods=['POST'])
-def show_all_diagnosis_with_pyhsicianID():
+def show_all_diagnosis_with_physicianID():
     data = request.get_json(force=True)
     public_key = app.wallet[data['username']]['public_key'] # physicainID
     true_diagnosis_transactions = []
     cases = {}
+    output = []
     try:
         assumed_diagnosis_transactions = app.network_interface.search_transaction_from_sender(public_key)
         for assumed_diagnosis_transaction in assumed_diagnosis_transactions:
@@ -143,7 +144,11 @@ def show_all_diagnosis_with_pyhsicianID():
                     cases[case_id] = ['',true_diagnosis_transaction.payload['document']['real_diagnosis']]
                 else:
                     cases[case_id][1] = true_diagnosis_transaction.payload['document']['real_diagnosis']
-        return json.dumps(cases)
+        for case_id in cases:
+            obj = cases[case_id]
+            obj.extend(case_id)
+            output.append(obj)
+        return json.dumps(output)
     except Exception as e:
         return jsonify(message='fail', description=str(e))
 
