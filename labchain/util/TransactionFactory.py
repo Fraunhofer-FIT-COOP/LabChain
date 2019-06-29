@@ -1,4 +1,6 @@
 from typing import Dict
+import time;
+
 
 from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.datastructure.taskTransaction import WorkflowTransaction
@@ -42,6 +44,7 @@ class TransactionFactory:
         workflow_transaction['payload']['processes'] = {}
         workflow_transaction['payload']['processes'][physician_public_key + '_1'] = [doctor_public_key + '_1']
         workflow_transaction['payload']['processes'][doctor_public_key + '_1'] = [chef_public_key + '_1']
+        workflow_transaction['payload']['timestamp'] = str(time.time())
 
         workflow_transaction['payload']['permissions'] = {}
         workflow_transaction['payload']['permissions']['assumed_diagnosis'] = [physician_public_key + '_1']

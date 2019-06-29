@@ -26,6 +26,7 @@ def create_app():
         app.wallet = json.load(file)[0]['wallet']
 
     #logging.basicConfig(level=logging.DEBUG)
+    app.cases_map = {} # for each controller or hospital we keep a counter to generate new case ID 
     app.crypto_helper = CryptoHelper.instance()
     app.network_interface = ClientNetworkInterface(JsonRpcClient(), {'localhost': { '8080': {}}})
     return app
@@ -36,7 +37,7 @@ app = create_app()
 def createCase():
     data = request.get_json(force=True)
 
-    case_ID = data['case_id'] if 'case_id' in data else '0'
+    case_ID = str(genrate_case_ID(data['controller']))
     controller_public_key = app.wallet[data['controller']]['public_key']
     controller_private_key = app.wallet[data['controller']]['private_key']
     physician_public_key = app.wallet[data['physician']]['public_key']
@@ -48,7 +49,7 @@ def createCase():
 
     try:
         app.network_interface.sendTransaction(transaction)
-        return jsonify(message='success')
+        return jsonify(message='success',case_ID=case_ID)
     except Exception as e:
         return jsonify(message='fail', description=str(e))
 
@@ -156,6 +157,17 @@ def checkTasks():
         return json.dumps([ob.__dict__ for ob in tasks])
     except Exception as e:
         return jsonify(message='fail', description=str(e))
+
+
+def genrate_case_ID(controller):
+    if (controller in app.cases_map):
+        current_case_id = app.cases_map[controller]
+        app.cases_map[controller] = current_case_id + 1
+        return current_case_id
+    else:
+        app.cases_map[controller] = 1
+        return 0
+
 
 if __name__ == '__main__':
     app.run(debug=True)
