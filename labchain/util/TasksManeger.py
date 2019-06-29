@@ -8,10 +8,11 @@ from labchain.datastructure.transaction import Transaction
 from labchain.util.cryptoHelper import CryptoHelper
 
 class Task:
-    def __init__(self, workflow_id, workflow_transaction_hash,previous_transaction_hash):
+    def __init__(self, workflow_id, workflow_transaction_hash,previous_transaction_hash,timestamp = 0):
         self.workflow_id = workflow_id
         self.workflow_transaction_hash = workflow_transaction_hash
         self.previous_transaction_hash = previous_transaction_hash
+        self.timestamp = timestamp
 
 
 class TasksManeger:
@@ -38,7 +39,8 @@ class TasksManeger:
                 if t.payload['transaction_type'] == '1':
                     workflow_id = t.payload['workflow_id']
                     workflow_transaction_hash = crypto_helper.hash(t.get_json())
-                    task = Task(workflow_id,workflow_transaction_hash,workflow_transaction_hash)
+                    workflow_timestamp = t.payload['timestamp']
+                    task = Task(workflow_id,workflow_transaction_hash,workflow_transaction_hash,workflow_timestamp)
                     tasks.append(task)
                 if t.payload['transaction_type'] == '2':
                     workflow_id = t.payload['workflow_id']
