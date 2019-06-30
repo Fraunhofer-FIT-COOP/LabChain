@@ -8,10 +8,11 @@ from labchain.datastructure.transaction import Transaction
 from labchain.util.cryptoHelper import CryptoHelper
 
 class Task:
-    def __init__(self, workflow_id, workflow_transaction_hash,previous_transaction_hash,timestamp = 0):
+    def __init__(self, workflow_id, workflow_transaction_hash,previous_transaction_hash,receiver, timestamp = 0):
         self.workflow_id = workflow_id
         self.workflow_transaction_hash = workflow_transaction_hash
         self.previous_transaction_hash = previous_transaction_hash
+        self.receiver = receiver
         self.timestamp = timestamp
 
 
@@ -31,7 +32,7 @@ class TasksManeger:
         return [diff[k] for k in diff]
 
     @staticmethod
-    def get_tasks_objects_from_task_transactions(transactions):
+    def get_tasks_objects_from_task_transactions(network_interface, transactions):
         crypto_helper = CryptoHelper.instance()
         tasks = []
         for t in transactions:
@@ -40,16 +41,18 @@ class TasksManeger:
                     workflow_id = t.payload['workflow_id']
                     workflow_transaction_hash = crypto_helper.hash(t.get_json())
                     workflow_timestamp = t.payload['timestamp']
-                    task = Task(workflow_id,workflow_transaction_hash,workflow_transaction_hash,workflow_timestamp)
+                    doctor_name = t.payload['document']['doctor_name']
+                    task = Task(workflow_id,workflow_transaction_hash,workflow_transaction_hash, doctor_name, workflow_timestamp)
                     tasks.append(task)
                 if t.payload['transaction_type'] == '2':
                     workflow_id = t.payload['workflow_id']
+                    workflow_transactions = network_interface.search_transaction_from_receiver(t.sender)
+                    for workflow_transaction in workflow_transactions:
+                        if workflow_transaction.payload['workflow_id'] == workflow_id:
+                            chef_name = workflow_transaction.payload['document']['chef_name']
+
                     workflow_transaction_hash = t.payload['workflow_transaction']
                     previous_transaction_hash = crypto_helper.hash(t.get_json())
-                    task = Task(workflow_id,workflow_transaction_hash,previous_transaction_hash)
+                    task = Task(workflow_id,workflow_transaction_hash,previous_transaction_hash, chef_name)
                     tasks.append(task)
         return tasks
-
-
-    
-
