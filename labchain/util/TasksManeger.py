@@ -40,7 +40,8 @@ class TasksManeger:
                 if t.payload['transaction_type'] == '1':
                     workflow_id = t.payload['workflow_id']
                     workflow_transaction_hash = crypto_helper.hash(t.get_json())
-                    workflow_timestamp = t.payload['timestamp']
+                    if 'timestamp' in t.payload:
+                        workflow_timestamp = t.payload['timestamp']
                     doctor_name = t.payload['document']['doctor_name']
                     task = Task(workflow_id,workflow_transaction_hash,workflow_transaction_hash, doctor_name, workflow_timestamp)
                     tasks.append(task)
