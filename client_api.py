@@ -114,6 +114,7 @@ def show_all_diagnosis():
             previous_transaction = real_diagnosis_transaction.payload['previous_transaction']
             assumed_diagnossis_transaction = app.network_interface.requestTransaction(previous_transaction)[0]
             diaggnosis = {}
+            diaggnosis['workflow_id'] = real_diagnosis_transaction.payload['workflow_id']
             diaggnosis['real_diagnosis'] = real_diagnosis_transaction.payload['document']['real_diagnosis']
             diaggnosis['assumed_diagnosis'] = assumed_diagnossis_transaction.payload['document']['assumed_diagnosis']
             diaggnosis_list.append(diaggnosis)

@@ -13,7 +13,12 @@
         </b-col>
       </b-row>
     </div>
-    <b-table ref="table" :fields="tableTitle" :items="items"></b-table>
+    <b-table ref="table"
+    :fields="tableTitle"
+    :items="items"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
+    ></b-table>
     <b-alert
       class="alert"
       :show="dismissCountDown"
@@ -30,13 +35,15 @@ export default {
   name: "fire-department",
   data() {
     return{
+      sortBy: 'workflow_id',
+      sortDesc: false,
       chief_name: "",
       dismissSecs: 2,
       dismissCountDown: 0,
       alertVariant: "success",
       alertMsg: "",
       tableTitle: [
-        { key: "workflow_id", label: "ID" },
+        { key: "workflow_id", label: "ID", sortable: true },
         { key: "real_diagnosis", label: "Real Diagnosis" },
         { key: "assumed_diagnosis", label: "Assumed Diagnosis" }
       ],

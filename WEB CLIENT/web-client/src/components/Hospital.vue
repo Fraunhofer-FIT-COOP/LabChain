@@ -61,7 +61,9 @@ export default {
       dismissCountDown: 0,
       alertVariant: "success",
       alertMsg: "",
-      caseIsCreated: false
+      caseIsCreated: false,
+      dismissSecs: 5,
+      dismissCountDown: 0
     };
   },
   mounted() {
@@ -78,7 +80,7 @@ export default {
       this.$store.dispatch("createCase", payload).then(
         response => {
           console.log(response);
-          this.alertMsg = "Case is successfully created.";
+          this.alertMsg = "Case is successfully created. case_ID: " + response.data['case_ID'];
           this.showAlert("success");
         },
         error => {

@@ -19,7 +19,7 @@ export default new Vuex.Store({
   actions: {
     createCase(context, payload) {
       return new Promise((resolve, reject) => {
-        Vue.http
+        axios
           .post(`http://127.0.0.1:5000/createCase`, {
             controller: payload["controller_name"]
               ? payload["controller_name"]
