@@ -40,7 +40,7 @@ export default {
     return {};
   },
   mounted() {
-    this.$store.dispatch("requestPatientDiagnosisData");
+
   },
   methods: {},
   components: {
