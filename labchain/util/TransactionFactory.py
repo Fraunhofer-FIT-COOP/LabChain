@@ -29,7 +29,7 @@ class TransactionFactory:
         return t
 
     @staticmethod
-    def create_case_transaction(case_ID,controller_public_key,physician_public_key,doctor_public_key,chef_public_key):
+    def create_case_transaction(case_ID,controller_public_key,physician_public_key,doctor_public_key,chef_public_key, doctor_name, chef_name):
         workflow_transaction = {}
         workflow_transaction['sender'] = controller_public_key
         workflow_transaction['receiver'] = physician_public_key
@@ -40,6 +40,8 @@ class TransactionFactory:
         workflow_transaction['payload']['document'] = {}
         workflow_transaction['payload']['document']['assumed_diagnosis'] = 'None'
         workflow_transaction['payload']['document']['real_diagnosis'] = 'None'
+        workflow_transaction['payload']['document']['doctor_name'] = doctor_name
+        workflow_transaction['payload']['document']['chef_name'] = chef_name
         workflow_transaction['payload']['in_charge'] = physician_public_key+ '_1'
         workflow_transaction['payload']['processes'] = {}
         workflow_transaction['payload']['processes'][physician_public_key + '_1'] = [doctor_public_key + '_1']

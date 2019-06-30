@@ -26,7 +26,7 @@ def create_app():
         app.wallet = json.load(file)[0]['wallet']
 
     #logging.basicConfig(level=logging.DEBUG)
-    app.cases_map = {} # for each controller or hospital we keep a counter to generate new case ID 
+    app.cases_map = {} # for each controller or hospital we keep a counter to generate new case ID
     app.crypto_helper = CryptoHelper.instance()
     app.network_interface = ClientNetworkInterface(JsonRpcClient(), {'localhost': { '8080': {}}})
     return app
@@ -44,7 +44,8 @@ def createCase():
     doctor_public_key = app.wallet[data['doctor']]['public_key']
     chef_public_key = app.wallet[data['chef']]['public_key']
 
-    transaction = TransactionFactory.create_case_transaction(case_ID,controller_public_key,physician_public_key,doctor_public_key,chef_public_key)
+
+    transaction = TransactionFactory.create_case_transaction(case_ID,controller_public_key,physician_public_key,doctor_public_key,chef_public_key, data['doctor'], data['chef'])
     transaction.sign_transaction(app.crypto_helper, controller_private_key)
 
     try:
@@ -156,9 +157,10 @@ def show_all_diagnosis_with_physicianID():
 def checkTasks():
     data = request.get_json(force=True)
     public_key = app.wallet[data['username']]['public_key']
+
     try:
         transactions = TasksManeger.check_tasks(app.network_interface,public_key)
-        tasks = TasksManeger.get_tasks_objects_from_task_transactions(transactions)
+        tasks = TasksManeger.get_tasks_objects_from_task_transactions(app.network_interface, transactions)
         return json.dumps([ob.__dict__ for ob in tasks])
     except Exception as e:
         return jsonify(message='fail', description=str(e))
