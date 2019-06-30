@@ -8,8 +8,16 @@
         <b-form-input v-model="physician_name"></b-form-input>
       </b-col>
       <b-col cols="3" class="bottom-space doctor-form">
-        <b-button class="send-btn bottom-space" variant="success" @click="findDiagnosisData()">Get Tasks</b-button>
-        <b-button class="send-btn bottom-space" variant="success" @click="getCompareDiagnosisData()">Compare Diagnosis</b-button>
+        <b-button
+          class="send-btn bottom-space"
+          variant="success"
+          @click="findDiagnosisData()"
+        >Get Tasks</b-button>
+        <b-button
+          class="send-btn bottom-space"
+          variant="success"
+          @click="getCompareDiagnosisData()"
+        >Compare Diagnosis</b-button>
       </b-col>
     </b-row>
     <b-row class="hospital-tbl-row">
@@ -36,6 +44,7 @@
             </template>
           </b-table>
         </b-card-text>
+        <P>Total:{{totalOpenTasks}} </p>
       </b-col>
       <b-col sm="6" class="bottom-space doctor-form">
         <b-card-text>
@@ -47,6 +56,7 @@
             :items="comparisonTaskData"
           ></b-table>
         </b-card-text>
+         <P>Total:{{totalOpenTasks}} Right:{{totalTrueDiagnosis}} Wrong:{{totalTrueDiagnosis}} </p>
       </b-col>
     </b-row>
   </div>
@@ -73,7 +83,10 @@ export default {
       comparisonTaskData: [],
       selectMode: "single",
       lastUpdatedDiagnosis: "single",
-      updated_diagnosis_value: ""
+      updated_diagnosis_value: "",
+      totalOpenTasks: 0,
+      totalDiagnosisComparisions: 0,
+      totalTrueDiagnosis: 0
     };
   },
   methods: {
@@ -87,11 +100,12 @@ export default {
       this.$store.dispatch("checkTasks", payload).then(
         response => {
           console.log("checkTasks: ", response.data);
-          if (response.data) {
+          if (response.data && response.data.length > 0) {
             response.data.forEach(element => {
               element.real_diagnosis = '<input type="text">';
             });
             this.physicianOpenTaskData = response.data;
+            this.totalOpenTasks = response.data.length;
           }
         },
         error => {
@@ -108,7 +122,10 @@ export default {
       this.$store.dispatch("showDiagnosisWithPhysicianID", payload).then(
         response => {
           console.log("showDiagnosisWithPhysicianID: ", response.data);
-          this.comparisonTaskData = response.data;
+          if (response.data && response.data.length > 0) {
+            this.comparisonTaskData = response.data;
+            this.totalDiagnosisComparisions = response.data.length;
+          }
         },
         error => {
           console.log(error);
@@ -131,7 +148,7 @@ export default {
         previous_transaction: data.previous_transaction,
         diagnosis: this.updated_diagnosis_value
       };
-      this.$store.dispatch("sendRealDiagnosis", payload).then(
+      this.$store.dispatch("sendAssumedDiagnosis", payload).then(
         response => {
           console.log(response);
           this.alertMsg = "Diagnosis is successfully updated.";
