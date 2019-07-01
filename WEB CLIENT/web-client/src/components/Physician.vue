@@ -56,7 +56,7 @@
             :items="comparisonTaskData"
           ></b-table>
         </b-card-text>
-         <P>Total:{{totalOpenTasks}} Right:{{totalTrueDiagnosis}} Wrong:{{totalTrueDiagnosis}} </p>
+         <P>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}} Wrong:{{totalTrueDiagnosis}} </p>
       </b-col>
     </b-row>
   </div>
@@ -70,7 +70,7 @@ export default {
       physician_name: "",
       tableTitle: [
         { key: "workflow_id", label: "ID" },
-        { key: "time", label: "Time" },
+        { key: "timestamp", label: "Time" },
         { key: "assumed_diagnosis", label: "Assumed Diagnosis" },
         { key: "update_diagnosis", label: "Update Diagnosis" }
       ],
@@ -139,15 +139,15 @@ export default {
       this.sendDiagnosisToServer(item, index);
     },
     sendDiagnosisToServer(data, index) {
-      console.log(data.value);
       let payload = {
         case_id: data.workflow_id,
         physician: this.physician_name,
-        chef: this.chief_name, // need to change after api change
-        workflow_transaction: data.workflow_transaction,
-        previous_transaction: data.previous_transaction,
+        doctor: data.receiver,
+        workflow_transaction: data.previous_transaction_hash,
+        previous_transaction: data.workflow_transaction_hash,
         diagnosis: this.updated_diagnosis_value
       };
+      console.log(payload);
       this.$store.dispatch("sendAssumedDiagnosis", payload).then(
         response => {
           console.log(response);

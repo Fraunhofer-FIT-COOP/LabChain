@@ -19,7 +19,7 @@ export default new Vuex.Store({
   actions: {
     createCase(context, payload) {
       return new Promise((resolve, reject) => {
-        axios
+        Vue.http
           .post(`http://127.0.0.1:5000/createCase`, {
             controller: payload["controller_name"]
               ? payload["controller_name"]
@@ -95,7 +95,7 @@ export default new Vuex.Store({
       return new Promise((resolve, reject) => {
         axios
           .post(`http://127.0.0.1:5000/sendAssumedDiagnosis`, {
-            case_id: payload["case_id"] ? payload["case_id"] : "case_id",
+            case_ID: payload["case_id"] ? payload["case_id"] : "case_id",
             doctor: payload["doctor"] ? payload["doctor"] : "doctor",
             physician: payload["physician"]
               ? payload["physician"]
