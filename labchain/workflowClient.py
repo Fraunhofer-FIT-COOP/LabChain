@@ -12,8 +12,10 @@ def clear_screen():
 
 
 class WorkflowClient:
+    demo_workflow_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'CarLogistic.json'))
 
-    demo_workflow_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'demo-workflow.json'))
+    _logistics = True if demo_workflow_file_path == os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'CarLogistic.json')) else False
 
     def __init__(self, wallet, network_interface, crypto_helper):
         self.network_interface = network_interface
@@ -94,7 +96,11 @@ class WorkflowClient:
         self.network_interface.sendTransaction(transaction)
 
     def send_task_transaction(self):
-        transactionName = input('which transaction (task1,task2,task3,invalid_task1)?')
+        if self._logistics:
+            transactionName = input(
+                'which transaction (taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp)?')
+        else:
+            transactionName = input('which transaction (task1,task2,task3,invalid_task1)?')
         transaction = TransactionFactory.create_transcation(self.workflow_json[transactionName])
         for k,v in  self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
@@ -107,6 +113,10 @@ class WorkflowClient:
             self.workflow_json = json.load(file)[0]
 
     def get_transaction_hash(self):
-        transaction = input('which workflow,task1,task2,task3,invalid_task1?')
+        if self._logistics:
+            transaction = input(
+                'which workflow, taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp?')
+        else:
+            transaction = input('which workflow,task1,task2,task3,invalid_task1?')
         transaction = TransactionFactory.create_transcation(self.workflow_json[transaction])
         print(self.crypto_helper.hash(transaction.get_json()))
