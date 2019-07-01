@@ -53,10 +53,11 @@
             :select-mode="selectMode"
             selectedVariant="success"
             :fields="tableTitleRight"
+            :tbody-tr-class="rowClass"
             :items="comparisonTaskData"
           ></b-table>
         </b-card-text>
-        <p>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}} Wrong:{{totalTrueDiagnosis}}</p>
+        <p>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}}</p>
       </b-col>
     </b-row>
     <b-alert
@@ -83,9 +84,9 @@ export default {
         { key: "update_diagnosis", label: "Update Diagnosis" }
       ],
       tableTitleRight: [
-        { key: "workflow_id", label: "ID" },
+        { key: "case_id", label: "ID" },
         { key: "assumed_diagnosis", label: "Assumed Diagnosis" },
-        { key: "real_diagnosis", label: "Real Diagnosis" }
+        { key: "true_diagnosis", label: "Real Diagnosis" }
       ],
       physicianOpenTaskData: [],
       comparisonTaskData: [],
@@ -103,8 +104,8 @@ export default {
   },
   methods: {
     findDiagnosisData() {
-       if(!this.physician_name) return;
-       this.checkMyTask();
+      if (!this.physician_name) return;
+      this.checkMyTask();
     },
     checkMyTask() {
       let payload = {
@@ -129,7 +130,7 @@ export default {
       );
     },
     getCompareDiagnosisData() {
-      if(!this.physician_name) return;
+      if (!this.physician_name) return;
       let payload = {
         username: this.physician_name
       };
@@ -138,7 +139,10 @@ export default {
           console.log("showDiagnosisWithPhysicianID: ", response.data);
           if (response.data && response.data.length > 0) {
             this.comparisonTaskData = response.data;
-            this.totalDiagnosisComparisions = response.data.length;
+            this.totalDiagnosisComparisions = this.comparisonTaskData.length;
+            this.totalTrueDiagnosis = this.comparisonTaskData.filter(
+              res => res.assumed_diagnosis === res.true_diagnosis
+            ).length;
           }
         },
         error => {
@@ -190,6 +194,12 @@ export default {
     showAlert(alertType) {
       this.alertVariant = alertType;
       this.dismissCountDown = this.dismissSecs;
+    },
+    rowClass(item, type) {
+      if (!item) return;
+      if (item.true_diagnosis === item.assumed_diagnosis)
+        return "table-success";
+      else return "table-danger";
     }
   }
 };

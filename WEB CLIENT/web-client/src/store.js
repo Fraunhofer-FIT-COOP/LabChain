@@ -65,7 +65,7 @@ export default new Vuex.Store({
     },
     showDiagnosisWithPhysicianID(context, payload) {
       return new Promise((resolve, reject) => {
-        Vue.http
+        axios
           .post(`http://127.0.0.1:5000/showDiagnosisWithPhysicianID`, {
             username: payload["username"] ? payload["username"] : "username"
           })

@@ -21,7 +21,7 @@
       :sort-desc.sync="sortDesc"
       :tbody-tr-class="rowClass"
     ></b-table>
-    <p> Total: {{total}},  Right Diagnosis: {{totalRight}}</p>
+    <p>Total: {{total}} Right: {{totalRight}}</p>
     <b-alert
       class="alert"
       :show="dismissCountDown"
@@ -57,15 +57,17 @@ export default {
   },
   methods: {
     getData() {
-      if(!this.chief_name) return;
+      if (!this.chief_name) return;
       let payload = {
         chief: this.chief_name
       };
       this.$store.dispatch("showAllDiagnosis", payload).then(
         response => {
           this.items = response.data;
-          this.total =this.items.length;
-          this.totalRight = (this.items.filter(res => res.real_diagnosis===res.assumed_diagnosis)).length;
+          this.total = this.items.length;
+          this.totalRight = this.items.filter(
+            res => res.real_diagnosis === res.assumed_diagnosis
+          ).length;
         },
         error => {
           console.log(error);
@@ -83,8 +85,9 @@ export default {
     },
     rowClass(item, type) {
       if (!item) return;
-      if (item.real_diagnosis === item.assumed_diagnosis) return "table-success";
-      else return "table-danger"
+      if (item.real_diagnosis === item.assumed_diagnosis)
+        return "table-success";
+      else return "table-danger";
     }
   }
 };

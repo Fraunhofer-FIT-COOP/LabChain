@@ -68,7 +68,7 @@ export default {
       alertMsg: "",
       tableTitle: [
         { key: "workflow_id", label: "ID" },
-        { key: "time", label: "Time" },
+        { key: "timestamp", label: "Time" },
         { key: "real_diagnosis", label: "Real Diagnosis" },
         { key: "update_diagnosis", label: "Update Diagnosis" }
       ],
