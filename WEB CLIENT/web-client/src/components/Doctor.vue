@@ -80,16 +80,17 @@ export default {
   mounted() {},
   methods: {
     findDiagnosisData() {
+       if(!this.dr_name) return;
       this.checkMyTask();
     },
     sendDiagnosisToServer(data, index) {
-      console.log(data.value);
+      console.log(data);
       let payload = {
         case_id: data.workflow_id,
         doctor: this.dr_name,
-        chef: this.chief_name, // need to change after api change
-        workflow_transaction: data.workflow_transaction,
-        previous_transaction: data.previous_transaction,
+        chef: data.receiver,
+        workflow_transaction: data.workflow_transaction_hash,
+        previous_transaction: data.previous_transaction_hash,
         diagnosis: this.updated_diagnosis_value
       };
       this.$store.dispatch("sendRealDiagnosis", payload).then(

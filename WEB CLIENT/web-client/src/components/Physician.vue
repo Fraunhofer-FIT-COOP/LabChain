@@ -44,7 +44,7 @@
             </template>
           </b-table>
         </b-card-text>
-        <P>Total:{{totalOpenTasks}} </p>
+        <p>Total:{{totalOpenTasks}}</p>
       </b-col>
       <b-col sm="6" class="bottom-space doctor-form">
         <b-card-text>
@@ -56,9 +56,17 @@
             :items="comparisonTaskData"
           ></b-table>
         </b-card-text>
-         <P>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}} Wrong:{{totalTrueDiagnosis}} </p>
+        <p>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}} Wrong:{{totalTrueDiagnosis}}</p>
       </b-col>
     </b-row>
+    <b-alert
+      class="alert"
+      :show="dismissCountDown"
+      dismissible
+      :variant="alertVariant"
+      @dismissed="dismissCountDown=0"
+      @dismiss-count-down="countDownChanged"
+    >{{ alertMsg }}</b-alert>
   </div>
 </template>
 
@@ -86,12 +94,17 @@ export default {
       updated_diagnosis_value: "",
       totalOpenTasks: 0,
       totalDiagnosisComparisions: 0,
-      totalTrueDiagnosis: 0
+      totalTrueDiagnosis: 0,
+      dismissSecs: 2,
+      dismissCountDown: 0,
+      alertVariant: "success",
+      alertMsg: ""
     };
   },
   methods: {
     findDiagnosisData() {
-      this.checkMyTask();
+       if(!this.physician_name) return;
+       this.checkMyTask();
     },
     checkMyTask() {
       let payload = {
@@ -116,6 +129,7 @@ export default {
       );
     },
     getCompareDiagnosisData() {
+      if(!this.physician_name) return;
       let payload = {
         username: this.physician_name
       };
@@ -143,8 +157,8 @@ export default {
         case_id: data.workflow_id,
         physician: this.physician_name,
         doctor: data.receiver,
-        workflow_transaction: data.previous_transaction_hash,
-        previous_transaction: data.workflow_transaction_hash,
+        workflow_transaction: data.workflow_transaction_hash,
+        previous_transaction: data.previous_transaction_hash,
         diagnosis: this.updated_diagnosis_value
       };
       console.log(payload);
@@ -169,6 +183,13 @@ export default {
     inputValueChanged(val) {
       console.log(val);
       this.updated_diagnosis_value = val;
+    },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
+    },
+    showAlert(alertType) {
+      this.alertVariant = alertType;
+      this.dismissCountDown = this.dismissSecs;
     }
   }
 };

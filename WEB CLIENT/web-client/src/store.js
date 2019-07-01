@@ -42,11 +42,11 @@ export default new Vuex.Store({
     },
     sendRealDiagnosis(context, payload) {
       return new Promise((resolve, reject) => {
-        Vue.http
+        axios
           .post(`http://127.0.0.1:5000/sendRealDiagnosis`, {
             case_id: payload["case_id"] ? payload["case_id"] : "case_id",
             doctor: payload["doctor"] ? payload["doctor"] : "doctor",
-            chief: payload["chief"] ? payload["chief"] : "chief",
+            chef: payload["chef"] ? payload["chef"] : "chief",
             workflow_transaction: payload["workflow_transaction"]
               ? payload["workflow_transaction"]
               : "workflow_transaction",
@@ -95,7 +95,7 @@ export default new Vuex.Store({
       return new Promise((resolve, reject) => {
         axios
           .post(`http://127.0.0.1:5000/sendAssumedDiagnosis`, {
-            case_ID: payload["case_id"] ? payload["case_id"] : "case_id",
+            case_id: payload["case_id"] ? payload["case_id"] : "case_id",
             doctor: payload["doctor"] ? payload["doctor"] : "doctor",
             physician: payload["physician"]
               ? payload["physician"]
