@@ -135,13 +135,13 @@ class BlockChainNode:
                     block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
                 self.blockchain_obj.active_mine_block_update(block)
-                _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff(
+                _timestamp2, _timestamp1, _num_of_blocks, _min_blocks, _difficulty = self.blockchain_obj.calculate_diff(
                     block.predecessor_hash)
                 self.logger.debug("Created new block, try to mine")
                 st = time.time()
 
                 if self.consensus_obj.mine(block, _timestamp2, _timestamp1,
-                                           _num_of_blocks, _difficulty):
+                                           _num_of_blocks, _min_blocks, _difficulty):
                     # have to check if other node already created a block
                     self.logger.debug("Mining was successful for new block")
                     if self.blockchain_obj.add_block(block):
