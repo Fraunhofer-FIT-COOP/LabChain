@@ -24,7 +24,7 @@ class WorkflowClient:
         self.wallet = self.workflow_json['wallet']
         self.main_menu = Menu(['Main menu'], {
             '1': ('Create workflow transaction', self.send_workflow_transaction, []),
-            '2': ('Send task transaction', self.send_task_transaction, []),
+            '2': ('Send transaction', self.send_task_transaction, []),
             '3': ('Check for open tasks', self.check_for_open_tasks, []),
             '4': ('Get transaction hash', self.get_transaction_hash, [])
         }, 'Please select a value: ', 'Exit Workflow Client')
