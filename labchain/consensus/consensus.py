@@ -45,9 +45,9 @@ class Consensus:
     def __iter__(self):
         pass
 
-    def calculate_difficulty_with_prev(self, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty,
+    def calculate_difficulty_with_prev(self, latest_timestamp, earliest_timestamp, num_of_blocks, max_blocks, prev_difficulty,
                                        bits):
-        if num_of_blocks == 0 or num_of_blocks == 1:
+        if num_of_blocks < max_blocks:
             return int(self.avg_diff * self.granular_factor)
 
         avg_time = (float(latest_timestamp - earliest_timestamp) / num_of_blocks)
@@ -82,25 +82,25 @@ class Consensus:
         # global difficulty should not be updated, instead return difficulty,
         # because if validate is called during mining, it would update difficulty
 
-    def get_difficulty(self, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty):
+    def get_difficulty(self, latest_timestamp, earliest_timestamp, num_of_blocks, max_blocks, prev_difficulty):
         if self.diflag or prev_difficulty < 1:
             difficulty = self.calculate_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks)
         elif not self.granular:
             difficulty = self.calculate_difficulty_with_prev(latest_timestamp, earliest_timestamp, num_of_blocks,
-                                                             prev_difficulty, 4)
+                                                             max_blocks, prev_difficulty, 4)
         else:
             difficulty = self.calculate_difficulty_with_prev(latest_timestamp, earliest_timestamp, num_of_blocks,
-                                                             prev_difficulty, 1)
+                                                             max_blocks, prev_difficulty, 1)
         return difficulty
 
-    def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
+    def validate(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, max_blocks, prev_difficulty=-1):
         if type(latest_timestamp) is datetime.datetime:
             latest_timestamp = latest_timestamp.timestamp()
 
         if type(earliest_timestamp) is datetime.datetime:
             earliest_timestamp = earliest_timestamp.timestamp()
 
-        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty)
+        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, max_blocks, prev_difficulty)
 
         logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
         zeros_array = "0" * difficulty
@@ -114,15 +114,14 @@ class Consensus:
             valid) + ' with hash: ' + str(block_hash))
         return valid
 
-
-    def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty=-1):
+    def mine(self, block, latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks, prev_difficulty=-1):
         if type(latest_timestamp) is datetime.datetime:
             latest_timestamp = latest_timestamp.timestamp()
 
         if type(earliest_timestamp) is datetime.datetime:
             earliest_timestamp = earliest_timestamp.timestamp()
 
-        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, prev_difficulty)
+        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks, prev_difficulty)
 
         logging.debug('#INFO: mine Difficulty: ' + str(difficulty))
         block.difficulty = difficulty

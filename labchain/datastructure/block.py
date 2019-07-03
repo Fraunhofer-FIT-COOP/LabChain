@@ -290,8 +290,8 @@ class LogicalBlock(Block):
         """Convert LogicalBlock to Block"""
         return Block.from_json(super(LogicalBlock, self).get_json())
 
-    def validate_block(self, _latest_timestamp, _earliest_timestamp,
-                       _num_of_blocks, _prev_difficulty, blockchain):
+    def validate_block(self, _latest_timestamp, _earliest_timestamp, _num_of_blocks, min_blocks,
+                                                _prev_difficulty, blockchain):
         """Validate the block by checking -
            1. The transaction signatures in the block
            2. The Merkle Tree correctness
@@ -322,9 +322,8 @@ class LogicalBlock(Block):
             return -2
 
         #  validate nonce
-        block_valid = self._consensus.validate(self, _latest_timestamp,
-                                               _earliest_timestamp,
-                                               _num_of_blocks, _prev_difficulty)
+        block_valid = self._consensus.validate(self, _latest_timestamp, _earliest_timestamp,
+                                               _num_of_blocks, min_blocks, _prev_difficulty)
         if not block_valid:
             self._logger.debug('Invalid block: {}'.format(self))
             return -3

@@ -56,12 +56,13 @@ class BlockChainComponent(unittest.TestCase):
         previous_granular_factor = self.consensus.granular_factor
         self.consensus.granular_factor = 0.25
         block1: LogicalBlock = self.block1
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=0)
         # Add block to blockchain
         self.assertTrue(self.blockchain.add_block(block1, False),
@@ -80,13 +81,14 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=23, transactions=[], nonce=23,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
 
         # Mine block to get correct Nonce
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=0)
         # Add both blocks to blockchain
         self.assertTrue(self.blockchain.add_block(block1, False),
@@ -117,12 +119,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=42, transactions=[],
                               nonce=42)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=0)
         # Add block to blockchain
         self.assertTrue(self.blockchain.add_block(block1, False),
@@ -141,24 +144,26 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=23, transactions=[], nonce=23,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=0)
         block2 = LogicalBlock(block_id=42, merkle_tree_root=None,
                               predecessor_hash='7f42cf7b8e05f7a6c1f6945514c862e36fcf613a7dd14bbabedbc331eb755cbc',
                               # Hash of genesis block
                               block_creator_id=42, transactions=[], nonce=42,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block2.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block2, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=block1.difficulty)
         # Add both blocks to blockchain
         self.assertTrue(self.blockchain.add_block(block1, False),
@@ -172,12 +177,13 @@ class BlockChainComponent(unittest.TestCase):
                                   predecessor_hash=block2.get_computed_hash(),  # Hash of genesis block
                                   block_creator_id=42, transactions=[],
                                   nonce=42, consensus_obj=self.consensus)
-            _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+            _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
                 self.blockchain.calculate_diff(block3.predecessor_hash)
             # Mine block to get correct Nonce
             self.consensus.mine(block=block3, latest_timestamp=_latest_ts,
                                 earliest_timestamp=_earliest_ts,
                                 num_of_blocks=_num_of_blocks,
+                                min_blocks=_min_blocks,
                                 prev_difficulty=block2.difficulty)
             # Add both blocks to blockchain
             self.assertTrue(self.blockchain.add_block(block3, False),
@@ -201,12 +207,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=23, transactions=[], nonce=23,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=0)
         self.assertTrue(self.blockchain.add_block(block1, False),
                         msg='Branch is not extended, because block could not be added')
@@ -216,12 +223,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=42, transactions=[], nonce=42,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block2.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block2, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=_latest_difficulty)
 
         self.blockchain._blockchain.pop(block1.get_computed_hash())
@@ -245,12 +253,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=23, transactions=[], nonce=23,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=0)
         self.assertTrue(self.blockchain.add_block(block1, False),
                         msg='Branch is not extended, because block could not be added')
@@ -260,12 +269,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=42, transactions=[], nonce=42,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block2.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block2, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=_latest_difficulty)
         self.assertTrue(self.blockchain.add_block(block2, False),
                         msg='Branch is not extended, because block could not be added')
@@ -275,12 +285,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=42, transactions=[], nonce=42,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block3.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block3, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=_latest_difficulty)
 
         self.blockchain._blockchain.pop(block1.get_computed_hash())
@@ -318,12 +329,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=23, transactions=[], nonce=23,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block1.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block1, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=0)
         self.assertTrue(self.blockchain.add_block(block1, False),
                         msg='Branch is not extended, because block could not be added')
@@ -333,12 +345,13 @@ class BlockChainComponent(unittest.TestCase):
                               # Hash of genesis block
                               block_creator_id=42, transactions=[], nonce=42,
                               consensus_obj=self.consensus)
-        _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = \
+        _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = \
             self.blockchain.calculate_diff(block2.predecessor_hash)
         # Mine block to get correct Nonce
         self.consensus.mine(block=block2, latest_timestamp=_latest_ts,
                             earliest_timestamp=_earliest_ts,
                             num_of_blocks=_num_of_blocks,
+                            min_blocks=_min_blocks,
                             prev_difficulty=_latest_difficulty)
 
         self.blockchain._blockchain.pop(block1.get_computed_hash())
@@ -388,10 +401,11 @@ class BlockChainComponent(unittest.TestCase):
 
     def test_calculate_diff(self):
         # blocks added in setup
-        blocks, t1, t2, diff = self.blockchain.calculate_diff()
-        self.assertIsNotNone(blocks)
+        t1, t2, num_blocks, min_blocks, diff = self.blockchain.calculate_diff()
         self.assertIsNotNone(t1)
         self.assertIsNotNone(t2)
+        self.assertIsNotNone(num_blocks)
+        self.assertIsNotNone(min_blocks)
         self.assertIsNotNone(diff)
 
     def test_create_block(self):
