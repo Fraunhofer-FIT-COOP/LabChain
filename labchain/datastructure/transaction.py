@@ -80,8 +80,7 @@ class Transaction:
         return crypto_helper.validate(self.sender, self.get_json(), self.signature)
 
     def __str__(self):
-        dict_with_names = PublicKeyNamesMapping.replace_public_keys_with_names(self.to_dict())
-        return str(dict_with_names)
+        return str(self.to_dict())
 
     @property
     def sender(self):

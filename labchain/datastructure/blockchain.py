@@ -201,14 +201,16 @@ class BlockChain:
             return None, None
 
     def get_highest_workflow_ID(self):
-        highest_id = -1
-        for _hash, _block in self._blockchain.items():
-            _txns = _block.transactions
-            for _txn in _txns:
-                if isinstance(_txn, WorkflowTransaction):
-                    wid = int(_txn.workflow_ID)
-                    if wid > highest_id:
-                        highest_id = wid
+        list_of_transactions = self.get_all_transactions()
+        list_of_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature())
+                                    for t in list_of_transactions if 'workflow_id' in t.payload]
+        list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '1']
+
+        highest_id = int(-1)
+        for _txn in list_of_workflow_transactions:
+            wid = int(_txn.workflow_ID)
+            if wid > highest_id:
+                highest_id = wid
         return highest_id
 
 

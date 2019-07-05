@@ -575,8 +575,7 @@ class ServerNetworkInterface(NetworkInterface):
 
     def __handle_get_highest_workflow_ID(self):
         latest_ID = self.get_highest_workflow_ID_callbck()
-        if latest_ID:
-            return latest_ID
+        return latest_ID
 
     @staticmethod
     def __ip4_addresses():
