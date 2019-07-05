@@ -180,10 +180,13 @@ class BlockChainNode:
 
     def on_search_transaction_from_receiver(self, receiver_public_key):
         return self.blockchain_obj.search_transaction_to_receiver(receiver_public_key)
-        
+
 
     def on_search_transaction_from_sender(self, sender_public_key):
         return self.blockchain_obj.search_transaction_from_sender(sender_public_key)
+
+    def on_get_highest_workflow_ID(self):
+        return self.blockchain_obj.get_highest_workflow_ID()
 
     def on_get_transactions_in_txpool(self):
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
@@ -193,20 +196,20 @@ class BlockChainNode:
         current_in_charge = currenttaskTransaction.in_charge
         for transaction in self.txpool_obj.get_task_transactions():
             if transaction.next_in_charge == current_in_charge:
-                return transaction            
+                return transaction
         for transaction in self.blockchain_obj.get_task_transactions():
             if transaction.next_in_charge == current_in_charge:
                 return transaction
         return None
-    
+
     def get_workflow_transaction(self, taskTransaction) -> WorkflowTransaction:
         workflowID = taskTransaction.workflowID
         for transaction in self.txpool_obj.get_workflow_transactions():
             if transaction.workflowID == workflowID:
-                return transaction            
+                return transaction
         for transaction in self.blockchain_obj.get_workflow_transactions():
             if transaction.workflowID == workflowID:
-                return transaction 
+                return transaction
         return None
 
     def on_new_transaction_received(self, transaction):
@@ -268,6 +271,7 @@ class BlockChainNode:
                                       self.on_get_last_n_transactions,
                                       self.on_search_transaction_from_receiver,
                                       self.on_search_transaction_from_sender,
+                                      self.on_get_highest_workflow_ID,
                                       self.peer_discovery, ip, port)
 
     def reinitialize_blockchain_from_db(self):
