@@ -188,8 +188,11 @@ export default {
     },
     formateDT(timestamp) {
       var date = new Date(parseInt(timestamp));
+      if (parseInt(timestamp) === 0) {
+        return "- -" ;
+      }
       var theyear = date.getFullYear();
-      var themonth =this.addZero(date.getMonth() + 1) ;
+      var themonth = this.addZero(date.getMonth() + 1);
       var thetoday = this.addZero(date.getDate());
       var hour = this.addZero(date.getHours());
       var minute = this.addZero(date.getMinutes());
