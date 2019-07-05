@@ -31,8 +31,8 @@
             :fields="tableTitle"
             :items="physicianOpenTaskData"
           >
-            <template slot="assumed_diagnosis" slot-scope="row">
-              <b-form-input @change="inputValueChanged" placeholder="Enter your diagnosis">Update</b-form-input>
+            <template slot="assumed_diagnosis" slot-scope="data">
+              <b-form-input v-model="data.item.assumed_diagnosis"  placeholder="Enter your diagnosis">Update</b-form-input>
             </template>
 
             <template slot="update_diagnosis" slot-scope="row">
@@ -92,7 +92,6 @@ export default {
       comparisonTaskData: [],
       selectMode: "single",
       lastUpdatedDiagnosis: "single",
-      updated_diagnosis_value: "",
       totalOpenTasks: 0,
       totalDiagnosisComparisions: 0,
       totalTrueDiagnosis: 0,
@@ -116,7 +115,7 @@ export default {
           console.log("checkTasks: ", response.data);
           if (response.data && response.data.length > 0) {
             response.data.forEach(element => {
-              element.real_diagnosis = '<input type="text">';
+              element.assumed_diagnosis = '';
             });
             this.physicianOpenTaskData = response.data;
             this.totalOpenTasks = response.data.length;
@@ -153,17 +152,17 @@ export default {
       );
     },
     update_diagnosis(item, index, e) {
-      console.log(item, index);
+      console.log(item);
       this.sendDiagnosisToServer(item, index);
     },
-    sendDiagnosisToServer(data, index) {
+    sendDiagnosisToServer(data) {
       let payload = {
         case_id: data.workflow_id,
         physician: this.physician_name,
         doctor: data.receiver,
         workflow_transaction: data.workflow_transaction_hash,
         previous_transaction: data.previous_transaction_hash,
-        diagnosis: this.updated_diagnosis_value
+        diagnosis: data.assumed_diagnosis
       };
       console.log(payload);
       this.$store.dispatch("sendAssumedDiagnosis", payload).then(
@@ -182,11 +181,6 @@ export default {
     rowClicked(item, index, e) {
       console.log(item);
       console.log(index);
-      console.log(e);
-    },
-    inputValueChanged(val) {
-      console.log(val);
-      this.updated_diagnosis_value = val;
     },
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
