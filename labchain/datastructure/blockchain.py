@@ -200,6 +200,19 @@ class BlockChain:
             self._blockchain_lock.release()
             return None, None
 
+    def get_highest_workflow_ID(self):
+        highest_id = -1
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if isinstance(_txn, WorkflowTransaction):
+                    wid = _txn.workflow_ID
+                    if wid > highest_id:
+                        highest_id = wid
+        return highest_id
+
+
+
     def get_all_transactions(self):
         """
         Returns
@@ -325,12 +338,14 @@ class BlockChain:
 
         Returns
         -------
-        number_of_blocks: Integer
-            Total number of blocks fetched from config or available in chain
         earliest_timestamp: timestamp
             timestamp of the earliest block added
         latest_timestamp: timestamp
             timestamp of the most recent block added
+        number_of_blocks: Integer
+            Total number of blocks fetched from config or available in chain
+        min_blocks: Integer
+            Minimal number of blocks required before difficulty calculation starts
         latest_difficulty: Integer
             difficulty of the latest block
         """
@@ -346,13 +361,13 @@ class BlockChain:
             _last_block = json.loads(last_block_json)
         else:
             self._blockchain_lock.release()
-            return -1, -1, -1, -1
+            return -1, -1, -1, -1, -1
 
         # if only genesis block present in chain return 0 as timestamps
         # and 1 as difficulty
         if _last_block["nr"] == 0:
             self._blockchain_lock.release()
-            return 0, 0, 1, 1
+            return 0, 0, 1, self._min_blocks, 1
 
         avg_difficulty = 0
         # getting timestamp and difficulty of the last block added in the chain
@@ -380,7 +395,7 @@ class BlockChain:
             _number_of_blocks += 1
         avg_difficulty = float(avg_difficulty) / _number_of_blocks
         self._blockchain_lock.release()
-        return _latest_timestamp, _earliest_timestamp, _number_of_blocks, avg_difficulty
+        return _latest_timestamp, _earliest_timestamp, _number_of_blocks, self._min_blocks, avg_difficulty
 
     def add_block(self, block, db_flag=True):
         """Finds correct position and adds the new block to the chain.
@@ -470,8 +485,8 @@ class BlockChain:
         _curr_block = block
 
         if _prev_hash in self._blockchain:
-            _latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
-            validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _latest_difficulty, self)
+            _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
+            validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty, self)
             if validity_level == 0:
                 return 0
             elif validity_level == -1:
