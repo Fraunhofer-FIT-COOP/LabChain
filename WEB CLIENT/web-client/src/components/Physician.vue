@@ -122,7 +122,7 @@ export default {
               element.timestamp = this.formateDT(element.timestamp);
             });
             this.physicianOpenTaskData = response.data;
-            this.totalOpenTasks = response.data.length;
+            this.totalOpenTasks = this.physicianOpenTaskData.length;
           }
         },
         error => {
@@ -175,6 +175,7 @@ export default {
           this.alertMsg = "Diagnosis is successfully updated.";
           this.showAlert("success");
           this.physicianOpenTaskData.splice(index, 1);
+          this.totalOpenTasks = this.physicianOpenTaskData.length;
         },
         error => {
           console.log(error);
@@ -229,7 +230,7 @@ export default {
       if (!item) return;
       if (item.true_diagnosis === item.assumed_diagnosis)
         return "table-success";
-      else if (item.assumed_diagnosis === "Pending") return "table-warning";
+      else if (item.true_diagnosis === "Pending") return "table-warning";
       else return "table-danger";
     }
   }
