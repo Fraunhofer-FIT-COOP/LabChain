@@ -38,7 +38,6 @@ def createCase():
     data = request.get_json(force=True)
 
     case_ID = app.network_interface.get_highest_workflow_ID()[0]
-    print(case_ID)
     case_ID += 1
 
     controller_public_key = app.wallet[data['controller']]['public_key']
