@@ -216,6 +216,10 @@ class NetworkInterface:
             raise NoPeersException('No nodes available to request the transactions from')
         return res
 
+    def get_highest_workflow_ID(self):
+        res = self._bulk_send('getHighestWorkflowID', return_on_first_success=True)
+        return res
+
     def search_transaction_from_receiver(self, receiver_public_key):
         responses = self._bulk_send('searchTransactionFromReceiver', [receiver_public_key], return_on_first_success=True)
         res = []
@@ -343,6 +347,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_n_last_transactions_callback,
                  search_transactions_from_receiver_callback,
                  search_transactions_from_sender_callback,
+                 get_highest_workflow_ID_callbck,
                  peer_discovery=True,
                  ip='127.0.0.1', port=8080, block_cache_size=1000,
                  transaction_cache_size=1000):
@@ -376,6 +381,8 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_n_last_transactions_callback = get_n_last_transactions_callback
         self.search_transactions_from_receiver_callback = search_transactions_from_receiver_callback
         self.search_transactions_from_sender_callback = search_transactions_from_sender_callback
+        self.get_highest_workflow_ID_callbck = get_highest_workflow_ID_callbck
+
 
         if peer_discovery:
 
@@ -439,6 +446,7 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['requestNLastTransaction'] = self.__handle_request_n_last_transaction
         dispatcher['searchTransactionFromReceiver'] = self.__handle_search_transaction_from_receiver
         dispatcher['searchTransactionFromSender'] = self.__handle_search_transaction_from_sender
+        dispatcher['getHighestWorkflowID'] = self.__handle_get_highest_workflow_ID
 
 
         # insert IP address of peer if advertise peer is called
@@ -564,6 +572,11 @@ class ServerNetworkInterface(NetworkInterface):
         if sender_transactions:
             return [transaction.to_dict() for transaction in sender_transactions]
         return []
+
+    def __handle_get_highest_workflow_ID(self):
+        latest_ID = self.get_highest_workflow_ID_callbck()
+        if latest_ID:
+            return latest_ID
 
     @staticmethod
     def __ip4_addresses():
