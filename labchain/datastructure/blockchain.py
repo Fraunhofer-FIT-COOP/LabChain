@@ -211,6 +211,8 @@ class BlockChain:
                         highest_id = wid
         return highest_id
 
+
+
     def get_all_transactions(self):
         """
         Returns
@@ -761,12 +763,3 @@ class BlockChain:
                     unmined_transactions = list(
                         set(self._active_mine_block.transactions).difference(set(block.transactions)))
                 self._txpool.return_transactions_to_pool(unmined_transactions, self)
-
-    def get_number_of_blocks(self):
-        return len(self._blockchain)
-
-    def get_number_of_transaction(self):
-        return len(self.get_all_transactions())
-
-    def get_difficulty(self):
-        return self._consensus.

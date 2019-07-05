@@ -138,18 +138,20 @@ def show_all_diagnosis_with_physicianID():
         for assumed_diagnosis_transaction in assumed_diagnosis_transactions:
             case_id = assumed_diagnosis_transaction.payload['workflow_id']
             if case_id not in cases:
-                cases[case_id] = [assumed_diagnosis_transaction.payload['document']['assumed_diagnosis'],'']
+                cases[case_id] = [assumed_diagnosis_transaction.payload['document']['assumed_diagnosis'],False]
             else:
                 cases[case_id][0] = assumed_diagnosis_transaction.payload['document']['assumed_diagnosis']
             for true_diagnosis_transaction in true_diagnosis_transactions:
                 if case_id not in cases:
-                    cases[case_id] = ['',true_diagnosis_transaction.payload['document']['real_diagnosis']]
+                    cases[case_id] = [False,true_diagnosis_transaction.payload['document']['real_diagnosis']]
                 else:
                     cases[case_id][1] = true_diagnosis_transaction.payload['document']['real_diagnosis']
         for case_id in cases:
-            obj = cases[case_id]
-            obj.extend(case_id)
-            output.append(obj)
+            output.append({
+                'case_id': case_id,
+                'assumed_diagnosis': cases[case_id][0],
+                'true_diagnosis': cases[case_id][1],
+            })
         return json.dumps(output)
     except Exception as e:
         return jsonify(message='fail', description=str(e))

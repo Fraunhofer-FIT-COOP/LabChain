@@ -80,7 +80,7 @@ export default {
       this.$store.dispatch("createCase", payload).then(
         response => {
           console.log(response);
-          this.alertMsg = "Case is successfully created. case_ID: " + response.data['case_ID'];
+          this.alertMsg = "Case is successfully created. case ID: " + response.data['case_ID'];
           this.showAlert("success");
         },
         error => {
