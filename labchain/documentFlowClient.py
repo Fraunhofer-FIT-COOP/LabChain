@@ -411,6 +411,9 @@ class DocumentFlowClient:
         """Entry point for the client console application."""
         self.main_menu.show()
 
+    def demo(self):
+        print('demo text')
+
     def __do_task(self):
         """Ask for all important information to create a new subsequent transaction/task and sends it to the network."""
         do_task_wizard = DocTransactionWizard(self.wallet,
