@@ -206,9 +206,9 @@ class BlockChain:
                                     for t in list_of_transactions if 'workflow_id' in t.payload]
         list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '1']
 
-        highest_id = -1
-        for _txn in list_of_workflow_transactions
-            wid = int(_txn.workflow_ID)
+        highest_id = 0
+        for _txn in list_of_workflow_transactions:
+            wid = _txn.workflow_ID
             if wid > highest_id:
                 highest_id = wid
         return highest_id

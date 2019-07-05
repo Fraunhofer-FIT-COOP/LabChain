@@ -39,7 +39,7 @@ def createCase():
 
     case_ID = app.network_interface.get_highest_workflow_ID()[0]
     print(case_ID)
-    case_ID+=1
+    case_ID=case_ID+1
     controller_public_key = app.wallet[data['controller']]['public_key']
     controller_private_key = app.wallet[data['controller']]['private_key']
     physician_public_key = app.wallet[data['physician']]['public_key']
