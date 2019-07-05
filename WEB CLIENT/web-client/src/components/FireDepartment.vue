@@ -21,7 +21,7 @@
       :sort-desc.sync="sortDesc"
       :tbody-tr-class="rowClass"
     ></b-table>
-    <p>Total: {{total}} Right: {{totalRight}}</p>
+    <p>Total: {{total}}   Correct: {{totalRight}}</p>
     <b-alert
       class="alert"
       :show="dismissCountDown"

@@ -60,7 +60,7 @@
             :items="comparisonTaskData"
           ></b-table>
         </b-card-text>
-        <p>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}}</p>
+        <p>Total:{{totalDiagnosisComparisions}}  Correct:{{totalTrueDiagnosis}}</p>
       </b-col>
     </b-row>
     <b-alert
@@ -159,7 +159,7 @@ export default {
       console.log(item);
       this.sendDiagnosisToServer(item, index);
     },
-    sendDiagnosisToServer(data) {
+    sendDiagnosisToServer(data,index) {
       let payload = {
         case_id: data.workflow_id,
         physician: this.physician_name,
@@ -174,6 +174,7 @@ export default {
           console.log(response);
           this.alertMsg = "Diagnosis is successfully updated.";
           this.showAlert("success");
+          this.physicianOpenTaskData.splice(index, 1);
         },
         error => {
           console.log(error);
@@ -189,7 +190,7 @@ export default {
     formateDT(timestamp) {
       var date = new Date(parseInt(timestamp));
       if (parseInt(timestamp) === 0) {
-        return "- -" ;
+        return "- -";
       }
       var theyear = date.getFullYear();
       var themonth = this.addZero(date.getMonth() + 1);
@@ -228,6 +229,7 @@ export default {
       if (!item) return;
       if (item.true_diagnosis === item.assumed_diagnosis)
         return "table-success";
+      else if (item.assumed_diagnosis === "Pending") return "table-warning";
       else return "table-danger";
     }
   }

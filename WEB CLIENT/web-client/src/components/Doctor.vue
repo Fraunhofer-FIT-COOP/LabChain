@@ -85,7 +85,7 @@ export default {
       if (!this.dr_name) return;
       this.checkMyTask();
     },
-    sendDiagnosisToServer(data) {
+    sendDiagnosisToServer(data,index) {
       console.log(data);
       let payload = {
         case_id: data.workflow_id,
@@ -100,6 +100,7 @@ export default {
           console.log(response);
           this.alertMsg = "Diagnosis is successfully updated.";
           this.showAlert("success");
+          this.taskData.splice(index, 1);
         },
         error => {
           console.log(error);
@@ -170,7 +171,7 @@ export default {
     },
     update_diagnosis(item, index, e) {
       console.log(item);
-      this.sendDiagnosisToServer(item);
+      this.sendDiagnosisToServer(item,index);
     }
   }
 };
