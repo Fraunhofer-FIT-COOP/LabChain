@@ -51,9 +51,11 @@ class TasksManeger:
                     for workflow_transaction in workflow_transactions:
                         if workflow_transaction.payload['workflow_id'] == workflow_id:
                             chef_name = workflow_transaction.payload['document']['chef_name']
+                        if 'timestamp' in workflow_transaction.payload:
+                            workflow_timestamp = workflow_transaction.payload['timestamp']
 
                     workflow_transaction_hash = t.payload['workflow_transaction']
                     previous_transaction_hash = crypto_helper.hash(t.get_json())
-                    task = Task(workflow_id,workflow_transaction_hash,previous_transaction_hash, chef_name)
+                    task = Task(workflow_id,workflow_transaction_hash,previous_transaction_hash, chef_name,workflow_timestamp)
                     tasks.append(task)
         return tasks
