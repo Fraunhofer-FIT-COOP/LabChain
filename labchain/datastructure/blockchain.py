@@ -206,7 +206,7 @@ class BlockChain:
             _txns = _block.transactions
             for _txn in _txns:
                 if isinstance(_txn, WorkflowTransaction):
-                    wid = _txn.workflow_ID
+                    wid = int(_txn.workflow_ID)
                     if wid > highest_id:
                         highest_id = wid
         return highest_id
@@ -581,7 +581,7 @@ class BlockChain:
                 self._logger.debug("Block not valid! Not adding.")
             else:
                 """
-                    validation_result -2 cannot happen, because block was taken from orphan pool and cannot be an 
+                    validation_result -2 cannot happen, because block was taken from orphan pool and cannot be an
                     orphan again since predecessor is now in blockchain
                 """
                 self._logger.error('Unexpected block state')
