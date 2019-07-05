@@ -189,7 +189,8 @@ export default {
       console.log(index);
     },
     formateDT(timestamp) {
-      var date = new Date(parseInt(timestamp));
+      let tm=parseInt(timestamp) * 1000;
+      var date = new Date(tm);
       if (parseInt(timestamp) === 0) {
         return "- -";
       }
