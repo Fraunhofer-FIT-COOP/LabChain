@@ -44,7 +44,7 @@
             </template>
           </b-table>
         </b-card-text>
-        <P>Total:{{totalOpenTasks}} </p>
+        <p>Total:{{totalOpenTasks}}</p>
       </b-col>
       <b-col sm="6" class="bottom-space doctor-form">
         <b-card-text>
@@ -53,12 +53,21 @@
             :select-mode="selectMode"
             selectedVariant="success"
             :fields="tableTitleRight"
+            :tbody-tr-class="rowClass"
             :items="comparisonTaskData"
           ></b-table>
         </b-card-text>
-         <P>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}} Wrong:{{totalTrueDiagnosis}} </p>
+        <p>Total:{{totalDiagnosisComparisions}} Right:{{totalTrueDiagnosis}}</p>
       </b-col>
     </b-row>
+    <b-alert
+      class="alert"
+      :show="dismissCountDown"
+      dismissible
+      :variant="alertVariant"
+      @dismissed="dismissCountDown=0"
+      @dismiss-count-down="countDownChanged"
+    >{{ alertMsg }}</b-alert>
   </div>
 </template>
 
@@ -75,9 +84,9 @@ export default {
         { key: "update_diagnosis", label: "Update Diagnosis" }
       ],
       tableTitleRight: [
-        { key: "workflow_id", label: "ID" },
+        { key: "case_id", label: "ID" },
         { key: "assumed_diagnosis", label: "Assumed Diagnosis" },
-        { key: "real_diagnosis", label: "Real Diagnosis" }
+        { key: "true_diagnosis", label: "Real Diagnosis" }
       ],
       physicianOpenTaskData: [],
       comparisonTaskData: [],
@@ -86,11 +95,16 @@ export default {
       updated_diagnosis_value: "",
       totalOpenTasks: 0,
       totalDiagnosisComparisions: 0,
-      totalTrueDiagnosis: 0
+      totalTrueDiagnosis: 0,
+      dismissSecs: 2,
+      dismissCountDown: 0,
+      alertVariant: "success",
+      alertMsg: ""
     };
   },
   methods: {
     findDiagnosisData() {
+      if (!this.physician_name) return;
       this.checkMyTask();
     },
     checkMyTask() {
@@ -116,6 +130,7 @@ export default {
       );
     },
     getCompareDiagnosisData() {
+      if (!this.physician_name) return;
       let payload = {
         username: this.physician_name
       };
@@ -124,7 +139,10 @@ export default {
           console.log("showDiagnosisWithPhysicianID: ", response.data);
           if (response.data && response.data.length > 0) {
             this.comparisonTaskData = response.data;
-            this.totalDiagnosisComparisions = response.data.length;
+            this.totalDiagnosisComparisions = this.comparisonTaskData.length;
+            this.totalTrueDiagnosis = this.comparisonTaskData.filter(
+              res => res.assumed_diagnosis === res.true_diagnosis
+            ).length;
           }
         },
         error => {
@@ -143,8 +161,8 @@ export default {
         case_id: data.workflow_id,
         physician: this.physician_name,
         doctor: data.receiver,
-        workflow_transaction: data.previous_transaction_hash,
-        previous_transaction: data.workflow_transaction_hash,
+        workflow_transaction: data.workflow_transaction_hash,
+        previous_transaction: data.previous_transaction_hash,
         diagnosis: this.updated_diagnosis_value
       };
       console.log(payload);
@@ -169,6 +187,19 @@ export default {
     inputValueChanged(val) {
       console.log(val);
       this.updated_diagnosis_value = val;
+    },
+    countDownChanged(dismissCountDown) {
+      this.dismissCountDown = dismissCountDown;
+    },
+    showAlert(alertType) {
+      this.alertVariant = alertType;
+      this.dismissCountDown = this.dismissSecs;
+    },
+    rowClass(item, type) {
+      if (!item) return;
+      if (item.true_diagnosis === item.assumed_diagnosis)
+        return "table-success";
+      else return "table-danger";
     }
   }
 };
