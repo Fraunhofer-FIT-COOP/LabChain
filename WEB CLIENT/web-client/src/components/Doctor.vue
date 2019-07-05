@@ -27,7 +27,10 @@
           :items="taskData"
         >
           <template slot="real_diagnosis" slot-scope="data">
-            <b-form-input  v-model="data.item.real_diagnosis"  placeholder="Enter your diagnosis">Update</b-form-input>
+            <b-form-input
+              v-model="data.item.real_diagnosis"
+              placeholder="Enter your diagnosis"
+            >Update</b-form-input>
           </template>
 
           <template slot="update_diagnosis" slot-scope="row">
@@ -79,7 +82,7 @@ export default {
   mounted() {},
   methods: {
     findDiagnosisData() {
-       if(!this.dr_name) return;
+      if (!this.dr_name) return;
       this.checkMyTask();
     },
     sendDiagnosisToServer(data) {
@@ -114,7 +117,8 @@ export default {
           console.log("checkTasks: ", response.data);
           if (response.data) {
             response.data.forEach(element => {
-              element.real_diagnosis = '';
+              element.real_diagnosis = "";
+              element.timestamp = this.formateDT(element.timestamp);
             });
             this.taskData = response.data;
           }
@@ -133,7 +137,34 @@ export default {
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
     },
-
+    formateDT(timestamp) {
+      var date = new Date(parseInt(timestamp));
+      var theyear = date.getFullYear();
+      var themonth = this.addZero(date.getMonth() + 1);
+      var thetoday = this.addZero(date.getDate());
+      var hour = this.addZero(date.getHours());
+      var minute = this.addZero(date.getMinutes());
+      var sec = this.addZero(date.getSeconds());
+      var formattedDT =
+        thetoday +
+        "." +
+        themonth +
+        "." +
+        theyear +
+        " " +
+        hour +
+        ":" +
+        minute +
+        ":" +
+        sec;
+      return formattedDT;
+    },
+    addZero(i) {
+      if (i < 10) {
+        i = "0" + i;
+      }
+      return i;
+    },
     update_diagnosis(item, index, e) {
       console.log(item);
       this.sendDiagnosisToServer(item);

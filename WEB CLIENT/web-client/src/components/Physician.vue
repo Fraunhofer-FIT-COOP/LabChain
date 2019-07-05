@@ -32,7 +32,10 @@
             :items="physicianOpenTaskData"
           >
             <template slot="assumed_diagnosis" slot-scope="data">
-              <b-form-input v-model="data.item.assumed_diagnosis"  placeholder="Enter your diagnosis">Update</b-form-input>
+              <b-form-input
+                v-model="data.item.assumed_diagnosis"
+                placeholder="Enter your diagnosis"
+              >Update</b-form-input>
             </template>
 
             <template slot="update_diagnosis" slot-scope="row">
@@ -115,7 +118,8 @@ export default {
           console.log("checkTasks: ", response.data);
           if (response.data && response.data.length > 0) {
             response.data.forEach(element => {
-              element.assumed_diagnosis = '';
+              element.assumed_diagnosis = "";
+              element.timestamp = this.formateDT(element.timestamp);
             });
             this.physicianOpenTaskData = response.data;
             this.totalOpenTasks = response.data.length;
@@ -181,6 +185,34 @@ export default {
     rowClicked(item, index, e) {
       console.log(item);
       console.log(index);
+    },
+    formateDT(timestamp) {
+      var date = new Date(parseInt(timestamp));
+      var theyear = date.getFullYear();
+      var themonth =this.addZero(date.getMonth() + 1) ;
+      var thetoday = this.addZero(date.getDate());
+      var hour = this.addZero(date.getHours());
+      var minute = this.addZero(date.getMinutes());
+      var sec = this.addZero(date.getSeconds());
+      var formattedDT =
+        thetoday +
+        "." +
+        themonth +
+        "." +
+        theyear +
+        " " +
+        hour +
+        ":" +
+        minute +
+        ":" +
+        sec;
+      return formattedDT;
+    },
+    addZero(i) {
+      if (i < 10) {
+        i = "0" + i;
+      }
+      return i;
     },
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
