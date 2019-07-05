@@ -30,7 +30,7 @@ class PublicKeyNamesMapping:
                         number = k.replace(public_key,"")
                         new_transaction_dict[public_key_name_map[public_key]+number] = new_transaction_dict.pop(k)
                     if isinstance(v, list):
-                        for i,element  in enumerate(v):
+                        for i,element in enumerate(v):
                             if public_key in element:
                                 number = element.replace(public_key,"")
                                 v[i] = public_key_name_map[public_key] + number
