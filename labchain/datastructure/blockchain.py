@@ -200,6 +200,19 @@ class BlockChain:
             self._blockchain_lock.release()
             return None, None
 
+    def get_highest_workflow_ID(self):
+        highest_id = -1
+        for _hash, _block in self._blockchain.items():
+            _txns = _block.transactions
+            for _txn in _txns:
+                if isinstance(_txn, WorkflowTransaction):
+                    wid = _txn.workflow_ID
+                    if wid > highest_id:
+                        highest_id = wid
+        return highest_id
+
+
+
     def get_all_transactions(self):
         """
         Returns
