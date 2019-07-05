@@ -587,8 +587,9 @@ class ServerNetworkInterface(NetworkInterface):
 
     @staticmethod
     def _call_threaded(func, args):
-        thread = Thread(target=func, args=args)
+        thread = Thread(name="call_network_threaded_" + str(func), target=func, args=args)
         thread.start()
+        logging.debug('Started thread: {} in networking'.format(str(func)))
 
     def __add_block_to_cache(self, block):
         if not self.__block_in_cache(block):
