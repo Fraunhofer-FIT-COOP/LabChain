@@ -135,13 +135,13 @@ class BlockChainNode:
                     block_transactions_size)
                 block = self.blockchain_obj.create_block(transactions)
                 self.blockchain_obj.active_mine_block_update(block)
-                _timestamp2, _timestamp1, _num_of_blocks, _difficulty = self.blockchain_obj.calculate_diff(
+                _timestamp2, _timestamp1, _num_of_blocks, _min_blocks, _difficulty = self.blockchain_obj.calculate_diff(
                     block.predecessor_hash)
                 self.logger.debug("Created new block, try to mine")
                 st = time.time()
 
                 if self.consensus_obj.mine(block, _timestamp2, _timestamp1,
-                                           _num_of_blocks, _difficulty):
+                                           _num_of_blocks, _min_blocks, _difficulty):
                     # have to check if other node already created a block
                     self.logger.debug("Mining was successful for new block")
                     if self.blockchain_obj.add_block(block):
@@ -348,13 +348,13 @@ class BlockChainNode:
 
         # start the web servers for receiving JSON-RPC calls
         self.logger.debug('Starting web server thread...')
-        self.webserver_thread = threading.Thread(name='Web Server',
+        self.webserver_thread = threading.Thread(name='Web Server thread',
                                                  target=self.network_interface.start_listening)
         self.webserver_thread.start()
 
         # start the polling threads
         self.logger.debug('Starting polling threads...')
-        self.polling_thread = threading.Thread(name='Polling',
+        self.polling_thread = threading.Thread(name='Polling thread',
                                                target=self.network_interface.poll_update_peer_lists,
                                                args=(pool_interval,))
         self.polling_thread.start()
@@ -376,21 +376,24 @@ class BlockChainNode:
         self.logger.debug("Starting request block thread...")
         """init rb"""
         # start the scheduler for rb
-        self.rb_thread = threading.Thread(target=self.fetch_prev_blocks,
-                                          kwargs=dict(q=self.q,
-                                                      interval=fetch_prev_interval))
+        self.rb_thread = threading.Thread(  name="Request block thread",
+                                            target=self.fetch_prev_blocks,
+                                            kwargs=dict(q=self.q,
+                                                        interval=fetch_prev_interval))
         self.rb_thread.start()
 
         self.logger.debug("Starting mining thread...")
         """init mining"""
         # start the scheduler for mining
-        self.mine_thread = threading.Thread(target=self.block_mine_timer,
+        self.mine_thread = threading.Thread(name="mine_thread",
+                                            target=self.block_mine_timer,
                                             kwargs=dict(mine_freq=mine_freq,
                                                         block_transactions_size=num_of_transactions))
         self.mine_thread.start()
 
         self.logger.debug("Starting orphan pruning thread...")
         self.orphan_killer = threading.Thread(
+            name="Orphan killer thread",
             target=self.schedule_orphans_killing,
             kwargs=dict(interval=pruning_interval))
 

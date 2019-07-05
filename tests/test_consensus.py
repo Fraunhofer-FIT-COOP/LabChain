@@ -17,7 +17,7 @@ class Tests(TestCase):
         consensus = Consensus()
         #  Block Instance
         block = Block(1, None, None, None, [], 0, datetime.now())
-        self.assertTrue(consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1))
+        self.assertTrue(consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 2))
 
     def test_show_mine_false(self):
         #  Values Dumped
@@ -30,7 +30,7 @@ class Tests(TestCase):
         block = Block(1, None, None, None, [], 0, datetime.now())
         consensus.kill_mine = 1
         self.assertFalse(
-            consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 3))
+            consensus.mine(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 2, 3))
 
     def test_show_validate_true(self):
         #  Values Dumped
@@ -47,9 +47,10 @@ class Tests(TestCase):
         consensus.mine(block=block, latest_timestamp=_latest_ts,
                        earliest_timestamp=_earliest_ts,
                        num_of_blocks=_num_of_blocks,
+                       min_blocks=2,
                        prev_difficulty=0)
 
-        self.assertTrue(consensus.validate(block, _latest_ts, _earliest_ts, 1))
+        self.assertTrue(consensus.validate(block, _latest_ts, _earliest_ts, 1, 2))
 
     def test_show_validate_false(self):
         #  Values Dumped
@@ -61,4 +62,4 @@ class Tests(TestCase):
         block = Block(1, None, None, None, [], 0, datetime.now())
         block.nonce = nonce_false
         self.assertFalse(
-            consensus.validate(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 2))
+            consensus.validate(block, datetime(2007, 12, 6, 15, 29, 52), datetime(2007, 12, 6, 15, 29, 43), 1, 1, 2))
