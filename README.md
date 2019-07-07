@@ -56,6 +56,22 @@ python3 client.py <blockchain-node-ip> <blockchain-node-port>
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
 
+# Run the Web Client
+
+Run `python3 client_api.py`.
+
+Copy `~/web-client` outside the project directory so that you won't push the Node packages to repository.
+
+Install Node.js: https://nodejs.org/en/
+
+After installing Node, run `npm install` inside the copy of web-client directory to install the necessary Node packages.
+
+After installing the necessary packages, run `npm run build`. You will see a directory named 'dist' afterward.
+
+Run `npm install -g serve` to install Serve, a static file server to host the web client in local network.
+
+Run `serve` inside the dist directory to host our web client. You can test the web client in http://localhost:5000
+
 # Run the unit tests
 
 Executing a single test:
