@@ -6,6 +6,7 @@ from typing import Dict
 
 from Crypto.PublicKey import ECC
 
+import labchain.datastructure.txpool as txpool
 from labchain.datastructure.transaction import Transaction
 from labchain.util.cryptoHelper import CryptoHelper
 
@@ -221,6 +222,7 @@ class WorkflowTransaction(TaskTransaction):
 
         # Check if workflow_id is already present
         list_of_transactions = blockchain.get_all_transactions()
+        list_of_transactions += txpool.TxPool(None).get_workflow_transactions()
         list_of_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature())
                                     for t in list_of_transactions if 'workflow_id' in t.payload]
         list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '1']
