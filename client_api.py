@@ -1,21 +1,13 @@
-import argparse
-import logging
 import json
 import os
-from typing import List
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
-from labchain.blockchainClient import Wallet, BlockchainClient
-from labchain.documentFlowClient import DocumentFlowClient
-from labchain.workflowClient import WorkflowClient
-from labchain.datastructure.taskTransaction import TaskTransaction
 from labchain.util.TransactionFactory import TransactionFactory
-from labchain.util.TasksManeger import TasksManeger,Task
-
+from labchain.util.TasksManager import TasksManager
 
 wallet_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'wallet.json'))
 
@@ -166,8 +158,8 @@ def checkTasks():
     public_key = app.wallet[data['username']]['public_key']
 
     try:
-        transactions = TasksManeger.check_tasks(app.network_interface,public_key)
-        tasks = TasksManeger.get_tasks_objects_from_task_transactions(app.network_interface, transactions)
+        transactions = TasksManager.check_tasks(app.network_interface, public_key)
+        tasks = TasksManager.get_tasks_objects_from_task_transactions(app.network_interface, transactions)
         return json.dumps([ob.__dict__ for ob in tasks])
     except Exception as e:
         return jsonify(message='fail', description=str(e))

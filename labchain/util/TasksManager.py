@@ -1,10 +1,6 @@
 from typing import Dict
-from ast import literal_eval
 
-from labchain.util.TransactionFactory import TransactionFactory
-from labchain.datastructure.taskTransaction import TaskTransaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction
-from labchain.datastructure.transaction import Transaction
+from labchain.workflow.taskTransaction import TaskTransaction
 from labchain.util.cryptoHelper import CryptoHelper
 
 class Task:
@@ -16,7 +12,7 @@ class Task:
         self.timestamp = timestamp
 
 
-class TasksManeger:
+class TasksManager:
 
     @staticmethod
     def check_tasks(network_interface,public_key) -> [TaskTransaction]:

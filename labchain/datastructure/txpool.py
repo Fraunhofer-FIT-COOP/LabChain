@@ -1,8 +1,8 @@
 import logging
 
 from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.taskTransaction import TaskTransaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.workflow.taskTransaction import TaskTransaction
+from labchain.workflow.taskTransaction import WorkflowTransaction
 
 
 class TxPool:

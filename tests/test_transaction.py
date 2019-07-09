@@ -7,7 +7,7 @@ import unittest
 from labchain.consensus.consensus import Consensus
 from labchain.datastructure.blockchain import BlockChain
 from labchain.datastructure.block import LogicalBlock
-from labchain.datastructure.taskTransaction import TaskTransaction, WorkflowTransaction
+from labchain.workflow.taskTransaction import TaskTransaction, WorkflowTransaction
 from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.txpool import TxPool
 from labchain.util.configReader import ConfigReader

@@ -4,8 +4,8 @@ import threading
 from datetime import datetime
 
 from labchain.datastructure.block import LogicalBlock
-from labchain.datastructure.taskTransaction import TaskTransaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.workflow.taskTransaction import TaskTransaction
+from labchain.workflow.taskTransaction import WorkflowTransaction
 from labchain.datastructure.transaction import NoHashError
 
 

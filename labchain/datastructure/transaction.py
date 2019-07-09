@@ -1,7 +1,6 @@
 import json
 
 from labchain.util.cryptoHelper import CryptoHelper
-from labchain.util.publicKeyNameMaping import PublicKeyNamesMapping
 
 
 class Transaction:
