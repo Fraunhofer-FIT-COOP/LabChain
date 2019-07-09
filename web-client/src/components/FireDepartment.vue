@@ -9,7 +9,12 @@
           <b-form-input v-model="chief_name"></b-form-input>
         </b-col>
         <b-col cols="3" class="bottom-space doctor-form">
-          <b-button class="search-btn bottom-space" variant="info" @click="getData()">Get Data</b-button>
+          <b-button
+            class="search-btn bottom-space"
+            variant="info"
+            @click="getData()"
+            >Get Data</b-button
+          >
         </b-col>
       </b-row>
     </div>
@@ -21,15 +26,16 @@
       :sort-desc.sync="sortDesc"
       :tbody-tr-class="rowClass"
     ></b-table>
-    <p>Total: {{total}}   Correct: {{totalRight}}</p>
+    <p>Total: {{ total }} Correct: {{ totalRight }}</p>
     <b-alert
       class="alert"
       :show="dismissCountDown"
       dismissible
       :variant="alertVariant"
-      @dismissed="dismissCountDown=0"
+      @dismissed="dismissCountDown = 0"
       @dismiss-count-down="countDownChanged"
-    >{{ alertMsg }}</b-alert>
+      >{{ alertMsg }}</b-alert
+    >
   </div>
 </template>
 

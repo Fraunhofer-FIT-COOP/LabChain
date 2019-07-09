@@ -13,8 +13,8 @@ from labchain.databaseInterface import Db
 from labchain.datastructure.block import Block
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.blockchain import BlockChain
-from labchain.datastructure.taskTransaction import TaskTransaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.workflow.taskTransaction import TaskTransaction
+from labchain.workflow.taskTransaction import WorkflowTransaction
 from labchain.datastructure.txpool import TxPool
 from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException

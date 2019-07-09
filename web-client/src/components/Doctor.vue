@@ -15,7 +15,8 @@
               class="send-btn bottom-space"
               variant="success"
               @click="findDiagnosisData()"
-            >FIND</b-button>
+              >FIND</b-button
+            >
           </b-col>
         </b-row>
 
@@ -30,7 +31,8 @@
             <b-form-input
               v-model="data.item.real_diagnosis"
               placeholder="Enter your diagnosis"
-            >Update</b-form-input>
+              >Update</b-form-input
+            >
           </template>
 
           <template slot="update_diagnosis" slot-scope="row">
@@ -38,7 +40,8 @@
               size="sm"
               @click="update_diagnosis(row.item, row.index, $event.target)"
               class="mr-1"
-            >Update</b-button>
+              >Update</b-button
+            >
           </template>
         </b-table>
       </b-container>
@@ -48,9 +51,10 @@
       :show="dismissCountDown"
       dismissible
       :variant="alertVariant"
-      @dismissed="dismissCountDown=0"
+      @dismissed="dismissCountDown = 0"
       @dismiss-count-down="countDownChanged"
-    >{{ alertMsg }}</b-alert>
+      >{{ alertMsg }}</b-alert
+    >
   </div>
 </template>
 
@@ -85,7 +89,7 @@ export default {
       if (!this.dr_name) return;
       this.checkMyTask();
     },
-    sendDiagnosisToServer(data,index) {
+    sendDiagnosisToServer(data, index) {
       console.log(data);
       let payload = {
         case_id: data.workflow_id,
@@ -139,7 +143,7 @@ export default {
       this.dismissCountDown = dismissCountDown;
     },
     formateDT(timestamp) {
-      let tm=parseInt(timestamp) * 1000;
+      let tm = parseInt(timestamp) * 1000;
       var date = new Date(tm);
       if (parseInt(timestamp) === 0) {
         return "- -";
@@ -172,7 +176,7 @@ export default {
     },
     update_diagnosis(item, index, e) {
       console.log(item);
-      this.sendDiagnosisToServer(item,index);
+      this.sendDiagnosisToServer(item, index);
     }
   }
 };

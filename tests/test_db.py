@@ -5,7 +5,7 @@ from labchain.datastructure.blockchain import BlockChain
 from labchain.consensus.consensus import Consensus
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.datastructure.transaction import Transaction
-from labchain.datastructure.taskTransaction import WorkflowTransaction
+from labchain.workflow.taskTransaction import WorkflowTransaction
 from labchain.datastructure.txpool import TxPool
 from labchain.util.configReader import ConfigReader
 from labchain.databaseInterface import Db

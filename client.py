@@ -6,8 +6,7 @@ import os
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
 from labchain.blockchainClient import Wallet, BlockchainClient
-from labchain.documentFlowClient import DocumentFlowClient
-from labchain.workflowClient import WorkflowClient
+from labchain.workflow.workflowClient import WorkflowClient
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:

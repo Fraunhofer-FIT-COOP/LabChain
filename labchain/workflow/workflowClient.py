@@ -2,7 +2,7 @@ import json
 import os
 from typing import List
 
-from labchain.datastructure.taskTransaction import TaskTransaction
+from labchain.workflow.taskTransaction import TaskTransaction
 from labchain.util.Menu import Menu
 from labchain.util.TransactionFactory import TransactionFactory
 
@@ -12,10 +12,10 @@ def clear_screen():
 
 
 class WorkflowClient:
-    demo_workflow_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'CarLogistic.json'))
+    demo_workflow_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources/CarLogistic.json'))
 
     _logistics = True if demo_workflow_file_path == os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'CarLogistic.json')) else False
+        os.path.join(os.path.dirname(__file__), 'resources/CarLogistic.json')) else False
 
     def __init__(self, wallet, network_interface, crypto_helper):
         self.network_interface = network_interface

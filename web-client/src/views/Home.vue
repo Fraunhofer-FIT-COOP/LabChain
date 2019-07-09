@@ -39,12 +39,13 @@ export default {
   data() {
     return {};
   },
-  mounted() {
-
-  },
+  mounted() {},
   methods: {},
   components: {
-    Doctor,Hospital,FireDepartment,Physician
+    Doctor,
+    Hospital,
+    FireDepartment,
+    Physician
   }
 };
 </script>

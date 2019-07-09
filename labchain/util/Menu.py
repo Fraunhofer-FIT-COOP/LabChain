@@ -1,5 +1,4 @@
 import os
-import json
 from collections import OrderedDict
 from labchain.util.utility import Utility
 
