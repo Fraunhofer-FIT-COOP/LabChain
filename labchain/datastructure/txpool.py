@@ -1,7 +1,5 @@
 import logging
 
-import labchain.datastructure.taskTransaction as taskTransaction
-import labchain.datastructure.taskTransaction as workflowTransaction
 from labchain.datastructure.transaction import Transaction
 
 
@@ -38,18 +36,19 @@ class TxPool:
         return transactions
 
     def get_task_transactions(self):
+        from labchain.workflow.taskTransaction import WorkflowTransaction, TaskTransaction
         task_transactions = []
         for transaction in self._transactions:
             if isinstance(transaction,
-                          taskTransaction.TaskTransaction) and not isinstance(transaction,
-                                                                              workflowTransaction.WorkflowTransaction):
+                          TaskTransaction) and not isinstance(transaction, WorkflowTransaction):
                 task_transactions.append(transaction)
         return task_transactions
 
     def get_workflow_transactions(self):
+        from labchain.workflow.taskTransaction import WorkflowTransaction
         task_transactions = []
         for transaction in self._transactions:
-            if isinstance(transaction, workflowTransaction.WorkflowTransaction):
+            if isinstance(transaction, WorkflowTransaction):
                 task_transactions.append(transaction)
         return task_transactions
 

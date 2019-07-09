@@ -12,12 +12,14 @@
           class="send-btn bottom-space"
           variant="success"
           @click="findDiagnosisData()"
-        >Get Tasks</b-button>
+          >Get Tasks</b-button
+        >
         <b-button
           class="send-btn bottom-space"
           variant="success"
           @click="getCompareDiagnosisData()"
-        >Compare Diagnosis</b-button>
+          >Compare Diagnosis</b-button
+        >
       </b-col>
     </b-row>
     <b-row class="hospital-tbl-row">
@@ -35,7 +37,8 @@
               <b-form-input
                 v-model="data.item.assumed_diagnosis"
                 placeholder="Enter your diagnosis"
-              >Update</b-form-input>
+                >Update</b-form-input
+              >
             </template>
 
             <template slot="update_diagnosis" slot-scope="row">
@@ -43,11 +46,12 @@
                 size="sm"
                 @click="update_diagnosis(row.item, row.index, $event.target)"
                 class="mr-1"
-              >Update</b-button>
+                >Update</b-button
+              >
             </template>
           </b-table>
         </b-card-text>
-        <p>Total:{{totalOpenTasks}}</p>
+        <p>Total:{{ totalOpenTasks }}</p>
       </b-col>
       <b-col sm="6" class="bottom-space doctor-form">
         <b-card-text>
@@ -60,7 +64,11 @@
             :items="comparisonTaskData"
           ></b-table>
         </b-card-text>
-        <p>Total:{{totalDiagnosisComparisions}}  Correct:{{totalTrueDiagnosis}}</p>
+        <p>
+          Total:{{ totalDiagnosisComparisions }} Correct:{{
+            totalTrueDiagnosis
+          }}
+        </p>
       </b-col>
     </b-row>
     <b-alert
@@ -68,9 +76,10 @@
       :show="dismissCountDown"
       dismissible
       :variant="alertVariant"
-      @dismissed="dismissCountDown=0"
+      @dismissed="dismissCountDown = 0"
       @dismiss-count-down="countDownChanged"
-    >{{ alertMsg }}</b-alert>
+      >{{ alertMsg }}</b-alert
+    >
   </div>
 </template>
 
@@ -159,7 +168,7 @@ export default {
       console.log(item);
       this.sendDiagnosisToServer(item, index);
     },
-    sendDiagnosisToServer(data,index) {
+    sendDiagnosisToServer(data, index) {
       let payload = {
         case_id: data.workflow_id,
         physician: this.physician_name,
@@ -189,7 +198,7 @@ export default {
       console.log(index);
     },
     formateDT(timestamp) {
-      let tm=parseInt(timestamp) * 1000;
+      let tm = parseInt(timestamp) * 1000;
       var date = new Date(tm);
       if (parseInt(timestamp) === 0) {
         return "- -";

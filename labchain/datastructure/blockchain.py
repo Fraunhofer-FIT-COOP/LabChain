@@ -205,7 +205,7 @@ class BlockChain:
         list_of_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature())
                                     for t in list_of_transactions if 'workflow_id' in t.payload]
         list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '1']
-
+        list_of_workflow_transactions += self._txpool.get_workflow_transactions()
         highest_id = int(0)
         for _txn in list_of_workflow_transactions:
             wid = int(_txn.workflow_ID)
