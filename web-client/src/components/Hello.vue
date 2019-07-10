@@ -1,5 +1,6 @@
 <template>
   <div>
+
     <b-table
       selectable
       :select-mode="selectMode"
