@@ -76,7 +76,8 @@ export default {
         { key: "update_diagnosis", label: "Update Diagnosis" }
       ],
       taskData: [],
-      selectMode: "single"
+      selectMode: "single",
+      cachedWorkflowID: []
     };
   },
   mounted() {},
@@ -100,6 +101,7 @@ export default {
           console.log(response);
           this.alertMsg = "Diagnosis is successfully updated.";
           this.showAlert("success");
+          this.cachedWorkflowID.push(payload["case_id"]);
           this.taskData.splice(index, 1);
         },
         error => {
@@ -117,12 +119,19 @@ export default {
         response => {
           console.log("checkTasks: ", response.data);
           if (response.data) {
-            response.data.forEach(element => {
+            response.data.forEach((element, index) => {
               element.real_diagnosis = "";
               element.timestamp = this.formateDT(element.timestamp);
+              this.cachedWorkflowID.forEach(id => {
+                console.log(id);
+                console.log(element.workflow_id);
+                if(id == element.workflow_id){
+                    response.data.splice(index, 1);
+                };
+              });
             });
             this.taskData = response.data;
-          }
+          };
         },
         error => {
           console.log(error);

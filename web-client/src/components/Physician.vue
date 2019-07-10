@@ -101,7 +101,8 @@ export default {
       dismissSecs: 2,
       dismissCountDown: 0,
       alertVariant: "success",
-      alertMsg: ""
+      alertMsg: "",
+      cachedWorkflowID: []
     };
   },
   methods: {
@@ -117,13 +118,20 @@ export default {
         response => {
           console.log("checkTasks: ", response.data);
           if (response.data && response.data.length > 0) {
-            response.data.forEach(element => {
+            response.data.forEach((element, index) => {
               element.assumed_diagnosis = "";
               element.timestamp = this.formateDT(element.timestamp);
+              this.cachedWorkflowID.forEach(id => {
+                console.log(id);
+                console.log(element.workflow_id);
+                if(id == element.workflow_id){
+                    response.data.splice(index, 1);
+                };
             });
             this.physicianOpenTaskData = response.data;
             this.totalOpenTasks = this.physicianOpenTaskData.length;
-          }
+          });
+        };
         },
         error => {
           console.log(error);
@@ -174,6 +182,7 @@ export default {
           console.log(response);
           this.alertMsg = "Diagnosis is successfully updated.";
           this.showAlert("success");
+          this.cachedWorkflowID.push(payload["case_id"]);
           this.physicianOpenTaskData.splice(index, 1);
           this.totalOpenTasks = this.physicianOpenTaskData.length;
         },
