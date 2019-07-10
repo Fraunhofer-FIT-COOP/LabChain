@@ -190,7 +190,7 @@ class TransactionWizard:
 
             clear_screen()
 
-            # Create transaction Object and send to network
+            # Create transaction object and send to network
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
@@ -231,12 +231,12 @@ class BlockchainClient:
             '2': ('Load by hash', self.__load_block, [True])
         }, 'Please select a value: ', 'Exit Load Block Menu')
         self.load_transaction_menu = Menu(['Load Transaction'], {
-            '1': ('Load by hash', self.__load_transaction_by_hash,[]),
-            '2': ('Show Transaction Pool', self.__show_transaction_pool,[]),
-            '3': ('Show n last transactions', self.__load_n_last_transactions,[]),
-            '4': ('Load by receiver\'s public key', self._show_transaction_by_public_key,["receiver"]),
-            '5': ('Load by sender\'s public key', self._show_transaction_by_public_key,["sender"]),
-            '6': ('Show all transactions', self._show_transaction_by_public_key,[])
+            '1': ('Load by hash', self.__load_transaction_by_hash, []),
+            '2': ('Show Transaction Pool', self.__show_transaction_pool, []),
+            '3': ('Show n last transactions', self.__load_n_last_transactions, []),
+            '4': ('Load by receiver\'s public key', self._show_transaction_by_public_key, ["receiver"]),
+            '5': ('Load by sender\'s public key', self._show_transaction_by_public_key, ["sender"]),
+            '6': ('Show all transactions', self._show_transaction_by_public_key, [])
         }, 'Please select a value: ', 'Exit Load Transaction Menu')
         self.main_menu = Menu(['Main menu'], {
             '1': ('Manage Wallet', self.manage_wallet_menu.show, []),
@@ -384,7 +384,7 @@ class BlockchainClient:
         clear_screen()
 
         if not transactions:
-            print ("No transactions")
+            print("No transactions")
         else:
             for transaction in transactions:
                 transaction.print()
@@ -392,33 +392,31 @@ class BlockchainClient:
         input('Press enter to continue...')
 
     def __search_transaction_from_receiver(self):
-        """Prompt the user for a public key: public key of the reciver"""
+        """Prompt the user for a public key: public key of the receiver"""
         clear_screen()
-        receiver_public_key = input('Please enter reciver public key: ')
+        receiver_public_key = input('Please enter receiver public key: ')
         transactions = self.network_interface.search_transaction_to_receiver(receiver_public_key)
 
         clear_screen()
 
         if not transactions:
-            print ("No transactions")
+            print("No transactions")
         else:
             for transaction in transactions:
                 transaction.print()
                 print()
         input('Press enter to continue...')
 
-
-
     def __search_transaction_from_sender(self):
-        """Prompt the user for a public key: public key of the reciver"""
+        """Prompt the user for a public key: public key of the receiver"""
         clear_screen()
         sender_public_key = input('Please enter sender public key: ')
         transactions = self.network_interface.search_transaction_from_sender(sender_public_key)
-        
+
         clear_screen()
 
         if not transactions:
-            print ("No transactions")
+            print("No transactions")
         else:
             for transaction in transactions:
                 transaction.print()
@@ -439,7 +437,7 @@ class BlockchainClient:
         input('Press enter to continue...')
 
     def __load_peers(self):
-        """display the peers list."""
+        """Display the list of peers."""
         clear_screen()
         try:
             print('peers : {}'.format(self.network_interface._connected_peers()))
@@ -449,33 +447,33 @@ class BlockchainClient:
         # wait for any input before returning to menu
         input('Press enter to continue...')
 
-    def _show_transaction_by_public_key(self, Owner_Of_publicKey = ""):
-        """Show received/sent transaction by receiver's/sender's public key."""
-        """If Owner_of_publicKey = "", show all transactions."""
+    def _show_transaction_by_public_key(self, owner_of_public_key=""):
+        """Show received/sent transaction by receiver's/sender's public key.
+           If owner_of_publicKey = "", show all transactions."""
         clear_screen()
-        if Owner_Of_publicKey != "":
-            public_key = input('Please enter a ' + Owner_Of_publicKey + ' address: ')
+        if owner_of_public_key != "":
+            public_key = input('Please enter a ' + owner_of_public_key + ' address: ')
 
         transactions = self.network_interface.requestAllTransactions()
 
         transaction_exist = False
         clear_screen()
 
-        if Owner_Of_publicKey == "sender":
+        if owner_of_public_key == "sender":
             for transaction in transactions:
                 if public_key == transaction.sender:
                     transaction_exist = True
 
                     transaction.print()
                     print()
-        if Owner_Of_publicKey == "receiver":
+        if owner_of_public_key == "receiver":
             for transaction in transactions:
                 if public_key == transaction.receiver:
                     transaction_exist = True
 
                     transaction.print()
                     print()
-        if Owner_Of_publicKey == "":
+        if owner_of_public_key == "":
             if transactions:
                 transaction_exist = True
             for transaction in transactions:

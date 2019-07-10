@@ -213,8 +213,6 @@ class BlockChain:
                 highest_id = wid
         return highest_id
 
-
-
     def get_all_transactions(self):
         """
         Returns
@@ -487,8 +485,10 @@ class BlockChain:
         _curr_block = block
 
         if _prev_hash in self._blockchain:
-            _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = self.calculate_diff(block.predecessor_hash)
-            validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty, self)
+            _latest_ts, _earliest_ts, _num_of_blocks, _min_blocks, _latest_difficulty = self.calculate_diff(
+                block.predecessor_hash)
+            validity_level = block.validate_block(_latest_ts, _earliest_ts, _num_of_blocks, _min_blocks,
+                                                  _latest_difficulty, self)
             if validity_level == 0:
                 return 0
             elif validity_level == -1:
@@ -545,7 +545,7 @@ class BlockChain:
         for each predecessor-hash
         """
         if block.predecessor_hash in self._orphan_blocks:
-            self._logger.warning("Orphan with same predecessor already in orphan_pool, overwriting")  # TODO fix logic
+            self._logger.warning("Orphan with same predecessor already in orphan_pool, overwriting")
         self._orphan_blocks[block.predecessor_hash] = block
         self._orphan_lock.release()
         self.request_block_from_neighbour(block.predecessor_hash)
@@ -560,8 +560,7 @@ class BlockChain:
         """
         # Protection mechanism for multithreading
         if not self._orphan_lock.acquire():
-            self._logger.debug(
-                "Add block was unable to acquire orphan_lock")
+            self._logger.debug("Add block was unable to acquire orphan_lock")
             raise TimeoutError
 
         predecessor_is_in_blockchain = self._get_orphans_with_predecessor_in_blockchain()
@@ -593,8 +592,8 @@ class BlockChain:
         # Remove non-orphans from orphan_pool
         self._orphan_blocks = {k: self._orphan_blocks[k] for k in
                                set(self._orphan_blocks) - set(predecessor_is_in_blockchain)}
-        if len(
-                predecessor_is_in_blockchain) == 0:  # All orphans have predecessors not in blockchain, terminate recursion
+        if len(predecessor_is_in_blockchain) == 0:
+            # All orphans have predecessors not in blockchain, terminate recursion
             self._orphan_lock.release()
             return
         else:  # Check if orphans got a parent in blockchain
@@ -703,7 +702,7 @@ class BlockChain:
                                               "position": float("inf")}
             self._logger.debug(
                 "Branch switching successful, new node branch head : {}"
-                .format(self._node_branch_head))
+                    .format(self._node_branch_head))
         self._blockchain_lock.release()
 
     def prune_orphans(self):
@@ -741,9 +740,8 @@ class BlockChain:
 
     def check_block_in_mining(self, block):
         """Check the block received in parameter with the one being mined,
-        and kill if the blocks are same with respect to miningself.
-        Returns the transactions in the block, after the block is destroyed
-
+           and kill if the blocks are same with respect to miningself.
+           Returns the transactions in the block, after the block is destroyed
         """
         self._logger.info("Kill mine check")
         if self._active_mine_block is not None:

@@ -106,12 +106,11 @@ class BlockChainComponent(unittest.TestCase):
         self.assertFalse(self.blockchain.add_block(self.block2, False),
                          msg='An invalid block was added!')
 
-    # TODO currently not working!
     def test_add_block_not_logical_block(self):
         """
-                    Save granular factor before modifying and modify to 0.25
-                    to speed up test
-                """
+            Save granular factor before modifying and modify to 0.25
+            to speed up test
+        """
         previous_granular_factor = self.consensus.granular_factor
         self.consensus.granular_factor = 0.25
         block1: Block = Block(block_id=42, merkle_tree_root=None,

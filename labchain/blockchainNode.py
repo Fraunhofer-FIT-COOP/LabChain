@@ -150,7 +150,7 @@ class BlockChainNode:
                     time.time() - st) + " seconds.")
             self.blockchain_obj.active_mine_block_update(None)
             delay_time = mine_freq - (
-                        time.time() - self.consensus_obj.last_mine_time_sec)
+                    time.time() - self.consensus_obj.last_mine_time_sec)
             if delay_time < 0:
                 delay_time = 1
             self.logger.debug(
@@ -174,13 +174,12 @@ class BlockChainNode:
         transaction_tuple = self.blockchain_obj.get_all_transactions()
         return transaction_tuple
 
-    def on_get_last_n_transactions(self,n):
+    def on_get_last_n_transactions(self, n):
         """Retrieve a list of n last mined transactions from the blockchain"""
         return self.blockchain_obj.get_n_last_transactions(n)
 
     def on_search_transaction_from_receiver(self, receiver_public_key):
         return self.blockchain_obj.search_transaction_to_receiver(receiver_public_key)
-
 
     def on_search_transaction_from_sender(self, sender_public_key):
         return self.blockchain_obj.search_transaction_from_sender(sender_public_key)
@@ -192,8 +191,8 @@ class BlockChainNode:
         return self.txpool_obj.get_transactions(self.txpool_obj.get_transaction_count(), False)
 
     # for workflow transaction utils
-    def get_previous_transaction(self, currenttaskTransaction) -> TaskTransaction:
-        current_in_charge = currenttaskTransaction.in_charge
+    def get_previous_transaction(self, current_task_transaction) -> TaskTransaction:
+        current_in_charge = current_task_transaction.in_charge
         for transaction in self.txpool_obj.get_task_transactions():
             if transaction.next_in_charge == current_in_charge:
                 return transaction
@@ -202,13 +201,13 @@ class BlockChainNode:
                 return transaction
         return None
 
-    def get_workflow_transaction(self, taskTransaction) -> WorkflowTransaction:
-        workflowID = taskTransaction.workflowID
+    def get_workflow_transaction(self, task_transaction) -> WorkflowTransaction:
+        workflow_id = task_transaction.workflowID
         for transaction in self.txpool_obj.get_workflow_transactions():
-            if transaction.workflowID == workflowID:
+            if transaction.workflowID == workflow_id:
                 return transaction
         for transaction in self.blockchain_obj.get_workflow_transactions():
-            if transaction.workflowID == workflowID:
+            if transaction.workflowID == workflow_id:
                 return transaction
         return None
 
@@ -279,7 +278,7 @@ class BlockChainNode:
         return self.db.get_blockchain_from_db()
 
     def initialize_components(self, new_database):
-        """ Initialize every componenent of the node"""
+        """ Initialize every component of the node"""
         self.logger.debug("Initialized every component for the node")
         self.consensus_obj = Consensus()
         self.crypto_helper_obj = CryptoHelper.instance()
@@ -302,8 +301,8 @@ class BlockChainNode:
                 section='BLOCK_CHAIN',
                 option='TIME_TO_PRUNE')
             fetch_prev_interval = self.config_reader.get_config(
-                                  section='BLOCK_CHAIN',
-                                  option='FETCH_PREV_INTERVAL')
+                section='BLOCK_CHAIN',
+                option='FETCH_PREV_INTERVAL')
             if not self.network_port:
                 self.network_port = self.config_reader.get_config(
                     section='NETWORK',
@@ -380,10 +379,10 @@ class BlockChainNode:
         self.logger.debug("Starting request block thread...")
         """init rb"""
         # start the scheduler for rb
-        self.rb_thread = threading.Thread(  name="Request block thread",
-                                            target=self.fetch_prev_blocks,
-                                            kwargs=dict(q=self.q,
-                                                        interval=fetch_prev_interval))
+        self.rb_thread = threading.Thread(name="Request block thread",
+                                          target=self.fetch_prev_blocks,
+                                          kwargs=dict(q=self.q,
+                                                      interval=fetch_prev_interval))
         self.rb_thread.start()
 
         self.logger.debug("Starting mining thread...")

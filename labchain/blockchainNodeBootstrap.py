@@ -39,6 +39,6 @@ class Bootstrapper:
                 blockchain.add_block(block)
 
             if len(blocks) > 0:
-               break
+                break
 
         return blockchain

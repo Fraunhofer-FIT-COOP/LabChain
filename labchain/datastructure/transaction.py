@@ -4,8 +4,7 @@ from labchain.util.cryptoHelper import CryptoHelper
 
 
 class Transaction:
-    """Represents a single transaction within the blockchain.
-    """
+    """Represents a single transaction within the blockchain."""
 
     def __init__(self, sender, receiver, payload, signature=None):
         self.__sender = sender
@@ -100,7 +99,7 @@ class Transaction:
     @signature.setter
     def signature(self, signature):
         if self.__signature:
-            raise ValueError('signature is already set')
+            raise ValueError('__signature is already set!')
         self.__signature = signature
 
     @property
@@ -110,14 +109,14 @@ class Transaction:
     @transaction_hash.setter
     def transaction_hash(self, transaction_hash):
         if self.__transaction_hash:
-            raise ValueError('transaction_hash is already set')
+            raise ValueError('__transaction_hash is already set!')
         self.__transaction_hash = transaction_hash
 
     def __hash__(self):
         if self.__transaction_hash:
             return int(self.__transaction_hash, 16)
         else:
-            raise NoHashError("Transaction has no hash")
+            raise NoHashError("Transaction has no hash!")
 
     def print(self):
         print('Sender Address:   {}'.format(self.__sender))

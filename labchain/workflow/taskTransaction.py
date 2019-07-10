@@ -130,7 +130,7 @@ class TaskTransaction(Transaction):
             i = int(pid_number)
         except ValueError:
             logging.warning("Number in PID wrong!")
-            logging.debug("Number in PID is: {}".format(parts[1]))
+            logging.debug("Number in PID currently is: {}".format(parts[1]))
             return False
 
         decoded_key = ""
@@ -139,15 +139,14 @@ class TaskTransaction(Transaction):
             pk = ECC.import_key(decoded_key)  # Get the public key object using public key string
         except TypeError:
             logging.warning("Public Key in PID is wrong!")
-            logging.debug("^ Public Key in PID is: {}".format(pid_pubkey))
+            logging.debug("^ Public Key in PID currently is: {}".format(pid_pubkey))
             return False
         except ValueError:
             logging.warning("Public Key in PID is not a key!")
-            logging.debug("^ ------- Public Key in PID is: {}".format(pid_pubkey))
-            logging.debug("^ Decoded Public Key in PID is: {}".format(decoded_key))
+            logging.debug("^ ------- Public Key in PID currently is: {}".format(pid_pubkey))
+            logging.debug("^ Decoded Public Key in PID currently is: {}".format(decoded_key))
             return False
 
-        # TODO more rules regarding well-formedness?
         return True
 
     @property
@@ -230,7 +229,7 @@ class WorkflowTransaction(TaskTransaction):
             workflow = workflow_tuple
             if self.payload['workflow_id'] == workflow.payload['workflow_id']:
                 TaskTransaction._validation_lock.release()
-                return False  # TODO write a test!
+                return False
 
         for sender, receivers in self.processes.items():
             if not self._check_pid_well_formedness(sender):
