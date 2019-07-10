@@ -44,7 +44,7 @@
             <template slot="update_diagnosis" slot-scope="row">
               <b-button
                 size="sm"
-                @click="update_diagnosis(row.item, row.index, $event.target)"
+                @click="update_diagnosis(row.item, row.index)"
                 class="mr-1"
                 >Update</b-button
               >
@@ -164,7 +164,7 @@ export default {
         }
       );
     },
-    update_diagnosis(item, index, e) {
+    update_diagnosis(item, index) {
       console.log(item);
       this.sendDiagnosisToServer(item, index);
     },
@@ -193,7 +193,7 @@ export default {
         }
       );
     },
-    rowClicked(item, index, e) {
+    rowClicked(item, index) {
       console.log(item);
       console.log(index);
     },
@@ -236,7 +236,7 @@ export default {
       this.alertVariant = alertType;
       this.dismissCountDown = this.dismissSecs;
     },
-    rowClass(item, type) {
+    rowClass(item) {
       if (!item) return;
       if (item.true_diagnosis === item.assumed_diagnosis)
         return "table-success";

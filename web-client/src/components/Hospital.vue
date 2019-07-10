@@ -63,8 +63,6 @@ export default {
       dr_name: "",
       e_physician_name: "",
       dpt_chief_name: "",
-      dismissSecs: 2,
-      dismissCountDown: 0,
       alertVariant: "success",
       alertMsg: "",
       caseIsCreated: false,

@@ -38,7 +38,7 @@
           <template slot="update_diagnosis" slot-scope="row">
             <b-button
               size="sm"
-              @click="update_diagnosis(row.item, row.index, $event.target)"
+              @click="update_diagnosis(row.item, row.index)"
               class="mr-1"
               >Update</b-button
             >
@@ -174,7 +174,7 @@ export default {
       }
       return i;
     },
-    update_diagnosis(item, index, e) {
+    update_diagnosis(item, index) {
       console.log(item);
       this.sendDiagnosisToServer(item, index);
     }

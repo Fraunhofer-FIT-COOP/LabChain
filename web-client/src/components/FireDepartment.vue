@@ -89,7 +89,7 @@ export default {
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
     },
-    rowClass(item, type) {
+    rowClass(item) {
       if (!item) return;
       if (item.real_diagnosis === item.assumed_diagnosis)
         return "table-success";
