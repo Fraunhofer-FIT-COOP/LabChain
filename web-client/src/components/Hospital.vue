@@ -34,12 +34,7 @@
           <b-col cols="3" class="bottom-space"></b-col>
         </b-row>
         <p v-if="caseIsCreated" class="caseIsCreated">Created case ID is</p>
-        <b-button
-          class="create-btn bottom-space"
-          variant="success"
-          @click="createCase()"
-          >Create</b-button
-        >
+        <b-button class="create-btn bottom-space" variant="success" @click="createCase()">Create</b-button>
       </b-container>
     </b-card-text>
     <b-alert
@@ -47,10 +42,9 @@
       :show="dismissCountDown"
       dismissible
       :variant="alertVariant"
-      @dismissed="dismissCountDown = 0"
+      @dismissed="dismissCountDown=0"
       @dismiss-count-down="countDownChanged"
-      >{{ alertMsg }}</b-alert
-    >
+    >{{ alertMsg }}</b-alert>
   </div>
 </template>
 
@@ -86,9 +80,7 @@ export default {
       this.$store.dispatch("createCase", payload).then(
         response => {
           console.log(response);
-          this.alertMsg =
-            "Case is successfully created. case ID: " +
-            response.data["case_ID"];
+          this.alertMsg = "Case is successfully created. case ID: " + response.data['case_ID'];
           this.showAlert("success");
         },
         error => {
