@@ -98,7 +98,6 @@ class NetworkInterface:
 
     def __init__(self, json_rpc_client, initial_peers):
         """
-
         :param initial_peers: List of IP addresses (optional with :port) of the initial peers.
         """
         self.json_rpc_client = json_rpc_client
@@ -202,7 +201,7 @@ class NetworkInterface:
             raise NoPeersException('No nodes available to request the transactions from')
         return res
 
-    def get_n_last_transactions(self,n):
+    def get_n_last_transactions(self, n):
         """return a list of n last mined transactions"""
         responses = self._bulk_send('requestNLastTransaction', [n], return_on_first_success=True)
         res = []
@@ -221,7 +220,8 @@ class NetworkInterface:
         return res
 
     def search_transaction_from_receiver(self, receiver_public_key):
-        responses = self._bulk_send('searchTransactionFromReceiver', [receiver_public_key], return_on_first_success=True)
+        responses = self._bulk_send('searchTransactionFromReceiver', [receiver_public_key],
+                                    return_on_first_success=True)
         res = []
         if responses:
             if len(responses) > 0:
@@ -332,6 +332,7 @@ class NetworkInterface:
         responses = self._bulk_send('getPeers')
         return responses
 
+
 class ServerNetworkInterface(NetworkInterface):
     """Advanced network interface for additional server-to-server communication."""
 
@@ -347,7 +348,7 @@ class ServerNetworkInterface(NetworkInterface):
                  get_n_last_transactions_callback,
                  search_transactions_from_receiver_callback,
                  search_transactions_from_sender_callback,
-                 get_highest_workflow_ID_callbck,
+                 get_highest_workflow_ID_callback,
                  peer_discovery=True,
                  ip='127.0.0.1', port=8080, block_cache_size=1000,
                  transaction_cache_size=1000):
@@ -381,11 +382,9 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_n_last_transactions_callback = get_n_last_transactions_callback
         self.search_transactions_from_receiver_callback = search_transactions_from_receiver_callback
         self.search_transactions_from_sender_callback = search_transactions_from_sender_callback
-        self.get_highest_workflow_ID_callbck = get_highest_workflow_ID_callbck
-
+        self.get_highest_workflow_ID_callback = get_highest_workflow_ID_callback
 
         if peer_discovery:
-
             def callback(info):
                 new_ip = socket.inet_ntoa(info.address)
                 logger.info('Add new peer {}:{}'.format(ip, info.port))
@@ -447,7 +446,6 @@ class ServerNetworkInterface(NetworkInterface):
         dispatcher['searchTransactionFromReceiver'] = self.__handle_search_transaction_from_receiver
         dispatcher['searchTransactionFromSender'] = self.__handle_search_transaction_from_sender
         dispatcher['getHighestWorkflowID'] = self.__handle_get_highest_workflow_ID
-
 
         # insert IP address of peer if advertise peer is called
         try:
@@ -555,7 +553,7 @@ class ServerNetworkInterface(NetworkInterface):
                     del (peers[my_address])
         return peers
 
-    def __handle_request_n_last_transaction(self,n):
+    def __handle_request_n_last_transaction(self, n):
         transactions = self.get_n_last_transactions_callback(n)
         if transactions:
             return [transaction.to_dict() for transaction in transactions]
@@ -574,7 +572,7 @@ class ServerNetworkInterface(NetworkInterface):
         return []
 
     def __handle_get_highest_workflow_ID(self):
-        latest_ID = self.get_highest_workflow_ID_callbck()
+        latest_ID = self.get_highest_workflow_ID_callback()
         return latest_ID
 
     @staticmethod

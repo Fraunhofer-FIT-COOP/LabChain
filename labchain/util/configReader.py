@@ -59,7 +59,7 @@ class ConfigReader:
                         value = fallback
                     else:
                         raise ConfigReaderException("Option {opt} in section {sec} "
-                                                    "defined without any value".\
+                                                    "defined without any value".
                                                     format(opt=option, sec=section))
                 return value
             else:

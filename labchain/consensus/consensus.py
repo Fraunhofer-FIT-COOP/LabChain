@@ -45,7 +45,8 @@ class Consensus:
     def __iter__(self):
         pass
 
-    def calculate_difficulty_with_prev(self, latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks, prev_difficulty,
+    def calculate_difficulty_with_prev(self, latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks,
+                                       prev_difficulty,
                                        bits):
         speed = 1
         if num_of_blocks < 2:
@@ -64,9 +65,6 @@ class Consensus:
 
         if partial_difficulty < self.min_diff * self.granular_factor:
             return self.min_diff * self.granular_factor
-        # elif partial_difficulty > self.max_diff * self.granular_factor:
-        #   return self.max_diff * self.granular_factor
-        # 
 
         if partial_difficulty <= prev_difficulty:
             difficulty = int(math.floor(partial_difficulty))
@@ -103,7 +101,8 @@ class Consensus:
         if type(earliest_timestamp) is datetime.datetime:
             earliest_timestamp = earliest_timestamp.timestamp()
 
-        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks, prev_difficulty)
+        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks,
+                                         prev_difficulty)
 
         logging.debug('#INFO: validate Difficulty: ' + str(difficulty))
         zeros_array = "0" * difficulty
@@ -124,7 +123,8 @@ class Consensus:
         if type(earliest_timestamp) is datetime.datetime:
             earliest_timestamp = earliest_timestamp.timestamp()
 
-        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks, prev_difficulty)
+        difficulty = self.get_difficulty(latest_timestamp, earliest_timestamp, num_of_blocks, min_blocks,
+                                         prev_difficulty)
 
         logging.debug('#INFO: mine Difficulty: ' + str(difficulty))
         block.difficulty = difficulty
@@ -132,10 +132,10 @@ class Consensus:
         zeros_array = "0" * difficulty
         block.nonce = randint(0, sys.maxsize)
         data = {'index': str(block.block_id), 'tree_hash': str(block.merkle_tree_root), 'pre_hash':
-                str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
+            str(block.predecessor_hash), 'creator': str(block.block_creator_id), 'nonce': str(block.nonce),
                 'difficulty': str(block.difficulty)}
         message = json.dumps(data)
-        block_hash = self.crypto_helper.hash(message)  # nonce is zero (we need to check that)
+        block_hash = self.crypto_helper.hash(message)
         counter = 0
         while not self.equalZeros(block_hash, zeros_array, difficulty):
             if self.kill_mine == 1:
@@ -167,12 +167,6 @@ class Consensus:
         logging.debug("hash = " + str(block_hash))
         # need a boolean return to check if mine got killed
         return True
-
-    #    Code for updating the difficulty to be implemented by Blockchain component
-    #    if self.blocks_counter % self.blocks_threshold  == 0 & self.recalculate == 1:
-    #        self.blocks_counter = 0
-    #        self.recalculate = 0;
-    #        self.difficulty = self.calculate_difficulty(time.time())
 
     def equalZeros(self, block_hash, zeros_array, difficulty):
         if not self.granular:

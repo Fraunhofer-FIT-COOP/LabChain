@@ -66,7 +66,7 @@ class Block(object):
             try:
                 t.append(transaction.to_dict())
             except Exception as e:
-                logging.error("tx error = "+e)
+                logging.error("tx error = " + e)
                 raise e
 
         return {
@@ -291,7 +291,7 @@ class LogicalBlock(Block):
         return Block.from_json(super(LogicalBlock, self).get_json())
 
     def validate_block(self, _latest_timestamp, _earliest_timestamp, _num_of_blocks, min_blocks,
-                                                _prev_difficulty, blockchain):
+                       _prev_difficulty, blockchain):
         """Validate the block by checking -
            1. The transaction signatures in the block
            2. The Merkle Tree correctness

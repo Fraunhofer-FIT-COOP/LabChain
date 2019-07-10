@@ -96,7 +96,7 @@ class Db:
         True if data saved successfully, False otherwise
         """
         if not block:
-            return False 
+            return False
         self.open_connection(self.db_file)
         # save a single block and its correspondent transactions in the db
         block_hash = block.get_computed_hash()
@@ -158,11 +158,10 @@ class Db:
                         else:
                             txn = None
                     except json.JSONDecodeError:
-                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                        txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                     if not txn.transaction_hash:
                         txn.transaction_hash = txn_db[4]
                     txns.append(txn)
-                #txns=[]
             block = Block(block_id=block_db[1], merkle_tree_root=block_db[2],
                           predecessor_hash=block_db[3], block_creator_id=block_db[4],
                           transactions=txns, nonce=block_db[5], timestamp=float(block_db[6]),

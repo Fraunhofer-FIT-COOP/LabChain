@@ -1,7 +1,6 @@
 from typing import Dict
 import time
 
-
 from labchain.workflow.taskTransaction import TaskTransaction
 from labchain.workflow.taskTransaction import WorkflowTransaction
 from labchain.datastructure.transaction import Transaction
@@ -29,7 +28,8 @@ class TransactionFactory:
         return t
 
     @staticmethod
-    def create_case_transaction(case_ID,controller_public_key,physician_public_key,doctor_public_key,chef_public_key, doctor_name, chef_name):
+    def create_case_transaction(case_ID, controller_public_key, physician_public_key, doctor_public_key,
+                                chef_public_key, doctor_name, chef_name):
         workflow_transaction = {}
         workflow_transaction['sender'] = controller_public_key
         workflow_transaction['receiver'] = physician_public_key
@@ -42,7 +42,7 @@ class TransactionFactory:
         workflow_transaction['payload']['document']['real_diagnosis'] = 'None'
         workflow_transaction['payload']['document']['doctor_name'] = doctor_name
         workflow_transaction['payload']['document']['chef_name'] = chef_name
-        workflow_transaction['payload']['in_charge'] = physician_public_key+ '_1'
+        workflow_transaction['payload']['in_charge'] = physician_public_key + '_1'
         workflow_transaction['payload']['processes'] = {}
         workflow_transaction['payload']['processes'][physician_public_key + '_1'] = [doctor_public_key + '_1']
         workflow_transaction['payload']['processes'][doctor_public_key + '_1'] = [chef_public_key + '_1']
@@ -54,16 +54,22 @@ class TransactionFactory:
         return TransactionFactory.create_transcation(workflow_transaction)
 
     @staticmethod
-    def create_assumed_diagnosis_transaction(case_ID,sender_public_key,receiver_public_key,assumed_diagnosis,workflow_transaction,previous_transaction):
-        return TransactionFactory.create_diagnosis_transaction(case_ID,sender_public_key,receiver_public_key,assumed_diagnosis,True,workflow_transaction,previous_transaction)
+    def create_assumed_diagnosis_transaction(case_ID, sender_public_key, receiver_public_key, assumed_diagnosis,
+                                             workflow_transaction, previous_transaction):
+        return TransactionFactory.create_diagnosis_transaction(case_ID, sender_public_key, receiver_public_key,
+                                                               assumed_diagnosis, True, workflow_transaction,
+                                                               previous_transaction)
 
     @staticmethod
-    def create_real_diagnosis_transaction(case_ID,sender_public_key,receiver_public_key,real_diagnosis,workflow_transaction,previous_transaction):
-        return TransactionFactory.create_diagnosis_transaction(case_ID,sender_public_key,receiver_public_key,real_diagnosis,False,workflow_transaction,previous_transaction)
-
+    def create_real_diagnosis_transaction(case_ID, sender_public_key, receiver_public_key, real_diagnosis,
+                                          workflow_transaction, previous_transaction):
+        return TransactionFactory.create_diagnosis_transaction(case_ID, sender_public_key, receiver_public_key,
+                                                               real_diagnosis, False, workflow_transaction,
+                                                               previous_transaction)
 
     @staticmethod
-    def create_diagnosis_transaction(case_ID,sender_public_key,receiver_public_key,diagnosis,is_assumed,workflow_transaction,previous_transaction):
+    def create_diagnosis_transaction(case_ID, sender_public_key, receiver_public_key, diagnosis, is_assumed,
+                                     workflow_transaction, previous_transaction):
         task_transaction = {}
         task_transaction['sender'] = sender_public_key
         task_transaction['receiver'] = receiver_public_key
@@ -76,7 +82,7 @@ class TransactionFactory:
             task_transaction['payload']['document']['assumed_diagnosis'] = diagnosis
         else:
             task_transaction['payload']['document']['real_diagnosis'] = diagnosis
-        task_transaction['payload']['in_charge'] = receiver_public_key+ '_1'
+        task_transaction['payload']['in_charge'] = receiver_public_key + '_1'
         task_transaction['payload']['workflow_transaction'] = workflow_transaction
         task_transaction['payload']['previous_transaction'] = previous_transaction
 

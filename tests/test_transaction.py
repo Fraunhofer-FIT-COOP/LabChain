@@ -228,7 +228,8 @@ class TaskTransactionCommon(unittest.TestCase):
                     "{}_1".format(receiver_key): ["{}_2".format(receiver_key)]
                 },
                 "permissions": {
-                    "stringAttribute": ["{}_1".format(receiver_key), "{}_2".format(receiver_key), "{}_3".format(receiver_key)],
+                    "stringAttribute": ["{}_1".format(receiver_key), "{}_2".format(receiver_key),
+                                        "{}_3".format(receiver_key)],
                     "booleanAttribute": ["{}_5".format(receiver_key)],
                     "integerAttribute": ["{}_4".format(receiver_key)],
                     "floatAttributes": ["{}_2".format(receiver_key)]

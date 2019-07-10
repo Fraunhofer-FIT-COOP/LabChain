@@ -2,8 +2,10 @@ import os
 from collections import OrderedDict
 from labchain.util.utility import Utility
 
+
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
+
 
 class Menu:
     """Create a CLI menu with this class."""
@@ -62,4 +64,3 @@ class Menu:
                     break
             else:
                 self.error_message = 'Wrong input. Please select one of [' + self.__available_options() + '].'
-
