@@ -32,10 +32,10 @@
             :items="physicianOpenTaskData"
           >
             <template slot="assumed_diagnosis" slot-scope="data">
-              <b-form-input
-                v-model="data.item.assumed_diagnosis"
-                placeholder="Enter your diagnosis"
-              >Update</b-form-input>
+              <b-form-select v-model="data.item.assumed_diagnosis">
+                <option value="dehydrate">dehydrate</option>
+                <option value="allergy">allergy</option>
+              </b-form-select>
             </template>
 
             <template slot="update_diagnosis" slot-scope="row">
@@ -177,6 +177,11 @@ export default {
         diagnosis: data.assumed_diagnosis
       };
       console.log(payload);
+      if (payload["diagnosis"] == ""){
+        this.alertMsg = "Diagnosis can't be empty. Please select diagnosis.";
+        this.showAlert("danger");
+        return;
+      }
       this.$store.dispatch("sendAssumedDiagnosis", payload).then(
         response => {
           console.log(response);

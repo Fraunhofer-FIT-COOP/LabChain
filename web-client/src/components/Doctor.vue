@@ -27,10 +27,10 @@
           :items="taskData"
         >
           <template slot="real_diagnosis" slot-scope="data">
-            <b-form-input
-              v-model="data.item.real_diagnosis"
-              placeholder="Enter your diagnosis"
-            >Update</b-form-input>
+            <b-form-select v-model="data.item.real_diagnosis">
+              <option value="dehydrate">dehydrate</option>
+              <option value="allergy">allergy</option>
+            </b-form-select>
           </template>
 
           <template slot="update_diagnosis" slot-scope="row">
@@ -96,6 +96,11 @@ export default {
         previous_transaction: data.previous_transaction_hash,
         diagnosis: data.real_diagnosis
       };
+      if (payload["diagnosis"] == ""){
+        this.alertMsg = "Diagnosis can't be empty. Please select diagnosis.";
+        this.showAlert("danger");
+        return;
+      }
       this.$store.dispatch("sendRealDiagnosis", payload).then(
         response => {
           console.log(response);
