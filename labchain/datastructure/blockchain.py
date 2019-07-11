@@ -485,11 +485,11 @@ class BlockChain:
                 self.contract_counter = self.contract_counter + 1
                 self.worldState.create_contract(tx, block.block_id)
                 print('Contract created\n')
+                # if self.contract_counter == 50:
+                #     sys.exit()
             if (txType == txTypes_instance.method_call):
                 # print("\nmethod call tx detected in Block #" + 
                 #     str(block.block_id) + " with tx.hash " + txHash)
-                if self.method_counter == 1:
-                    self.start_time = time.time()
                 elapsed_time = time.time() - self.start_time
                 print('Method call # ' + str(self.method_counter) + '. Elapsed time: ' + str(elapsed_time))
                 self.method_counter = self.method_counter + 1

@@ -191,6 +191,7 @@ class SmartContract:
             print(DOCKER_FILE_PATH)
             client.images.build(tag=CONTAINER_IMAGE, path=DOCKER_RESOURCES_PATH, dockerfile=DOCKER_FILE_PATH)
             print("Image created,\n")
+        
         container = client.containers.run(image=str(CONTAINER_IMAGE), ports={"80/tcp": self._port}, detach=True)
         #print("Running container")
 
@@ -203,14 +204,22 @@ class SmartContract:
                 if r == "Container is running" or time.time() > timeout:
                     break
             except:
+                if time.time() > timeout:
+                    break
                 continue
+        if time.time() > timeout:
+            self._container.remove(force=True)
+            return None
         return container
 
     def find_free_port(self):
         """Returns a free port to be used."""
+        # with socket.socket() as s:
         s = socket.socket()
         s.bind(('0.0.0.0', 0))            # Bind to a free port provided by the host.
-        return s.getsockname()[1]  # Return the port number assigned.
+        port = s.getsockname()[1]
+        print("Assigned port: " + str(port))
+        return port  # Return the port number assigned.
 
     def get_last_state(self):
         last_state_blockID = max(list(self.states.keys()))

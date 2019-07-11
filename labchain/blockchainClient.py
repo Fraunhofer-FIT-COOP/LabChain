@@ -486,8 +486,8 @@ class BlockchainClient:
 
     def main(self):
         """Entry point for the client console application."""
-        #self.create_dummy_contracts(100)
-        self.create_dummy_method_calls(300)
+        self.create_dummy_contracts(800)
+        #self.create_dummy_method_calls(1000)
         #self.main_menu.show()
     
     def __create_transaction(self):
