@@ -16,15 +16,13 @@ class WorldState:
 
         Attributes
         ----------
-        contract_list : List
-            List of all the smartContracts in the blockchain.
+        _contract_list : List
+            List of all active smartContract objects in the blockchain (also terminated).
         _crypto_helper : CryptoHelper
             Instance of the CryptoHelper Module
-
         """
 
         self._contract_list = []
-        self._contract_id_counter = 0
         self._crypto_helper = CryptoHelper.instance()
 
 
@@ -37,7 +35,7 @@ class WorldState:
         return None
 
     def terminate_contract(self, contract_address, sender):
-        """Returns the smartContract that has the specified address if it exists."""
+        """Terminates the smartContract that has the specified address if it exists."""
         for contract in self._contract_list:
             if contract_address in contract.addresses:
                 if sender in contract.contract_owners:
@@ -46,7 +44,7 @@ class WorldState:
         return False
     
     def restore_contract(self, tx, blockID):
-        """Returns the smartContract that has the specified address if it exists."""
+        """Restores the smartContract that has the specified address if it exists."""
         contract_address = tx.receiver
         sender = tx.sender
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
@@ -55,7 +53,7 @@ class WorldState:
         if new_address == None:
             new_address = self._crypto_helper.hash(tx.get_json())
         
-        #Add sender at the beginning of the arguments
+        #Inject sender at the beginning of the arguments
         arguments = json.dumps(payload['arguments'])
         arguments = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
         arguments = json.loads(arguments)
@@ -80,7 +78,7 @@ class WorldState:
                         logging.error('Contract from transaction could not be restored')
 
     def update_contract_state(self, contract_address, new_state, new_encoded_state, blockID):
-        """Updates the state of a contract."""
+        """Adds a new state to the state history of a contract."""
         contract = self.get_contract(contract_address)
         if contract:
             contract.contract_owners = new_state['contract_owners']
@@ -119,7 +117,7 @@ class WorldState:
         data_dict = json.loads(json_data)
         return WorldState.from_dict(data_dict)
 
-    
+
     @staticmethod
     def from_dict(data_dict):
         """Instantiate WorldState from a data dictionary."""
@@ -138,6 +136,7 @@ class WorldState:
         """Gets the hash for the entire WorldState instance."""
         return self._crypto_helper.hash(self.get_json)
 
+
     def get_all_contract_addresses(self):
         """Returns a list of all the contract addresses stored in worldState."""
         all_addresses = []
@@ -154,16 +153,14 @@ class WorldState:
         if txHash == None:
             txHash = self._crypto_helper.hash(tx.get_json())
         
-        contract_id = self._contract_id_counter
         contract_owners = [tx.sender]
         contract_addresses = [txHash]
         contract_code = payload['contractCode']
-        contract = SmartContract(contract_id, contract_owners, contract_addresses, contract_code)
+        contract = SmartContract(contract_owners, contract_addresses, contract_code)
 
-        self._contract_id_counter += 1
         url = 'http://localhost:' + str(contract.port) + '/createContract'
         try:
-            #Add sender at the beginning of the arguments
+            #Inject sender at the beginning of the arguments
             arguments = json.dumps(payload['arguments'])
             arguments = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
             arguments = json.loads(arguments)
@@ -182,31 +179,6 @@ class WorldState:
         except:
             logging.error('Contract from transaction could not be created')
 
-        # """Creates a new contract and adds it to the list _contracts."""
-        # port = self.find_free_port()
-        # container = self.create_container(port)
-        # url = 'http://localhost:' + str(port) + '/createContract'
-        # try:
-        #     payload = tx.to_dict()['payload'].replace("'",'"')
-        #     payload = json.loads(payload)
-        #     data = {'code': payload['contractCode'],
-        #             'arguments': payload['arguments'],
-        #             'sender': tx.sender}
-        #     r = requests.post(url,json=data).json()
-        #     if(r['success'] == True):
-        #         txHash = tx.transaction_hash
-        #         if txHash == None:
-        #             txHash = self._crypto_helper.hash(tx.get_json())
-        #         new_contract = SmartContract(address=txHash,
-        #                                     txHash=txHash,
-        #                                     state=r['encodedNewState'])
-        #         self.add_contract(new_contract)
-        #     if(r['success'] == False):
-        #             print(r['error'])
-        # except:
-        #     logging.error('Contract from transaction could not be created')
-        # container.remove(force=True)
-
 
     def call_method(self, tx, blockID):
         """Calls a method or methods on an existing contract from the _contract_list."""
@@ -222,7 +194,6 @@ class WorldState:
                 'sender': tx.sender}
         
         r = requests.post(url,json=data).json()
-
         try:
             if(r['success'] == True):
                 self.update_contract_state(tx.receiver, r['updatedState'], r['encodedUpdatedState'], blockID)
@@ -231,30 +202,6 @@ class WorldState:
         except:
             print('Method call from transaction could not be completed')
 
-
-        # """Calls a method or methods on an existing contract from the _contract_list."""
-        # port = self.find_free_port()
-        # container = self.create_container(port)
-        # url = 'http://localhost:' + str(port) + '/callMethod'
-        
-        # payload_contractCreation = tx_of_contractCreation.to_dict()['payload'].replace("'",'"')
-        # payload = tx.to_dict()['payload'].replace("'",'"')
-
-        # data = {'code': json.loads(payload_contractCreation)['contractCode'],
-        #         'state': state,
-        #         'methods': json.loads(payload)['methods'],
-        #         'sender': tx.sender}
-        # r = requests.post(url,json=data).json()
-
-        # try:
-        #     if(r['success'] == True):
-        #         self.update_contract_state(tx.receiver, r['encodedUpdatedState'])
-        #     if(r["success"] == False):
-        #         print(r["error"])
-        # except:
-        #     logging.error('Method call from transaction ' + tx.transaction_hash + 
-        #                 'could not be completed')
-        # container.remove(force=True)
 
     def get_state(self, contract_address):
         """Returns a readable version of the current state of a contract
@@ -265,16 +212,16 @@ class WorldState:
         data = {'code': contract.code,
                 'state': contract.get_last_state()}
         r = requests.post(url,json=data).json()
-        # try:
-        if(r['success'] == True):
-            response = r['state']
-            response['addresses'] = contract.addresses
-            return response
-        if(r['success'] == False):
-            return r['error']
-        # except:
-        #     logging.error('Could not get readable state from contract.')
-        #     return None
+        try:
+            if(r['success'] == True):
+                response = r['state']
+                response['addresses'] = contract.addresses
+                return response
+            if(r['success'] == False):
+                return r['error']
+        except:
+            logging.error('Could not get readable state from contract.')
+            return None
 
 
     def get_parameters(self, contract_address, methodName):
@@ -296,26 +243,6 @@ class WorldState:
             return None
 
 
-
-        # """Returns the parameters that a contract constructor/method needs to execute."""
-        # port = self.find_free_port()
-        # container = self.create_container(port)
-        # url = 'http://localhost:' + str(port) + '/getParameters'
-        # data = {'code': tx_of_contractCreation.to_dict()['payload']['contractCode'],
-        #         'state': state,
-        #         'methodName': methodName}
-        # r = requests.post(url,json=data).json()
-
-        # try:
-        #     if(r['success'] == True):
-        #         return r['parameters']
-        #     if(r['success'] == False):
-        #         return r["error"]
-        # except:
-        #     logging.error('Could not get parameters')
-        #     return None
-        # container.remove(force=True)
-
     def get_methods(self, contract_address):
         """Returns the methods that a contract has."""
         contract = self.get_contract(contract_address)
@@ -333,27 +260,6 @@ class WorldState:
             logging.error('Could not get methods from contract with id: ' + str(contract.id))
             return None
 
-
-
-        # """Returns the methods that a contract has."""
-        # port = self.find_free_port()
-        # container = self.create_container(port)
-        # url = 'http://localhost:' + str(port) + '/getMethods'
-
-        # payload = json.loads(tx_of_contractCreation['payload'].replace("'",'"'))
-
-        # data = {'code': payload['contractCode'],
-        #         'state': state}
-        # r = requests.post(url,json=data).json()
-        # try:
-        #     if(r['success'] == True):
-        #         return r['methods']
-        #     if(r["success"] == False):
-        #         return r['error']
-        # except:
-        #     logging.error('Could not get methods')
-        #     return None
-        # container.remove(force=True)
 
     def remove_contract_states(self, from_blockID_onwards):
         for contract in self._contract_list:

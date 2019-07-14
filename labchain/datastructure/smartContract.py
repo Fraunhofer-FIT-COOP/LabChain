@@ -3,60 +3,54 @@ import docker
 import time
 import os
 import socket
-import threading
 import requests
 
+
+CONTAINER_TIMEOUT = 10
 CONTAINER_IMAGE = "bit_blockchain_image"
+DOCKER_RESOURCES_PATH = os.path.join(os.path.dirname(__file__), 'dockerResources')
 DOCKER_FILE_PATH = os.path.join(os.path.dirname(__file__),
                         'dockerResources', 'Dockerfile')
-DOCKER_RESOURCES_PATH = os.path.join(os.path.dirname(__file__),
-                        'dockerResources')
-CONTAINER_TIMEOUT = 10
 
 
 class SmartContract:
 
-    def __init__(self, id, contract_owners, addresses, code, terminated=False):
-        """Constructor for Block, placeholder for Block information.
+    def __init__(self, contract_owners, addresses, code, terminated=False):
+        """Constructor for SmartContract.
 
         Parameters
         ----------
-        id: Int
-            ID of the contract
+        contract_owners: List
+            List of all the public addresses that have privileges over this contract. Those privileges
+            include terminating and restoring contracts. Contract developers can use this list in their 
+            contract logic to restrict some actions to owners only. Contract developers can also leave
+            this list empty to create an independent contract that can't be terminated or restored.
         addresses : List
             List of all the addresses used by this contract. Starting with the address of the genesis
-            transaction of the contract's creation and followed by other transactions that updated the code
-            of the contract after it's termination.
+            transaction of the contract's creation and followed by other restoration transactions that 
+            updated the code of the contract after it's termination.
+        code : String
+            Binary formated string containing the code of the contract.
         terminated: Bool
-            Bool variable that indicates if the contract was terminated or not.
-            Default is False.
+            Bool variable that indicates if the contract was terminated or not. Default value is False.
 
         Attributes
         ----------
-        id: Int
-            ID of the contract
-        addresses : List
-            List of all the addresses used by this contract. Starting with the address of the genesis
-            transaction of the contract's creation and followed by other transactions that updated the code
-            of the contract after it's termination.
-        state : String
-            Binary format containing the current state of the contract. 
-            It will be used to recover the latest state when the contract is needed.
-        terminated: Bool
-            Bool variable that indicates if the contract was terminated or not.
-            Default is False.
+        states : Dict
+            Dictionary containing the history of states from a contract. The key is the block number where
+            the contract's state was updated, the value is a list containing all states changes that took
+            place in the block specified in the key ordered in chronological order.
+        port: Int
+            Port used to communicate with the container via HTTP requests.
         container: Container object
             Docker container that is used to run the contract's code in a safe and isolated environment.
-        port: Int
-            Port used to communicate with the container via http requests.
         """
 
-        self._id = id
         self._contract_owners = contract_owners
         self._addresses = addresses
-        self._code = code
-        self._states = {}
         self._terminated = terminated
+        self._states = {}
+        self._code = code
         self._port = self.find_free_port()
         self._container = self.create_container()
 
@@ -71,8 +65,7 @@ class SmartContract:
 
     def restore(self, new_address, new_code):
         """Restarts a terminated contract with a new address.
-            The contract is now callable with the old and the new addresses.
-        """
+            The contract is now callable with the old and the new addresses."""
         self._addresses.append(new_address)
         self._code = new_code
         self._port = self.find_free_port()
@@ -80,17 +73,16 @@ class SmartContract:
         self._terminated = False
 
     def to_dict(self):
-        """Convert own data to a dictionary."""
+        """Convert own data to a dictionary. The container object is not converted
+            since it is not serializable."""
         return {
-            'id' : self._id,
-            'contract_owners' : self._contract_owners,
-            'addresses': self._addresses,
-            'code': self._code,
-            'states': self._states,
-            #'container': self._container,
-            'port': self._port,
-            'terminated': self._terminated
-            }
+                'contract_owners' : self._contract_owners,
+                'addresses': self._addresses,
+                'code': self._code,
+                'states': self._states,
+                'port': self._port,
+                'terminated': self._terminated
+                }
 
     def get_json(self):
         """Serialize this instance to a JSON string."""
@@ -105,13 +97,11 @@ class SmartContract:
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a SmartContract from a data dictionary."""
-        smartContract = SmartContract(data_dict['id'],
-                data_dict['contract_owners'],
-                data_dict['addresses'],
-                data_dict['code'],
-                data_dict['terminated'])
+        smartContract = SmartContract(  data_dict['contract_owners'],
+                                        data_dict['addresses'],
+                                        data_dict['code'],
+                                        data_dict['terminated'])
         smartContract.states = data_dict['states']
-        #smartContract.container = data_dict['container']
         smartContract.port = data_dict['port']
         return smartContract
 
@@ -146,13 +136,6 @@ class SmartContract:
     def terminated(self):
         return self._terminated
 
-    # @state.setter
-    # def state(self, state):
-    #     self._state = state
-    
-    # def addState(self, state, blockchain_position):
-    #     self._states[blockchain_position] = state
-
     @code.setter
     def code(self, code):
         self._code = code
@@ -182,7 +165,7 @@ class SmartContract:
         self._terminated = terminated
 
     def create_container(self):
-        """Creates a docker container to run the code of the contract."""
+        """Creates a docker container object to run the code of the contract."""
         client = docker.from_env()
         try:
             client.images.get(CONTAINER_IMAGE)
@@ -193,9 +176,8 @@ class SmartContract:
             print("Image created,\n")
         
         container = client.containers.run(image=str(CONTAINER_IMAGE), ports={"80/tcp": self._port}, detach=True)
-        #print("Running container")
 
-        #Check if the container works
+        #Check if the container is instantiated before the specified CONTAINER_TIMEOUT
         timeout = time.time() + CONTAINER_TIMEOUT
         url = 'http://localhost:' + str(self._port) + '/'
         while True:
@@ -214,12 +196,10 @@ class SmartContract:
 
     def find_free_port(self):
         """Returns a free port to be used."""
-        # with socket.socket() as s:
         s = socket.socket()
         s.bind(('0.0.0.0', 0))            # Bind to a free port provided by the host.
         port = s.getsockname()[1]
-        print("Assigned port: " + str(port))
-        return port  # Return the port number assigned.
+        return port
 
     def get_last_state(self):
         last_state_blockID = max(list(self.states.keys()))

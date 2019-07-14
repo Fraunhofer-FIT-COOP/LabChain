@@ -353,6 +353,8 @@ class LogicalBlock(Block):
                     if valid_state == None:
                         return t
                     else:
+                        """ Save the validated state temporally so that we can call several 
+                            methods on a contract in the same block"""
                         _contracts[t.transaction_hash].state = valid_state
                 elif t.transaction_type == Transaction_Types().contract_termination:
                     contract = _contracts[t.transaction_hash]
@@ -388,7 +390,6 @@ class LogicalBlock(Block):
             -------
             merkle tree root; final hash of all the hashes
                      or None if param hashes is empty
-
             """
             sub_tree = []
             for i in range(0, len(hashes), 2):
@@ -416,18 +417,19 @@ class LogicalBlock(Block):
 
     
     def validate_contract_creation(self, tx):
-        """Checks if the tx can create a new contract successfully."""
+        """Checks if the tx can create a new contract successfully.
+            if successfull returns the valid state, which is stored temporally
+            so that more methods targeting the same contract can be validated in the same block"""
         print("\nValidating contract creation tx...")
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
         txHash = tx.transaction_hash
         if txHash == None:
             txHash = self._crypto_helper.hash(tx.get_json())
 
-        contract_id = -1
         contract_owners = [tx.sender]
         contract_addresses = [txHash]
         contract_code = payload['contractCode']
-        contract = SmartContract(contract_id, contract_owners, contract_addresses, contract_code)
+        contract = SmartContract(contract_owners, contract_addresses, contract_code)
 
         url = 'http://localhost:' + str(contract.port) + '/createContract'
         try:
@@ -453,6 +455,7 @@ class LogicalBlock(Block):
             logging.error('Contract creation tx was not validated2.\n')
             return False
 
+
     def validate_method_call(self, tx, contract):
         """Checks if a tx can call a method or methods on an existing contract successfully."""
         print("\nValidating method call tx...")
@@ -460,6 +463,10 @@ class LogicalBlock(Block):
             url = 'http://localhost:' + str(contract.port) + '/callMethod'
 
             payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
+
+            for method in payload['methods']:
+                if method['arguments']['sender'] != tx.sender:
+                    return None
 
             data = {'code': contract.code,
                     'state': contract.get_last_state(),
@@ -482,6 +489,7 @@ class LogicalBlock(Block):
             print('Method call verification could not be completed')
             return None
 
+
     def validate_contract_termination(self, tx, contract):
         print("\nValidating contract termination tx...")
         if (contract != None 
@@ -494,7 +502,6 @@ class LogicalBlock(Block):
             return False
 
 
-    
     def validate_contract_restoration(self, tx, contract):
         print("\nValidating contract restoration tx...")
         if (contract != None 

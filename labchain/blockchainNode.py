@@ -328,7 +328,7 @@ class BlockChainNode:
         
         
         #self.create_dummy_method_calls(1000)
-        self.create_dummy_contract(500)
+        #self.create_dummy_contract(500)
 
 
         self.logger.debug("Initialized web server")
@@ -394,8 +394,8 @@ class BlockChainNode:
         self.logger.debug("Starting worldState thread...")
 
 
-        self.block_mine_timer(mine_freq,num_of_transactions)
-        #self.mine_thread.start()
+        #self.block_mine_timer(mine_freq,num_of_transactions)
+        self.mine_thread.start()
         self.orphan_killer.start()
 
     

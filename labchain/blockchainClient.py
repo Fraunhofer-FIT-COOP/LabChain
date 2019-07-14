@@ -486,9 +486,9 @@ class BlockchainClient:
 
     def main(self):
         """Entry point for the client console application."""
-        self.create_dummy_contracts(800)
+        #self.create_dummy_contracts(800)
         #self.create_dummy_method_calls(1000)
-        #self.main_menu.show()
+        self.main_menu.show()
     
     def __create_transaction(self):
         """Ask for all important information to create a new transaction and sends it to the network."""
@@ -623,7 +623,7 @@ class BlockchainClient:
         clear_screen()
         contract_address = input('Please enter a contract\'s address: ')        
         
-        #try:
+    # try:
         contract = self.network_interface.requestContract(contract_address)
         if contract['terminated']:
             print("This contract has been terminated.")
@@ -635,13 +635,13 @@ class BlockchainClient:
         contract_states_encoded = contract['states']
         contract_state_encoded = contract_states_encoded[max(list(contract_states_encoded.keys()))]
         contract_code = contract['code']
-        #contract_address = contract['addresses'][-1]
-        # except:
-        #     print("No contract was found")
-        #     print()
-        #     # wait for any input before returning to menu
-        #     input('Press enter to continue...')
-        #     return
+        contract_address = contract['addresses'][-1]
+    # except:
+    #     print("No contract was found")
+    #     print()
+    #     # wait for any input before returning to menu
+    #     input('Press enter to continue...')
+    #     return
         contract_options =   {  '1': 'Get the state of the contract',
                                 '2': 'Get the callable methods from the contract',
                                 '3': 'Get the code of the contract'}
