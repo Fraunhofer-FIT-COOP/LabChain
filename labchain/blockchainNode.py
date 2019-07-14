@@ -13,14 +13,14 @@ from labchain.databaseInterface import Db
 from labchain.datastructure.block import Block
 from labchain.datastructure.block import LogicalBlock
 from labchain.datastructure.blockchain import BlockChain
-from labchain.workflow.taskTransaction import TaskTransaction
-from labchain.workflow.taskTransaction import WorkflowTransaction
 from labchain.datastructure.txpool import TxPool
 from labchain.network.networking import JsonRpcClient
 from labchain.network.networking import ServerNetworkInterface, NoPeersException
 from labchain.util.configReader import ConfigReader
 from labchain.util.configReader import ConfigReaderException
 from labchain.util.cryptoHelper import CryptoHelper
+from labchain.workflow.taskTransaction import TaskTransaction
+from labchain.workflow.taskTransaction import WorkflowTransaction
 
 
 class BlockChainNode:
@@ -289,7 +289,7 @@ class BlockChainNode:
         """init blockchain"""
         # Generate the node ID using host ID
         node_uuid = str(uuid.uuid1())
-        node_id = node_uuid[node_uuid.rfind('-') + 1:]
+        node_id = node_uuid
         self.logger.info("Creator id " + str(node_id))
 
         # Read all configurations to be used
