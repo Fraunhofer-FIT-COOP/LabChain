@@ -1,0 +1,7 @@
+version: '3'
+services:
+        labchain:
+                image: labchain:latest
+                container_name: labchain
+                ports:
+                        - "8080:8080"
