@@ -192,8 +192,6 @@ def getState():
 	
 	# Fetch received data
 	data_dict = request.json
-	print('TEST')
-	print(data_dict['state'])
 	state = data_dict['state']
 
 	# Create a contracts instance with the fetched state

@@ -403,7 +403,7 @@ class BlockChainNode:
 
     def create_dummy_method_calls(self, number_of_calls):
 
-        contract_address = self.create_dummy_contract()
+        contract_address = self.create_dummy_contract(1)
         print("Transaction for creating a test contract sent...")
 
         #time.sleep(15)
@@ -418,10 +418,6 @@ class BlockChainNode:
 
         methodName = 'addCoins'
         arguments = json.loads("""{"coinsToAdd": 100}""")
-        
-        arguments = json.dumps(arguments)
-        arguments = arguments.replace('{','{"sender": "' + public_key + '", ', 1)
-        arguments = json.loads(arguments)
 
         methodToCall = {'methodName':methodName, 'arguments':arguments}
         methods.append(methodToCall)
@@ -432,16 +428,16 @@ class BlockChainNode:
 
         for i in range(19):
             new_transaction = Transaction(sender=str(public_key), receiver=chosen_receiver, payload='', transaction_type='Normal Transaction')
-            transaction_hash = crypto_helper.hash(new_transaction.get_json())
-            new_transaction.transaction_hash = transaction_hash
+            #transaction_hash = crypto_helper.hash(new_transaction.get_json())
+            #new_transaction.transaction_hash = transaction_hash
             new_transaction.sign_transaction(crypto_helper, private_key)
             self.txpool_obj.add_transaction_if_not_exist(new_transaction)
             print('Normal transaction # ' + str(i) + ' was sent.')
 
         for i in range(number_of_calls):
             new_transaction = Transaction(sender=str(public_key), receiver=chosen_receiver, payload=str(payload), transaction_type='Method Call')
-            transaction_hash = crypto_helper.hash(new_transaction.get_json())
-            new_transaction.transaction_hash = transaction_hash
+            #transaction_hash = crypto_helper.hash(new_transaction.get_json())
+            #new_transaction.transaction_hash = transaction_hash
             new_transaction.sign_transaction(crypto_helper, private_key)
             self.txpool_obj.add_transaction_if_not_exist(new_transaction)
             print('Method call transaction # ' + str(i) + ' was sent.')
@@ -460,9 +456,10 @@ class BlockChainNode:
             private_key, public_key = crypto_helper.generate_key_pair()
             new_transaction = Transaction(sender=str(public_key), receiver='', payload=str(payload), transaction_type='Contract Creation')
             transaction_hash = crypto_helper.hash(new_transaction.get_json())
+    
             new_transaction.transaction_hash = transaction_hash
             new_transaction.sign_transaction(crypto_helper, private_key)
             self.txpool_obj.add_transaction_if_not_exist(new_transaction)
             print("Contract added")
 
-            #return transaction_hash
+            return transaction_hash

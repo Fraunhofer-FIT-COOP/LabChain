@@ -459,35 +459,42 @@ class LogicalBlock(Block):
     def validate_method_call(self, tx, contract):
         """Checks if a tx can call a method or methods on an existing contract successfully."""
         print("\nValidating method call tx...")
-        try:
-            url = 'http://localhost:' + str(contract.port) + '/callMethod'
+        #try:
+        url = 'http://localhost:' + str(contract.port) + '/callMethod'
 
-            payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
+        payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
 
-            for method in payload['methods']:
+        for method in payload['methods']:
+            # If the method call already has a sender -> verify
+            if 'sender' in method['arguments']:
                 if method['arguments']['sender'] != tx.sender:
                     return None
 
-            data = {'code': contract.code,
-                    'state': contract.get_last_state(),
-                    'contract_file_name': payload['contract_file_name'],
-                    'methods': payload['methods'],
-                    'sender': tx.sender}
+            # If the method call does not have a sender -> inject
+            arguments = json.dumps(method['arguments']).replace("'",'"')
+            arguments_with_sender = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
+            method['arguments'] = json.loads(arguments_with_sender)
 
-            r = requests.post(url,json=data).json()
+        data = {'code': contract.code,
+                'state': contract.get_last_state(),
+                'contract_file_name': payload['contract_file_name'],
+                'methods': payload['methods'],
+                'sender': tx.sender}
 
-            if(r['success'] == True 
-                and r['encodedUpdatedState'] != contract.get_last_state() 
-                and r['updatedState']['bad_state'] == False):
-                    print('\nMethod call tx was validated.\n')
-                    return r['encodedUpdatedState']
-            #If the execution wasn't successfull or the tx didn't create any state changes return false
-            else:
-                print('Method call was not validated.\n')
-                return None
-        except:
-            print('Method call verification could not be completed')
+        r = requests.post(url,json=data).json()
+
+        if(r['success'] == True 
+            and r['encodedUpdatedState'] != contract.get_last_state() 
+            and r['updatedState']['bad_state'] == False):
+                print('\nMethod call tx was validated.\n')
+                return r['encodedUpdatedState']
+        #If the execution wasn't successfull or the tx didn't create any state changes return None
+        else:
+            print('Method call was not validated.\n')
             return None
+        # except:
+        #     print('Method call verification could not be completed')
+        #     return None
 
 
     def validate_contract_termination(self, tx, contract):

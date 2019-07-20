@@ -72,6 +72,7 @@ class WorldState:
                         if(r['success'] == True):
                             new_state = r['encodedNewState']
                             contract.add_new_state(new_state, blockID)
+                            contract.contract_owners = r['newState']['contract_owners']
                         if(r['success'] == False):
                                 print(r['error'])
                     except:
@@ -153,7 +154,7 @@ class WorldState:
         if txHash == None:
             txHash = self._crypto_helper.hash(tx.get_json())
         
-        contract_owners = [tx.sender]
+        contract_owners = []    # This will be updated with the container response
         contract_addresses = [txHash]
         contract_code = payload['contractCode']
         contract = SmartContract(contract_owners, contract_addresses, contract_code)
@@ -173,6 +174,7 @@ class WorldState:
             r = requests.post(url,json=data).json()
             if(r['success'] == True):
                 contract.states[blockID] = [r['encodedNewState']]
+                contract.contract_owners = r['newState']['contract_owners']
                 self._contract_list.append(contract)
             if(r['success'] == False):
                     print(r['error'])
@@ -186,6 +188,12 @@ class WorldState:
         url = 'http://localhost:' + str(contract.port) + '/callMethod'
 
         payload = json.loads(tx.to_dict()['payload'].replace("'",'"'))
+
+        for method in payload['methods']:
+            # If the method call does not have a sender -> inject
+            arguments = json.dumps(method['arguments']).replace("'",'"')
+            arguments_with_sender = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
+            method['arguments'] = json.loads(arguments_with_sender)
 
         data = {'code': contract.code,
                 'state': contract.get_last_state(),

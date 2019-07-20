@@ -396,10 +396,6 @@ class TransactionWizard:
         try:
             methodName = input("Please enter name of the method you want to call on this contract: ")
             arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
-            
-            arguments = json.dumps(arguments)
-            arguments = arguments.replace('{','{"sender": "' + sender + '", ', 1)
-            arguments = json.loads(arguments)
 
             moreArguments = True
             while moreArguments:
@@ -737,10 +733,6 @@ class BlockchainClient:
 
         methodName = 'addCoins'
         arguments = json.loads("""{"coinsToAdd": 100}""")
-        
-        arguments = json.dumps(arguments)
-        arguments = arguments.replace('{','{"sender": "' + public_key + '", ', 1)
-        arguments = json.loads(arguments)
 
         methodToCall = {'methodName':methodName, 'arguments':arguments}
         methods.append(methodToCall)
