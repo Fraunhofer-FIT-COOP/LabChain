@@ -9,7 +9,7 @@ import docker
 from flask_cors import CORS
 from flask import request
 
-app = flask.Flask("labchainComposer")
+app = flask.Flask("labchainComposer", static_folder = "./web/")
 app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
 
 CORS(app, origins = "*")
