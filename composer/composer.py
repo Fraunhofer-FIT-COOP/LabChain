@@ -5,6 +5,7 @@ import string
 import sys
 import subprocess
 import docker
+import os
 
 from flask_cors import CORS
 from flask import request
@@ -21,36 +22,57 @@ running_instances_count = 1
 running_instances = {}
 
 def getDockerInstances():
-    instances = client.containers.list()
+    instances = client.containers.list(all=True)
     return [{"id" : x.id, "name" : x.name, "status" : x.status, "port" : list(x.attrs["HostConfig"]["PortBindings"].keys())} for x in instances]
 
 def getDockerImages():
     images = client.images.list()
     return images
 
-def startInstance():
+def startInstance(name):
+    """ Starts an existing instance
+    """
+    container = running_instances.get(name, "None")
+
+    if container is None:
+        return False
+
+    container.start()
+
+    return True
+
+def createInstance():
     """ Starts a new instance with the given name and the port
     """
+    global running_instances_count
+
+    try:
+        client.networks.get("labchain_network")
+    except docker.errors.NotFound:
+        client.networks.create("labchain_network", "bridge")
+
+    running_instances_count += 1
 
     name = "labchain_{}".format(running_instances_count)
 
     container = client.containers.run( \
             "labchain:latest", \
             name = name, \
-            ports = {(5000 + running_instances_count) : 8080},
-            detach=True)
+            ports = { 8080: (5000 + running_instances_count) },
+            network = "labchain_network", \
+                    detach=True)
 
     running_instances[name] = container
-
-    running_instances_count += 1
 
 def stopInstance(name):
     container = running_instances.get(name, "None")
 
     if container is None:
-        return
+        return False
 
     container.stop()
+
+    return True
 
 @app.route('/getInstances', methods=["GET"])
 def get_instances():
@@ -59,11 +81,32 @@ def get_instances():
     instances = getDockerInstances()
     return json.dumps(instances), 200
 
+@app.route('/deleteInstance', methods=["GET"])
+def delete_instance():
+    """ Deletes the instance with the given name
+    """
+    name = request.args.get('name', None)
+
+    if name is None:
+        return "Specify a name", 404
+
+    os.system("docker rm " + str(name))
+
+    instances = getDockerInstances()
+    return json.dumps(instances), 200
+
+
 @app.route('/startInstance', methods=["GET"])
 def start_instance():
     """ Starts an existing docker instance or creates a new one
     """
-    startInstance()
+    name = request.args.get('name', None)
+
+    if name is None:
+        createInstance()
+    else:
+        if not startInstance(name):
+            return "No such instance", 300
 
     instances = getDockerInstances()
     return json.dumps(instances), 200
@@ -77,7 +120,8 @@ def stop_instance():
     if name is None:
         return "Specify name", 300
 
-    stopInstance(name)
+    if not stopInstance(name):
+        return "Cannot find instance", 300
 
     instances = getDockerInstances()
     return json.dumps(instances), 200
@@ -98,7 +142,7 @@ if '__main__' == __name__:
             sys.exit()
 
     # initiate program
-    instances = [x for x in client.containers.list() if x.name.startswith("labchain_")]
+    instances = [x for x in client.containers.list(all=True) if x.name.startswith("labchain_")]
 
     i = 0
     for instance in instances:
@@ -110,7 +154,7 @@ if '__main__' == __name__:
 
     running_instances_count = i
 
-    print("Recognized instances: {}".format(running_instances_count))
+    print("Recognized instances: {}".format(running_instances_count + 1))
     print(running_instances)
 
     arguments = sys.argv
