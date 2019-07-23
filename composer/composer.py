@@ -74,6 +74,18 @@ def stopInstance(name):
 
     return True
 
+@app.route('/pruneNetwork', methods=["GET"])
+def prune_network():
+    """ Prune the network
+    """
+    instances = getDockerInstances()
+
+    for instance in instances:
+        stopInstance(instance["name"])
+        os.system("docker rm " + str(instance["name"]))
+
+    return json.dumps([]), 200
+
 @app.route('/getInstances', methods=["GET"])
 def get_instances():
     """ Returns the docker instances
