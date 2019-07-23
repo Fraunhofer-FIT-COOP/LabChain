@@ -74,6 +74,21 @@ def stopInstance(name):
 
     return True
 
+@app.route('/spawnNetwork', methods=["GET"])
+def spawn_network():
+    """ Spawns a network
+    """
+    number = request.args.get('number', None)
+
+    if number is None:
+        return "Specify a number", 300
+
+    for i in range(int(number)):
+        createInstance()
+
+    instances = getDockerInstances()
+    return json.dumps(instances), 200
+
 @app.route('/pruneNetwork', methods=["GET"])
 def prune_network():
     """ Prune the network

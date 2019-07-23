@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react'
 import DockerInstanceTable from './DockerInstanceTable'
 import Notifications, { notify } from 'react-notify-toast';
 import PruneConfirmation from './dialog/PruneConfirmation'
+import SpawnNetworkDialog from './dialog/SpawnDialog'
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import './App.css'
 
 const App: React.FC = () => {
     const [dockerInstances, setDockerInstances] = useState([])
     const [showPruneConfirmation, setShowPruneConfirmation] = useState(false)
+    const [showSpawnDialog, setShowSpawnDialog] = useState(false)
 
     let noteColor = { background: '#0E1717', text: "#FFFFFF" };
 
@@ -61,7 +63,16 @@ const App: React.FC = () => {
         setShowPruneConfirmation(true)
     }
 
-    let spawnNetwork = async function() {
+    let spawnNetworkDialog = async function() {
+        setShowSpawnDialog(true)
+    }
+
+    let spawnNetwork = async function(n: number) {
+        setShowSpawnDialog(false)
+        const response = await fetch("http://localhost:4999/spawnNetwork?number=" + n)
+        const instances = await response.json()
+        setDockerInstances(instances)
+        notify.show("Network generated", "custom", 5000, noteColor)
     }
 
     return (
@@ -69,6 +80,8 @@ const App: React.FC = () => {
             <div className="row">
                 <div className="col-md-12">
                     <PruneConfirmation show={showPruneConfirmation} ok={pruneNetwork} cancel={() => { setShowPruneConfirmation(false) }}></PruneConfirmation>
+                    <SpawnNetworkDialog show={showSpawnDialog} ok={spawnNetwork} cancel={() => { setShowSpawnDialog(false) }}>
+                    </SpawnNetworkDialog>
                     <Notifications />
                 </div>
             </div>
@@ -88,7 +101,7 @@ const App: React.FC = () => {
                     <button className="btn btn-primary" onClick={pruneNetworkDialog}>Prune Network...</button>
                 </div>
                 <div className="col-md-2">
-                    <button className="btn btn-primary" onClick={spawnNetwork}>Spawn Network...</button>
+                    <button className="btn btn-primary" onClick={spawnNetworkDialog}>Spawn Network...</button>
                 </div>
                 <div className="col-md-6">
                 </div>
