@@ -3,7 +3,9 @@ FROM python:3.7-slim
 
 # Set the working directory to /app
 WORKDIR /app
-COPY LabChain/ ./
+ADD ./labchain ./labchain
+ADD ./requirements.txt ./requirements.txt
+ADD ./node.py ./node.py
 
 RUN apt-get update && apt-get install -y git gcc net-tools
 
