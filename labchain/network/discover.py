@@ -32,28 +32,28 @@ class PeerDiscoverySystem:
         self.port = port
         self.desc = {}
         self.serviceinfo = ServiceInfo(self.type, self.name, self.ip,
-                                       self.port, 0, 0, self.desc)
+                self.port, 0, 0, self.desc)
         self.zeroconf = Zeroconf()
         self.browser = None
         self.listener = ServiceListener(callback_function=callback_function)
 
     def register_service(self):
-        ip: str = socket.inet_ntoa(self.ip)
+        ip = socket.inet_ntoa(self.ip)
         logger.debug('Registering service: {} for host with IP: {} and port: {}'
-                     .format(self.type, ip, str(self.port)))
+                .format(self.type, ip, str(self.port)))
         self.zeroconf.register_service(self.serviceinfo)
 
     def stop_service(self):
-        ip: str = socket.inet_ntoa(self.ip)
+        ip = socket.inet_ntoa(self.ip)
         logger.debug(
-            'Unregistering service: {} for host with IP: {} and port: {}'
-            .format(self.type, ip, str(self.port)))
+                'Unregistering service: {} for host with IP: {} and port: {}'
+                .format(self.type, ip, str(self.port)))
         self.zeroconf.unregister_service(self.serviceinfo)
         self.zeroconf.close()
 
     def start_service_listener(self):
         self.zeroconf.add_service_listener(type_=self.type,
-                                           listener=self.listener)
+                listener=self.listener)
 
-    def __del__(self):
-        self.stop_service()
+        def __del__(self):
+            self.stop_service()

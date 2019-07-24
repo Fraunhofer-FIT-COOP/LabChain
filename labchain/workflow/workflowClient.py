@@ -15,7 +15,7 @@ class WorkflowClient:
     demo_workflow_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources/CarLogistic.json'))
 
     _logistics = True if demo_workflow_file_path == os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'resources/CarLogistic.json')) else False
+            os.path.join(os.path.dirname(__file__), 'resources/CarLogistic.json')) else False
 
     def __init__(self, wallet, network_interface, crypto_helper):
         self.network_interface = network_interface
@@ -27,14 +27,14 @@ class WorkflowClient:
             '2': ('Send transaction', self.send_task_transaction, []),
             '3': ('Check for open tasks', self.check_for_open_tasks, []),
             '4': ('Get transaction hash', self.get_transaction_hash, [])
-        }, 'Please select a value: ', 'Exit Workflow Client')
+            }, 'Please select a value: ', 'Exit Workflow Client')
 
-    def main(self):
-        """Entry point for the client console application."""
+        def main(self):
+            """Entry point for the client console application."""
         self.main_menu.show()
 
     def check_for_open_tasks(self):
-        wallet_dict: dict = self.wallet_to_dict()
+        wallet_dict = self.wallet_to_dict()
         if len(wallet_dict) > 0:
             wallet_id = self.ask_for_key(wallet_dict)
             wallet = wallet_dict[wallet_id]
@@ -72,9 +72,9 @@ class WorkflowClient:
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     'workflow_id' in t.payload]
+                'workflow_id' in t.payload]
         send_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
-                                 'workflow_id' in t.payload]
+                'workflow_id' in t.payload]
         send_task_transaction = [t for t in send_task_transaction if t.type == '2']
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
@@ -93,7 +93,7 @@ class WorkflowClient:
     def send_task_transaction(self):
         if self._logistics:
             transaction_name = input(
-                'which transaction (taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp)?')
+                    'which transaction (taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp)?')
         else:
             transaction_name = input('which transaction (task1,task2,task3,invalid_task1)?')
         transaction = TransactionFactory.create_transcation(self.workflow_json[transaction_name])
@@ -110,7 +110,7 @@ class WorkflowClient:
     def get_transaction_hash(self):
         if self._logistics:
             transaction = input(
-                'which workflow, taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp?')
+                    'which workflow, taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp?')
         else:
             transaction = input('which workflow,task1,task2,task3,invalid_task1?')
         transaction = TransactionFactory.create_transcation(self.workflow_json[transaction])
