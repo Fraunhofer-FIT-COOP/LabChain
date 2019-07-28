@@ -406,7 +406,7 @@ class TransactionWizard:
                 if methodName == '':
                     moreArguments = False
                     break
-                arguments = input("Please enter arguments of the method in dict format (leave empty if no arguments): ")
+                arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
             chosen_payload['methods'] = methods
 
             tx_of_contract_creation, _ = self.network_interface.requestTransaction(chosen_receiver)

@@ -195,8 +195,7 @@ class WorldState:
             arguments_with_sender = arguments.replace('{','{"sender": "' + tx.sender + '", ', 1)
             method['arguments'] = json.loads(arguments_with_sender)
 
-        data = {'code': contract.code,
-                'state': contract.get_last_state(),
+        data = {'state': contract.get_last_state(),
                 'contract_file_name': payload['contract_file_name'],
                 'methods': payload['methods'],
                 'sender': tx.sender}

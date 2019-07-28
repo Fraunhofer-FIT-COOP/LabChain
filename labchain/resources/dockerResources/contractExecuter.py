@@ -202,7 +202,7 @@ def getState():
 		return jsonError(errorMessage)
 	
 	# Encode updated the updated contract's state to send back
-	encodedInstance = codecs.encode(pickle.dumps(contractInstance), "base64").decode()
+	#encodedInstance = codecs.encode(pickle.dumps(contractInstance), "base64").decode()
 	
 	# Prepare response
 	try:

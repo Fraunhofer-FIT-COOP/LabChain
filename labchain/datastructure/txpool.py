@@ -50,8 +50,6 @@ class TxPool:
 
     def add_transaction_if_not_exist(self, transaction):
         if isinstance(transaction, Transaction):
-            print(transaction not in self._transactions)
-            print(transaction.validate_transaction(self._crypto_helper))
             if transaction not in self._transactions and \
                     transaction.validate_transaction(self._crypto_helper):
                 if not transaction.transaction_hash:
