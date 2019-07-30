@@ -409,8 +409,11 @@ class TransactionWizard:
                 arguments = json.loads(input("Please enter arguments of the method in dict format (leave empty if no arguments): "))
             chosen_payload['methods'] = methods
 
-            tx_of_contract_creation, _ = self.network_interface.requestTransaction(chosen_receiver)
-            contract_file_name = json.loads(tx_of_contract_creation.payload.replace("'", '"'))['contract_file_name']
+            contract_state = self.network_interface.requestContract(chosen_receiver)
+            last_tx_with_file_name_address = contract_state['addresses'][-1]
+            
+            tx_with_file_name, _ = self.network_interface.requestTransaction(last_tx_with_file_name_address)
+            contract_file_name = json.loads(tx_with_file_name.payload.replace("'", '"'))['contract_file_name']
             chosen_payload['contract_file_name'] = contract_file_name
             return chosen_receiver, chosen_payload
         except:
