@@ -25,7 +25,9 @@ running_instances = {}
 
 
 def getDockerInstances():
-    instances = client.containers.list(all=True)
+    instances = [
+        x for x in client.containers.list(all=True) if x.name.startswith("labchain_")
+    ]
     return [
         {
             "id": x.id,

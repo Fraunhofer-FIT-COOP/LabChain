@@ -22,3 +22,12 @@ cd composer
 pip3 install -r requirements.txt
 python3 composer.py
 ```
+
+Next:
+TODO: Automate this step and serve the webpage as static content via the composer.py.
+
+```
+cd composer/web/composer
+npm install
+npm start
+```
