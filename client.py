@@ -43,8 +43,8 @@ def setup_logging(verbose, very_verbose):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='CLI client for Labchain.')
-    parser.add_argument('node_ip', nargs='?',help='The IP address of the Labchain node',default="localhost")
-    parser.add_argument('node_port',nargs='?',help='The port address of the Labchain node',default="8080")
+    parser.add_argument('node_ip', nargs='?', help='The IP address of the Labchain node', default="localhost")
+    parser.add_argument('node_port', nargs='?', help='The port address of the Labchain node', default="8080")
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     parser.add_argument('--doc', help='Use this argument if you want to use the document flow client.', action='store_true')
@@ -67,6 +67,7 @@ if __name__ == '__main__':
         else:
             client = create_client(open_wallet_file, args.node_ip, args.node_port)
             client.main()
+
 
 def create_document_flow_client_instance():
     args = parse_args()

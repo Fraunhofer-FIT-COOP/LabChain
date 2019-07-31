@@ -15,8 +15,11 @@ WORKDIR /app/LabChain
 
 RUN pip3 install --trusted-host pypi.python.org -r requirements.txt
 
+ENV PORT 8080
+ENV PEER NONE
+
 # Make port 8080 available to the world outside this container
-EXPOSE 8080
+EXPOSE $PORT
 
 # Run app.py when the container launches
-CMD ["python3", "./node.py", "--port", "8080", "-v", "--peer-discovery"]
+CMD ["python3", "./node.py", "--port", "8080", "--very-verbose", "--peer-discovery"]
