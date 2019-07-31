@@ -12,7 +12,7 @@ In our BitLab Blockchain Course we develop our own blockchain platform.
 
 
 ## Project Prerequisites
-- Python3 (https://www.python.org/)
+- Python3 (>= Python 3.5+) (https://www.python.org/)
   - PEP 8 Style Guide for Python Code (https://www.python.org/dev/peps/pep-0008/)
 - Git Repository (https://git-scm.com/)
 - Agile development
@@ -28,6 +28,8 @@ This script creats a symlink from ```.git//hooks/pre-commit``` to ```scripts/pre
 
 
 # Setup
+
+This software is tested with Python 3.5+
 
 Run the following to install all dependencies:
 
