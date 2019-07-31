@@ -4,8 +4,6 @@ import os
 import socket
 import sys
 
-import dns.resolver
-
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode
 from labchain.util.configReader import ConfigReader
@@ -71,35 +69,16 @@ def parse_peers(peer_args):
     result = {}
     try:
         config = ConfigReader(CONFIG_FILE)
-        resolver = config.get_config(section="NETWORK", option="DNS_CLIENT")
-        seed_domain = config.get_config(section="NETWORK",
-                                        option="DNS_SEED_DOMAIN")
         default_port = config.get_config(section="NETWORK", option="PORT",
                                          fallback=8080)
         default_port = str(default_port)
-        myResolver = dns.resolver.Resolver(configure=False)
-        myResolver.nameservers = [resolver]
-        myResolver.lifetime = 2
 
         own_ip = get_private_ip()
-
-        answers = myResolver.query(seed_domain, "A")
-        for a in answers.rrset.items:
-            host_addr = a.to_text()
-            if host_addr == own_ip:
-                logging.info("Not adding own IP to the list")
-                continue
-            logging.info(
-                "Adding Node peer IP {} received using DNS SEED peer discovery ... ".format(
-                    host_addr))
-            if host_addr not in result:
-                result[host_addr] = {}
-            result[host_addr][default_port] = {}
     except Exception as e:
         logging.error(str(e))
 
     for peer_str in peer_args:
-        host, port = peer_str.split(':')
+        host, port = peer_str.replace("\"", "").replace("'", "").split(':')
         if host not in result:
             result[host] = {}
         result[host][port] = {}
