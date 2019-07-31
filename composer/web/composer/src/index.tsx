@@ -3,12 +3,14 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import { Route, BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
+import ConnectivityView from './network/ConnectivityView';
 import * as serviceWorker from './serviceWorker';
 
 const routing = (
     <Router>
     <div>
-    <Route path="/" component={App} />
+    <Route exact path="/" component={App} />
+    <Route path="/network" component={ConnectivityView} />
     </div>
     </Router>
 )
