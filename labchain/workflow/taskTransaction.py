@@ -31,8 +31,8 @@ class TaskTransaction(Transaction):
             TaskTransaction._validation_lock.release()
             return False
 
-        previous_transaction: TaskTransaction = blockchain.get_transaction(self.previous_transaction)[0]
-        workflow_transaction: WorkflowTransaction = blockchain.get_transaction(self.workflow_transaction)[0]
+        previous_transaction = blockchain.get_transaction(self.previous_transaction)[0]
+        workflow_transaction = blockchain.get_transaction(self.workflow_transaction)[0]
 
         if previous_transaction is None:
             TaskTransaction._validation_lock.release()
