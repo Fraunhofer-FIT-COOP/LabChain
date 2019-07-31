@@ -57,8 +57,10 @@ def startInstance(name):
     return True
 
 
-def createInstance():
+def createInstance(instances=[]):
     """ Starts a new instance with the given name and the port
+
+        Return the 'name' of the given instance
     """
     global running_instances_count
 
@@ -71,15 +73,23 @@ def createInstance():
 
     name = "labchain_{}".format(running_instances_count)
 
+    envr = []
+
+    if len(instances) > 0:
+        envr = ["PEER=" + " ".join([str(x) + ":8080" for x in instances])]
+
     container = client.containers.run(
         "labchain:latest",
         name=name,
         ports={8080: (5000 + running_instances_count)},
         network="labchain_network",
+        environment=envr,
         detach=True,
     )
 
     running_instances[name] = container
+
+    return name
 
 
 def stopInstance(name):
@@ -102,8 +112,11 @@ def spawn_network():
     if number is None:
         return "Specify a number", 300
 
-    for i in range(int(number)):
-        createInstance()
+    number = int(number)
+
+    instances = []
+    for i in range(number):
+        instances.append(createInstance(instances))
 
     instances = getDockerInstances()
     return json.dumps(instances), 200

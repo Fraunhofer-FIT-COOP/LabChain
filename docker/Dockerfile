@@ -13,6 +13,12 @@ RUN pip install --upgrade pip
 
 WORKDIR /app/LabChain
 
+RUN git checkout dev
+
+ADD start.sh /app/LabChain/
+
+RUN chmod +x /app/LabChain/start.sh
+
 RUN pip3 install --trusted-host pypi.python.org -r requirements.txt
 
 ENV PORT 8080
@@ -22,4 +28,4 @@ ENV PEER NONE
 EXPOSE $PORT
 
 # Run app.py when the container launches
-CMD ["python3", "./node.py", "--port", "8080", "--very-verbose", "--peer-discovery"]
+CMD ["./start.sh"]
