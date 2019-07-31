@@ -210,12 +210,12 @@ if "__main__" == __name__:
 
     running_instances_count = i
 
-    print("Recognized instances: {}".format(running_instances_count + 1))
+    print("Recognized instances: {}".format(len(instances)))
     print(running_instances)
 
     arguments = sys.argv
     _host = "127.0.0.1"
-    _port = 80
+    _port = 8080
 
     if len(arguments) == 2:
         _host = arguments[1]
