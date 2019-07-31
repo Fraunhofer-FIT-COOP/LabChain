@@ -78,7 +78,7 @@ def parse_peers(peer_args):
         logging.error(str(e))
 
     for peer_str in peer_args:
-        host, port = peer_str.split(':')
+        host, port = peer_str.replace("\"", "").replace("'", "").split(':')
         if host not in result:
             result[host] = {}
         result[host][port] = {}
