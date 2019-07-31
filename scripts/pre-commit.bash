@@ -14,7 +14,7 @@ Forked https://github.com/cbrueffer/pep8-git-hook based on https://gist.github.c
 # don't fill in both of these
 select_codes = []
 ignore_codes = ["E121", "E122", "E123", "E124", "E125", "E126", "E127", "E128",
-                "E129", "E131", "E501"]
+                "E129", "E131", "E501", "W503"]
 # Add things like "--max-line-length=120" below
 overrides = []
 

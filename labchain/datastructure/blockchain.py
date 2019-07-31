@@ -506,7 +506,7 @@ class BlockChain:
         :param block:   the block to be added to the blockchain
         :param db_flag: True, if block should be added to database
         """
-        _prev_block: LogicalBlock = self._blockchain.get(block.predecessor_hash)
+        _prev_block = self._blockchain.get(block.predecessor_hash)
         _prev_block_pos = _prev_block.get_block_pos()
 
         if block.predecessor_hash in self._current_branch_heads:

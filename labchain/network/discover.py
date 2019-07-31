@@ -38,13 +38,13 @@ class PeerDiscoverySystem:
         self.listener = ServiceListener(callback_function=callback_function)
 
     def register_service(self):
-        ip: str = socket.inet_ntoa(self.ip)
+        ip = socket.inet_ntoa(self.ip)
         logger.debug('Registering service: {} for host with IP: {} and port: {}'
                      .format(self.type, ip, str(self.port)))
         self.zeroconf.register_service(self.serviceinfo)
 
     def stop_service(self):
-        ip: str = socket.inet_ntoa(self.ip)
+        ip = socket.inet_ntoa(self.ip)
         logger.debug(
             'Unregistering service: {} for host with IP: {} and port: {}'
             .format(self.type, ip, str(self.port)))
