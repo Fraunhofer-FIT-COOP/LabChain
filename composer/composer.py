@@ -10,10 +10,12 @@ import os
 from flask_cors import CORS
 from flask import request
 
-app = flask.Flask("labchainComposer", static_folder = "./web/")
-app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+app = flask.Flask("labchainComposer", static_folder="./web/")
+app.secret_key = "".join(
+    random.choice(string.ascii_uppercase + string.digits) for _ in range(10)
+)
 
-CORS(app, origins = "*")
+CORS(app, origins="*")
 
 client = docker.from_env()
 
@@ -21,13 +23,24 @@ running_instances_count = 1
 
 running_instances = {}
 
+
 def getDockerInstances():
     instances = client.containers.list(all=True)
-    return [{"id" : x.id, "name" : x.name, "status" : x.status, "port" : list(x.attrs["HostConfig"]["PortBindings"].keys())} for x in instances]
+    return [
+        {
+            "id": x.id,
+            "name": x.name,
+            "status": x.status,
+            "port": list(x.attrs["HostConfig"]["PortBindings"].keys()),
+        }
+        for x in instances
+    ]
+
 
 def getDockerImages():
     images = client.images.list()
     return images
+
 
 def startInstance(name):
     """ Starts an existing instance
@@ -40,6 +53,7 @@ def startInstance(name):
     container.start()
 
     return True
+
 
 def createInstance():
     """ Starts a new instance with the given name and the port
@@ -55,14 +69,16 @@ def createInstance():
 
     name = "labchain_{}".format(running_instances_count)
 
-    container = client.containers.run( \
-            "labchain:latest", \
-            name = name, \
-            ports = { 8080: (5000 + running_instances_count) },
-            network = "labchain_network", \
-                    detach=True)
+    container = client.containers.run(
+        "labchain:latest",
+        name=name,
+        ports={8080: (5000 + running_instances_count)},
+        network="labchain_network",
+        detach=True,
+    )
 
     running_instances[name] = container
+
 
 def stopInstance(name):
     container = running_instances.get(name, "None")
@@ -74,11 +90,12 @@ def stopInstance(name):
 
     return True
 
-@app.route('/spawnNetwork', methods=["GET"])
+
+@app.route("/spawnNetwork", methods=["GET"])
 def spawn_network():
     """ Spawns a network
     """
-    number = request.args.get('number', None)
+    number = request.args.get("number", None)
 
     if number is None:
         return "Specify a number", 300
@@ -89,7 +106,8 @@ def spawn_network():
     instances = getDockerInstances()
     return json.dumps(instances), 200
 
-@app.route('/pruneNetwork', methods=["GET"])
+
+@app.route("/pruneNetwork", methods=["GET"])
 def prune_network():
     """ Prune the network
     """
@@ -101,18 +119,20 @@ def prune_network():
 
     return json.dumps([]), 200
 
-@app.route('/getInstances', methods=["GET"])
+
+@app.route("/getInstances", methods=["GET"])
 def get_instances():
     """ Returns the docker instances
     """
     instances = getDockerInstances()
     return json.dumps(instances), 200
 
-@app.route('/deleteInstance', methods=["GET"])
+
+@app.route("/deleteInstance", methods=["GET"])
 def delete_instance():
     """ Deletes the instance with the given name
     """
-    name = request.args.get('name', None)
+    name = request.args.get("name", None)
 
     if name is None:
         return "Specify a name", 404
@@ -123,11 +143,11 @@ def delete_instance():
     return json.dumps(instances), 200
 
 
-@app.route('/startInstance', methods=["GET"])
+@app.route("/startInstance", methods=["GET"])
 def start_instance():
     """ Starts an existing docker instance or creates a new one
     """
-    name = request.args.get('name', None)
+    name = request.args.get("name", None)
 
     if name is None:
         createInstance()
@@ -138,11 +158,12 @@ def start_instance():
     instances = getDockerInstances()
     return json.dumps(instances), 200
 
-@app.route('/stopInstance', methods=["GET"])
+
+@app.route("/stopInstance", methods=["GET"])
 def stop_instance():
     """ Stops an existing docker instance
     """
-    name = request.args.get('name', None)
+    name = request.args.get("name", None)
 
     if name is None:
         return "Specify name", 300
@@ -153,23 +174,31 @@ def stop_instance():
     instances = getDockerInstances()
     return json.dumps(instances), 200
 
+
 def hasContainer():
-    images = [ x.tags for x in getDockerImages()]
+    images = [x.tags for x in getDockerImages()]
 
     return ["labchain:latest"] in images
 
-if '__main__' == __name__:
+
+if "__main__" == __name__:
 
     # check if labchain container is available
     if not hasContainer():
         print("Try to pull")
-        client.images.pull("labchain")
-        if not hasContainer():
-            print("Docker image not found - please execute 'docker pull labchain:latest'")
+        try:
+            client.images.pull("labchain")
+        except docker.errors.ImageNotFound as e:
+            print("Could not pull image")
+            print("Build docker image locally and tag it with 'labchain:latest'")
+            print("     cd ROOT/docker")
+            print("     docker build -t labchain:latest .")
             sys.exit()
 
     # initiate program
-    instances = [x for x in client.containers.list(all=True) if x.name.startswith("labchain_")]
+    instances = [
+        x for x in client.containers.list(all=True) if x.name.startswith("labchain_")
+    ]
 
     i = 0
     for instance in instances:
@@ -196,4 +225,4 @@ if '__main__' == __name__:
 
     print("Starting server at http://{}:{}".format(_host, _port))
 
-    app.run(debug = True, host = _host, port = _port)
+    app.run(debug=True, host=_host, port=_port)
