@@ -19,5 +19,6 @@ Then start the network composer by:
 
 ```
 cd composer
+pip3 install -r requirements.txt
 python3 composer.py
 ```
