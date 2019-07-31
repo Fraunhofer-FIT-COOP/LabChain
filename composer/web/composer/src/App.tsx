@@ -12,7 +12,7 @@ const App: React.FC = () => {
     const [showSpawnDialog, setShowSpawnDialog] = useState(false)
 
     let noteColor = { background: '#0E1717', text: "#FFFFFF" };
-    let base_url = "http://localhost:8080"
+    const base_url = "http://localhost:8080"
 
     useEffect(() => {
         const fetchInstances = async () => {
