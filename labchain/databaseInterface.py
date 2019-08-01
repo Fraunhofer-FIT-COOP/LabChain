@@ -152,7 +152,7 @@ class Db:
                         if isinstance(json_payload, dict):
                             transaction_data = {'payload': json_payload, 'signature': txn_db[3], 'sender': txn_db[0],
                                                 'receiver': txn_db[1]}
-                            txn = TransactionFactory.create_transcation(transaction_data)
+                            txn = TransactionFactory.create_transaction(transaction_data)
                         elif isinstance(json_payload, int):
                             txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
                         else:

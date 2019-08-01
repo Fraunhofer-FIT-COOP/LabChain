@@ -489,7 +489,7 @@ class ServerNetworkInterface(NetworkInterface):
             pass
 
     def __handle_send_transaction(self, transaction_data):
-        transaction = TransactionFactory.create_transcation(transaction_data)
+        transaction = TransactionFactory.create_transaction(transaction_data)
         transaction_hash = self.crypto_helper.hash(transaction.get_json())
         transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
         self.on_transaction_received_callback(transaction)

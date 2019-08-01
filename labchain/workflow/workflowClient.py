@@ -83,7 +83,7 @@ class WorkflowClient:
         return [diff[k] for k in diff]
 
     def send_workflow_transaction(self):
-        transaction = TransactionFactory.create_transcation(self.workflow_json["workflow"])
+        transaction = TransactionFactory.create_transaction(self.workflow_json["workflow"])
         for k, v in self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
                 transaction.sign_transaction(self.crypto_helper, v["private_key"])
@@ -96,7 +96,7 @@ class WorkflowClient:
                 'which transaction (taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp)?')
         else:
             transaction_name = input('which transaction (task1,task2,task3,invalid_task1)?')
-        transaction = TransactionFactory.create_transcation(self.workflow_json[transaction_name])
+        transaction = TransactionFactory.create_transaction(self.workflow_json[transaction_name])
         for k, v in self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
                 transaction.sign_transaction(self.crypto_helper, v["private_key"])
@@ -113,5 +113,5 @@ class WorkflowClient:
                 'which workflow, taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp?')
         else:
             transaction = input('which workflow,task1,task2,task3,invalid_task1?')
-        transaction = TransactionFactory.create_transcation(self.workflow_json[transaction])
+        transaction = TransactionFactory.create_transaction(self.workflow_json[transaction])
         print(self.crypto_helper.hash(transaction.get_json()))

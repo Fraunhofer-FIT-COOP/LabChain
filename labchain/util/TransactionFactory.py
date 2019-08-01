@@ -10,7 +10,7 @@ from labchain.util.cryptoHelper import CryptoHelper
 class TransactionFactory:
 
     @staticmethod
-    def create_transcation(transaction_data):
+    def create_transaction(transaction_data):
         if isinstance(transaction_data['payload'], Dict):
             transaction_type = transaction_data['payload'].get('transaction_type', '0')
         else:
@@ -51,7 +51,7 @@ class TransactionFactory:
         workflow_transaction['payload']['permissions'] = {}
         workflow_transaction['payload']['permissions']['assumed_diagnosis'] = [physician_public_key + '_1']
         workflow_transaction['payload']['permissions']['real_diagnosis'] = [doctor_public_key + '_1']
-        return TransactionFactory.create_transcation(workflow_transaction)
+        return TransactionFactory.create_transaction(workflow_transaction)
 
     @staticmethod
     def create_assumed_diagnosis_transaction(case_ID, sender_public_key, receiver_public_key, assumed_diagnosis,
@@ -86,4 +86,4 @@ class TransactionFactory:
         task_transaction['payload']['workflow_transaction'] = workflow_transaction
         task_transaction['payload']['previous_transaction'] = previous_transaction
 
-        return TransactionFactory.create_transcation(task_transaction)
+        return TransactionFactory.create_transaction(task_transaction)
