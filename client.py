@@ -1,5 +1,4 @@
 import argparse
-import logging
 import os
 
 # append project dir to python path
@@ -30,7 +29,6 @@ def create_document_flow_client(wallet_file, node_ip, node_port):
     crypto_helper = CryptoHelper.instance()
     network_interface = ClientNetworkInterface(JsonRpcClient(), {node_ip: {node_port: {}}})
     return WorkflowClient(Wallet(wallet_file), network_interface, crypto_helper)
-
 
 
 def parse_args():

@@ -14,9 +14,6 @@ def clear_screen():
 class WorkflowClient:
     demo_workflow_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources/CarLogistic.json'))
 
-    _logistics = True if demo_workflow_file_path == os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'resources/CarLogistic.json')) else False
-
     def __init__(self, wallet, network_interface, crypto_helper):
         self.network_interface = network_interface
         self.crypto_helper = crypto_helper
@@ -87,31 +84,30 @@ class WorkflowClient:
         for k, v in self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
                 transaction.sign_transaction(self.crypto_helper, v["private_key"])
-        print(self.crypto_helper.hash(transaction.get_json()))
         self.network_interface.sendTransaction(transaction)
 
     def send_task_transaction(self):
-        if self._logistics:
-            transaction_name = input(
-                'which transaction (taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp)?')
-        else:
-            transaction_name = input('which transaction (task1,task2,task3,invalid_task1)?')
+        transaction_name = input(self.get_task_names())
         transaction = TransactionFactory.create_transaction(self.workflow_json[transaction_name])
         for k, v in self.workflow_json["wallet"].items():
             if v["public_key"] == transaction.sender:
                 transaction.sign_transaction(self.crypto_helper, v["private_key"])
-        print(self.crypto_helper.hash(transaction.get_json()))
         self.network_interface.sendTransaction(transaction)
 
     def read_workflow_json(self):
         with open(self.demo_workflow_file_path, 'r') as file:
             self.workflow_json = json.load(file)[0]
 
+    def get_task_names(self):
+        keys = list(self.workflow_json.keys())
+        keys.remove('wallet')
+        keys.remove('workflow')
+        task_names_str = str("which transaction (" + ", ".join(keys) + ")?")
+        return task_names_str
+
     def get_transaction_hash(self):
-        if self._logistics:
-            transaction = input(
-                'which workflow, taskInternal, taskExternal, taskWarehouseA, taskWarehouseB, taskSuppliersCorp?')
-        else:
-            transaction = input('which workflow,task1,task2,task3,invalid_task1?')
-        transaction = TransactionFactory.create_transaction(self.workflow_json[transaction])
+        #TODO what does it even do?
+        transaction_name = input(self.get_task_names())
+        transaction = TransactionFactory.create_transaction(self.workflow_json[transaction_name])
         print(self.crypto_helper.hash(transaction.get_json()))
+        input("Press any key to return...")
