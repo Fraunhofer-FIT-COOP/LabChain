@@ -12,6 +12,7 @@ from jsonrpc import JSONRPCResponseManager, dispatcher
 from netifaces import interfaces, ifaddresses, AF_INET, AF_INET6
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
+from werkzeug.datastructures import Headers
 
 from labchain.datastructure.block import Block
 from labchain.datastructure.transaction import Transaction
@@ -21,6 +22,7 @@ from labchain.util.utility import Utility
 
 logger = logging.getLogger(__name__)
 
+HTTP_OK_REQUEST = 200
 HTTP_BAD_REQUEST = 400
 
 
@@ -350,7 +352,7 @@ class ServerNetworkInterface(NetworkInterface):
                  search_transactions_from_sender_callback,
                  get_highest_workflow_ID_callback,
                  peer_discovery=True,
-                 ip='127.0.0.1', port=8080, block_cache_size=1000,
+                 ip='127.0.0.1', port=8080, cors="", block_cache_size=1000,
                  transaction_cache_size=1000):
         """
         :param json_rpc_client: A JsonRpcClient instance.
@@ -374,6 +376,7 @@ class ServerNetworkInterface(NetworkInterface):
         self.get_transactions_in_pool_callback = get_transactions_in_pool
         self.ip = ip
         self.port = int(port)
+        self.cors = cors
         self.block_cache = []
         self.block_cache_size = block_cache_size
         self.transaction_cache = []
@@ -432,6 +435,15 @@ class ServerNetworkInterface(NetworkInterface):
     @Request.application
     def application(self, request):
         """Define the JSON-RPC callbacks and handle an incoming request."""
+
+        headers = Headers()
+        if not "" == self.cors:
+            headers.add('Access-Control-Allow-Origin', self.cors)
+            headers.add('Access-Control-Allow-Methods', 'OPTIONS, POST')
+
+            if "OPTIONS" == request.method:
+                return Response(status=HTTP_OK_REQUEST, headers=headers)
+
         dispatcher['getPeers'] = self.__handle_get_peers
         dispatcher['advertisePeer'] = self.__handle_advertise_peer
         dispatcher['sendBlock'] = self.__handle_send_block
@@ -452,6 +464,7 @@ class ServerNetworkInterface(NetworkInterface):
             request_body_dict = json.loads(request.data.decode())
         except ValueError:
             return Response(status=HTTP_BAD_REQUEST)
+
         if request_body_dict['method'] == 'advertisePeer':
             if 'params' not in request_body_dict:
                 request_body_dict['params'] = [6666]
@@ -460,7 +473,7 @@ class ServerNetworkInterface(NetworkInterface):
 
         response = JSONRPCResponseManager.handle(
             request.data, dispatcher)
-        return Response(response.json, mimetype='application/json')
+        return Response(response.json, mimetype='application/json', headers=headers)
 
     def __handle_get_peers(self):
         return self.peers

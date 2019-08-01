@@ -20,9 +20,9 @@ CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_ip, node_port, peer_list, peer_discovery):
+def create_node(node_ip, node_port, peer_list, peer_discovery, cors):
     return BlockChainNode(CONFIG_FILE, node_ip, node_port, peer_list,
-                          peer_discovery)
+                          peer_discovery, cors=cors)
 
 
 def setup_logging(verbose, very_verbose):
@@ -42,11 +42,12 @@ def parse_args():
                         help='The port address of the Labchain node')
     parser.add_argument('--peers', nargs='*', default=[],
                         help='The peer list address of the Labchain node')
-    parser.add_argument('--verbose', '-v', action='store_true')
-    parser.add_argument('--very-verbose', '-vv', action='store_true')
-    parser.add_argument('--peer-discovery', action='store_true')
-    parser.add_argument('--drop_db', '-d', action='store_true')
-    parser.add_argument('--localhost', action='store_true')
+    parser.add_argument('--verbose', '-v', action='store_true', help="Debug level INFO")
+    parser.add_argument('--very-verbose', '-vv', action='store_true', help="Debug level DEBUG")
+    parser.add_argument('--peer-discovery', action='store_true', help="Use zero-conf service to connect to nodes in the same network")
+    parser.add_argument('--drop_db', '-d', action='store_true', help="Delete database")
+    parser.add_argument('--localhost', action='store_true', help="Start as localhost")
+    parser.add_argument('--cors', default="", action="store", help="Set CORS headers for the networking component")
     return parser.parse_args()
 
 
@@ -99,4 +100,4 @@ if __name__ == '__main__':
         if os.path.exists(db_path):
             os.remove(db_path)
 
-    node = create_node(ip, args.port, initial_peers, args.peer_discovery)
+    node = create_node(ip, args.port, initial_peers, args.peer_discovery, args.cors)

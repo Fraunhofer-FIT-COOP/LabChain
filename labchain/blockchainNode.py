@@ -26,7 +26,7 @@ from labchain.workflow.taskTransaction import WorkflowTransaction
 class BlockChainNode:
 
     def __init__(self, config_file_path, node_ip="127.0.0.1", node_port=None,
-                 peer_list=None, peer_discovery=True, new_database=False):
+                 peer_list=None, peer_discovery=True, new_database=False, cors=""):
         """Constructor for BlockChainNode
 
         Parameters
@@ -75,6 +75,8 @@ class BlockChainNode:
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
         self.q = None
+        self.cors = cors
+
         try:
             self.config_reader = ConfigReader(config_file_path)
             self.logger.debug("Read config file successfully!")
@@ -257,6 +259,7 @@ class BlockChainNode:
         """Initialize the network interface"""
         if initial_peers is None:
             initial_peers = {}
+
         return ServerNetworkInterface(JsonRpcClient(), initial_peers,
                                       self.crypto_helper_obj,
                                       self.on_new_block_received,
@@ -271,7 +274,7 @@ class BlockChainNode:
                                       self.on_search_transaction_from_receiver,
                                       self.on_search_transaction_from_sender,
                                       self.on_get_highest_workflow_ID,
-                                      self.peer_discovery, ip, port)
+                                      self.peer_discovery, ip, port, self.cors)
 
     def reinitialize_blockchain_from_db(self):
         """Restore DB by fetching entries from Blockchain"""
