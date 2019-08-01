@@ -2,8 +2,16 @@
 
 cd /app/LabChain
 
-if [ "${PEER}" = "NONE" ] ; then
-        python3 ./node.py --port ${PORT} --very-verbose --peer-discovery
-else
-        python3 ./node.py --port ${PORT} --very-verbose --peers ${PEER}
+CONFIG="./node.py --port ${PORT} --very-verbose"
+
+if [ "${CORS}" != "NONE" ] ; then
+        CONFIG="${CONFIG} --cors ${CORS}"
 fi
+
+if [ "${PEER}" = "NONE" ] ; then
+        CONFIG="${CONFIG} --peer-discovery"
+else
+        CONFIG="${CONFIG} --peers ${PEER}"
+fi
+
+python3 ${CONFIG}

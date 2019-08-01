@@ -5,12 +5,15 @@ services:
                 container_name: labchain_0
                 ports:
                         - "4000:8080"
+                environment:
+                        - CORS="*"
                 networks:
                         - labchain_network
         labchain_1:
                 image: labchain:latest
                 container_name: labchain_1
                 environment:
+                        - CORS="*"
                         - PEER="labchain_0:8080"
                 networks:
                         - labchain_network
@@ -18,6 +21,7 @@ services:
                 image: labchain:latest
                 container_name: labchain_2
                 environment:
+                        - CORS="*"
                         - PEER="labchain_1:8080 labchain_0:8080"
                 networks:
                         - labchain_network
