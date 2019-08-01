@@ -100,4 +100,6 @@ if __name__ == '__main__':
         if os.path.exists(db_path):
             os.remove(db_path)
 
-    node = create_node(ip, args.port, initial_peers, args.peer_discovery, args.cors)
+    cors = args.cors.replace("\"", "")
+
+    node = create_node(ip, args.port, initial_peers, args.peer_discovery, cors)
