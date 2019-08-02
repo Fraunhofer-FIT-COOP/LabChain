@@ -29,9 +29,7 @@ def getDockerInstances():
         x for x in client.containers.list(all=True) if x.name.startswith("labchain_")
     ]
     network_containers = client.networks.get("labchain_network").attrs["Containers"]
-    print(instances)
-    print(json.dumps(network_containers, indent=4, sort_keys=True))
-    print([x.name for x in client.networks.list()])
+
     return [
         {
             "id": x.id,

@@ -4,22 +4,20 @@ import Notifications, { notify } from "react-notify-toast";
 import PruneConfirmation from "./dialog/PruneConfirmation";
 import SpawnNetworkDialog from "./dialog/SpawnDialog";
 import FooterComponent from "./FooterComponent";
-import DockerInterface from "./docker/DockerInterface";
+import { DockerInterface, DockerInstance } from "./docker/DockerInterface";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
 const App: React.FC = () => {
-    const [dockerInstances, setDockerInstances] = useState([]);
+    const [dockerInstances, setDockerInstances] = useState<DockerInstance[]>([]);
     const [showPruneConfirmation, setShowPruneConfirmation] = useState(false);
     const [showSpawnDialog, setShowSpawnDialog] = useState(false);
 
     let noteColor = { background: "#0E1717", text: "#FFFFFF" };
     const base_url = "http://localhost:8080";
 
-    const di = new DockerInterface(base_url);
-
     useEffect(() => {
-        di.getInstances().then(instances => {
+        DockerInterface.getInstances().then(instances => {
             setDockerInstances(instances);
         });
         // eslint-disable-next-line

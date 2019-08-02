@@ -1,11 +1,11 @@
-export class LabchainClient {
+export default class LabchainClient {
     url: string = "";
     rpc_id_count: number = 0;
     constructor(url: string) {
         this.url = url;
     }
 
-    getConnectedPeers(): Promise<any> {
+    getConnectedPeers(): Promise<string[]> {
         if ("" === this.url) {
             throw Error("Not connected to a node");
         }
