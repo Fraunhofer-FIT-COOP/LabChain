@@ -67,20 +67,24 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
 
         let nodes: GraphNode[] = [];
         let links: GraphLink[] = [];
+        console.log(_data);
 
-        for (let node of _data) {
-            nodes.push({ id: node.peer.name });
-            for (let con of Object.keys(node.peers)) {
-                let name = this.getNameByIP(dockerInstances, con);
+        nodes = _data.map(d => {
+            return { id: (" " + d.peer.name).slice(1) };
+        });
 
-                if ("" === name) continue;
-
-                links.push({
-                    source: node.peer.name,
-                    target: name
-                });
-            }
-        }
+        links = _data
+            .map(d => {
+                return Object.keys(d.peers)
+                    .map(d2 => {
+                        return this.getNameByIP(dockerInstances, d2);
+                    })
+                    .filter(a => a !== d.peer.name)
+                    .map(d3 => {
+                        return { source: d.peer.name, target: d3 };
+                    });
+            })
+            .flat();
 
         if (this._isMounted) this.setState({ data: { nodes: nodes, links: links } });
     }
@@ -91,9 +95,9 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
             for (let inst of instances) {
                 if (inst.status !== "running") continue;
 
-                let id: string = inst.name.split("_")[1];
+                let id: number = +inst.name.split("_")[1];
 
-                let client = new LabchainClient("http://localhost:500" + id + "/");
+                let client = new LabchainClient("http://localhost:" + (id + 5000) + "/");
 
                 getPeersProms.push(
                     new Promise((resolve, reject) => {
