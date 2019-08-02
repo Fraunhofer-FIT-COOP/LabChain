@@ -32,9 +32,11 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
 
     graphConfig: any = {
         nodeHighlightBehavior: true,
+        width: 1600,
+        height: 800,
         node: {
             color: "lightgreen",
-            size: 120,
+            size: 300,
             highlightStrokeColor: "blue"
         },
         link: {
