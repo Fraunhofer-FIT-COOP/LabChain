@@ -517,7 +517,7 @@ class ServerNetworkInterface(NetworkInterface):
             except NoPeersException:
                 pass
 
-    def __handle_request_block(self, block_id):
+    def __handle_request_block(self, block_id=None):
         blocks = self.get_block_callback(block_id)
         if blocks:
             return [block.to_dict() for block in blocks]

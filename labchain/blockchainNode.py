@@ -236,7 +236,7 @@ class BlockChainNode:
             return Block.from_json(block_data)
         return None
 
-    def on_get_block_by_id(self, block_id):
+    def on_get_block_by_id(self, block_id=None):
         """callback method for get block"""
         return self.blockchain_obj.get_block_by_id(block_id)
 

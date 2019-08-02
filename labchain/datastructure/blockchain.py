@@ -129,12 +129,20 @@ class BlockChain:
         self._blockchain_lock.release()
         return blocks_range
 
-    def get_block_by_id(self, block_id):
-        """Returns the block if found in blockchain, else returns None"""
+    def get_block_by_id(self, block_id=None):
+        """Returns the block if found in blockchain, else returns None
+
+            If no block_id is specified than it returns the chain head
+        """
         # Protection mechanism for multithreading
         if not self._blockchain_lock.acquire():
             self._logger.debug("get_block_by_id was unable to acquire lock")
             raise TimeoutError
+
+        # return branch head if on id was specified
+        if block_id is None:
+            self._blockchain_lock.release()
+            return [self._blockchain[self._node_branch_head]]
 
         block_list = []
         for _, _block in self._blockchain.items():
