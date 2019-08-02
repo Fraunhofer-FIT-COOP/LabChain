@@ -4,6 +4,7 @@ import Notifications, { notify } from "react-notify-toast";
 import PruneConfirmation from "./dialog/PruneConfirmation";
 import SpawnNetworkDialog from "./dialog/SpawnDialog";
 import FooterComponent from "./FooterComponent";
+import DockerInterface from "./docker/DockerInterface";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
@@ -15,14 +16,13 @@ const App: React.FC = () => {
     let noteColor = { background: "#0E1717", text: "#FFFFFF" };
     const base_url = "http://localhost:8080";
 
-    useEffect(() => {
-        const fetchInstances = async () => {
-            const response = await fetch(base_url + "/getInstances");
-            const instances = await response.json();
-            setDockerInstances(instances);
-        };
+    const di = new DockerInterface(base_url);
 
-        fetchInstances();
+    useEffect(() => {
+        di.getInstances().then(instances => {
+            setDockerInstances(instances);
+        });
+        // eslint-disable-next-line
     }, []);
 
     let createNewDockerInstance = async function(evt: any) {

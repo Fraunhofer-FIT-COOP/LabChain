@@ -28,11 +28,18 @@ def getDockerInstances():
     instances = [
         x for x in client.containers.list(all=True) if x.name.startswith("labchain_")
     ]
+    network_containers = client.networks.get("labchain_network").attrs["Containers"]
+    print(instances)
+    print(json.dumps(network_containers, indent=4, sort_keys=True))
+    print([x.name for x in client.networks.list()])
     return [
         {
             "id": x.id,
             "name": x.name,
             "status": x.status,
+            "mac": network_containers.get(x.id, {"MacAddress": ""})["MacAddress"],
+            "ipv4": network_containers.get(x.id, {"IPv4Address": ""})["IPv4Address"],
+            "ipv6": network_containers.get(x.id, {"IPv6Address": ""})["IPv6Address"],
             "port": list(x.attrs["HostConfig"]["PortBindings"].keys()),
         }
         for x in instances
@@ -77,6 +84,8 @@ def createInstance(instances=[]):
 
     if len(instances) > 0:
         envr = ["PEER=" + " ".join([str(x) + ":8080" for x in instances])]
+
+    envr.append("CORS=\"*\"")
 
     container = client.containers.run(
         "labchain:latest",
