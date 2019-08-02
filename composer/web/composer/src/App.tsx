@@ -4,6 +4,7 @@ import Notifications, { notify } from "react-notify-toast";
 import PruneConfirmation from "./dialog/PruneConfirmation";
 import SpawnNetworkDialog from "./dialog/SpawnDialog";
 import FooterComponent from "./FooterComponent";
+import StatChart from "./StatChart";
 import { DockerInterface, DockerInstance } from "./docker/DockerInterface";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
@@ -70,6 +71,7 @@ const App: React.FC = () => {
 
     return (
         <div className="container-fluid">
+            <StatChart></StatChart>
             <div className="row">
                 <div className="col-md-12">
                     <PruneConfirmation

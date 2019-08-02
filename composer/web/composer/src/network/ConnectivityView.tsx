@@ -5,6 +5,7 @@ import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "./ConnectivityView.css";
 import { Graph } from "react-d3-graph";
 import LabchainClient from "../labchainSDK/Client";
+import StatChart from "../StatChart";
 
 export interface GraphNode {
     id: string;
@@ -127,6 +128,7 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
     render() {
         return (
             <div className="container-fluid">
+                <StatChart></StatChart>
                 <div className="row">
                     <div className="col-md-12">
                         <h1>Network View</h1>
