@@ -1,16 +1,46 @@
-export default class LabchainClient {
+export interface Block {
+    creator: string;
+    difficulty: number;
+    merkleHash: string | null;
+    nonce: number;
+    nr: number;
+    predecessorBlock: string;
+    timestamp: number;
+    transactions: string[];
+}
+
+export class LabchainClient {
     url: string = "";
     rpc_id_count: number = 0;
     constructor(url: string) {
         this.url = url;
     }
 
+    /**
+     * Returns the connected peers of the node
+     * */
     getConnectedPeers(): Promise<string[]> {
         if ("" === this.url) {
             throw Error("Not connected to a node");
         }
 
         return this.sendJSONRPC("getPeers");
+    }
+
+    /**
+     * Returns the n'th block. If no number is given
+     * it returns the latest block
+     * */
+    async getBlock(n?: number): Promise<Block[]> {
+        if (!n) return this.sendJSONRPC("requestBlock");
+        else return this.sendJSONRPC("requestBlock", [n]);
+    }
+
+    /**
+     * Returns the current mining difficulty
+     * */
+    getDifficulty(): Promise<number> {
+        return new Promise<number>(() => {});
     }
 
     sendJSONRPC(method: string, params?: any): Promise<any> {

@@ -1,21 +1,64 @@
 import React from "react";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import { LabchainClient } from "./labchainSDK/Client";
 
-interface IState {}
+interface IState {
+    current_miner: string;
+    current_block: number;
+    current_difficulty: number;
+}
 
 interface IProps {}
 
 export default class StateChart extends React.Component<IProps, IState> {
-    current_miner: string = "";
-    current_block: number = 0;
-    current_difficulty: number = -1;
+    _isMounted: Boolean = false;
+    timer: any;
+    client: LabchainClient;
+
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            current_miner: "",
+            current_block: 0,
+            current_difficulty: 0
+        };
+
+        this.client = new LabchainClient("http://localhost:5049/");
+    }
+
+    componentDidMount() {
+        this._isMounted = true;
+        this.timer = setInterval(() => {
+            this.tick();
+        }, 1000);
+    }
+
+    tick() {
+        this.client.getBlock().then(blocks => {
+            if (this._isMounted) {
+                if (0 === blocks.length) return;
+                let block = blocks[0];
+                this.setState({
+                    current_miner: block.creator,
+                    current_block: block.nr,
+                    current_difficulty: block.difficulty
+                });
+            }
+        });
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
+        clearInterval(this.timer);
+    }
+
     render() {
         return (
             <div className="container-fluid">
                 <div className="row">
-                    <div className="col-md-4">Current Miner: {this.current_miner}</div>
-                    <div className="col-md-4">Current Block: {this.current_block}</div>
-                    <div className="col-md-4">Current Difficulty: {this.current_difficulty}</div>
+                    <div className="col-md-4">Current Miner: {this.state.current_miner}</div>
+                    <div className="col-md-4">Current Block: {this.state.current_block}</div>
+                    <div className="col-md-4">Current Difficulty: {this.state.current_difficulty}</div>
                 </div>
             </div>
         );

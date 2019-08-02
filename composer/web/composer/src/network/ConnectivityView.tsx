@@ -4,7 +4,7 @@ import FooterComponent from "../FooterComponent";
 import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "./ConnectivityView.css";
 import { Graph } from "react-d3-graph";
-import LabchainClient from "../labchainSDK/Client";
+import { LabchainClient } from "../labchainSDK/Client";
 import StatChart from "../StatChart";
 
 export interface GraphNode {
