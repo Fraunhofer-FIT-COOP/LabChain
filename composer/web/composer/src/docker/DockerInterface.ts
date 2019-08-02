@@ -17,4 +17,46 @@ export class DockerInterface {
 
         return json_resp;
     }
+
+    public static async createInstance(): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/startInstance");
+        const instances = await response.json();
+
+        return instances;
+    }
+
+    public static async startInstance(name: string): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/startInstance?name=" + name);
+        const instances = await response.json();
+
+        return instances;
+    }
+
+    public static async deleteInstance(name: string): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/deleteInstance?name=" + name);
+        const instances = await response.json();
+
+        return instances;
+    }
+
+    public static async stopInstance(name: string): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/stopInstance?name=" + name);
+        const instances = await response.json();
+
+        return instances;
+    }
+
+    public static async pruneNetwork(): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/pruneNetwork");
+        const instances = await response.json();
+
+        return instances;
+    }
+
+    public static async spawnNetwork(n: number): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/spawnNetwork?number=" + n);
+        const instances = await response.json();
+
+        return instances;
+    }
 }

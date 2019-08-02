@@ -14,7 +14,6 @@ const App: React.FC = () => {
     const [showSpawnDialog, setShowSpawnDialog] = useState(false);
 
     let noteColor = { background: "#0E1717", text: "#FFFFFF" };
-    const base_url = "http://localhost:8080";
 
     useEffect(() => {
         DockerInterface.getInstances().then(instances => {
@@ -24,37 +23,32 @@ const App: React.FC = () => {
     }, []);
 
     let createNewDockerInstance = async function(evt: any) {
-        const response = await fetch(base_url + "/startInstance");
-        const instances = await response.json();
+        let instances = await DockerInterface.createInstance();
         setDockerInstances(instances);
         notify.show("Instance created", "custom", 5000, noteColor);
     };
 
     let startInstance = async function(name: string) {
-        const response = await fetch(base_url + "/startInstance?name=" + name);
-        const instances = await response.json();
+        let instances = await DockerInterface.startInstance(name);
         setDockerInstances(instances);
         notify.show("Instance started", "custom", 5000, noteColor);
     };
 
     let deleteInstance = async function(name: string) {
-        const response = await fetch(base_url + "/deleteInstance?name=" + name);
-        const instances = await response.json();
+        let instances = await DockerInterface.deleteInstance(name);
         setDockerInstances(instances);
         notify.show("Instance deleted", "custom", 5000, noteColor);
     };
 
     let stopInstance = async function(name: string) {
-        const response = await fetch(base_url + "/stopInstance?name=" + name);
-        const instances = await response.json();
+        let instances = await DockerInterface.stopInstance(name);
         setDockerInstances(instances);
         notify.show("Instance stopped", "custom", 5000, noteColor);
     };
 
     let pruneNetwork = async function() {
         setShowPruneConfirmation(false);
-        const response = await fetch(base_url + "/pruneNetwork");
-        const instances = await response.json();
+        let instances = await DockerInterface.pruneNetwork();
         setDockerInstances(instances);
         notify.show("Network pruned", "custom", 5000, noteColor);
     };
@@ -69,8 +63,7 @@ const App: React.FC = () => {
 
     let spawnNetwork = async function(n: number) {
         setShowSpawnDialog(false);
-        const response = await fetch(base_url + "/spawnNetwork?number=" + n);
-        const instances = await response.json();
+        let instances = await DockerInterface.spawnNetwork(n);
         setDockerInstances(instances);
         notify.show("Network generated", "custom", 5000, noteColor);
     };
