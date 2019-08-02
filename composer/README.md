@@ -2,16 +2,28 @@
 
 The LabChain network composer is a web-based GUI component heavily relying on docker, that provides the following features:
 
-* Spawning networks of arbitrary sizes locally (at some point your machine overburdened)
-* Measures the connectivity. What node is connect to what other nodes?
-* Easy application of benchmarks.
+- Spawning networks of arbitrary sizes locally (at some point your machine overburdened)
+- Measures the connectivity. What node is connect to what other nodes?
+- Easy application of benchmarks.
 
 The general idea is to provide a benchmark application that can easily be executed to measure the performance continuously during
 development.
 
+## Screenshots
+
+### Instance Overview
+
+![Instance Overview](./doc/instance_overview.png)
+
+### Network View
+
+![Network View](./doc/network_view.png)
+
+By hovering over a node you see the established connections to other nodes.
+
 ## Usage
 
-One requirement is that you have installed *docker* and that you can execute docker as non-root user
+One requirement is that you have installed _docker_ and that you can execute docker as non-root user
 
 `sudo usermod -aG docker $USER` on Ubuntu
 
