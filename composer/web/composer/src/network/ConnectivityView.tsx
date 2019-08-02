@@ -88,7 +88,10 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
             })
             .flat();
 
-        if (this._isMounted) this.setState({ data: { nodes: nodes, links: links } });
+        let newData = { nodes: nodes, links: links };
+
+        // the comparation might fail sometimes, but its fast and nothing bad will happen anyway
+        if (this._isMounted && JSON.stringify(this.state.data) !== JSON.stringify(newData)) this.setState({ data: newData });
     }
 
     tick() {
