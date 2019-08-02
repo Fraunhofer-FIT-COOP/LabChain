@@ -40,7 +40,7 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
             highlightStrokeColor: "blue"
         },
         link: {
-            highlightColor: "lightblue"
+            highlightColor: "blue"
         }
     };
 
