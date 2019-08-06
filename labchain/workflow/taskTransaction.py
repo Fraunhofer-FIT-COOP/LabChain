@@ -39,12 +39,12 @@ class TaskTransaction(Transaction):
             raise ValueError(
                 'Corrupted transaction, no previous_transaction found')
 
-        if self.workflow_ID != previous_transaction.workflow_ID:
+        if self.workflow_ID != previous_transaction.payload["workflow_id"]:
             logging.warning('Workflow_ID of the new transaction does not match with the previous transaction.')
             TaskTransaction._validation_lock.release()
             return False
 
-        if self.workflow_ID != workflow_transaction.workflow_ID:
+        if self.workflow_ID != workflow_transaction.payload["workflow_id"]:
             logging.warning('Workflow_ID of the new transaction does not match with the initial transaction.')
             TaskTransaction._validation_lock.release()
             return False
@@ -55,13 +55,13 @@ class TaskTransaction(Transaction):
             TaskTransaction._validation_lock.release()
             return False
 
-        if not previous_transaction.in_charge.split(sep='_')[0] == self.sender:
+        if not previous_transaction.payload["in_charge"].split(sep='_')[0] == self.sender:
             logging.warning(
                 'Sender is not the current owner of the document flow!')
             TaskTransaction._validation_lock.release()
             return False
 
-        if not self.in_charge.split(sep='_')[0] == self.receiver:
+        if not self.payload["in_charge"].split(sep='_')[0] == self.receiver:
             logging.warning('Receiver does not correspond to in_charge flag')
             TaskTransaction._validation_lock.release()
             return False
@@ -86,25 +86,25 @@ class TaskTransaction(Transaction):
         return self.validate_transaction_common(crypto_helper, blockchain)
 
     def validate_transaction_common(self, crypto_helper, blockchain):
-        if not self._check_pid_well_formedness(self.in_charge):
+        if not self._check_pid_well_formedness(self.payload["in_charge"]):
             return False
         return super().validate_transaction(crypto_helper, blockchain)
 
     def _check_permissions_write(self, previous_transaction, workflow_transaction):
         if not workflow_transaction:
             return False
-        permissions = workflow_transaction.permissions
+        permissions = workflow_transaction.payload["permissions"]
         for attributeName in self.document:
             if attributeName not in permissions:
                 return False
-            if previous_transaction.in_charge not in permissions[attributeName]:
+            if previous_transaction.payload["in_charge"] not in permissions[attributeName]:
                 return False
         return True
 
     def _check_process_definition(self, previous_transaction, workflow_transaction):
-        process_definition = workflow_transaction.processes
+        process_definition = workflow_transaction.payload["processes"]
         if previous_transaction:
-            if self.in_charge not in process_definition[previous_transaction.in_charge]:
+            if self.payload["in_charge"] not in process_definition[previous_transaction.payload["in_charge"]]:
                 return False
         return True
 
@@ -231,7 +231,7 @@ class WorkflowTransaction(TaskTransaction):
                 TaskTransaction._validation_lock.release()
                 return False
 
-        for sender, receivers in self.processes.items():
+        for sender, receivers in self.payload["processes"].items():
             if not self._check_pid_well_formedness(sender):
                 TaskTransaction._validation_lock.release()
                 return False
