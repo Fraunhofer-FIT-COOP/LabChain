@@ -6,6 +6,7 @@ import SpawnNetworkDialog from "./dialog/SpawnDialog";
 import FooterComponent from "./FooterComponent";
 import StatChart from "./StatChart";
 import { Transaction } from "./labchainSDK/Transaction";
+import { LabchainClient } from "./labchainSDK/Client";
 import { Account } from "./labchainSDK/Account";
 import { DockerInterface, DockerInstance } from "./docker/DockerInterface";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
@@ -75,16 +76,26 @@ const App: React.FC = () => {
     let send1000Transactions = async function() {
         // create disposable accounts
         let ac: Account = Account.createAccount();
+        console.log("Sender");
+        console.log(ac);
+        console.log(ac.getPublicKeyPEMBase64());
         let rec: Account = Account.createAccount();
-        ac.generate();
+        console.log("Receiver");
+        console.log(rec);
 
         // create benchmark transaction and sign it
         let tr: Transaction = new Transaction(ac.getPublicKeyPEMBase64(), rec.getPublicKeyPEMBase64(), "This is a very important payload");
         tr = ac.signTransaction(tr);
+        console.log(tr);
+        console.log("Verify:");
+        //console.log(tr.validate(ac.getPublicKey()));
+
+        let client: LabchainClient = new LabchainClient("http://localhost:8082");
+        client.sendTransaction(tr).then(() => {
+            console.log("Send transaction");
+        });
 
         // send it to the blockchain node
-
-        console.log(tr);
     };
 
     let send10000Transactions = async function() {};
