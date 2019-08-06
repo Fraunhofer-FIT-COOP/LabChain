@@ -81,6 +81,64 @@ class TaskTransactionWizard(TransactionWizard):
                 - set(send_task_transaction_dict)}
         return [diff[k] for k in diff]
 
+    def get_all_received_workflow_transactions(self, public_key):
+        received = self.network_interface.search_transaction_from_receiver(public_key)
+        received_workflow_transactions = [WorkflowTransaction.from_json(t.get_json_with_signature()).payload for t in received if
+                                     'processes' in t.payload]
+        return received_workflow_transactions
+
+    def check_if_wf_ended(self, public_key, wf_id):
+        received = self.network_interface.search_transaction_from_receiver(public_key)
+        received_workflow_transactions = [TaskTransaction.from_json(t.get_json_with_signature()).payload["workflow_id"]==wf_id for t in received if
+                                     'workflow_id' in t.payload]
+        return True if True in received_workflow_transactions else False
+
+    def get_workflow_status(self, workflow_payload):
+        addr = self.get_last_account(workflow_payload)
+        result = self.check_if_wf_ended(addr, workflow_payload["workflow_id"])
+        return "Completed" if result else "In Progress"
+
+    def get_last_account(self, workflow_payload):
+        all_addresses = set([item.split('_')[0] for sublist in workflow_payload["processes"].values() for item in sublist])
+        for addr in all_addresses:
+            if addr not in [item.split('_')[0] for item in workflow_payload["processes"].keys()]:
+                return addr
+
+    def show_workflow_status(self):
+        clear_screen()
+        wallet_list = self.wallet_to_list()
+
+        if not len(self.wallet) == 0:
+            print("Please choose the account to see related workflows!")
+            chosen_key = self.ask_for_key_from_wallet(wallet_list)
+            if chosen_key == '':
+                return
+
+            while not self.validate_sender_input(chosen_key):
+                print("Please choose the account to see related workflows!")
+                chosen_key = self.ask_for_key_from_wallet(wallet_list)
+                if chosen_key == '':
+                    return
+                clear_screen()
+                print('Invalid input! Please choose a correct index!')
+                print()
+
+            clear_screen()
+            print(u'Account: ' + str(chosen_key))
+            public_key = wallet_list[int(chosen_key) - 1][1]
+
+            workflow_transactions = self.get_all_received_workflow_transactions(public_key)
+            if len(workflow_transactions) == 0:
+                print("You have not started any workflows!")
+                input('Press any key to go back to the main menu!')
+                return
+            for (key, wf_tx) in enumerate(workflow_transactions):
+                print()
+                print(str(key+1) + u':  Workflow id:   ' + str(wf_tx["workflow_id"] + '\t---->\t' +
+                                                                self.get_workflow_status(wf_tx)))
+                print()
+            input('Press any key to go back to the main menu!')
+
 
     def show(self):
         """Start the wizard."""
@@ -360,7 +418,8 @@ class WorkflowClient:
                                                                      self.network_interface)
         self.main_menu = Menu(['Main menu'], {
             '1': ('Create workflow transaction', self.send_workflow_transaction, []),
-            '2': ('Send transaction', self.send_task_transaction, [])
+            '2': ('Send transaction', self.send_task_transaction, []),
+            '3': ('Show workflow status', self.show_workflow_status, []),
         }, 'Please select a value: ', 'Exit Workflow Client')
 
     def main(self):
@@ -373,6 +432,5 @@ class WorkflowClient:
     def send_task_transaction(self):
         self.task_transaction_wizard.show()
 
-    def show_completed_workflows(self):
-        #TODO
-        pass
+    def show_workflow_status(self):
+        self.task_transaction_wizard.show_workflow_status()

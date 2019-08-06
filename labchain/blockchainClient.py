@@ -126,7 +126,7 @@ class TransactionWizard:
             print(u'\tPublic Key: ' + str(key[1]))
             print()
 
-        user_input = input('Please choose a sender account (by number) or press enter to return: ')
+        user_input = input('Please choose an account (by number) or press enter to return: ')
         return user_input
 
     @staticmethod
