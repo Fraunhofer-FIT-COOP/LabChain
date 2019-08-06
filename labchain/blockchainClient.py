@@ -103,14 +103,14 @@ class TransactionWizard:
             return False
 
     @staticmethod
-    def __validate_receiver_input(usr_input):
+    def validate_receiver_input(usr_input):
         if len(usr_input) > 0:
             return True
         else:
             return False
 
     @staticmethod
-    def __validate_payload_input(usr_input):
+    def validate_payload_input(usr_input):
         if len(usr_input) > 0:
             return True
         else:
@@ -168,7 +168,7 @@ class TransactionWizard:
             print(u'Sender: ' + str(chosen_key))
             chosen_receiver = self.ask_for_receiver()
 
-            while not self.__validate_receiver_input(chosen_receiver):
+            while not self.validate_receiver_input(chosen_receiver):
                 # clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
@@ -180,7 +180,7 @@ class TransactionWizard:
             print(u'Receiver: ' + str(chosen_receiver))
             chosen_payload = self.ask_for_payload()
 
-            while not self.__validate_payload_input(chosen_payload):
+            while not self.validate_payload_input(chosen_payload):
                 # clear_screen()
                 print('Invalid input! Please choose a correct payload!')
                 print(u'Sender: ' + str(chosen_key))
