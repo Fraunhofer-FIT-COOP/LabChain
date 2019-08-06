@@ -7,6 +7,12 @@ class Transaction:
     """Represents a single transaction within the blockchain."""
 
     def __init__(self, sender, receiver, payload, signature=None):
+        """ Creates a transaction
+        :param sender: Public key of the sender in PEM format Base64 encoded
+        :param receiver: Public key of the receiver in PEM format Base64 encoded
+        :param payload: Payload of the transaction
+        :param signature: signature as 'DER' formatted signature as a ASN.1 SEQUENCE consisting of two INTEGERSrepresenting the points of the EC
+        """
         self.__sender = sender
         self.__receiver = receiver
         self.__payload = payload
@@ -55,6 +61,9 @@ class Transaction:
     def sign_transaction(self, crypto_helper, private_key):
         """
         Passing the arguments for signature with given private key.
+
+        The signature is stored in 'DER' format: An ASN.1 SEQUENCE with two INTEGERS as hex value
+
         :param private_key: Private key of the signer in the string format.
         :param crypto_helper: Crypto_Helper instance used for signing
         """

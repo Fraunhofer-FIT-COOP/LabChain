@@ -23,11 +23,11 @@ class CryptoHelper:
         Hashes and signs the given payload with given private key.
         :param private_key: Private key of the signer in the string format.
         :param payload: JSON of the data to be signed.
-        :return signature: signature in binary string format."""
+        :return signature: signature as 'DER' formatted signature as a ASN.1 SEQUENCE consisting of two INTEGERSrepresenting the points of the EC"""
 
         private_key = b64decode(private_key).decode()
         h = self.__hash(payload)  # Hash the payload
-        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3')  # Get the signature object
+        signer = DSS.new(ECC.import_key(private_key), 'fips-186-3', encoding="der")  # Get the signature object
         signature = signer.sign(h)  # Sign the hash
         signature = b64encode(signature).decode('utf-8')
         logging.debug('Cryptohelper signed.')
@@ -38,13 +38,13 @@ class CryptoHelper:
         Validates the signature and data pair with the signer's public key.
         :param pub_key: Public key of the signer in the string format.
         :param payload: JSON of the data that was signed.
-        :param signature: Signature in binary string that was produced for the given data.
+        :param signature: Signature as 'DER' formatted signature as a ASN.1 SEQUENCE consisting of two INTEGERS representing the points of the EC
         :return result: True if signature and data pair matches, false otherwise."""
 
         pub_key = b64decode(pub_key).decode()
         h = self.__hash(payload)  # Hash the payload
         public_key = ECC.import_key(pub_key)  # Get the public key object using public key string
-        verifier = DSS.new(public_key, 'fips-186-3')  # Create a signature object
+        verifier = DSS.new(public_key, 'fips-186-3', encoding="der")  # Create a signature object
         signature = b64decode(signature.encode('utf-8'))
 
         try:
