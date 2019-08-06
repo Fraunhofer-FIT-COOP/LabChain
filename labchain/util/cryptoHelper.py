@@ -40,20 +40,22 @@ class CryptoHelper:
         :param payload: JSON of the data that was signed.
         :param signature: Signature as 'DER' formatted signature as a ASN.1 SEQUENCE consisting of two INTEGERS representing the points of the EC
         :return result: True if signature and data pair matches, false otherwise."""
+        logging.debug("Verifiy transaction: pubkey: {}, payload: {}, signature: {}".format(pub_key, payload, signature))
 
-        pub_key = b64decode(pub_key).decode()
+        pub_key = b64decode(pub_key)
         h = self.__hash(payload)  # Hash the payload
         public_key = ECC.import_key(pub_key)  # Get the public key object using public key string
         verifier = DSS.new(public_key, 'fips-186-3', encoding="der")  # Create a signature object
-        signature = b64decode(signature.encode('utf-8'))
+        signature = b64decode(signature)
 
         try:
             verifier.verify(h, signature)  # Check if the signature is verified
             result = True
             logging.debug('Cryptohelper verified.')
 
-        except ValueError:
+        except ValueError as e:
             result = False
+            logging.debug(e)
             logging.debug('Cryptohelper failed to verify.')
 
         return result
