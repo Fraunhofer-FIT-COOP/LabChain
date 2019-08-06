@@ -198,7 +198,7 @@ class TaskTransaction(Transaction):
 
 class WorkflowTransaction(TaskTransaction):
 
-    def __init__(self, sender, receiver, payload: Dict, signature=None):
+    def __init__(self, sender, receiver, payload, signature=None):
         super().__init__(sender, receiver, payload, signature)
         self.payload['transaction_type'] = '1'
 
