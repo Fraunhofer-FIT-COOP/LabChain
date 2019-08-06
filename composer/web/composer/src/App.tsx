@@ -82,18 +82,15 @@ const App: React.FC = () => {
         let rec: Account = Account.createAccount();
         console.log("Receiver");
         console.log(rec);
+        let client: LabchainClient = new LabchainClient("http://localhost:8082");
 
         // create benchmark transaction and sign it
-        let tr: Transaction = new Transaction(ac, rec, "This is a very important payload");
-        tr = ac.signTransaction(tr);
-        console.log(tr);
-        console.log("Verify:");
-        //console.log(tr.validate(ac.getPublicKey()));
+        for (let i = 0; i < 1000; ++i) {
+            let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
+            tr = ac.signTransaction(tr);
 
-        let client: LabchainClient = new LabchainClient("http://localhost:8082");
-        client.sendTransaction(tr).then(() => {
-            console.log("Send transaction");
-        });
+            client.sendTransaction(tr).then(() => {});
+        }
 
         // send it to the blockchain node
     };
