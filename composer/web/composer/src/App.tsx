@@ -5,8 +5,11 @@ import PruneConfirmation from "./dialog/PruneConfirmation";
 import SpawnNetworkDialog from "./dialog/SpawnDialog";
 import FooterComponent from "./FooterComponent";
 import StatChart from "./StatChart";
+import { Transaction } from "./labchainSDK/Transaction";
+import { Account } from "./labchainSDK/Account";
 import { DockerInterface, DockerInstance } from "./docker/DockerInterface";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.min.js";
 import "./App.css";
 
 const App: React.FC = () => {
@@ -69,6 +72,25 @@ const App: React.FC = () => {
         notify.show("Network generated", "custom", 5000, noteColor);
     };
 
+    let send1000Transactions = async function() {
+        // create disposable accounts
+        let ac: Account = Account.createAccount();
+        let rec: Account = Account.createAccount();
+        ac.generate();
+
+        // create benchmark transaction and sign it
+        let tr: Transaction = new Transaction(ac.getPublicKeyPEMBase64(), rec.getPublicKeyPEMBase64(), "This is a very important payload");
+        tr = ac.signTransaction(tr);
+
+        // send it to the blockchain node
+
+        console.log(tr);
+    };
+
+    let send10000Transactions = async function() {};
+
+    let send100000Transactions = async function() {};
+
     return (
         <div className="container-fluid">
             <StatChart></StatChart>
@@ -115,7 +137,44 @@ const App: React.FC = () => {
                         Spawn Network...
                     </button>
                 </div>
-                <div className="col-md-6"></div>
+                <div className="col-md-2">
+                    <div className="dropdown">
+                        <button
+                            className="btn btn-primary dropdown-toggle"
+                            type="button"
+                            id="dropdownMenuButton"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                        >
+                            Apply benchmark...
+                        </button>
+                        <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <button
+                                className="dropdown-item"
+                                title="Send 1,000 tranasctions to the blockchain network and measure the time"
+                                onClick={send1000Transactions}
+                            >
+                                1,000 Transactions
+                            </button>
+                            <button
+                                className="dropdown-item"
+                                title="Send 10,000 tranasctions to the blockchain network and measure the time"
+                                onClick={send10000Transactions}
+                            >
+                                10,000 Transactions
+                            </button>
+                            <button
+                                className="dropdown-item"
+                                title="Send 100,000 tranasctions to the blockchain network and measure the time"
+                                onClick={send100000Transactions}
+                            >
+                                100,000 Transactions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-2"></div>
             </div>
             <div className="row">
                 <div className="col-md-12">

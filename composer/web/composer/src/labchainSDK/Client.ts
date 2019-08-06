@@ -1,3 +1,5 @@
+import { Transaction } from "./Transaction";
+
 export interface Block {
     creator: string;
     difficulty: number;
@@ -19,7 +21,7 @@ export class LabchainClient {
     /**
      * Returns the connected peers of the node
      * */
-    getConnectedPeers(): Promise<string[]> {
+    async getConnectedPeers(): Promise<string[]> {
         if ("" === this.url) {
             throw Error("Not connected to a node");
         }
@@ -37,10 +39,10 @@ export class LabchainClient {
     }
 
     /**
-     * Returns the current mining difficulty
+     * Sends a transaction to the node
      * */
-    getDifficulty(): Promise<number> {
-        return new Promise<number>(() => {});
+    async sendTransaction(tx: Transaction): Promise<any> {
+        return new Promise(() => {});
     }
 
     sendJSONRPC(method: string, params?: any): Promise<any> {
