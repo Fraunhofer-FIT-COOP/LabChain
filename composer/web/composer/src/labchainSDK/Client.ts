@@ -42,7 +42,7 @@ export class LabchainClient {
      * Sends a transaction to the node
      * */
     async sendTransaction(tx: Transaction): Promise<any> {
-        return this.sendJSONRPC("sendTransaction", [tx]);
+        return this.sendJSONRPC("sendTransaction", [tx.toTransmittableString()]);
     }
 
     sendJSONRPC(method: string, params?: any): Promise<any> {

@@ -84,7 +84,7 @@ const App: React.FC = () => {
         console.log(rec);
 
         // create benchmark transaction and sign it
-        let tr: Transaction = new Transaction(ac.getPublicKeyPEMBase64(), rec.getPublicKeyPEMBase64(), "This is a very important payload");
+        let tr: Transaction = new Transaction(ac, rec, "This is a very important payload");
         tr = ac.signTransaction(tr);
         console.log(tr);
         console.log("Verify:");
