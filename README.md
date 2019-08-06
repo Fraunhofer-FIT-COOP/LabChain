@@ -45,10 +45,6 @@ python3 node.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 ```
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
-`-p` or `--plot` enables frequent plotting of the blockchain into `~/.labchain/plot`
-`--plot-dir <directory>` lets you choose a different directory for plot output
-`--plot-auto-open` enables opening the plot in your browser whenever it is created (may become annoying)
-
 
 # Run the Client
 
@@ -56,23 +52,7 @@ python3 node.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 python3 client.py <blockchain-node-ip> <blockchain-node-port>
 ```
 
-`-v` and `-vv` set the log level to INFO or DEBUG.
-
-# Run the Web Client
-
-Run `python3 client_api.py`.
-
-Make a copy of the directory `~/web-client` and move the copy outside the project directory, so that you won't push the Node packages to repository.
-
-Install Node.js: https://nodejs.org/en/
-
-After installing Node, run the command `npm install` inside the copy of web-client directory to install the necessary Node packages.
-
-After installing the necessary packages, run `npm run build`. You will see a directory named 'dist' afterward.
-
-Run `npm install -g serve` to install Serve, a static file server to host the web client in local network.
-
-After installing Serve, run the command `serve` inside the dist directory to host our web client. You can test the web client in http://localhost:5000
+`--doc` to start the Workflow Management System
 
 # Run the unit tests
 
@@ -100,6 +80,7 @@ python3 -m unittest discover
 - [x] Remove visualizer
 - [x] Clean up existing branches
 - [x] Remove `nogas` and check PEP8 Styleguide
+- [x] The `test_account.py` uses the `MockCryptoHelper` but should use the real CryptoHelper
 - [ ] Check unit tests
 - [ ] Add an example (quick start/ getting started) to the README
 - [ ] Remove mocks
@@ -112,7 +93,6 @@ python3 -m unittest discover
 - [ ] Remove 10 seconds delay to wait for incoming transactions
 - [ ] Currently the blocksynchronisation seems not to work ( > 2 peers) -> fix it
 - [ ] Remove auto discovery mechanism
-- [ ] The `test_account.py` uses the `MockCryptoHelper` but should use the real CryptoHelper
 - [ ] Check the calls of the crypto helper methods (First `json.dumps(...)` then in the crypto helper `json.loads(...)`. There must be a better way.)
 - [ ] Add Status Information when starting the node (without verbose mode)
 - [ ] Clean up logging (better differentiation between log levels)
