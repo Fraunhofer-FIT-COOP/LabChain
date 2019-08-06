@@ -68,7 +68,6 @@ class TaskTransactionWizard(TransactionWizard):
             return False
 
     def check_tasks(self, public_key):
-        #todo not working right, fix it
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
@@ -78,8 +77,8 @@ class TaskTransactionWizard(TransactionWizard):
         send_task_transaction = [t for t in send_task_transaction if t.type == '2']
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
-        diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)}
-                #- set(send_task_transaction_dict)}
+        diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)
+                - set(send_task_transaction_dict)}
         return [diff[k] for k in diff]
 
 
@@ -149,7 +148,9 @@ class TaskTransactionWizard(TransactionWizard):
             if in_charge in workflow_transaction.payload['processes'].keys():
                 next_in_charge_list = workflow_transaction.payload['processes'][in_charge]
             else:
-                next_in_charge_list = list(in_charge)
+                input("End of workflow. Please press any key to return!")
+                return
+
 
             receiver_index = self.ask_for_receiver(next_in_charge_list)
             if receiver_index == '':
