@@ -6,6 +6,8 @@ from labchain.blockchainClient import TransactionWizard
 from labchain.util.TransactionFactory import TransactionFactory
 from labchain.workflow.taskTransaction import TaskTransaction, WorkflowTransaction
 
+RESOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources'))
+
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -14,6 +16,7 @@ class TaskTransactionWizard(TransactionWizard):
 
     def __init__(self, wallet, crypto_helper, network_interface):
         super().__init__(wallet, crypto_helper, network_interface)
+        self.my_dir = RESOURCE_DIR
 
     @staticmethod
     def validate_wf_id_input(chosen_wf_id, wf_ids):
@@ -94,9 +97,6 @@ class TaskTransactionWizard(TransactionWizard):
         return  len([i for i in length_list if i > 1]) > 0
 
 
-    def check_if_split_transaction(self):
-        pass
-
     def get_all_received_workflow_transactions(self, public_key):
         received = self.network_interface.search_transaction_from_receiver(public_key)
         received_workflow_transactions = [WorkflowTransaction.from_json(t.get_json_with_signature()).payload for t in received if
@@ -110,18 +110,32 @@ class TaskTransactionWizard(TransactionWizard):
         return True if True in received_workflow_transactions else False
 
     def get_workflow_status(self, workflow_payload):
-        addr = self.get_last_account(workflow_payload)
-        result = self.check_if_wf_ended(addr, workflow_payload["workflow_id"])
+        addrs = self.get_last_accounts(workflow_payload)
+        result = True
+        for addr in addrs:
+            if not self.check_if_wf_ended(addr, workflow_payload["workflow_id"]):
+                result = False
         return "Completed" if result else "In Progress"
 
-    def get_last_account(self, workflow_payload):
+    def get_last_accounts(self, workflow_payload):
         all_addresses = set([item.split('_')[0] for sublist in workflow_payload["processes"].values() for item in sublist])
+        last_accounts = list()
         for addr in all_addresses:
             if addr not in [item.split('_')[0] for item in workflow_payload["processes"].keys()]:
-                return addr
+                last_accounts.append(addr)
+        return last_accounts
+
+    def get_workflow_name(self, workflow_payload):
+        for file in os.listdir(self.my_dir):
+            with open(os.path.join(self.my_dir, file)) as f:
+                wf_definition = json.load(f)
+                document_cond = set(wf_definition["document"].keys())  == set(workflow_payload["document"].keys())
+                process_cond = set(wf_definition["processes"].keys())  == set(workflow_payload["processes"].keys())
+                permissions_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
+                if document_cond and process_cond and permissions_cond:
+                    return file
 
     def show_workflow_status(self):
-        #TODO show the name of the workflow json
         clear_screen()
         wallet_list = self.wallet_to_list()
 
@@ -151,8 +165,8 @@ class TaskTransactionWizard(TransactionWizard):
                 return
             for (key, wf_tx) in enumerate(workflow_transactions):
                 print()
-                print(str(key+1) + u':  Workflow id:   ' + str(wf_tx["workflow_id"] + '\t---->\t' +
-                                                                self.get_workflow_status(wf_tx)))
+                print(str(key+1) + u':  Workflow id: ' + str(wf_tx["workflow_id"] + '\t---->\t' +
+                      self.get_workflow_name(wf_tx) + '\t---->\t' + self.get_workflow_status(wf_tx)))
                 print()
             input('Press any key to go back to the main menu!')
 
@@ -294,7 +308,7 @@ class WorkflowTransactionWizard(TransactionWizard):
 
     def __init__(self, wallet, crypto_helper, network_interface):
         super().__init__(wallet, crypto_helper, network_interface)
-        self.my_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources'))
+        self.my_dir = RESOURCE_DIR
 
     def get_workflow_list(self, directory):
         path_list = list()
