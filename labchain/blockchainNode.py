@@ -324,12 +324,6 @@ class BlockChainNode:
                                          min_blocks_for_difficulty=min_blocks,
                                          db=self.db,
                                          q=self.q)
-        
-        
-        
-        #self.create_dummy_method_calls(1000)
-        #self.create_dummy_contract(500)
-
 
         self.logger.debug("Initialized web server")
         """init network interface"""
@@ -393,73 +387,5 @@ class BlockChainNode:
             kwargs=dict(interval=pruning_interval))
         self.logger.debug("Starting worldState thread...")
 
-
-        #self.block_mine_timer(mine_freq,num_of_transactions)
         self.mine_thread.start()
         self.orphan_killer.start()
-
-    
-
-
-    def create_dummy_method_calls(self, number_of_calls):
-
-        contract_address = self.create_dummy_contract(1)
-        print("Transaction for creating a test contract sent...")
-
-        #time.sleep(15)
-
-        chosen_receiver = contract_address
-        
-        crypto_helper = CryptoHelper.instance()
-        private_key, public_key = crypto_helper.generate_key_pair()
-
-        payload = {'methods':[]}
-        methods = []
-
-        methodName = 'addCoins'
-        arguments = json.loads("""{"coinsToAdd": 100}""")
-
-        methodToCall = {'methodName':methodName, 'arguments':arguments}
-        methods.append(methodToCall)
-
-        payload['methods'] = methods
-
-        payload['contract_file_name'] = 'contract.py'
-
-        for i in range(19):
-            new_transaction = Transaction(sender=str(public_key), receiver=chosen_receiver, payload='', transaction_type='Normal Transaction')
-            #transaction_hash = crypto_helper.hash(new_transaction.get_json())
-            #new_transaction.transaction_hash = transaction_hash
-            new_transaction.sign_transaction(crypto_helper, private_key)
-            self.txpool_obj.add_transaction_if_not_exist(new_transaction)
-            print('Normal transaction # ' + str(i) + ' was sent.')
-
-        for i in range(number_of_calls):
-            new_transaction = Transaction(sender=str(public_key), receiver=chosen_receiver, payload=str(payload), transaction_type='Method Call')
-            #transaction_hash = crypto_helper.hash(new_transaction.get_json())
-            #new_transaction.transaction_hash = transaction_hash
-            new_transaction.sign_transaction(crypto_helper, private_key)
-            self.txpool_obj.add_transaction_if_not_exist(new_transaction)
-            print('Method call transaction # ' + str(i) + ' was sent.')
-
-        
-
-    def create_dummy_contract(self, num_of_contracts):
-        for _ in range(num_of_contracts):
-            crypto_helper = CryptoHelper.instance()
-            payload = {"contractCode":'', "arguments":"", "contract_file_name":""}
-
-            payload["contractCode"] = """gANCGQwAAIADWA8MAAAiIiIKICAgIENPTlRSQUNUIEdVSURFTElORVMKICAgIC0gQ29udHJhY3Qg\naGFzIHRvIGhhdmUgYSAidG9fZGljdCIgbWV0aG9kLgogICAgLSBUaGUgY29uc3RydWN0b3IgbmVl\nZHMgdG8gcmVjZWl2ZSB0aGUgc2VuZGVyIG9mIHRoZSB0cmFuc2FjdGlvbgogICAgICAgIGFzIGEg\ncGFyYW1ldGVyIGFuZCBzYXZlIGl0IGluIHNlbGYuY29udHJhY3Rfb3duZXJzIGFzIHRoZSBmaXJz\ndAogICAgICAgIHN0cmluZyBvZiBhIGxpc3QuCiAgICAgICAgTm90ZTogVGhlIHNlbmRlciBpcyBp\nbmplY3RlZCBieSB0aGUgYmxvY2tjaGFpbl9ub2RlIGxvZ2ljIGludG8gdGhlCiAgICAgICAgICAg\nIHBhcmFtZXRlcnMgb2YgdGhlIGNvbnRyYWN0IGNhbGwsIHNvIGl0IHNob3VsZCBiZSBvbW1pdGVk\nIHdoZW4gY3JlYXRpbmcKICAgICAgICAgICAgYSBjb250cmFjdCBjcmVhdGlvbiB0cmFuc2FjdGlv\nbiBvciBhIG1ldGhvZCBjYWxsIHRyYW5zYWN0aW9uIGluIHRoZQogICAgICAgICAgICBibG9ja2No\nYWluIGNsaWVudC4KICAgIC0gVGhlIGJhZF9zdGF0ZSB2YXJpYWJsZSBzaG91bGQgYmUgdXNlZCBp\nbnNpZGUgb2YgdGhlIGNvbnRyYWN0cyBsb2dpYyB0byBpbmZvcm0KICAgICAgICB0aGF0IGEgdHJh\nbnNhY3Rpb24gY3JlYXRlZCBhbiB1bmRlc2lyZWQgc3RhdGUuIEl0J3MgZGVmYXVsdCBpcyBGYWxz\nZS4gSWYgc2V0IHRvCiAgICAgICAgVHJ1ZSB0aGUgYmxvY2tjaGFpbiB3aWxsIGRpc2NhcmQgdGhl\nIHRyYW5zYWN0aW9uIHRoYXQgY3JlYXRlZCB0aGlzIGNoYW5nZSBhbmQKICAgICAgICB0aGUgbmV3\nIHN0YXRlIHdpbGwgbm90IGJlIHNhdmVkLgogICAgLSBBbGwgcGFyYW1ldGVyIHR5cGVzIHNob3Vs\nZCBiZSBzcGVjaWZpZWQgaW4gdGhlIGNvbnN0cnVjdG9yIGFuZCBpbiB0aGUgY2xhc3MgbWV0aG9k\ncy4KICAgIC0gQWxsIGN1c3RvbSBtZXRob2RzIHNob3VsZCByZWNlaXZlIHRoZSBzZW5kZXIgYXMg\ndGhlIGZpcnN0IHBhcmFtZXRlci4gVGhlIG1ldGhvZCBjYW4gdGhlbgogICAgCXVzZSB0aGlzIGlu\nZm9ybWF0aW9uIHRvIHJlc3RyaWN0IGFjdGlvbnMgb3Igbm90LgoKICAgIC0gRXhhbXBsZToKICAg\nICAgICBjbGFzcyBteUNvbnRyYWN0OgogICAgICAgICAgICBkZWYgX19pbml0X18oc2VsZiwgc2Vu\nZGVyOiBzdHIsIGN1c3RvbV9wYXJhbTE6IHR5cGUsIGN1c3RvbV9wYXJhbTI6IHR5cGUsIC4uLik6\nCiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICNSRVFVSVJFRCBBVFRSSUJVVEVTCiAg\nICAgICAgICAgICAgICBzZWxmLmNvbnRyYWN0X25hbWUgPSBzZWxmLl9fY2xhc3NfXy5fX25hbWVf\nXwogICAgICAgICAgICAgICAgc2VsZi5iYWRfc3RhdGUgPSBGYWxzZQogICAgICAgICAgICAgICAg\nc2VsZi5jb250cmFjdF9vd25lcnMgPSBbc2VuZGVyXQoKICAgICAgICAgICAgICAgICNDVVNUT00g\nQVRUUklCVVRFUwogICAgICAgICAgICAgICAgc2VsZi5jdXN0b21fYXJnMSA9IGN1c3RvbV9hcmcx\nCiAgICAgICAgICAgICAgICBzZWxmLmN1c3RvbV9hcmcyID0gY3VzdG9tX2FyZzIKICAgICAgICAg\nICAgICAgIC4uLgoKICAgICAgICAgICAgI1JFUVVJUkVEIE1FVEhPRAogICAgICAgICAgICBkZWYg\ndG9fZGljdChzZWxmKToKICAgICAgICAgICAgICAgIHJldHVybiB7CiAgICAgICAgICAgICAgICAg\nICAgI1JFUVVJUkVEIEtFWSBWQUxVRSBQQUlSUwogICAgICAgICAgICAgICAgICAgICdjb250cmFj\ndF9uYW1lJzogc2VsZi5jb250cmFjdF9uYW1lLAogICAgICAgICAgICAgICAgICAgICdiYWRfc3Rh\ndGUnOiBzZWxmLmJhZF9zdGF0ZSwKICAgICAgICAgICAgICAgICAgICAnY29udHJhY3Rfb3duZXJz\nJzogc2VsZi5jb250cmFjdF9vd25lcnMsCiAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAg\nICAgICAgICAgI0NVU1RPTSBLRVkgVkFMVUUgUEFJUlMKICAgICAgICAgICAgICAgICAgICAnY3Vz\ndG9tX2FyZzEnID0gc2VsZi5jdXN0b21fYXJnMSwKICAgICAgICAgICAgICAgICAgICAnY3VzdG9t\nX2FyZzInID0gc2VsZi5jdXN0b21fYXJnMiwKICAgICAgICAgICAgICAgICAgICAuLi4KICAgICAg\nICAgICAgICAgICAgICB9CgogICAgICAgICAgICAjQ1VTVE9NIE1FVEhPRFMKICAgICAgICAgICAg\nZGVmIG15X2N1c3RvbV9tZXRob2Qoc2VsZiwgc2VuZGVyOiBzdHIsIG15X2N1c3RvbV9wYXJhbTE6\nIHR5cGUsIC4uLikKICAgICAgICAgICAgLi4uCiIiIgoKY2xhc3MgQ29udHJhY3Q6CiAgICBkZWYg\nX19pbml0X18oc2VsZiwgc2VuZGVyOiBzdHIsIHBlcnNvbjogc3RyLCBjb2luczogaW50KToKICAg\nICAgICBzZWxmLmNvbnRyYWN0X25hbWUgPSBzZWxmLl9fY2xhc3NfXy5fX25hbWVfXwogICAgICAg\nIHNlbGYuYmFkX3N0YXRlID0gRmFsc2UKICAgICAgICBzZWxmLmNvbnRyYWN0X293bmVycyA9IFtz\nZW5kZXJdCgogICAgICAgIHNlbGYucGVyc29uOiBzdHIgPSBwZXJzb24KICAgICAgICBzZWxmLmNv\naW5zOiBpbnQgPSBjb2lucwoKCiAgICBkZWYgdG9fZGljdChzZWxmKToKICAgICAgICAiIiJDb252\nZXJ0IG93biBkYXRhIHRvIGEgZGljdGlvbmFyeS4iIiIKICAgICAgICByZXR1cm4gewogICAgICAg\nICAgICAnY29udHJhY3RfbmFtZSc6IHNlbGYuY29udHJhY3RfbmFtZSwKICAgICAgICAgICAgJ2Nv\nbnRyYWN0X293bmVycyc6IHNlbGYuY29udHJhY3Rfb3duZXJzLAogICAgICAgICAgICAnYmFkX3N0\nYXRlJzogc2VsZi5iYWRfc3RhdGUsCiAgICAgICAgICAgICdwZXJzb24nOiBzZWxmLnBlcnNvbiwK\nICAgICAgICAgICAgJ2NvaW5zJzogc2VsZi5jb2lucwogICAgICAgICAgICB9CgoKICAgIGRlZiBh\nZGRDb2lucyhzZWxmLCBzZW5kZXI6IHN0ciwgY29pbnNUb0FkZDogaW50KToKICAgICAgICBzZWxm\nLmNvaW5zID0gc2VsZi5jb2lucyArIGNvaW5zVG9BZGQKCiAgICBkZWYgc3BlbmRDb2lucyhzZWxm\nLCBzZW5kZXI6IHN0ciwgY29pbnNUb1NwZW5kOiBpbnQpOgogICAgICAgIGlmIHNlbGYuY29pbnMg\nLSBjb2luc1RvU3BlbmQgPCAwOgogICAgICAgICAgICBzZWxmLmJhZF9zdGF0ZSA9IFRydWUKICAg\nICAgICAgICAgcmV0dXJuCiAgICAgICAgZWxzZToKICAgICAgICAgICAgc2VsZi5jb2lucyA9IHNl\nbGYuY29pbnMgLSBjb2luc1RvU3BlbmRxAC5xAC4=\n"""
-            payload['arguments'] = json.loads('{"Person": "Alice", "coins": 100}')
-            payload['contract_file_name'] = 'contract.py'
-
-            private_key, public_key = crypto_helper.generate_key_pair()
-            new_transaction = Transaction(sender=str(public_key), receiver='', payload=str(payload), transaction_type='Contract Creation')
-            transaction_hash = crypto_helper.hash(new_transaction.get_json())
-    
-            new_transaction.transaction_hash = transaction_hash
-            new_transaction.sign_transaction(crypto_helper, private_key)
-            self.txpool_obj.add_transaction_if_not_exist(new_transaction)
-            print("Contract added")
-
-            return transaction_hash

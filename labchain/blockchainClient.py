@@ -305,7 +305,6 @@ class TransactionWizard:
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
-            #new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload), str(chosen_txType))
             new_transaction = Transaction(sender=str(public_key), receiver=str(chosen_receiver), payload=str(chosen_payload), transaction_type=str(chosen_txType))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
             transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
@@ -356,7 +355,6 @@ class TransactionWizard:
     def handle_contract_creation(self):
         chosen_receiver = ''
         payload = {"contractCode":'', "arguments":"", "contract_file_name":""}
-        #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
         pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
         pickledContract = None
         try:
@@ -386,10 +384,6 @@ class TransactionWizard:
             chosen_receiver = self.__ask_for_receiver()
             print()
 
-        # clear_screen()
-        # print(u'Sender: ' + str(sender))
-        # print(u'Transaction Type: ' + str(chosen_txType))
-        # print(u'Receiver: ' + str(chosen_receiver))
         chosen_payload = {'methods':[]}
         methods = []
 
@@ -442,7 +436,6 @@ class TransactionWizard:
         
         try:
             payload = {"contractCode":'', "arguments":""}
-            #pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
             pathToContract = input('Please enter the path to your contract: ').replace(' ', '')
             pickledContract = None
             with open(pathToContract, 'r') as file:
@@ -485,8 +478,6 @@ class BlockchainClient:
 
     def main(self):
         """Entry point for the client console application."""
-        #self.create_dummy_contracts(800)
-        #self.create_dummy_method_calls(1000)
         self.main_menu.show()
     
     def __create_transaction(self):
@@ -622,25 +613,25 @@ class BlockchainClient:
         clear_screen()
         contract_address = input('Please enter a contract\'s address: ')        
         
-    # try:
-        contract = self.network_interface.requestContract(contract_address)
-        if contract['terminated']:
-            print("This contract has been terminated.")
+        try:
+            contract = self.network_interface.requestContract(contract_address)
+            if contract['terminated']:
+                print("This contract has been terminated.")
+                print()
+                # wait for any input before returning to menu
+                input('Press enter to continue...')
+                return
+            contract_state = self.network_interface.requestContractState(contract_address)
+            contract_states_encoded = contract['states']
+            contract_state_encoded = contract_states_encoded[max(list(contract_states_encoded.keys()))]
+            contract_code = contract['code']
+            contract_address = contract['addresses'][-1]
+        except:
+            print("No contract was found")
             print()
             # wait for any input before returning to menu
             input('Press enter to continue...')
             return
-        contract_state = self.network_interface.requestContractState(contract_address)
-        contract_states_encoded = contract['states']
-        contract_state_encoded = contract_states_encoded[max(list(contract_states_encoded.keys()))]
-        contract_code = contract['code']
-        contract_address = contract['addresses'][-1]
-    # except:
-    #     print("No contract was found")
-    #     print()
-    #     # wait for any input before returning to menu
-    #     input('Press enter to continue...')
-    #     return
         contract_options =   {  '1': 'Get the state of the contract',
                                 '2': 'Get the callable methods from the contract',
                                 '3': 'Get the code of the contract'}
@@ -697,80 +688,3 @@ class BlockchainClient:
         print()
         user_input = input('Please choose an option (by number) or press enter to return: ')
         return user_input
-
-    def create_dummy_contracts(self, number_of_contracts):
-
-        payload = {"contractCode":'', "arguments":"", "contract_file_name":""}
-
-        pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
-        pickledContract = None
-        with open(pathToContract, 'r') as file:
-            pickledContract = pickle.dumps(file.read())
-        payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
-
-        payload['arguments'] = json.loads('{"Person": "Alice", "coins": 100}')
-        payload['contract_file_name'] = 'contract.py'
-
-        for i in range(number_of_contracts):
-            private_key, public_key = self.crypto_helper.generate_key_pair()
-            new_transaction = Transaction(sender=str(public_key), receiver='', payload=str(payload), transaction_type='Contract Creation')
-            transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
-            new_transaction.transaction_hash = transaction_hash
-            new_transaction.sign_transaction(self.crypto_helper, private_key)
-            self.network_interface.sendTransaction(new_transaction)
-            print('Transaction # ' + str(i) + ' was sent.')
-
-    def create_dummy_method_calls(self, number_of_calls):
-
-        contract_address = self.create_dummy_contract()
-        print("Transaction for creating a test contract sent...")
-
-        time.sleep(15)
-
-        chosen_receiver = contract_address
-        
-        private_key, public_key = self.crypto_helper.generate_key_pair()
-
-        payload = {'methods':[]}
-        methods = []
-
-        methodName = 'addCoins'
-        arguments = json.loads("""{"coinsToAdd": 100}""")
-
-        methodToCall = {'methodName':methodName, 'arguments':arguments}
-        methods.append(methodToCall)
-
-        payload['methods'] = methods
-
-        tx_of_contract_creation, _ = self.network_interface.requestTransaction(chosen_receiver)
-        contract_file_name = json.loads(tx_of_contract_creation.payload.replace("'", '"'))['contract_file_name']
-        payload['contract_file_name'] = contract_file_name
-
-        for i in range(number_of_calls):
-            new_transaction = Transaction(sender=str(public_key), receiver=chosen_receiver, payload=str(payload), transaction_type='Method Call')
-            transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
-            new_transaction.transaction_hash = transaction_hash
-            new_transaction.sign_transaction(self.crypto_helper, private_key)
-            self.network_interface.sendTransaction(new_transaction)
-            print('Transaction # ' + str(i) + ' was sent.')
-
-    def create_dummy_contract(self):
-        payload = {"contractCode":'', "arguments":"", "contract_file_name":""}
-
-        pathToContract = "/Users/joseminguez/Desktop/Contracts/PiggyBankContract/contract.py"
-        pickledContract = None
-        with open(pathToContract, 'r') as file:
-            pickledContract = pickle.dumps(file.read())
-        payload["contractCode"] = codecs.encode(pickle.dumps(pickledContract), "base64").decode()
-
-        payload['arguments'] = json.loads('{"Person": "Alice", "coins": 100}')
-        payload['contract_file_name'] = 'contract.py'
-
-        private_key, public_key = self.crypto_helper.generate_key_pair()
-        new_transaction = Transaction(sender=str(public_key), receiver='', payload=str(payload), transaction_type='Contract Creation')
-        transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
-        new_transaction.transaction_hash = transaction_hash
-        new_transaction.sign_transaction(self.crypto_helper, private_key)
-        self.network_interface.sendTransaction(new_transaction)
-
-        return self.crypto_helper.hash(new_transaction.get_json())

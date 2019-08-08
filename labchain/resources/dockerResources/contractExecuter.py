@@ -111,27 +111,16 @@ def callMethod():
 	
 	# Fetch received data
 	data_dict = request.json
-	#code = data_dict['code']
 	state = data_dict['state']
 	methods = data_dict['methods']
 	contract_file_name = data_dict['contract_file_name']
 
 	try:
-		#####
 		#Import module dynamically
 		module = importlib.import_module(contract_file_name[:-3])
-
-		mainClass = inspect.getmembers(module)[0][0]
-		#mainClassName = str(mainClass)
-
-	# 	#####
 	except:
 		errorMessage = "Contract file could not be found. (callMethod function)"
 		return jsonError(errorMessage)
-	
-	# createContractErrorMessage = createContractHelper(code, contract_file_name)
-	# if createContractErrorMessage != None:
-	# 	return createContractErrorMessage
 
 	# Create a contracts instance with the fetched state
 	try:
@@ -200,10 +189,7 @@ def getState():
 	except:
 		errorMessage = "The state provided could not be decoded. String may be corrupted. (getState function)"
 		return jsonError(errorMessage)
-	
-	# Encode updated the updated contract's state to send back
-	#encodedInstance = codecs.encode(pickle.dumps(contractInstance), "base64").decode()
-	
+		
 	# Prepare response
 	try:
 		updatedState = getattr(contractInstance, "to_dict")()
@@ -211,8 +197,7 @@ def getState():
 		updatedState = "Contract does not contain any 'to_dict' method."
 	response = {
 		"success": True,
-		"state": updatedState,
-		#"encodedState": encodedInstance
+		"state": updatedState
 	}
 	return json.dumps(response, indent=4, sort_keys=False)
 
@@ -314,7 +299,6 @@ def createContractHelper(code, contract_file_name):
 		codeString = pickle.loads(codecs.decode(code.encode(), "base64"))
 		with open(contract_file_name, 'w') as file:
 			file.write(str(pickle.loads(codeString)))
-		# module = importlib.import_module(contract_file_name[:-3])
 	except:
 		errorMessage = "The code provided could not be decoded. String may be corrupted."
 		return jsonError(errorMessage)

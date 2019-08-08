@@ -99,20 +99,6 @@ class Transaction:
             'transaction_type': self.__transaction_type
         })
 
-        # if self.__transaction_type == Transaction_Types().method_call:
-        #     methods = json.loads(self.__payload.replace("'",'"'))['methods']
-            
-        #     for method in methods:
-        #         try:
-        #             sender = method['arguments']['sender']
-        #             if self.__sender != sender:
-        #                 logging.debug('Could not verify transaction. Sender of transaction and ' +
-        #                                 'the sender specified in the method\'s arguments did not match.')
-        #                 return False
-        #         except:
-        #             logging.debug('Could not verify transaction.')
-        #             return False
-
         return crypto_helper.validate(self.sender, data, self.signature)
 
     def __str__(self):

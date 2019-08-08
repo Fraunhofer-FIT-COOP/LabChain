@@ -64,8 +64,8 @@ class SmartContract:
             self._terminated = True
 
     def restore(self, new_address, new_code):
-        """Restarts a terminated contract with a new address.
-            The contract is now callable with the old and the new addresses."""
+        """Restores a terminated contract with a new address.
+            The contract is then callable with the old and the new addresses."""
         self._addresses.append(new_address)
         self._code = new_code
         self._port = self.find_free_port()
