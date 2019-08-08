@@ -56,7 +56,6 @@ class TaskTransactionWizard(TransactionWizard):
             data[data_key] = input(str(data_key) + u':\t')
         return data
 
-
     def validate_receiver_input(self, usr_input, receivers_len):
         try:
             int_usr_input = int(usr_input)
@@ -68,6 +67,8 @@ class TaskTransactionWizard(TransactionWizard):
             return False
 
     def check_tasks(self, public_key):
+        #TODO this does not return tasks for second split person once a split tx is sent
+        # TODO probably won't also work with merge -> check it out
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
@@ -79,7 +80,22 @@ class TaskTransactionWizard(TransactionWizard):
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
         diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)
                 - set(send_task_transaction_dict)}
+
+        #todo check if there's any split transaction, if yes, add workflow to diff set
+        # wf_tx_list = [t.workflow_transaction for t in send_task_transaction if t.type == '2']
+        # wfs_with_split = [wf_tx for wf_tx in wf_tx_list if self.workflow_has_split(wf_tx)]
+
         return [diff[k] for k in diff]
+
+
+    def workflow_has_split(self, workflow_tx):
+        length_list = [len(x) for x in WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
+                                           .get_json_with_signature()).processes.values()]
+        return  len([i for i in length_list if i > 1]) > 0
+
+
+    def check_if_split_transaction(self):
+        pass
 
     def get_all_received_workflow_transactions(self, public_key):
         received = self.network_interface.search_transaction_from_receiver(public_key)
@@ -105,6 +121,7 @@ class TaskTransactionWizard(TransactionWizard):
                 return addr
 
     def show_workflow_status(self):
+        #TODO show the name of the workflow json
         clear_screen()
         wallet_list = self.wallet_to_list()
 
@@ -138,7 +155,6 @@ class TaskTransactionWizard(TransactionWizard):
                                                                 self.get_workflow_status(wf_tx)))
                 print()
             input('Press any key to go back to the main menu!')
-
 
     def show(self):
         """Start the wizard."""

@@ -18,7 +18,7 @@ class TaskTransaction(Transaction):
         super().__init__(sender, receiver, payload, signature)
         self.payload['transaction_type'] = '2'
 
-    def validate_transaction(self, crypto_helper, blockchain) -> bool:
+    def validate_transaction(self, crypto_helper, blockchain):
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: CryptoHelper object
@@ -82,6 +82,13 @@ class TaskTransaction(Transaction):
                 'Duplicated transaction found!')
             TaskTransaction._validation_lock.release()
             return False
+
+        if not self._check_merge_conditions(blockchain, previous_transaction, workflow_transaction):
+            logging.warning(
+                'Merge conditions not met!')
+            TaskTransaction._validation_lock.release()
+            return False
+
         TaskTransaction._validation_lock.release()
         return self.validate_transaction_common(crypto_helper, blockchain)
 
@@ -89,6 +96,21 @@ class TaskTransaction(Transaction):
         if not self._check_pid_well_formedness(self.payload["in_charge"]):
             return False
         return super().validate_transaction(crypto_helper, blockchain)
+
+    def _check_merge_conditions(self, blockchain, previous_transaction, workflow_transaction):
+        processes = workflow_transaction.payload["processes"]
+        incoming_tx_senders = [k for k, v in processes.items() if v == previous_transaction.payload["in_charge"]]
+        incoming_tx_number = len(incoming_tx_senders)
+        if incoming_tx_number < 2:
+            return True
+        all_tx_sender_received = [TaskTransaction.from_json(t.get_json_with_signature()) for t in blockchain.search_transaction_to_receiver(self.sender) if
+                                     'workflow_id' in t.payload]
+        split_tx_received = [t.payload for t in all_tx_sender_received if
+                             t.workflow_ID == self.workflow_ID and
+                             t.in_charge == previous_transaction.payload["in_charge"]]
+        if len(split_tx_received) == incoming_tx_number:
+            return True
+        return False
 
     def _check_permissions_write(self, previous_transaction, workflow_transaction):
         if not workflow_transaction:
