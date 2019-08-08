@@ -3,6 +3,7 @@ import DockerInstanceTable from "./DockerInstanceTable";
 import Notifications, { notify } from "react-notify-toast";
 import PruneConfirmation from "./dialog/PruneConfirmation";
 import SpawnNetworkDialog from "./dialog/SpawnDialog";
+import BenchmarkDialog from "./dialog/BenchmarkDialog";
 import FooterComponent from "./FooterComponent";
 import StatChart from "./StatChart";
 import { Transaction } from "./labchainSDK/Transaction";
@@ -17,6 +18,8 @@ const App: React.FC = () => {
     const [dockerInstances, setDockerInstances] = useState<DockerInstance[]>([]);
     const [showPruneConfirmation, setShowPruneConfirmation] = useState(false);
     const [showSpawnDialog, setShowSpawnDialog] = useState(false);
+    const [showBenchmarkDialog, setShowBenchmarkDialog] = useState(false);
+    const [benchmarkId, setBenchmarkId] = useState("");
 
     let noteColor = { background: "#0E1717", text: "#FFFFFF" };
 
@@ -73,31 +76,52 @@ const App: React.FC = () => {
         notify.show("Network generated", "custom", 5000, noteColor);
     };
 
-    let send1000Transactions = async function() {
-        // create disposable accounts
+    /**
+     * Sends n very simple (string based) transactions to the network
+     * */
+    let sendNSimpleTransactions = function(n: number) {
         let ac: Account = Account.createAccount();
-        console.log("Sender");
-        console.log(ac);
-        console.log(ac.getPublicKeyPEMBase64());
         let rec: Account = Account.createAccount();
-        console.log("Receiver");
-        console.log(rec);
         let client: LabchainClient = new LabchainClient("http://localhost:8082");
 
-        // create benchmark transaction and sign it
-        for (let i = 0; i < 1000; ++i) {
+        for (let i = 0; i < n; ++i) {
             let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
             tr = ac.signTransaction(tr);
 
             client.sendTransaction(tr).then(() => {});
         }
-
-        // send it to the blockchain node
     };
 
-    let send10000Transactions = async function() {};
+    let send1000Transactions = async function() {
+        setBenchmarkId("1000Simple");
+        setShowBenchmarkDialog(true);
+    };
 
-    let send100000Transactions = async function() {};
+    let send10000Transactions = async function() {
+        setBenchmarkId("10000Simple");
+        setShowBenchmarkDialog(true);
+    };
+
+    let send100000Transactions = async function() {
+        setBenchmarkId("100000Simple");
+        setShowBenchmarkDialog(true);
+    };
+
+    let startBenchmark = function() {
+        switch (benchmarkId) {
+            case "1000simple":
+                sendNSimpleTransactions(1000);
+                break;
+            case "10000simple":
+                sendNSimpleTransactions(10000);
+                break;
+            case "100000simple":
+                sendNSimpleTransactions(100000);
+                break;
+        }
+
+        setBenchmarkId("");
+    };
 
     return (
         <div className="container-fluid">
@@ -118,6 +142,15 @@ const App: React.FC = () => {
                             setShowSpawnDialog(false);
                         }}
                     ></SpawnNetworkDialog>
+                    <BenchmarkDialog
+                        show={showBenchmarkDialog}
+                        ok={startBenchmark}
+                        dockerInstances={dockerInstances}
+                        cancel={() => {
+                            setShowBenchmarkDialog(false);
+                            setBenchmarkId("");
+                        }}
+                    ></BenchmarkDialog>
                     <Notifications />
                 </div>
             </div>

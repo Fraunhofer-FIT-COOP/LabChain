@@ -10,6 +10,7 @@
                 "@types/react-modal": "^3.8.2",
                 "@types/react-notify-toast": "^0.5.2",
                 "@types/react-router-dom": "^4.3.4",
+                "@types/react-select": "^3.0.2",
                 "bootstrap": "^4.3.1",
                 "d3": "^5.9.7",
                 "ec-key": "0.0.4",
@@ -23,6 +24,8 @@
                 "react-notify-toast": "^0.5.0",
                 "react-router-dom": "^5.0.1",
                 "react-scripts": "3.0.1",
+                "react-select": "^3.0.4",
+                "save": "^2.4.0",
                 "sigma": "^1.2.0",
                 "typescript": "3.5.3"
         },
