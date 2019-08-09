@@ -125,7 +125,12 @@ export default function BenchmarkDialog(props: any) {
                         </button>
                     </div>
                     <div className="col-md-6 text-right">
-                        <button className="btn btn-primary" onClick={props.ok}>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => {
+                                props.ok(selectedReceiver.map(x => (x as any).value), selectedSamples.map(x => (x as any).value));
+                            }}
+                        >
                             Ok
                         </button>
                     </div>

@@ -1,4 +1,5 @@
 import flask
+import datetime
 import json
 import random
 import string
@@ -108,6 +109,18 @@ def stopInstance(name):
     container.stop()
 
     return True
+
+
+@app.route("/storeBenchmarkData", methods=["POST"])
+def store_benchmark_data():
+    """ Stores the send benchmark data into a file locally
+    """
+    filename = "./testData_{}.json".format(str(datetime.datetime.now()).replace(" ", "_"))
+
+    with open(filename, "w") as f:
+        f.write(request.data.decode('utf-8'))
+
+    return "Data stored", 200
 
 
 @app.route("/spawnNetwork", methods=["GET"])

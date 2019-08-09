@@ -6,9 +6,7 @@ import SpawnNetworkDialog from "./dialog/SpawnDialog";
 import BenchmarkDialog from "./dialog/BenchmarkDialog";
 import FooterComponent from "./FooterComponent";
 import StatChart from "./StatChart";
-import { Transaction } from "./labchainSDK/Transaction";
-import { LabchainClient } from "./labchainSDK/Client";
-import { Account } from "./labchainSDK/Account";
+import BenchmarkEngine from "./docker/BenchmarkEngine";
 import { DockerInterface, DockerInstance } from "./docker/DockerInterface";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min.js";
@@ -76,20 +74,14 @@ const App: React.FC = () => {
         notify.show("Network generated", "custom", 5000, noteColor);
     };
 
-    /**
-     * Sends n very simple (string based) transactions to the network
-     * */
-    let sendNSimpleTransactions = function(n: number) {
-        let ac: Account = Account.createAccount();
-        let rec: Account = Account.createAccount();
-        let client: LabchainClient = new LabchainClient("http://localhost:8082");
+    let send10Transactions = async function() {
+        setBenchmarkId("10Simple");
+        setShowBenchmarkDialog(true);
+    };
 
-        for (let i = 0; i < n; ++i) {
-            let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
-            tr = ac.signTransaction(tr);
-
-            client.sendTransaction(tr).then(() => {});
-        }
+    let send100Transactions = async function() {
+        setBenchmarkId("100Simple");
+        setShowBenchmarkDialog(true);
     };
 
     let send1000Transactions = async function() {
@@ -107,18 +99,35 @@ const App: React.FC = () => {
         setShowBenchmarkDialog(true);
     };
 
-    let startBenchmark = function() {
+    let startBenchmark = function(receiver: DockerInstance[], samples: DockerInstance[]) {
+        console.log("Start benchmark: " + benchmarkId);
+        setShowBenchmarkDialog(false);
+        let bc: BenchmarkEngine = new BenchmarkEngine(receiver, samples);
+        let b: any;
+
         switch (benchmarkId) {
-            case "1000simple":
-                sendNSimpleTransactions(1000);
+            case "10Simple":
+                b = bc.benchmarkSimpleTransactions(10);
                 break;
-            case "10000simple":
-                sendNSimpleTransactions(10000);
+            case "100Simple":
+                b = bc.benchmarkSimpleTransactions(100);
                 break;
-            case "100000simple":
-                sendNSimpleTransactions(100000);
+            case "1000Simple":
+                b = bc.benchmarkSimpleTransactions(1000);
+                break;
+            case "10000Simple":
+                b = bc.benchmarkSimpleTransactions(10000);
+                break;
+            case "100000Simple":
+                b = bc.benchmarkSimpleTransactions(100000);
                 break;
         }
+
+        b.then((data: any) => {
+            DockerInterface.storeData(data).then((res: any) => {
+                console.log(res);
+            });
+        });
 
         setBenchmarkId("");
     };
@@ -191,6 +200,20 @@ const App: React.FC = () => {
                             Apply benchmark...
                         </button>
                         <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <button
+                                className="dropdown-item"
+                                title="Send 10 tranasctions to the blockchain network and measure the time"
+                                onClick={send10Transactions}
+                            >
+                                10 Transactions
+                            </button>
+                            <button
+                                className="dropdown-item"
+                                title="Send 100 tranasctions to the blockchain network and measure the time"
+                                onClick={send100Transactions}
+                            >
+                                100 Transactions
+                            </button>
                             <button
                                 className="dropdown-item"
                                 title="Send 1,000 tranasctions to the blockchain network and measure the time"

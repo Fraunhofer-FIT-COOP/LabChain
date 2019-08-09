@@ -59,4 +59,13 @@ export class DockerInterface {
 
         return instances;
     }
+
+    public static async storeData(data: any): Promise<String> {
+        const response = await fetch(DockerInterface.url + "/storeBenchmarkData", {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
+
+        return response.toString();
+    }
 }

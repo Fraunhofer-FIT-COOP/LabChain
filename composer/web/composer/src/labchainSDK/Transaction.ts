@@ -5,7 +5,7 @@ import { Account } from "./Account";
  * Represents a transaction in the blockchain
  * */
 export class Transaction {
-    sender: Account;
+    sender: Account | string = "";
     receiver: Account | string = "";
     payload: string = "";
     signature: string = "";
@@ -14,11 +14,18 @@ export class Transaction {
      * @param sender The public key of the sender must be provided as <Account>
      * @param receiver The public key of the receiver can be provided either as <Account> or as string in PEM format
      * @param payload The payload of the transaction as string
+     * @param signature The signature of the transaction as string
      * */
-    constructor(sender: Account, receiver: Account | string, payload: string) {
+    constructor(sender: Account | string, receiver: Account | string, payload: string, signature?: string) {
         this.sender = sender;
         this.receiver = receiver;
         this.payload = payload;
+
+        if (!signature) {
+            this.signature = "";
+        } else {
+            this.signature = signature;
+        }
     }
 
     /**
@@ -34,7 +41,11 @@ export class Transaction {
             _payload += this.receiver;
         }
 
-        _payload += this.sender.getPublicKeyPEMBase64();
+        if (this.sender instanceof Account) {
+            _payload += (this.sender as Account).getPublicKeyPEMBase64();
+        } else {
+            _payload += this.sender;
+        }
 
         return _payload;
     }
@@ -78,7 +89,13 @@ export class Transaction {
      * @returns a transmittable representation of the transaction
      * */
     toTransmittableString(): any {
-        let ret: any = { sender: this.sender.getPublicKeyPEMBase64(), signature: this.signature, payload: this.payload };
+        let ret: any = { signature: this.signature, payload: this.payload };
+
+        if (this.sender instanceof Account) {
+            ret.sender = (this.sender as Account).getPublicKeyPEMBase64();
+        } else {
+            ret.sender = this.sender;
+        }
 
         if (this.receiver instanceof Account) {
             ret.receiver = (this.receiver as Account).getPublicKeyPEMBase64();
@@ -87,5 +104,9 @@ export class Transaction {
         }
 
         return ret;
+    }
+
+    hash(): string {
+        return Crypto.sha256(this.toBCRepresentation());
     }
 }

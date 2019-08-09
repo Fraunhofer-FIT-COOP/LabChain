@@ -8,7 +8,7 @@ export interface Block {
     nr: number;
     predecessorBlock: string;
     timestamp: number;
-    transactions: string[];
+    transactions: Transaction[];
 }
 
 export class LabchainClient {
@@ -34,8 +34,23 @@ export class LabchainClient {
      * it returns the latest block
      * */
     async getBlock(n?: number): Promise<Block[]> {
-        if (!n) return this.sendJSONRPC("requestBlock");
-        else return this.sendJSONRPC("requestBlock", [n]);
+        return new Promise<Block[]>((resolve, reject) => {
+            if (!n) {
+                this.sendJSONRPC("requestBlock").then(blocks => {
+                    for (let block of blocks) {
+                        block.transactions = block.transactions.map((tr: Transaction) => new Transaction(tr.sender, tr.receiver, tr.payload, tr.signature));
+                    }
+                    resolve(blocks);
+                });
+            } else {
+                this.sendJSONRPC("requestBlock", [n]).then(blocks => {
+                    for (let block of blocks) {
+                        block.transactions = block.transactions.map((tr: Transaction) => new Transaction(tr.sender, tr.receiver, tr.payload, tr.signature));
+                    }
+                    resolve(blocks);
+                });
+            }
+        });
     }
 
     /**
@@ -43,6 +58,28 @@ export class LabchainClient {
      * */
     async sendTransaction(tx: Transaction): Promise<any> {
         return this.sendJSONRPC("sendTransaction", [tx.toTransmittableString()]);
+    }
+
+    /**
+     * Returns true, if the transaction was mined otherwise false
+     *
+     * This methods fails if two blocks are mined quickly after another.
+     * It only checks the  most recent block TODO
+     * */
+    isTransactionMined(tx_hash: string): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.getBlock().then(blocks => {
+                for (let block of blocks) {
+                    if (
+                        block.transactions.filter(function(a: Transaction) {
+                            return a.hash() === tx_hash;
+                        }).length > 0
+                    ) {
+                        resolve(true);
+                    }
+                }
+            });
+        });
     }
 
     sendJSONRPC(method: string, params?: any): Promise<any> {
