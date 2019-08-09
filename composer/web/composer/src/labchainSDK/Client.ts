@@ -39,6 +39,7 @@ export class LabchainClient {
                 this.sendJSONRPC("requestBlock").then(blocks => {
                     for (let block of blocks) {
                         block.transactions = block.transactions.map((tr: Transaction) => new Transaction(tr.sender, tr.receiver, tr.payload, tr.signature));
+                        block.timestamp = new Date((block as Block).timestamp * 1000);
                     }
                     resolve(blocks);
                 });
@@ -46,6 +47,7 @@ export class LabchainClient {
                 this.sendJSONRPC("requestBlock", [n]).then(blocks => {
                     for (let block of blocks) {
                         block.transactions = block.transactions.map((tr: Transaction) => new Transaction(tr.sender, tr.receiver, tr.payload, tr.signature));
+                        block.timestamp = new Date((block as Block).timestamp * 1000);
                     }
                     resolve(blocks);
                 });

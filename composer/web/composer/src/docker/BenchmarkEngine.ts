@@ -57,6 +57,8 @@ export default class BenchmarkEngine {
                             let tx_hash = tx.hash();
                             console.log("Located transaction: " + tx.hash());
                             let mdata: BenchmarkData = benchmark_data.filter(m => m.transaction_hash === tx_hash)[0];
+
+                            if (!mdata) continue;
                             mdata.end_time = new Date(block.timestamp);
                             hashesToTest = hashesToTest.filter(m => m !== tx_hash);
                         }

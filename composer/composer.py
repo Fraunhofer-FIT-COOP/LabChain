@@ -7,9 +7,35 @@ import sys
 import subprocess
 import docker
 import os
+import threading
 
 from flask_cors import CORS
 from flask import request
+
+
+class BCClient:
+    def getBlock(self):
+        return []
+
+
+bcclient = BCClient()
+
+
+def lookupThread():
+    while True:
+        blocks = bcclient.getBlock()
+
+        for block in blocks:
+            for tx in block.transactions:
+                _txs = filter(lambda x: x["transaction_hash"])
+                if len(_txs) > 0:
+                    _tx = _txs[0]
+                    _tx["end_date"] = datetime.datetime.now()
+
+                    watched_transactions.remove(_tx)
+
+
+watched_transactions = []
 
 app = flask.Flask("labchainComposer", static_folder="./web/")
 app.secret_key = "".join(
@@ -111,16 +137,25 @@ def stopInstance(name):
     return True
 
 
-@app.route("/storeBenchmarkData", methods=["POST"])
-def store_benchmark_data():
-    """ Stores the send benchmark data into a file locally
+def store_benchmark_data(data):
+    """ Stores the data into a file locally
     """
     filename = "./testData_{}.json".format(str(datetime.datetime.now()).replace(" ", "_"))
 
     with open(filename, "w") as f:
-        f.write(request.data.decode('utf-8'))
+        f.write(data)
 
-    return "Data stored", 200
+
+@app.route("/watchTransactions", methods=["POST"])
+def watch_transactions():
+    """ Watches the given transactions to determine when those got mined
+    """
+    txs = json.loads(request.data)
+
+    for tx in txs:
+        watched_transactions.append(tx)
+
+    return "Added transactions", 200
 
 
 @app.route("/spawnNetwork", methods=["GET"])
@@ -259,5 +294,8 @@ if "__main__" == __name__:
         _port = int(arguments[2])
 
     print("Starting server at http://{}:{}".format(_host, _port))
+
+    t = threading.Thread(target=lookupThread)
+    t.start()
 
     app.run(debug=True, host=_host, port=_port)
