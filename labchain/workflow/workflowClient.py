@@ -71,6 +71,7 @@ class TaskTransactionWizard(TransactionWizard):
 
     def check_tasks(self, public_key):
         #TODO if it is an "OR" merge do not show it as task anymore, if and merge, do not show the task twice
+        #TODO check if task fully completed
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
@@ -78,20 +79,22 @@ class TaskTransactionWizard(TransactionWizard):
         send_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
                                  'workflow_id' in t.payload and 'processes' not in t.payload]
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
-        send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
+
 
         # check sent transactions and subtract from dict if split not completed
-        diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)
-                - set(send_task_transaction_dict)}
+
         ttx_with_split = [ttx for ttx in send_task_transaction if self.workflow_has_split(ttx.workflow_transaction)[0]]
         for ttx in ttx_with_split:
             if not self.split_completed(ttx.workflow_transaction, send_task_transaction):
-                diff[self.crypto_helper.hash(ttx.get_json())] = ttx
+                send_task_transaction.remove(ttx)
+        send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
+        diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)
+                - set(send_task_transaction_dict)}
         return [diff[k] for k in diff]
 
     def split_completed(self, workflow_tx, send_task_transaction):
         sent_with_wf_tx = [tx for tx in send_task_transaction if tx.workflow_transaction == workflow_tx]
-        return len(sent_with_wf_tx) == self.workflow_has_split(workflow_tx)[1]
+        return len(sent_with_wf_tx) >= self.workflow_has_split(workflow_tx)[1]
 
 
     def workflow_has_split(self, workflow_tx):
@@ -237,8 +240,10 @@ class TaskTransactionWizard(TransactionWizard):
                 workflow_transaction = self.network_interface.requestTransaction(workflow_transaction_hash)[0]
 
             in_charge = prev_transaction.payload['in_charge']
+            print(in_charge)
             if in_charge in workflow_transaction.payload['processes'].keys():
                 next_in_charge_list = workflow_transaction.payload['processes'][in_charge]
+                print(next_in_charge_list)
             else:
                 input("End of workflow. Please press any key to return!")
                 return
