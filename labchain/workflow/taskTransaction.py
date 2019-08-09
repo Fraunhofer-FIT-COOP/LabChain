@@ -98,7 +98,11 @@ class TaskTransaction(Transaction):
         return super().validate_transaction(crypto_helper, blockchain)
 
     def _check_merge_conditions(self, blockchain, previous_transaction, workflow_transaction):
-        is_merge_tx = previous_transaction.payload["in_charge"] in workflow_transaction.payload["splits"].values()
+        is_merge_tx = False
+        for list in workflow_transaction.payload["splits"].values():
+            if previous_transaction.payload["in_charge"] in list:
+                is_merge_tx = True
+                break
         if not is_merge_tx:
             return True
 

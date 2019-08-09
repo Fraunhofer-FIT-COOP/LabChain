@@ -70,31 +70,34 @@ class TaskTransactionWizard(TransactionWizard):
             return False
 
     def check_tasks(self, public_key):
-        #TODO this does not return tasks for second split person once a split tx is sent
-        # TODO probably won't also work with merge -> check it out
+        #TODO if it is an "OR" merge do not show it as task anymore, if and merge, do not show the task twice
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
                                      'workflow_id' in t.payload]
         send_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
-                                 'workflow_id' in t.payload]
-        send_task_transaction = [t for t in send_task_transaction if t.type == '2']
+                                 'workflow_id' in t.payload and 'processes' not in t.payload]
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
+
+        # check sent transactions and subtract from dict if split not completed
         diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)
                 - set(send_task_transaction_dict)}
-
-        #todo check if there's any split transaction, if yes, add workflow to diff set
-        # wf_tx_list = [t.workflow_transaction for t in send_task_transaction if t.type == '2']
-        # wfs_with_split = [wf_tx for wf_tx in wf_tx_list if self.workflow_has_split(wf_tx)]
-
+        ttx_with_split = [ttx for ttx in send_task_transaction if self.workflow_has_split(ttx.workflow_transaction)[0]]
+        for ttx in ttx_with_split:
+            if not self.split_completed(ttx.workflow_transaction, send_task_transaction):
+                diff[self.crypto_helper.hash(ttx.get_json())] = ttx
         return [diff[k] for k in diff]
+
+    def split_completed(self, workflow_tx, send_task_transaction):
+        sent_with_wf_tx = [tx for tx in send_task_transaction if tx.workflow_transaction == workflow_tx]
+        return len(sent_with_wf_tx) == self.workflow_has_split(workflow_tx)[1]
 
 
     def workflow_has_split(self, workflow_tx):
         length_list = [len(x) for x in WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
                                            .get_json_with_signature()).processes.values()]
-        return  len([i for i in length_list if i > 1]) > 0
+        return  len([i for i in length_list if i > 1]) > 0, length_list[0]
 
 
     def get_all_received_workflow_transactions(self, public_key):
@@ -129,6 +132,7 @@ class TaskTransactionWizard(TransactionWizard):
         for file in os.listdir(self.my_dir):
             with open(os.path.join(self.my_dir, file)) as f:
                 wf_definition = json.load(f)
+                #todo check if we can just make a direct comparison
                 document_cond = set(wf_definition["document"].keys())  == set(workflow_payload["document"].keys())
                 process_cond = set(wf_definition["processes"].keys())  == set(workflow_payload["processes"].keys())
                 permissions_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
