@@ -98,18 +98,27 @@ class TaskTransaction(Transaction):
         return super().validate_transaction(crypto_helper, blockchain)
 
     def _check_merge_conditions(self, blockchain, previous_transaction, workflow_transaction):
-        processes = workflow_transaction.payload["processes"]
-        incoming_tx_senders = [k for k, v in processes.items() if v == previous_transaction.payload["in_charge"]]
-        incoming_tx_number = len(incoming_tx_senders)
-        if incoming_tx_number < 2:
+        is_merge_tx = previous_transaction.payload["in_charge"] in workflow_transaction.payload["splits"].values()
+        if not is_merge_tx:
             return True
+
+        processes = workflow_transaction.payload["processes"]
         all_tx_sender_received = [TaskTransaction.from_json(t.get_json_with_signature()) for t in blockchain.search_transaction_to_receiver(self.sender) if
                                      'workflow_id' in t.payload]
-        split_tx_received = [t.payload for t in all_tx_sender_received if
+        split_tx_received = [t.sender for t in all_tx_sender_received if
                              t.workflow_ID == self.workflow_ID and
                              t.in_charge == previous_transaction.payload["in_charge"]]
-        if len(split_tx_received) == incoming_tx_number:
-            return True
+
+        merge_type = [type for type,addresses in workflow_transaction.payload["splits"].items() if previous_transaction.payload["in_charge"] in addresses][0]
+        senders = [sender.split("_")[0] for sender, receivers in processes.items() if
+                   previous_transaction.payload["in_charge"] in receivers]
+        if merge_type == "AND":
+            if set(split_tx_received) == set(senders):
+                return True
+        else:
+            if previous_transaction.sender in set(senders):
+                return True
+
         return False
 
     def _check_permissions_write(self, previous_transaction, workflow_transaction):
@@ -252,7 +261,7 @@ class WorkflowTransaction(TaskTransaction):
             if self.payload['workflow_id'] == workflow.payload['workflow_id']:
                 TaskTransaction._validation_lock.release()
                 return False
-
+        all_receivers = set()
         for sender, receivers in self.payload["processes"].items():
             if not self._check_pid_well_formedness(sender):
                 TaskTransaction._validation_lock.release()
@@ -261,6 +270,7 @@ class WorkflowTransaction(TaskTransaction):
                 if not self._check_pid_well_formedness(receiver):
                     TaskTransaction._validation_lock.release()
                     return False
+                all_receivers.add(receiver)
         document_keys = self.document.keys()
         for attr, pids in self.permissions.items():
             for pid in pids:
@@ -270,6 +280,16 @@ class WorkflowTransaction(TaskTransaction):
             if attr not in document_keys:
                 TaskTransaction._validation_lock.release()
                 return False
+
+        for type, addresses in self.payload["splits"].items():
+            for address in addresses:
+                if address not in all_receivers:
+                    TaskTransaction._validation_lock.release()
+                    return False
+                sender_size = len([sender for sender, receivers in self.payload["processes"].items() if address in receivers])
+                if sender_size <= 1:
+                    TaskTransaction._validation_lock.release()
+                    return False
 
         TaskTransaction._validation_lock.release()
         return super().validate_transaction_common(crypto_helper, blockchain)
