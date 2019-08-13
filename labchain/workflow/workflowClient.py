@@ -375,7 +375,7 @@ class WorkflowTransactionWizard(TransactionWizard):
         super().__init__(wallet, crypto_helper, network_interface)
         self.my_dir = RESOURCE_DIR
 
-    def get_workflow_list(self, directory):
+    def get_workflow_list(self):
         path_list = list()
         for file in os.listdir(self.my_dir):
             if file.endswith(".json"):
@@ -418,7 +418,7 @@ class WorkflowTransactionWizard(TransactionWizard):
         # this needs to be done to get an ordered list that does not change
         # at runtime of the function
         wallet_list = self.wallet_to_list()
-        workflow_list = self.get_workflow_list(self.my_dir)
+        workflow_list = self.get_workflow_list()
 
         if len(workflow_list) == 0:
             #   case: workflow resources are empty
