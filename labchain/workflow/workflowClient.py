@@ -1,5 +1,6 @@
 import os
 import json
+import pprint
 
 from labchain.util.Menu import Menu
 from labchain.blockchainClient import TransactionWizard
@@ -194,10 +195,9 @@ class TaskTransactionWizard(TransactionWizard):
             with open(os.path.join(self.my_dir, file)) as f:
                 wf_definition = json.load(f)
                 document_cond = set(wf_definition["document"].keys())  == set(workflow_payload["document"].keys())
-                process_cond = set(wf_definition["processes"].keys())  == set(workflow_payload["processes"].keys())
                 permissions_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
                 split_cond = set(wf_definition["splits"].keys())  == set(workflow_payload["splits"].keys())
-                if document_cond and process_cond and permissions_cond and split_cond:
+                if document_cond  and permissions_cond and split_cond:
                     return file
 
     def show_workflow_status(self):
@@ -374,6 +374,7 @@ class WorkflowTransactionWizard(TransactionWizard):
     def __init__(self, wallet, crypto_helper, network_interface):
         super().__init__(wallet, crypto_helper, network_interface)
         self.my_dir = RESOURCE_DIR
+        self.pp = pprint.PrettyPrinter(indent=2)
 
     def get_workflow_list(self):
         path_list = list()
@@ -400,6 +401,17 @@ class WorkflowTransactionWizard(TransactionWizard):
         return str(usr_input)
 
     @staticmethod
+    def ask_for_key_from_wallet(wallet_list):
+        print(u'Current keys in the wallet: ')
+        for counter, key in enumerate(wallet_list, 1):
+            print()
+            print(str(counter) + u':\t' + str(key[0]))
+            print()
+
+        user_input = input('Please choose an account (by number) or press enter to return: ')
+        return user_input
+
+    @staticmethod
     def ask_for_workflow(workflow_list):
         print(u'Current workflow files in resources: ')
         for counter, key in enumerate(workflow_list, 1):
@@ -409,6 +421,24 @@ class WorkflowTransactionWizard(TransactionWizard):
 
         user_input = input('Please choose a workflow file (by number) or press enter to return: ')
         return user_input
+
+    @staticmethod
+    def get_all_entities_in_wf(workflow_template):
+        task_entities = set()
+        in_charge_entity = workflow_template["in_charge"].split("_")[0]
+        for key, values in workflow_template["processes"].items():
+            if in_charge_entity != key.split("_")[0]:
+                task_entities.add(key.split("_")[0])
+            for value in values:
+                if in_charge_entity != value.split("_")[0]:
+                    task_entities.add(value.split("_")[0])
+        return in_charge_entity, task_entities
+
+    def exchange_entities_with_pks(self, workflow_template, exchange_dict):
+        workflow_str = json.dumps(workflow_template)
+        for key, value in exchange_dict.items():
+            workflow_str = workflow_str.replace(key, value)
+        return json.loads(workflow_str)
 
     def show(self):
         """Start the wizard."""
@@ -440,61 +470,84 @@ class WorkflowTransactionWizard(TransactionWizard):
                 print()
 
             clear_screen()
-            print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
 
-            chosen_key = self.ask_for_key_from_wallet(wallet_list)
-            if chosen_key == '':
-                return
-
-            # ask for valid sender input in a loop
-            while not self.validate_sender_input(chosen_key):
-                chosen_key = self.ask_for_key_from_wallet(wallet_list)
-                if chosen_key == '':
-                    return
-                clear_screen()
-                print('Invalid input! Please choose a correct index!')
-                print()
-
-            clear_screen()
-            print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
-            print(u'Sender: ' + str(chosen_key))
-            chosen_receiver = self.ask_for_receiver()
-
-            while not self.validate_receiver_input(chosen_receiver):
-                # clear_screen()
-                print('Invalid input! Please choose a correct receiver!')
-                print(u'Sender: ' + str(chosen_key))
-                chosen_receiver = self.ask_for_receiver()
-                print()
-
-            clear_screen()
-            print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
-            print(u'Sender: ' + str(chosen_key))
-            print(u'Receiver: ' + str(chosen_receiver))
-
-            # Create transaction object and send to network
-            private_key = wallet_list[int(chosen_key) - 1][2]
-            public_key = wallet_list[int(chosen_key) - 1][1]
-
-            chosen_workflow_id = self.ask_for_workflow_id()
             path = os.path.join(self.my_dir, str(workflow_list[int(chosen_workflow) - 1]))
             with open(path) as f:
                 chosen_payload = json.load(f)
+
+            print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
+            self.pp.pprint(chosen_payload)
+            print("-------------------------------------------------------------")
+            print("Please enter a sender account.")
+            chosen_sender = self.ask_for_key_from_wallet(wallet_list)
+            if chosen_sender == '':
+                return
+
+            # ask for valid sender input in a loop
+            while not self.validate_sender_input(chosen_sender):
+                clear_screen()
+                print('Invalid input! Please choose a correct index!')
+                print()
+                print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
+                self.pp.pprint(chosen_payload)
+                print("-------------------------------------------------------------")
+                print("Please enter a sender account.")
+                chosen_key = self.ask_for_key_from_wallet(wallet_list)
+                if chosen_key == '':
+                    return
+
+            clear_screen()
+            sender_private_key = wallet_list[int(chosen_sender) - 1][2]
+            sender_public_key = wallet_list[int(chosen_sender) - 1][1]
+
+            in_charge_entity, task_entities = self.get_all_entities_in_wf(chosen_payload)
+            exchange_dict = dict()
+            exchange_dict[in_charge_entity] = sender_public_key
+
+            for entity in task_entities:
+                print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
+                print(u'Sender: ' + str(wallet_list[int(chosen_sender) - 1][0]))
+                print("-------------------------------------------------------------")
+                print("Please enter an account for: ", entity)
+                chosen_key = self.ask_for_key_from_wallet(wallet_list)
+                if chosen_key == '':
+                    return
+
+                # ask for valid sender input in a loop
+                while not self.validate_sender_input(chosen_key):
+                    clear_screen()
+                    print('Invalid input! Please choose a correct index!')
+                    print()
+                    print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
+                    print(u'Sender: ' + str(wallet_list[int(chosen_sender) - 1][0]))
+                    print("-------------------------------------------------------------")
+                    print("Please enter an account for: ", entity)
+                    chosen_key = self.ask_for_key_from_wallet(wallet_list)
+                    if chosen_key == '':
+                        return
+                exchange_dict[entity] = wallet_list[int(chosen_key) - 1][1]
+                clear_screen()
+
+            chosen_payload = self.exchange_entities_with_pks(chosen_payload, exchange_dict)
+            print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
+            print(u'Your workflow data:')
+            self.pp.pprint(chosen_payload)
+
+            chosen_workflow_id = self.ask_for_workflow_id()
+            #TODO add a check for workflow id
             chosen_payload["workflow_id"] = chosen_workflow_id
 
-            transaction = TransactionFactory.create_transaction(dict(sender=public_key,
-                                                                     receiver=chosen_receiver,
+            transaction = TransactionFactory.create_transaction(dict(sender=sender_public_key,
+                                                                     receiver=sender_public_key,
                                                                      payload=chosen_payload,
                                                                      signature=''))
-            transaction.sign_transaction(self.crypto_helper, private_key)
+            transaction.sign_transaction(self.crypto_helper, sender_private_key)
             self.network_interface.sendTransaction(transaction)
             transaction_hash = self.crypto_helper.hash(transaction.get_json())
+            clear_screen()
             print('Workflow successfully created!')
             print()
             print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
-            print(u'Sender: ' + wallet_list[int(chosen_key) - 1][2])
-            print(u'Receiver: ' + str(chosen_receiver))
-            print(u'Payload: ' + str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))
             print()
         input('Press any key to go back to the main menu!')

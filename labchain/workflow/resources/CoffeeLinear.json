@@ -1,0 +1,31 @@
+{
+  "document": {
+    "coffee_status": "",
+    "coffee_empty_review_one": "",
+    "coffee_empty_review_two": ""
+  },
+  "in_charge": "decider_0",
+  "processes": {
+    "decider_0": [
+      "reviewer1_0"
+    ],
+    "reviewer1_0": [
+      "rewiever2_0"
+    ],
+    "rewiever2_0": [
+      "orderer_0"
+    ]
+  },
+  "permissions": {
+    "coffee_status": [
+      "decider_0"
+    ],
+    "coffee_empty_review_one": [
+      "reviewer1_0"
+    ],
+    "coffee_empty_review_two": [
+      "rewiever2_0"
+    ]
+  },
+  "splits": {}
+}
