@@ -70,37 +70,95 @@ class TaskTransactionWizard(TransactionWizard):
             return False
 
     def check_tasks(self, public_key):
-        #TODO if it is an "OR" merge do not show it as task anymore, if and merge, do not show the task twice
-        #TODO check if task fully completed
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
+        received_workflow_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
+                                     'processes' in t.payload]
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     'workflow_id' in t.payload]
+                                     'workflow_id' in t.payload and 'processes' not in t.payload]
         send_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
                                  'workflow_id' in t.payload and 'processes' not in t.payload]
+
+        send_task_transaction = self.rearrange_send_task_transactions(send_task_transaction)
+        received_task_transaction = self.rearrange_received_task_transactions(received_task_transaction)
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
-
-
-        # check sent transactions and subtract from dict if split not completed
-
-        ttx_with_split = [ttx for ttx in send_task_transaction if self.workflow_has_split(ttx.workflow_transaction)[0]]
-        for ttx in ttx_with_split:
-            if not self.split_completed(ttx.workflow_transaction, send_task_transaction):
-                send_task_transaction.remove(ttx)
+        received_tx_dict = {**received_task_transaction_dict, **{self.crypto_helper.hash(t.get_json()): t for t in received_workflow_transaction}}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
-        diff = {k: received_task_transaction_dict[k] for k in set(received_task_transaction_dict)
+        diff = {k: received_tx_dict[k] for k in set(received_tx_dict)
                 - set(send_task_transaction_dict)}
         return [diff[k] for k in diff]
 
-    def split_completed(self, workflow_tx, send_task_transaction):
-        sent_with_wf_tx = [tx for tx in send_task_transaction if tx.workflow_transaction == workflow_tx]
-        return len(sent_with_wf_tx) >= self.workflow_has_split(workflow_tx)[1]
+    @staticmethod
+    def group_dict_by_wf_id(tx_list):
+        grouped_dict_by_wf_id = dict()
+        for tx in tx_list:
+            key = tx.payload["workflow_transaction"]
+            if key in grouped_dict_by_wf_id:
+                grouped_dict_by_wf_id[key].append(tx)
+            else:
+                grouped_dict_by_wf_id[key] = list()
+                grouped_dict_by_wf_id[key].append(tx)
+        return grouped_dict_by_wf_id
 
+    def rearrange_received_task_transactions(self, received_task_transaction):
+        # TODO shows the workflow id twice if there's one split tx  and one linear waiting for OR split
+        # TODO shows the split tx even if wf completed on other branch
+        grouped_dict_by_wf_id = self.group_dict_by_wf_id(received_task_transaction)
 
-    def workflow_has_split(self, workflow_tx):
-        length_list = [len(x) for x in WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
-                                           .get_json_with_signature()).processes.values()]
-        return  len([i for i in length_list if i > 1]) > 0, length_list[0]
+        for workflow_tx in grouped_dict_by_wf_id:
+            split_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
+                                                       .get_json_with_signature()).splits
+            # just a regular linear wf -> continue
+            if len(split_dict.keys()) == 0:
+                continue
+            # wf has splits
+            process_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
+                                                         .get_json_with_signature()).processes
+            for merge_type, merge_addr_list in split_dict.items():
+                for addr in merge_addr_list:
+                    split_addresses = [sender for sender, receiver_list in process_dict.items() if
+                                       addr in receiver_list]
+                    sent_split_txs = [tx for tx in grouped_dict_by_wf_id[workflow_tx] if tx.in_charge == addr]
+                    if len(sent_split_txs) < len(split_addresses) and merge_type == "AND":
+                        for tx in sent_split_txs:
+                            received_task_transaction.remove(tx)
+                    elif len(sent_split_txs) < len(split_addresses) and merge_type == "OR":
+                        if len(sent_split_txs) > 1:
+                            for sent_split_tx in sent_split_txs[1:]:
+                                received_task_transaction.remove(sent_split_tx)
+                        else:
+                            continue
+                    elif len(sent_split_txs) == len(split_addresses):
+                        received_task_transaction.remove(sent_split_txs[0])
+        return received_task_transaction
+
+    def rearrange_send_task_transactions(self, send_task_transaction):
+        grouped_dict_by_wf_id = self.group_dict_by_wf_id(send_task_transaction)
+
+        for workflow_tx in grouped_dict_by_wf_id:
+            split_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
+                                           .get_json_with_signature()).splits
+
+            # wf has splits
+            process_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
+                                                         .get_json_with_signature()).processes
+            splits = [lists for lists in process_dict.values() if len(lists) > 1]
+            # just a regular linear wf -> continue
+            if len(split_dict.keys()) == 0 and not len(splits) > 0:
+                continue
+
+            next_in_charge_list = [tx.in_charge for tx in grouped_dict_by_wf_id[workflow_tx]]
+            not_completed = list()
+            for split_list in splits:
+                for addr in split_list:
+                    if addr not in next_in_charge_list:
+                        not_completed.append(split_list)
+
+            for split in not_completed:
+                for addr in split:
+                    if addr in next_in_charge_list:
+                        send_task_transaction.remove([tx for tx in send_task_transaction if tx.in_charge == addr][0])
+        return send_task_transaction
 
 
     def get_all_received_workflow_transactions(self, public_key):
@@ -135,11 +193,11 @@ class TaskTransactionWizard(TransactionWizard):
         for file in os.listdir(self.my_dir):
             with open(os.path.join(self.my_dir, file)) as f:
                 wf_definition = json.load(f)
-                #todo check if we can just make a direct comparison
                 document_cond = set(wf_definition["document"].keys())  == set(workflow_payload["document"].keys())
                 process_cond = set(wf_definition["processes"].keys())  == set(workflow_payload["processes"].keys())
                 permissions_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
-                if document_cond and process_cond and permissions_cond:
+                split_cond = set(wf_definition["splits"].keys())  == set(workflow_payload["splits"].keys())
+                if document_cond and process_cond and permissions_cond and split_cond:
                     return file
 
     def show_workflow_status(self):
@@ -240,10 +298,8 @@ class TaskTransactionWizard(TransactionWizard):
                 workflow_transaction = self.network_interface.requestTransaction(workflow_transaction_hash)[0]
 
             in_charge = prev_transaction.payload['in_charge']
-            print(in_charge)
             if in_charge in workflow_transaction.payload['processes'].keys():
                 next_in_charge_list = workflow_transaction.payload['processes'][in_charge]
-                print(next_in_charge_list)
             else:
                 input("End of workflow. Please press any key to return!")
                 return

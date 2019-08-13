@@ -303,5 +303,9 @@ class WorkflowTransaction(TaskTransaction):
         return self.payload['processes']
 
     @property
+    def splits(self):
+        return self.payload['splits']
+
+    @property
     def permissions(self):
         return self.payload['permissions']
