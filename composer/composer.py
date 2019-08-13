@@ -69,6 +69,8 @@ running_instances_count = 1
 
 running_instances = {}
 
+data_filename = None
+
 
 def getDockerInstances():
     instances = [
@@ -159,7 +161,12 @@ def stopInstance(name):
 def store_benchmark_data(data):
     """ Stores the data into a file locally
     """
-    filename = "./testData_{}.json".format(str(datetime.datetime.now()).replace(" ", "_"))
+    global data_filename
+
+    if data_filename is None:
+        data_filename = "testData"
+
+    filename = "./{}_{}.json".format(data_filename, str(datetime.datetime.now()).replace(" ", "_"))
 
     with open(filename, "w") as f:
         f.write(json.dumps(data, default=str))
@@ -169,11 +176,14 @@ def store_benchmark_data(data):
 def watch_transactions():
     """ Watches the given transactions to determine when those got mined
     """
-    txs = json.loads(request.data.decode('utf-8'))
+    data = json.loads(request.data.decode('utf-8'))
 
-    print("Watch transactions: {}".format(txs))
+    print("Watch transactions: {}".format(data))
 
-    for tx in txs:
+    global data_filename
+    data_filename = data["filename"]
+
+    for tx in data["transactions"]:
         watched_transactions.append(tx)
 
     return "Added transactions", 200

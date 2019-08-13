@@ -16,6 +16,7 @@ const pruneDialogStyle = {
 
 export default function BenchmarkDialog(props: any) {
     const [selectedReceiver, setSelectedReceiver] = useState<DockerInstance[]>([]);
+    const [filename, setFilename] = useState<string>("testData");
 
     let handleReceiverChange = function(_sel: any) {
         setSelectedReceiver(_sel);
@@ -33,12 +34,24 @@ export default function BenchmarkDialog(props: any) {
         setSelectedReceiver([]);
     };
 
+    let handleFilenameChange = function(evt: any) {
+        setFilename(evt.target.value);
+    };
+
     return (
         <Modal isOpen={props.show} contentLabel="Benchmark Configuration" style={pruneDialogStyle}>
             <div className="container">
                 <div className="row">
                     <div className="col-md-12">
                         <h2>Benchmark Configuration</h2>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col-md-2">
+                        <h4>Filename:</h4>
+                    </div>
+                    <div className="col-md-10">
+                        <input type="text" name="filename" value={filename} onChange={handleFilenameChange} />
                     </div>
                 </div>
                 <div className="row">
@@ -81,7 +94,7 @@ export default function BenchmarkDialog(props: any) {
                         <button
                             className="btn btn-primary"
                             onClick={() => {
-                                props.ok(selectedReceiver.map(x => (x as any).value));
+                                props.ok(selectedReceiver.map(x => (x as any).value), filename);
                             }}
                         >
                             Ok

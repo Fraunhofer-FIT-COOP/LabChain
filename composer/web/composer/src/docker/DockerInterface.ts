@@ -108,10 +108,10 @@ export class DockerInterface {
         return instances;
     }
 
-    public static async addWatchTransactions(txs: BenchmarkData[]): Promise<any> {
+    public static async addWatchTransactions(txs: BenchmarkData[], filename: string): Promise<any> {
         const response = await fetch(DockerInterface.url + "/watchTransactions", {
             method: "POST",
-            body: JSON.stringify(txs)
+            body: JSON.stringify({ transactions: txs, filename: filename })
         });
 
         return response.toString();

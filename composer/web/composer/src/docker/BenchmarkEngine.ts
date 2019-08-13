@@ -10,8 +10,10 @@ export interface BenchmarkData {
 
 export default class BenchmarkEngine {
     _receiver: DockerInstance[];
-    constructor(receiver: DockerInstance[]) {
+    _filename: string;
+    constructor(receiver: DockerInstance[], filename: string) {
         this._receiver = receiver;
+        this._filename = filename;
     }
 
     /**
@@ -42,6 +44,6 @@ export default class BenchmarkEngine {
         }
 
         console.log("Analyse mining progress");
-        return DockerInterface.addWatchTransactions(benchmarkData);
+        return DockerInterface.addWatchTransactions(benchmarkData, this._filename);
     }
 }
