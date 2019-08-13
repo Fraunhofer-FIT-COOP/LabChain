@@ -70,7 +70,6 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
 
         let nodes: GraphNode[] = [];
         let links: GraphLink[] = [];
-        console.log(_data);
 
         nodes = _data.map(d => {
             return { id: (" " + d.peer.name).slice(1) };
@@ -99,7 +98,7 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
         DockerInterface.getInstances().then(instances => {
             let getPeersProms: Promise<{ peer: DockerInstance; peers: string[] }>[] = [];
             DockerInterface.getClientInterfaces().then((clientInterfaces: { instance: DockerInstance; client: LabchainClient }[]) => {
-                for (let clientI of clientInterfaces) {
+                clientInterfaces.forEach(clientI => {
                     getPeersProms.push(
                         new Promise((resolve, reject) => {
                             clientI.client.getConnectedPeers().then(peers => {
@@ -107,11 +106,11 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
                             });
                         })
                     );
-                }
-            });
+                });
 
-            Promise.all(getPeersProms).then(peerData => {
-                this.renderGraph(instances, peerData);
+                Promise.all(getPeersProms).then(peerData => {
+                    this.renderGraph(instances, peerData);
+                });
             });
         });
     }
