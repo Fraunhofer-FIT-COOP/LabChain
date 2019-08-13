@@ -124,9 +124,7 @@ const App: React.FC = () => {
         }
 
         b.then((data: any) => {
-            DockerInterface.storeData(data).then((res: any) => {
-                console.log(res);
-            });
+            console.log("Its done");
         });
 
         setBenchmarkId("");

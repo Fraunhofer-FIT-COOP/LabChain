@@ -1,41 +1,60 @@
-import flask
-import datetime
-import json
-import random
-import string
-import sys
-import subprocess
-import docker
-import os
-import threading
-
-from flask_cors import CORS
 from flask import request
+from flask_cors import CORS
+import threading
+import os
+import docker
+import subprocess
+import sys
+import string
+import random
+import json
+import datetime
+import time
+import calendar
+import flask
+sys.path.insert(0, '../')  # noqa
+from labchain.network.networking import JsonRpcClient, NetworkInterface  # noqa
 
 
-class BCClient:
-    def getBlock(self):
-        return []
+networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {8082: {}}})
 
-
-bcclient = BCClient()
+watched_transactions = []
 
 
 def lookupThread():
+    benchmark_data = []
+    last_block_checked = -1
     while True:
-        blocks = bcclient.getBlock()
+        blocks = networkInterface.requestBlock(None)
 
-        for block in blocks:
-            for tx in block.transactions:
-                _txs = filter(lambda x: x["transaction_hash"])
-                if len(_txs) > 0:
-                    _tx = _txs[0]
-                    _tx["end_date"] = datetime.datetime.now()
+        if len(blocks) > 1:
+            print("WARNING Multiplebranch heads")
 
-                    watched_transactions.remove(_tx)
+        block = blocks[0]
 
+        if block._block_id == last_block_checked:
+            continue
 
-watched_transactions = []
+        print(str(block))
+
+        for tx in block._transactions:
+            print("Check hash: {}".format(tx.transaction_hash))
+            _txs = list(filter(lambda x: x["transaction_hash"] == tx.transaction_hash, watched_transactions))
+            if len(_txs) > 0:
+                print("Identified transaction: {}".format(tx))
+                _tx = _txs[0]
+                _tx["end_time"] = calendar.timegm(time.gmtime())
+                benchmark_data.append(_tx)
+
+                watched_transactions.remove(_tx)
+                print("Watched transactions now #{}".format(len(watched_transactions)))
+
+        last_block_checked = block._block_id
+
+        if len(watched_transactions) == 0 and len(benchmark_data) > 0:
+            store_benchmark_data(benchmark_data)
+            benchmark_data = []
+
 
 app = flask.Flask("labchainComposer", static_folder="./web/")
 app.secret_key = "".join(
@@ -143,14 +162,16 @@ def store_benchmark_data(data):
     filename = "./testData_{}.json".format(str(datetime.datetime.now()).replace(" ", "_"))
 
     with open(filename, "w") as f:
-        f.write(data)
+        f.write(json.dumps(data, default=str))
 
 
 @app.route("/watchTransactions", methods=["POST"])
 def watch_transactions():
     """ Watches the given transactions to determine when those got mined
     """
-    txs = json.loads(request.data)
+    txs = json.loads(request.data.decode('utf-8'))
+
+    print("Watch transactions: {}".format(txs))
 
     for tx in txs:
         watched_transactions.append(tx)

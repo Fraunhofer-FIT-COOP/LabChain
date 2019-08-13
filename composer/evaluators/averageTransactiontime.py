@@ -12,11 +12,11 @@ with open(sys.argv[1], "r") as f:
 durations = []
 
 for d in data:
-    d["start_time"] = datetime.strptime(d["start_time"], '%Y-%m-%dT%H:%M:%S.%fZ')
-    d["end_time"] = datetime.strptime(d["end_time"], '%Y-%m-%dT%H:%M:%S.%fZ')
-    durations.append(abs((d["end_time"] - d["start_time"]).total_seconds()))
+    durations.append(abs(int(d["start_time"]) - int(d["end_time"])))
 
 
 print(data)
 print(durations)
 print("Average duration in seconds: {}s".format(float(sum(durations)) / len(durations)))
+print("Average duration in minutes: {}s".format(float(sum(durations)) / len(durations) / 60))
+print("Average duration in hours: {}s".format(float(sum(durations)) / len(durations) / 60 / 60))

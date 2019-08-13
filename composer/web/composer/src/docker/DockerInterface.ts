@@ -1,3 +1,5 @@
+import { BenchmarkData } from "./BenchmarkEngine";
+
 export interface DockerInstance {
     id: string;
     ipv4: string;
@@ -58,6 +60,15 @@ export class DockerInterface {
         const instances = await response.json();
 
         return instances;
+    }
+
+    public static async addWatchTransactions(txs: BenchmarkData[]): Promise<any> {
+        const response = await fetch(DockerInterface.url + "/watchTransactions", {
+            method: "POST",
+            body: JSON.stringify(txs)
+        });
+
+        return response.toString();
     }
 
     public static async storeData(data: any): Promise<String> {
