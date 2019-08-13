@@ -21,29 +21,40 @@ export default class BenchmarkEngine {
      * the average time until those transactions become visible in the block of a sampler.
      * */
     benchmarkSimpleTransactions(n: number): Promise<any> {
-        let benchmarkData: BenchmarkData[] = [];
-
         let ac: Account = Account.createAccount();
         let rec: Account = Account.createAccount();
 
         let n_txs: number = n / (this._receiver.length === 0 ? 1 : this._receiver.length);
 
-        for (let receiver of this._receiver) {
-            DockerInterface.getClientInterface(receiver).then(client => {
-                for (let i = 0; i < n_txs; ++i) {
-                    console.log("Send transaction #" + i);
-                    let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
-                    tr = ac.signTransaction(tr);
-                    let tx_hash: string = tr.hash();
-                    let tx: BenchmarkData = { transaction_hash: tx_hash, start_time: new Date().getTime() / 1000 };
-                    benchmarkData.push(tx);
+        let proms: any[] = [];
 
-                    client.sendTransaction(tr).then();
-                }
-            });
+        for (let receiver of this._receiver) {
+            proms.push(
+                new Promise<any>((resolve, reject) => {
+                    DockerInterface.getClientInterface(receiver).then(client => {
+                        for (let i = 0; i < n_txs; ++i) {
+                            console.log("Send transaction #" + i);
+                            let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
+                            tr = ac.signTransaction(tr);
+                            let tx_hash: string = tr.hash();
+                            let tx: BenchmarkData = { transaction_hash: tx_hash, start_time: new Date().getTime() / 1000 };
+
+                            client.sendTransaction(tr).then(() => {
+                                resolve(tx);
+                            });
+                        }
+                    });
+                })
+            );
         }
 
         console.log("Analyse mining progress");
-        return DockerInterface.addWatchTransactions(benchmarkData, this._filename);
+        return new Promise((resolve, reject) => {
+            Promise.all(proms).then(benchmarkData => {
+                DockerInterface.addWatchTransactions(benchmarkData, this._filename).then(x => {
+                    resolve(x);
+                });
+            });
+        });
     }
 }
