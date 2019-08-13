@@ -99,10 +99,10 @@ const App: React.FC = () => {
         setShowBenchmarkDialog(true);
     };
 
-    let startBenchmark = function(receiver: DockerInstance[], samples: DockerInstance[]) {
+    let startBenchmark = function(receiver: DockerInstance[]) {
         console.log("Start benchmark: " + benchmarkId);
         setShowBenchmarkDialog(false);
-        let bc: BenchmarkEngine = new BenchmarkEngine(receiver, samples);
+        let bc: BenchmarkEngine = new BenchmarkEngine(receiver);
         let b: any;
 
         switch (benchmarkId) {

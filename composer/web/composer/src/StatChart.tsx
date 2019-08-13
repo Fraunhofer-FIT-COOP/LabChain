@@ -1,6 +1,7 @@
 import React from "react";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import { LabchainClient } from "./labchainSDK/Client";
+import { DockerInterface } from "./docker/DockerInterface";
 
 interface IState {
     current_miner: string;
@@ -13,7 +14,7 @@ interface IProps {}
 export default class StateChart extends React.Component<IProps, IState> {
     _isMounted: Boolean = false;
     timer: any;
-    client: LabchainClient;
+    client: LabchainClient | undefined;
 
     constructor(props: any) {
         super(props);
@@ -23,7 +24,9 @@ export default class StateChart extends React.Component<IProps, IState> {
             current_difficulty: 0
         };
 
-        this.client = new LabchainClient("http://localhost:5049/");
+        DockerInterface.getClientInterface().then(intf => {
+            this.client = intf;
+        });
     }
 
     componentDidMount() {
@@ -34,6 +37,8 @@ export default class StateChart extends React.Component<IProps, IState> {
     }
 
     tick() {
+        if (!this.client) return;
+
         this.client.getBlock().then(blocks => {
             if (this._isMounted) {
                 if (0 === blocks.length) return;

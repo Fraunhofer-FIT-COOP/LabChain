@@ -1,7 +1,6 @@
 import { DockerInstance, DockerInterface } from "./DockerInterface";
 import { Account } from "../labchainSDK/Account";
 import { Transaction } from "../labchainSDK/Transaction";
-import { LabchainClient } from "../labchainSDK/Client";
 
 export interface BenchmarkData {
     transaction_hash: string;
@@ -11,10 +10,8 @@ export interface BenchmarkData {
 
 export default class BenchmarkEngine {
     _receiver: DockerInstance[];
-    _sampler: DockerInstance[];
-    constructor(receiver: DockerInstance[], sampler: DockerInstance[]) {
+    constructor(receiver: DockerInstance[]) {
         this._receiver = receiver;
-        this._sampler = sampler;
     }
 
     /**
@@ -23,20 +20,25 @@ export default class BenchmarkEngine {
      * */
     benchmarkSimpleTransactions(n: number): Promise<any> {
         let benchmarkData: BenchmarkData[] = [];
-        let client: LabchainClient = new LabchainClient("http://localhost:8082");
 
         let ac: Account = Account.createAccount();
         let rec: Account = Account.createAccount();
 
-        for (let i = 0; i < n; ++i) {
-            console.log("Send transaction #" + i);
-            let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
-            tr = ac.signTransaction(tr);
-            let tx_hash: string = tr.hash();
-            let tx: BenchmarkData = { transaction_hash: tx_hash, start_time: new Date().getTime() / 1000 };
-            benchmarkData.push(tx);
+        let n_txs: number = n / (this._receiver.length === 0 ? 1 : this._receiver.length);
 
-            client.sendTransaction(tr).then();
+        for (let receiver of this._receiver) {
+            DockerInterface.getClientInterface(receiver).then(client => {
+                for (let i = 0; i < n_txs; ++i) {
+                    console.log("Send transaction #" + i);
+                    let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
+                    tr = ac.signTransaction(tr);
+                    let tx_hash: string = tr.hash();
+                    let tx: BenchmarkData = { transaction_hash: tx_hash, start_time: new Date().getTime() / 1000 };
+                    benchmarkData.push(tx);
+
+                    client.sendTransaction(tr).then();
+                }
+            });
         }
 
         console.log("Analyse mining progress");

@@ -1,4 +1,5 @@
 import { BenchmarkData } from "./BenchmarkEngine";
+import { LabchainClient } from "../labchainSDK/Client";
 
 export interface DockerInstance {
     id: string;
@@ -12,6 +13,51 @@ export interface DockerInstance {
 
 export class DockerInterface {
     public static url = "http://localhost:8080";
+
+    /**
+     * Returns a labchain client connected to an arbitrary docker instance, or if an
+     * instance is provided to this instance
+     * */
+    public static getClientInterface(instance?: DockerInstance): Promise<LabchainClient> {
+        if (instance) {
+            return new Promise<LabchainClient>((resolve, reject) => {
+                let id: number = +instance.name.split("_")[1];
+                resolve(new LabchainClient("http://localhost:" + (id + 5000)));
+            });
+        }
+        return new Promise<LabchainClient>((resolve, reject) => {
+            DockerInterface.getInstances().then(instances => {
+                if (instances.length === 0) {
+                    reject();
+                } else {
+                    let instance: DockerInstance = instances[0];
+                    let id: number = +instance.name.split("_")[1];
+                    resolve(new LabchainClient("http://localhost:" + (id + 5000)));
+                }
+            });
+        });
+    }
+
+    /**
+     * Returns the labchain interfaces to the running docker instances
+     * */
+    public static getClientInterfaces(): Promise<{ instance: DockerInstance; client: LabchainClient }[]> {
+        return new Promise<{ instance: DockerInstance; client: LabchainClient }[]>((resolve, reject) => {
+            let clients: { instance: DockerInstance; client: LabchainClient }[] = [];
+            DockerInterface.getInstances().then(instances => {
+                for (let inst of instances) {
+                    if (inst.status !== "running") continue;
+                    let id: number = +inst.name.split("_")[1];
+
+                    let client: LabchainClient = new LabchainClient("http://localhost:" + (id + 5000) + "/");
+
+                    clients.push({ instance: inst, client: client });
+                }
+
+                resolve(clients);
+            });
+        });
+    }
 
     public static async getInstances(): Promise<DockerInstance[]> {
         const response = await fetch(DockerInterface.url + "/getInstances");

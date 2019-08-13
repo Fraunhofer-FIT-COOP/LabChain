@@ -98,21 +98,17 @@ export default class ConnectivityView extends React.Component<IProps, IState> {
     tick() {
         DockerInterface.getInstances().then(instances => {
             let getPeersProms: Promise<{ peer: DockerInstance; peers: string[] }>[] = [];
-            for (let inst of instances) {
-                if (inst.status !== "running") continue;
-
-                let id: number = +inst.name.split("_")[1];
-
-                let client = new LabchainClient("http://localhost:" + (id + 5000) + "/");
-
-                getPeersProms.push(
-                    new Promise((resolve, reject) => {
-                        client.getConnectedPeers().then(peers => {
-                            resolve({ peer: inst, peers: peers });
-                        });
-                    })
-                );
-            }
+            DockerInterface.getClientInterfaces().then((clientInterfaces: { instance: DockerInstance; client: LabchainClient }[]) => {
+                for (let clientI of clientInterfaces) {
+                    getPeersProms.push(
+                        new Promise((resolve, reject) => {
+                            clientI.client.getConnectedPeers().then(peers => {
+                                resolve({ peer: clientI.instance, peers: peers });
+                            });
+                        })
+                    );
+                }
+            });
 
             Promise.all(getPeersProms).then(peerData => {
                 this.renderGraph(instances, peerData);

@@ -16,7 +16,7 @@ sys.path.insert(0, '../')  # noqa
 from labchain.network.networking import JsonRpcClient, NetworkInterface  # noqa
 
 
-networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {8082: {}}})
+networkInterface = None
 
 watched_transactions = []
 
@@ -316,7 +316,9 @@ if "__main__" == __name__:
 
     print("Starting server at http://{}:{}".format(_host, _port))
 
-    t = threading.Thread(target=lookupThread)
-    t.start()
+    if len(instances) > 0:
+        networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
+        t = threading.Thread(target=lookupThread)
+        t.start()
 
     app.run(debug=True, host=_host, port=_port)
