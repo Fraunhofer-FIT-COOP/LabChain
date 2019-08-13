@@ -90,7 +90,7 @@ python3 -m unittest discover
 - [ ] Check difficulty calculation
 - [ ] Check block timestamp
 - [ ] Put every class into a file
-- [ ] Update versions in PIP requirements file
+- [x] Update versions in PIP requirements file
 - [ ] Remove 10 seconds delay to wait for incoming transactions
 - [ ] Currently the blocksynchronisation seems not to work ( > 2 peers) -> fix it
 - [ ] Remove auto discovery mechanism
