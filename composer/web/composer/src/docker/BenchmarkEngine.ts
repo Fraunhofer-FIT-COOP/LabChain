@@ -1,6 +1,7 @@
 import { DockerInstance, DockerInterface } from "./DockerInterface";
 import { Account } from "../labchainSDK/Account";
 import { Transaction } from "../labchainSDK/Transaction";
+import { LabchainClient } from "../labchainSDK/Client";
 
 export interface BenchmarkData {
     transaction_hash: string;
@@ -24,35 +25,40 @@ export default class BenchmarkEngine {
         let ac: Account = Account.createAccount();
         let rec: Account = Account.createAccount();
 
-        let n_txs: number = n / (this._receiver.length === 0 ? 1 : this._receiver.length);
+        let n_txs: number = Math.ceil(n / (this._receiver.length === 0 ? 1 : this._receiver.length));
 
         let proms: any[] = [];
 
-        for (let receiver of this._receiver) {
-            proms.push(
-                new Promise<any>((resolve, reject) => {
-                    DockerInterface.getClientInterface(receiver).then(client => {
-                        for (let i = 0; i < n_txs; ++i) {
-                            console.log("Send transaction #" + i);
-                            let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + i);
-                            tr = ac.signTransaction(tr);
-                            let tx_hash: string = tr.hash();
-                            let tx: BenchmarkData = { transaction_hash: tx_hash, start_time: new Date().getTime() / 1000 };
+        this._receiver.forEach(receiver => {
+            proms.push(DockerInterface.getClientInterface(receiver));
+        });
 
-                            client.sendTransaction(tr).then(() => {
-                                resolve(tx);
-                            });
-                        }
+        return new Promise(p2 => {
+            Promise.all(proms).then((clients: LabchainClient[]) => {
+                proms = [];
+                clients.forEach((client: LabchainClient, i: number) => {
+                    for (let j = 0; j < n_txs; ++j) {
+                        console.log("Prepare transaction #" + (i + j * n_txs));
+                        let tr: Transaction = new Transaction(ac, rec, "This is a very important payload #" + (i + j * n_txs));
+                        tr = ac.signTransaction(tr);
+                        let tx_hash: string = tr.hash();
+                        let tx: BenchmarkData = { transaction_hash: tx_hash, start_time: new Date().getTime() / 1000 };
+
+                        proms.push(
+                            new Promise((resolve, reject) => {
+                                client.sendTransaction(tr).then(() => {
+                                    resolve(tx);
+                                });
+                            })
+                        );
+                    }
+                });
+
+                console.log("Analyse mining process");
+                Promise.all(proms).then(benchmarkData => {
+                    DockerInterface.addWatchTransactions(benchmarkData, this._filename).then(() => {
+                        p2();
                     });
-                })
-            );
-        }
-
-        console.log("Analyse mining progress");
-        return new Promise((resolve, reject) => {
-            Promise.all(proms).then(benchmarkData => {
-                DockerInterface.addWatchTransactions(benchmarkData, this._filename).then(x => {
-                    resolve(x);
                 });
             });
         });
