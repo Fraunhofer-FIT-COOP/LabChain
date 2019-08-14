@@ -337,9 +337,19 @@ class TaskTransactionWizard(TransactionWizard):
                         modifiable.append(attr)
 
             if len(modifiable) == 0:
-                # TODO offer some option to cancel the transaction
                 print(u'You are not permissioned to modify any data.')
-                input('Press any key to send the transaction!')
+                result = input('Press (y) to send the transaction and (n) to return to main menu!')
+                while str(result) != "y" and str(result) != "n":
+                    clear_screen()
+                    print('You pressed a wrong key.')
+                    print(u'Sender: ' + str(chosen_key))
+                    print(u'Chosen workflow id: ' + str(chosen_wf_id))
+                    print(u'Receiver: ' + str(chosen_receiver))
+                    print(u'You are not permissioned to modify any data.')
+                    result = input('Press (y) to send the transaction and (n) to return to main menu!')
+                if str(result) == "n":
+                    return
+
                 data = dict()
             else:
                 data = self.ask_for_data(modifiable)
