@@ -20,6 +20,8 @@ networkInterface = None
 
 watched_transactions = []
 
+BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
+
 
 def lookupThread():
     benchmark_data = []
@@ -166,7 +168,7 @@ def store_benchmark_data(data):
     if data_filename is None:
         data_filename = "testData"
 
-    filename = "./{}_{}.json".format(data_filename, str(datetime.datetime.now()).replace(" ", "_"))
+    filename = "{}/{}_{}.json".format(BENCHMARK_DATA_DIRECTORY, data_filename, str(datetime.datetime.now()).replace(" ", "_"))
 
     with open(filename, "w") as f:
         f.write(json.dumps(data, default=str))
@@ -182,6 +184,8 @@ def watch_transactions():
 
     global data_filename
     data_filename = data["filename"]
+
+    print("Received {} transactions to watch".format(len(data["transactions"])))
 
     for tx in data["transactions"]:
         watched_transactions.append(tx)
@@ -283,6 +287,9 @@ def hasContainer():
 
 
 if "__main__" == __name__:
+
+    if not os.path.exists(BENCHMARK_DATA_DIRECTORY):
+        os.makedirs(BENCHMARK_DATA_DIRECTORY)
 
     # check if labchain container is available
     if not hasContainer():
