@@ -1,3 +1,5 @@
+#TODO provide feedback to the client if the tx is not validated
+
 import os
 import json
 import pprint
@@ -85,28 +87,26 @@ class TaskTransactionWizard(TransactionWizard):
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
         received_tx_dict = {**received_task_transaction_dict, **{self.crypto_helper.hash(t.get_json()): t for t in received_workflow_transaction}}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
+
         diff = {k: received_tx_dict[k] for k in set(received_tx_dict)
                 - set(send_task_transaction_dict)}
         return [diff[k] for k in diff]
 
     @staticmethod
-    def group_dict_by_wf_id(tx_list):
-        grouped_dict_by_wf_id = dict()
+    def grouped_dict_by_wf_tx(tx_list):
+        grouped_dict_by_wf_tx = dict()
         for tx in tx_list:
             key = tx.payload["workflow_transaction"]
-            if key in grouped_dict_by_wf_id:
-                grouped_dict_by_wf_id[key].append(tx)
+            if key in grouped_dict_by_wf_tx:
+                grouped_dict_by_wf_tx[key].append(tx)
             else:
-                grouped_dict_by_wf_id[key] = list()
-                grouped_dict_by_wf_id[key].append(tx)
-        return grouped_dict_by_wf_id
+                grouped_dict_by_wf_tx[key] = list()
+                grouped_dict_by_wf_tx[key].append(tx)
+        return grouped_dict_by_wf_tx
 
     def rearrange_received_task_transactions(self, received_task_transaction):
-        # TODO shows the workflow id twice if there's one split tx  and one linear waiting for OR split
-        # TODO shows the split tx even if wf completed on other branch
-        grouped_dict_by_wf_id = self.group_dict_by_wf_id(received_task_transaction)
-
-        for workflow_tx in grouped_dict_by_wf_id:
+        grouped_dict_by_wf_tx = self.grouped_dict_by_wf_tx(received_task_transaction)
+        for workflow_tx in grouped_dict_by_wf_tx:
             split_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
                                                        .get_json_with_signature()).splits
             # just a regular linear wf -> continue
@@ -119,22 +119,23 @@ class TaskTransactionWizard(TransactionWizard):
                 for addr in merge_addr_list:
                     split_addresses = [sender for sender, receiver_list in process_dict.items() if
                                        addr in receiver_list]
-                    sent_split_txs = [tx for tx in grouped_dict_by_wf_id[workflow_tx] if tx.in_charge == addr]
-                    if len(sent_split_txs) < len(split_addresses) and merge_type == "AND":
-                        for tx in sent_split_txs:
+                    received_split_txs = [tx for tx in grouped_dict_by_wf_tx[workflow_tx] if tx.in_charge == addr]
+                    if len(received_split_txs) < len(split_addresses) and merge_type == "AND":
+                        for tx in received_split_txs:
                             received_task_transaction.remove(tx)
-                    elif len(sent_split_txs) < len(split_addresses) and merge_type == "OR":
-                        if len(sent_split_txs) > 1:
-                            for sent_split_tx in sent_split_txs[1:]:
-                                received_task_transaction.remove(sent_split_tx)
+                    elif len(received_split_txs) <= len(split_addresses) and merge_type == "OR":
+                        if len(received_split_txs) > 1:
+                            for received_split_tx in received_split_txs[1:]:
+                                received_task_transaction.remove(received_split_tx)
                         else:
                             continue
-                    elif len(sent_split_txs) == len(split_addresses):
-                        received_task_transaction.remove(sent_split_txs[0])
+                        pass
+                    elif len(received_split_txs) == len(split_addresses):
+                        received_task_transaction.remove(received_split_txs[0])
         return received_task_transaction
 
     def rearrange_send_task_transactions(self, send_task_transaction):
-        grouped_dict_by_wf_id = self.group_dict_by_wf_id(send_task_transaction)
+        grouped_dict_by_wf_id = self.grouped_dict_by_wf_tx(send_task_transaction)
 
         for workflow_tx in grouped_dict_by_wf_id:
             split_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
@@ -158,7 +159,7 @@ class TaskTransactionWizard(TransactionWizard):
             for split in not_completed:
                 for addr in split:
                     if addr in next_in_charge_list:
-                        send_task_transaction.remove([tx for tx in send_task_transaction if tx.in_charge == addr][0])
+                        send_task_transaction.remove([tx for tx in grouped_dict_by_wf_id[workflow_tx] if tx.in_charge == addr][0])
         return send_task_transaction
 
 
@@ -199,6 +200,7 @@ class TaskTransactionWizard(TransactionWizard):
                 split_cond = set(wf_definition["splits"].keys())  == set(workflow_payload["splits"].keys())
                 if document_cond  and permissions_cond and split_cond:
                     return file
+        return "File not found."
 
     def show_workflow_status(self):
         clear_screen()
@@ -304,7 +306,8 @@ class TaskTransactionWizard(TransactionWizard):
                 input("End of workflow. Please press any key to return!")
                 return
 
-
+            #TODO add either comments to the addresses
+            #TODO or change addresses in such way that it is easier to differentiate
             receiver_index = self.ask_for_receiver(next_in_charge_list)
             if receiver_index == '':
                 return
@@ -334,6 +337,7 @@ class TaskTransactionWizard(TransactionWizard):
                         modifiable.append(attr)
 
             if len(modifiable) == 0:
+                # TODO offer some option to cancel the transaction
                 print(u'You are not permissioned to modify any data.')
                 input('Press any key to send the transaction!')
                 data = dict()
@@ -534,7 +538,21 @@ class WorkflowTransactionWizard(TransactionWizard):
             self.pp.pprint(chosen_payload)
 
             chosen_workflow_id = self.ask_for_workflow_id()
-            #TODO add a check for workflow id
+            if chosen_workflow_id == '':
+                return
+
+            # ask for valid sender input in a loop
+            while not self.validate_receiver_input(chosen_workflow_id):
+                clear_screen()
+                print('Invalid input! Please choose a workflow id that is greater than 0!')
+                print()
+                print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
+                print(u'Your workflow data:')
+                self.pp.pprint(chosen_payload)
+                chosen_workflow_id = self.ask_for_workflow_id()
+                if chosen_workflow_id == '':
+                    return
+
             chosen_payload["workflow_id"] = chosen_workflow_id
 
             transaction = TransactionFactory.create_transaction(dict(sender=sender_public_key,
