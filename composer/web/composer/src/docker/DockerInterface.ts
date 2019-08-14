@@ -115,6 +115,19 @@ export class DockerInterface {
         return files;
     }
 
+    public static async dumpBenchmarkData(): Promise<string> {
+        const response = await fetch(DockerInterface.url + "/dumpBenchmarkData");
+
+        return response.toString();
+    }
+
+    public static async getBenchmarkStatus(): Promise<{ found_txs: number; remaining_txs: number }> {
+        const response = await fetch(DockerInterface.url + "/benchmarkStatus");
+        const data = await response.json();
+
+        return data;
+    }
+
     public static async addWatchTransactions(txs: BenchmarkData[], filename: string): Promise<any> {
         const response = await fetch(DockerInterface.url + "/watchTransactions", {
             method: "POST",

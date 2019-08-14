@@ -22,9 +22,11 @@ watched_transactions = []
 
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
 
+benchmark_data = []
+
 
 def lookupThread():
-    benchmark_data = []
+    global benchmark_data
     last_block_checked = -1
     while True:
         blocks = networkInterface.requestBlock(None)
@@ -174,8 +176,14 @@ def store_benchmark_data(data):
         f.write(json.dumps(data, default=str))
 
 
+@app.route("/dumpBenchmarkData", methods=["GET"])
+def dump_benchmark_data():
+    store_benchmark_data(benchmark_data)
+    return "done", 200
+
+
 @app.route("/watchTransactions", methods=["POST"])
-def watch_transactions():
+def set_watch_transactions():
     """ Watches the given transactions to determine when those got mined
     """
     data = json.loads(request.data.decode('utf-8'))
@@ -262,6 +270,11 @@ def start_instance():
 
     instances = getDockerInstances()
     return json.dumps(instances), 200
+
+
+@app.route("/benchmarkStatus", methods=["GET"])
+def get_benchmark_status():
+    return json.dumps({"found_txs": len(benchmark_data), "remaining_txs": len(watched_transactions)}), 200
 
 
 @app.route("/benchmarkFiles", methods=["GET"])
