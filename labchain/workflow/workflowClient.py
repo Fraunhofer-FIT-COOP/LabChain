@@ -1,4 +1,5 @@
 #TODO provide feedback to the client if the tx is not validated
+#TODO maybe add comments next to addresses while creating the workflow by using the name the address is saved under in wallet instead of shortening the public keys?
 
 import os
 import json
@@ -46,9 +47,10 @@ class TaskTransactionWizard(TransactionWizard):
 
     def ask_for_receiver(self, receiver_list):
         print(u'Possible receivers listed: ')
+        print()
+
         for tuple in list(enumerate(receiver_list)):
-            print()
-            print(str(tuple[0]+1) + u':\t' + str(tuple[1].split('_')[0]))
+            print(str(tuple[0]+1) + u':\t...' + str(tuple[1].split('_')[0][84:199]) + '...')
             print()
 
         user_input = input('Please choose a receiver account (by number) or press enter to return: ')
@@ -306,8 +308,6 @@ class TaskTransactionWizard(TransactionWizard):
                 input("End of workflow. Please press any key to return!")
                 return
 
-            #TODO add either comments to the addresses
-            #TODO or change addresses in such way that it is easier to differentiate
             receiver_index = self.ask_for_receiver(next_in_charge_list)
             if receiver_index == '':
                 return
@@ -417,9 +417,10 @@ class WorkflowTransactionWizard(TransactionWizard):
     @staticmethod
     def ask_for_key_from_wallet(wallet_list):
         print(u'Current keys in the wallet: ')
+        print()
         for counter, key in enumerate(wallet_list, 1):
-            print()
             print(str(counter) + u':\t' + str(key[0]))
+            print(u'\tPublic Key: ...' + str(key[1])[84: 199] + '...')
             print()
 
         user_input = input('Please choose an account (by number) or press enter to return: ')
