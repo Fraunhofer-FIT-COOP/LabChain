@@ -264,6 +264,11 @@ def start_instance():
     return json.dumps(instances), 200
 
 
+@app.route("/benchmarkFiles", methods=["GET"])
+def get_benchmarkFiles():
+    return json.dumps(os.listdir(BENCHMARK_DATA_DIRECTORY)), 200
+
+
 @app.route("/stopInstance", methods=["GET"])
 def stop_instance():
     """ Stops an existing docker instance

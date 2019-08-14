@@ -18,6 +18,9 @@ export default function FooterComponent() {
                     <div className="col-md-1">
                         <Link to="/network">Network</Link>
                     </div>
+                    <div className="col-md-1">
+                        <Link to="/benchmarks">Benchmarks</Link>
+                    </div>
                 </div>
             </div>
         </footer>

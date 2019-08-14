@@ -108,6 +108,13 @@ export class DockerInterface {
         return instances;
     }
 
+    public static async getBenchmarkFiles(): Promise<string[]> {
+        const response = await fetch(DockerInterface.url + "/benchmarkFiles");
+        const files = await response.json();
+
+        return files;
+    }
+
     public static async addWatchTransactions(txs: BenchmarkData[], filename: string): Promise<any> {
         const response = await fetch(DockerInterface.url + "/watchTransactions", {
             method: "POST",
