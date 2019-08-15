@@ -1,7 +1,3 @@
-#TODO provide feedback to the client if the tx is not validated
-#TODO maybe add comments next to addresses while creating the workflow by using the name the address is saved under in wallet instead of shortening the public keys?
-#TODO malicious test client?
-
 import os
 import json
 import pprint

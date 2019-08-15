@@ -81,6 +81,7 @@ python3 -m unittest discover
 - [x] Clean up existing branches
 - [x] Remove `nogas` and check PEP8 Styleguide
 - [x] The `test_account.py` uses the `MockCryptoHelper` but should use the real CryptoHelper
+- [x] Update versions in PIP requirements file
 - [ ] Check unit tests
 - [ ] Add an example (quick start/ getting started) to the README
 - [ ] Remove mocks
@@ -89,13 +90,18 @@ python3 -m unittest discover
 - [ ] Check difficulty calculation
 - [ ] Check block timestamp
 - [ ] Put every class into a file
-- [x] Update versions in PIP requirements file
 - [ ] Remove 10 seconds delay to wait for incoming transactions
 - [ ] Currently the blocksynchronisation seems not to work ( > 2 peers) -> fix it
 - [ ] Remove auto discovery mechanism
 - [ ] Check the calls of the crypto helper methods (First `json.dumps(...)` then in the crypto helper `json.loads(...)`. There must be a better way.)
 - [ ] Add Status Information when starting the node (without verbose mode)
 - [ ] Clean up logging (better differentiation between log levels)
+
+# TODO for Workflow Management System
+
+- [ ] Provide feedback to the client if the transaction is not validated
+- [ ] Add comments in the workflow for the addresses while creating the workflow, so that client can see a better explanation about the receiver of his transaction.
+- [ ] Implement a malicious test client
 
 ## Nice to have
 
