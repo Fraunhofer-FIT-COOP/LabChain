@@ -1,22 +1,20 @@
 #TODO provide feedback to the client if the tx is not validated
 #TODO maybe add comments next to addresses while creating the workflow by using the name the address is saved under in wallet instead of shortening the public keys?
+#TODO malicious test client?
 
 import os
 import json
 import pprint
 
 from labchain.util.Menu import Menu
-from labchain.blockchainClient import TransactionWizard
+from labchain.blockchainClient import TransactionWizard, clear_screen
 from labchain.util.TransactionFactory import TransactionFactory
 from labchain.workflow.taskTransaction import TaskTransaction, WorkflowTransaction
 
 RESOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources'))
 
-
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
 class TaskTransactionWizard(TransactionWizard):
+    """CLI wizard for creating new task transactions and showing workflow status."""
 
     def __init__(self, wallet, crypto_helper, network_interface):
         super().__init__(wallet, crypto_helper, network_interface)
@@ -75,8 +73,11 @@ class TaskTransactionWizard(TransactionWizard):
             return False
 
     def check_tasks(self, public_key):
+        #   get all the transactions received and sent from the chosen public key
         received = self.network_interface.search_transaction_from_receiver(public_key)
         send = self.network_interface.search_transaction_from_sender(public_key)
+
+        #   separate received transactions into workflow and task transactions
         received_workflow_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
                                      'processes' in t.payload]
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
@@ -84,12 +85,15 @@ class TaskTransactionWizard(TransactionWizard):
         send_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
                                  'workflow_id' in t.payload and 'processes' not in t.payload]
 
+        #   remove or keep the transaction according to split&merge status of the workflow
         send_task_transaction = self.rearrange_send_task_transactions(send_task_transaction)
         received_task_transaction = self.rearrange_received_task_transactions(received_task_transaction)
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
+
+        #   merge the workflow transactions with the rearranged received transactions
         received_tx_dict = {**received_task_transaction_dict, **{self.crypto_helper.hash(t.get_json()): t for t in received_workflow_transaction}}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
-
+        #   look for the difference of the sent and received transactions
         diff = {k: received_tx_dict[k] for k in set(received_tx_dict)
                 - set(send_task_transaction_dict)}
         return [diff[k] for k in diff]
@@ -109,22 +113,30 @@ class TaskTransactionWizard(TransactionWizard):
     def rearrange_received_task_transactions(self, received_task_transaction):
         grouped_dict_by_wf_tx = self.grouped_dict_by_wf_tx(received_task_transaction)
         for workflow_tx in grouped_dict_by_wf_tx:
+            #   retrieve the split dictionary of the wf
             split_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
                                                        .get_json_with_signature()).splits
-            # just a regular linear wf -> continue
+            #   just a regular linear wf, nothing to rearrange -> continue
             if len(split_dict.keys()) == 0:
                 continue
-            # wf has splits
+
+            #   wf has splits
+            #   get process dict to be able to check merge conditions
             process_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
                                                          .get_json_with_signature()).processes
             for merge_type, merge_addr_list in split_dict.items():
                 for addr in merge_addr_list:
+                    #   get the potential split senders
                     split_addresses = [sender for sender, receiver_list in process_dict.items() if
                                        addr in receiver_list]
+                    #   get the real split senders
                     received_split_txs = [tx for tx in grouped_dict_by_wf_tx[workflow_tx] if tx.in_charge == addr]
+
+                    #   if it is 'and' merge and not all senders sent a transaction, do not show it on received tasks
                     if len(received_split_txs) < len(split_addresses) and merge_type == "AND":
                         for tx in received_split_txs:
                             received_task_transaction.remove(tx)
+                    #   if it is 'or' merge and there are multiple transactions that arrive, only show one
                     elif len(received_split_txs) <= len(split_addresses) and merge_type == "OR":
                         if len(received_split_txs) > 1:
                             for received_split_tx in received_split_txs[1:]:
@@ -132,6 +144,7 @@ class TaskTransactionWizard(TransactionWizard):
                         else:
                             continue
                         pass
+                    #   show only one received tx if the merge condition completed
                     elif len(received_split_txs) == len(split_addresses):
                         received_task_transaction.remove(received_split_txs[0])
         return received_task_transaction
@@ -140,24 +153,29 @@ class TaskTransactionWizard(TransactionWizard):
         grouped_dict_by_wf_id = self.grouped_dict_by_wf_tx(send_task_transaction)
 
         for workflow_tx in grouped_dict_by_wf_id:
+            #   retrieve the split dictionary of the wf
             split_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
                                            .get_json_with_signature()).splits
 
-            # wf has splits
+            #   wf has splits
             process_dict = WorkflowTransaction.from_json(self.network_interface.requestTransaction(workflow_tx)[0]
                                                          .get_json_with_signature()).processes
             splits = [lists for lists in process_dict.values() if len(lists) > 1]
-            # just a regular linear wf -> continue
+
+            #   just a regular linear wf -> continue
             if len(split_dict.keys()) == 0 and not len(splits) > 0:
                 continue
 
+            #   get the in charge lists of the sent transactions
             next_in_charge_list = [tx.in_charge for tx in grouped_dict_by_wf_id[workflow_tx]]
             not_completed = list()
+            #   check for splits that are not completed
             for split_list in splits:
                 for addr in split_list:
                     if addr not in next_in_charge_list:
                         not_completed.append(split_list)
 
+            #   if the split is not completed, remove the ones that are a part of the split
             for split in not_completed:
                 for addr in split:
                     if addr in next_in_charge_list:
@@ -178,6 +196,7 @@ class TaskTransactionWizard(TransactionWizard):
         return True if True in received_workflow_transactions else False
 
     def get_workflow_status(self, workflow_payload):
+        #   check if the ending points in the workflow received a transaction of the given workflow
         addrs = self.get_last_accounts(workflow_payload)
         result = True
         for addr in addrs:
@@ -185,7 +204,9 @@ class TaskTransactionWizard(TransactionWizard):
                 result = False
         return "Completed" if result else "In Progress"
 
-    def get_last_accounts(self, workflow_payload):
+    @staticmethod
+    def get_last_accounts(workflow_payload):
+        #   get the ending points in a workflow
         all_addresses = set([item.split('_')[0] for sublist in workflow_payload["processes"].values() for item in sublist])
         last_accounts = list()
         for addr in all_addresses:
@@ -205,6 +226,7 @@ class TaskTransactionWizard(TransactionWizard):
         return "File not found."
 
     def show_workflow_status(self):
+        """Start wizard to show the current status of the workflows"""
         clear_screen()
         wallet_list = self.wallet_to_list()
 
@@ -272,13 +294,14 @@ class TaskTransactionWizard(TransactionWizard):
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
+            #   retrieve waiting tasks
             tasks = self.check_tasks(public_key)
             workflow_ids = [task.payload['workflow_id'] for task in tasks]
             chosen_wf_id = self.ask_for_task_id(workflow_ids)
             if chosen_wf_id == '':
                 return
 
-            # ask for valid sender input in a loop
+            # ask for valid wf id input in a loop
             while not self.validate_wf_id_input(chosen_wf_id, workflow_ids):
                 clear_screen()
                 print('Invalid input! Please choose a correct workflow id!')
@@ -291,6 +314,7 @@ class TaskTransactionWizard(TransactionWizard):
             print(u'Sender: ' + str(chosen_key))
             print(u'Chosen workflow id: ' + str(chosen_wf_id))
 
+            #   arrange workflow_transaction and previous_transaction values
             task = [element for element in tasks if element.payload['workflow_id'] == chosen_wf_id][0]
             task_hash = self.crypto_helper.hash(task.get_json())
             prev_transaction = self.network_interface.requestTransaction(task_hash)[0]
@@ -301,6 +325,7 @@ class TaskTransactionWizard(TransactionWizard):
                 workflow_transaction_hash = prev_transaction.payload["workflow_transaction"]
                 workflow_transaction = self.network_interface.requestTransaction(workflow_transaction_hash)[0]
 
+            #   check if it is end of the workflow
             in_charge = prev_transaction.payload['in_charge']
             if in_charge in workflow_transaction.payload['processes'].keys():
                 next_in_charge_list = workflow_transaction.payload['processes'][in_charge]
@@ -308,6 +333,7 @@ class TaskTransactionWizard(TransactionWizard):
                 input("End of workflow. Please press any key to return!")
                 return
 
+            # ask for valid receiver input in a loop
             receiver_index = self.ask_for_receiver(next_in_charge_list)
             if receiver_index == '':
                 return
@@ -328,6 +354,7 @@ class TaskTransactionWizard(TransactionWizard):
             print(u'Chosen workflow id: ' + str(chosen_wf_id))
             print(u'Receiver: ' + str(chosen_receiver))
 
+            #   get the document values that the sender is allowed to modify
             attributes = workflow_transaction.payload['permissions'].keys()
             modifiable = list()
             for attr in attributes:
@@ -336,6 +363,7 @@ class TaskTransactionWizard(TransactionWizard):
                     if allowed == in_charge:
                         modifiable.append(attr)
 
+            #   case: sender not allowed to modify anything
             if len(modifiable) == 0:
                 print(u'You are not permissioned to modify any data.')
                 result = input('Press (y) to send the transaction and (n) to return to main menu!')
@@ -352,14 +380,15 @@ class TaskTransactionWizard(TransactionWizard):
 
                 data = dict()
             else:
+                #   case: ask for the data
                 data = self.ask_for_data(modifiable)
 
             document = data
 
+            #   form the payload and send the transaction
             chosen_payload = dict(workflow_id=chosen_wf_id, document=document,
                                   in_charge=next_in_charge, workflow_transaction=workflow_transaction_hash,
                                   previous_transaction=task_hash)
-
             new_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
                                                                      receiver=chosen_receiver,
                                                                      payload=chosen_payload,
@@ -384,6 +413,7 @@ class TaskTransactionWizard(TransactionWizard):
         input('Press any key to go back to the main menu!')
 
 class WorkflowTransactionWizard(TransactionWizard):
+    """CLI wizard for creating new workflow transactions."""
 
     def __init__(self, wallet, crypto_helper, network_interface):
         super().__init__(wallet, crypto_helper, network_interface)
@@ -450,6 +480,7 @@ class WorkflowTransactionWizard(TransactionWizard):
         return in_charge_entity, task_entities
 
     def exchange_entities_with_pks(self, workflow_template, exchange_dict):
+        #   exchange the meaningful names with public key values chosen by the client
         workflow_str = json.dumps(workflow_template)
         for key, value in exchange_dict.items():
             workflow_str = workflow_str.replace(key, value)
@@ -459,9 +490,6 @@ class WorkflowTransactionWizard(TransactionWizard):
         """Start the wizard."""
         clear_screen()
 
-        # convert dict to an ordered list
-        # this needs to be done to get an ordered list that does not change
-        # at runtime of the function
         wallet_list = self.wallet_to_list()
         workflow_list = self.get_workflow_list()
 
@@ -472,10 +500,10 @@ class WorkflowTransactionWizard(TransactionWizard):
             #   case: wallet is empty
             print(u'Wallet does not contain any keys! Please create one first!')
         else:
+            # ask for valid workflow input in a loop
             chosen_workflow = self.ask_for_workflow(workflow_list)
             if chosen_workflow == '':
                 return
-            # ask for valid workflow input in a loop
             while not self.validate_workflow_input(chosen_workflow, len(workflow_list)):
                 chosen_workflow = self.ask_for_workflow(workflow_list)
                 if chosen_workflow == '':
@@ -518,7 +546,7 @@ class WorkflowTransactionWizard(TransactionWizard):
             in_charge_entity, task_entities = self.get_all_entities_in_wf(chosen_payload)
             exchange_dict = dict()
             exchange_dict[in_charge_entity] = sender_public_key
-
+            # ask for valid input in a loop for each entity in the workflow template
             for entity in task_entities:
                 print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
                 print(u'Sender: ' + str(wallet_list[int(chosen_sender) - 1][0]))
@@ -528,7 +556,6 @@ class WorkflowTransactionWizard(TransactionWizard):
                 if chosen_key == '':
                     return
 
-                # ask for valid sender input in a loop
                 while not self.validate_sender_input(chosen_key):
                     clear_screen()
                     print('Invalid input! Please choose a correct index!')
@@ -548,11 +575,11 @@ class WorkflowTransactionWizard(TransactionWizard):
             print(u'Your workflow data:')
             self.pp.pprint(chosen_payload)
 
+            # ask for valid workflow id input in a loop
             chosen_workflow_id = self.ask_for_workflow_id()
             if chosen_workflow_id == '':
                 return
 
-            # ask for valid sender input in a loop
             while not self.validate_receiver_input(chosen_workflow_id):
                 clear_screen()
                 print('Invalid input! Please choose a workflow id that is greater than 0!')
@@ -566,6 +593,7 @@ class WorkflowTransactionWizard(TransactionWizard):
 
             chosen_payload["workflow_id"] = chosen_workflow_id
 
+            # prepare the transaction and send it to the sender
             transaction = TransactionFactory.create_transaction(dict(sender=sender_public_key,
                                                                      receiver=sender_public_key,
                                                                      payload=chosen_payload,
