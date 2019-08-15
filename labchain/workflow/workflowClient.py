@@ -410,7 +410,7 @@ class TaskTransactionWizard(TransactionWizard):
             transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
 
             self.network_interface.sendTransaction(new_transaction)
-
+            clear_screen()
             print('Transaction successfully created!')
             print()
             print(u'Sender: ' + wallet_list[int(chosen_key) - 1][2])

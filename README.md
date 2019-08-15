@@ -105,9 +105,7 @@ python3 -m unittest discover
 - [ ] Implement a malicious test client
 - [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
 - [ ] Improve retrieving the type of workflow while showing the workflow status
-- [ ] Fix the check tasks bug for OR split: when a task in further stages sent, the previous split task is still visible if not completed
-
-
+- [ ] Optimize current workflow status page as it takes long time to show the workflows
 ## Nice to have
 
 - [ ] Use JSON for configuration
