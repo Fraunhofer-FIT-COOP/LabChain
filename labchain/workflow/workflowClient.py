@@ -193,6 +193,7 @@ class TaskTransactionWizard(TransactionWizard):
         return True if True in received_workflow_transactions else False
 
     def get_workflow_status(self, workflow_payload):
+        # TODO doesn't work when the last point participated somewhere before because we only check the addresses, not after _
         #   check if the ending points in the workflow received a transaction of the given workflow
         last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
         result = True
@@ -228,11 +229,12 @@ class TaskTransactionWizard(TransactionWizard):
                 wf_definition = json.load(f)
                 document_cond = set(wf_definition["document"].keys())  == set(workflow_payload["document"].keys())
                 permissions_key_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
-                permissions_val_cond = [len(value_list) for value_list in wf_definition["permissions"].values()] == \
-                                       [len(value_list) for value_list in workflow_payload["permissions"].values()]
+                permissions_val_cond = [len(value_list) for value_list in wf_definition["permissions"].values()].sort() == \
+                                       [len(value_list) for value_list in workflow_payload["permissions"].values()].sort()
                 split_key_cond = set(wf_definition["splits"].keys())  == set(workflow_payload["splits"].keys())
-                split_val_cond = [len(value_list) for value_list in wf_definition["splits"].values()] == \
-                                       [len(value_list) for value_list in workflow_payload["splits"].values()]
+                split_val_cond = [len(value_list) for value_list in wf_definition["splits"].values()].sort() == \
+                                       [len(value_list) for value_list in workflow_payload["splits"].values()].sort()
+
                 if document_cond  and permissions_key_cond and permissions_val_cond and split_key_cond and split_val_cond:
                     return file
         return "File not found."

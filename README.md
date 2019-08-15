@@ -106,6 +106,8 @@ python3 -m unittest discover
 - [ ] Implement a malicious test client
 - [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
 - [ ] Optimize current workflow status page as it takes long time to show the workflows
+- [ ] The system does not support split inside split(See CoffeeVeryComplexOrAndMerge.json). Find a solution for that.
+
 ## Nice to have
 
 - [ ] Use JSON for configuration
