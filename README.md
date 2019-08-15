@@ -100,11 +100,11 @@ python3 -m unittest discover
 # TODO for Workflow Management System
 
 - [x] Improve the current status of workflows by showing at which user it is at the moment
+- [x] Improve retrieving the type of workflow while showing the workflow status
 - [ ] Provide feedback to the client if the transaction is not validated
 - [ ] Add comments in the workflow for the addresses while creating the workflow, so that client can see a better explanation about the receiver of his transaction.
 - [ ] Implement a malicious test client
 - [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
-- [ ] Improve retrieving the type of workflow while showing the workflow status
 - [ ] Optimize current workflow status page as it takes long time to show the workflows
 ## Nice to have
 

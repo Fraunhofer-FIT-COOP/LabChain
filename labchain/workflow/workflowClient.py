@@ -226,9 +226,13 @@ class TaskTransactionWizard(TransactionWizard):
             with open(os.path.join(self.my_dir, file)) as f:
                 wf_definition = json.load(f)
                 document_cond = set(wf_definition["document"].keys())  == set(workflow_payload["document"].keys())
-                permissions_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
-                split_cond = set(wf_definition["splits"].keys())  == set(workflow_payload["splits"].keys())
-                if document_cond  and permissions_cond and split_cond:
+                permissions_key_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
+                permissions_val_cond = [len(value_list) for value_list in wf_definition["permissions"].values()] == \
+                                       [len(value_list) for value_list in workflow_payload["permissions"].values()]
+                split_key_cond = set(wf_definition["splits"].keys())  == set(workflow_payload["splits"].keys())
+                split_val_cond = [len(value_list) for value_list in wf_definition["splits"].values()] == \
+                                       [len(value_list) for value_list in workflow_payload["splits"].values()]
+                if document_cond  and permissions_key_cond and permissions_val_cond and split_key_cond and split_val_cond:
                     return file
         return "File not found."
 
