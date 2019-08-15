@@ -102,6 +102,11 @@ python3 -m unittest discover
 - [ ] Provide feedback to the client if the transaction is not validated
 - [ ] Add comments in the workflow for the addresses while creating the workflow, so that client can see a better explanation about the receiver of his transaction.
 - [ ] Implement a malicious test client
+- [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
+- [ ] Improve the current status of workflows by showing at which user it is at the moment
+- [ ] Improve retrieving the type of workflow while showing the workflow status
+- [ ] Fix the check tasks bug for OR split: when a task in further stages sent, the previous split task is still visible if not completed
+
 
 ## Nice to have
 
