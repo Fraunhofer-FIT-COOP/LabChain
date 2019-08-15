@@ -185,7 +185,7 @@ class TaskTransactionWizard(TransactionWizard):
                                      'processes' in t.payload]
         return received_workflow_transactions
 
-    def check_if_wf_ended(self, public_key, wf_id):
+    def check_if_wf_arrived(self, public_key, wf_id):
         received = self.network_interface.search_transaction_from_receiver(public_key)
         received_workflow_transactions = [TaskTransaction.from_json(t.get_json_with_signature()).payload["workflow_id"]==wf_id for t in received if
                                      'workflow_id' in t.payload]
@@ -193,12 +193,22 @@ class TaskTransactionWizard(TransactionWizard):
 
     def get_workflow_status(self, workflow_payload):
         #   check if the ending points in the workflow received a transaction of the given workflow
-        addrs = self.get_last_accounts(workflow_payload)
+        last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
         result = True
-        for addr in addrs:
-            if not self.check_if_wf_ended(addr, workflow_payload["workflow_id"]):
+        for addr in last_accounts:
+            if not self.check_if_wf_arrived(addr, workflow_payload["workflow_id"]):
                 result = False
-        return "Completed" if result else "In Progress"
+        if result:
+            return "Completed", []
+        else:
+            remaining_accounts = all_accounts - set(last_accounts)
+            waiting_accounts = list()
+            for account in remaining_accounts:
+                tasks = [task.payload["in_charge"] for task in self.check_tasks(account) if task.payload["workflow_id"] == workflow_payload["workflow_id"]]
+                if tasks:
+                    waiting_accounts = tasks
+            return "In progress", waiting_accounts
+
 
     @staticmethod
     def get_last_accounts(workflow_payload):
@@ -208,7 +218,8 @@ class TaskTransactionWizard(TransactionWizard):
         for addr in all_addresses:
             if addr not in [item.split('_')[0] for item in workflow_payload["processes"].keys()]:
                 last_accounts.append(addr)
-        return last_accounts
+        return last_accounts, all_addresses
+
 
     def get_workflow_name(self, workflow_payload):
         for file in os.listdir(self.my_dir):
@@ -251,10 +262,16 @@ class TaskTransactionWizard(TransactionWizard):
                 input('Press any key to go back to the main menu!')
                 return
             for (key, wf_tx) in enumerate(workflow_transactions):
+                status, waiting_addresses = self.get_workflow_status(wf_tx)
                 print()
                 print(str(key+1) + u':  Workflow id: ' + str(wf_tx["workflow_id"] + '\t---->\t' +
-                      self.get_workflow_name(wf_tx) + '\t---->\t' + self.get_workflow_status(wf_tx)))
+                      self.get_workflow_name(wf_tx) + '\t---->\t' + status))
+                if len(waiting_addresses) != 0:
+                    print("Waiting for the following accounts: ")
+                    for item in set(waiting_addresses):
+                        print(u'*  ..' + item[84:199] + '..._' + item.split("_")[1])
                 print()
+                print("------------------------------------------------------------------")
             input('Press any key to go back to the main menu!')
 
     def show(self):
