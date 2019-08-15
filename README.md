@@ -101,8 +101,8 @@ python3 -m unittest discover
 
 - [x] Improve the current status of workflows by showing at which user it is at the moment
 - [x] Improve retrieving the type of workflow while showing the workflow status
+- [x] Add comments in the workflow for the addresses while creating the workflow, so that client can see a better explanation about the receiver of his transaction.
 - [ ] Provide feedback to the client if the transaction is not validated
-- [ ] Add comments in the workflow for the addresses while creating the workflow, so that client can see a better explanation about the receiver of his transaction.
 - [ ] Implement a malicious test client
 - [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
 - [ ] Optimize current workflow status page as it takes long time to show the workflows

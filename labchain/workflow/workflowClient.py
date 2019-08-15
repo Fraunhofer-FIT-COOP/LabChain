@@ -39,12 +39,13 @@ class TaskTransactionWizard(TransactionWizard):
         user_input = input('Please choose a workflow id to work on or press enter to return: ')
         return user_input
 
-    def ask_for_receiver(self, receiver_list):
+    def ask_for_receiver(self, receiver_list, comment_dict):
         print(u'Possible receivers listed: ')
         print()
 
         for tuple in list(enumerate(receiver_list)):
-            print(str(tuple[0]+1) + u':\t...' + str(tuple[1].split('_')[0][84:199]) + '...')
+            print(str(tuple[0]+1) + u': '+ comment_dict[tuple[1].split('_')[0]] +':')
+            print('...' + str(tuple[1].split('_')[0][84:199]) + '...')
             print()
 
         user_input = input('Please choose a receiver account (by number) or press enter to return: ')
@@ -351,7 +352,7 @@ class TaskTransactionWizard(TransactionWizard):
                 return
 
             # ask for valid receiver input in a loop
-            receiver_index = self.ask_for_receiver(next_in_charge_list)
+            receiver_index = self.ask_for_receiver(next_in_charge_list, workflow_transaction.payload['comments'])
             if receiver_index == '':
                 return
             while not self.validate_receiver_input(receiver_index, len(next_in_charge_list)):
@@ -359,7 +360,7 @@ class TaskTransactionWizard(TransactionWizard):
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Chosen workflow id: ' + str(chosen_wf_id))
-                receiver_index = self.ask_for_receiver(next_in_charge_list)
+                receiver_index = self.ask_for_receiver(next_in_charge_list, workflow_transaction.payload['comments'])
                 if receiver_index == '':
                     return
                 print()
@@ -496,12 +497,17 @@ class WorkflowTransactionWizard(TransactionWizard):
                     task_entities.add(value.split("_")[0])
         return in_charge_entity, task_entities
 
-    def exchange_entities_with_pks(self, workflow_template, exchange_dict):
+    def exchange_entities_with_pks(self, workflow_template, exchange_dict, wallet_list):
         #   exchange the meaningful names with public key values chosen by the client
         workflow_str = json.dumps(workflow_template)
         for key, value in exchange_dict.items():
             workflow_str = workflow_str.replace(key, value)
-        return json.loads(workflow_str)
+        new_workflow = json.loads(workflow_str)
+        new_workflow["comments"] = dict()
+        for account in wallet_list:
+            if account[1] in exchange_dict.values():
+                new_workflow["comments"][account[1]] = account[0]
+        return new_workflow
 
     def show(self):
         """Start the wizard."""
@@ -587,7 +593,7 @@ class WorkflowTransactionWizard(TransactionWizard):
                 exchange_dict[entity] = wallet_list[int(chosen_key) - 1][1]
                 clear_screen()
 
-            chosen_payload = self.exchange_entities_with_pks(chosen_payload, exchange_dict)
+            chosen_payload = self.exchange_entities_with_pks(chosen_payload, exchange_dict, self.wallet_to_list())
             print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
             print(u'Your workflow data:')
             self.pp.pprint(chosen_payload)

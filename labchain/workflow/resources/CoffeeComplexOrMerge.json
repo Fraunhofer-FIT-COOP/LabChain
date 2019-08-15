@@ -45,5 +45,6 @@
     "OR": [
       "decider_1", "decider_2"
     ]
-  }
+  },
+  "comments": {}
 }
