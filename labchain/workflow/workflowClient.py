@@ -90,9 +90,43 @@ class TaskTransactionWizard(TransactionWizard):
         #   merge the workflow transactions with the rearranged received transactions
         received_tx_dict = {**received_task_transaction_dict, **{self.crypto_helper.hash(t.get_json()): t for t in received_workflow_transaction}}
         send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
-        #   look for the difference of the sent and received transactions
-        diff = {k: received_tx_dict[k] for k in set(received_tx_dict)
-                - set(send_task_transaction_dict)}
+        #   look for the difference of the sent and received transactions and remove duplicates
+        diff_set = set(received_tx_dict) - set(send_task_transaction_dict)
+        diff_in_charge_list = [received_tx_dict[k].in_charge.split("_")[0] for k in diff_set]
+        diff_in_charge_stages = [received_tx_dict[k].in_charge.split("_")[1] for k in diff_set]
+        duplicates = list([x for x in diff_in_charge_list if diff_in_charge_list.count(x) > 1])
+        if len(duplicates) > 0:
+            max_stage = max(diff_in_charge_stages)
+            to_remove = list()
+            for elem in diff_set:
+                if received_tx_dict[elem].in_charge != "_".join([duplicates[0], max_stage]):
+                    to_remove.append(elem)
+            for elem in to_remove:
+                diff_set.remove(elem)
+
+        #remove completed txs
+        completed = list()
+        for tx_hash in diff_set:
+            if "processes" in received_tx_dict[tx_hash].payload:
+                workflow_payload = received_tx_dict[tx_hash].payload
+            else:
+                workflow_hash = received_tx_dict[tx_hash].payload["workflow_transaction"]
+                tx = self.network_interface.requestTransaction(workflow_hash)
+                print(tx)
+                input("")
+                pass
+            last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
+            result = True
+            for addr in last_accounts:
+                if not self.check_if_wf_arrived(addr, workflow_payload["workflow_id"]):
+                    result = False
+                if result:
+                    completed.append(tx_hash)
+
+        for completed_hash in completed:
+            diff_set.remove(completed_hash)
+
+        diff = {k: received_tx_dict[k] for k in diff_set}
         return [diff[k] for k in diff]
 
     @staticmethod
@@ -210,7 +244,6 @@ class TaskTransactionWizard(TransactionWizard):
                 if tasks:
                     waiting_accounts = tasks
             return "In progress", waiting_accounts
-
 
     @staticmethod
     def get_last_accounts(workflow_payload):
