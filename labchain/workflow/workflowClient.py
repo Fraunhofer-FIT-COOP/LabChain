@@ -309,7 +309,9 @@ class TaskTransactionWizard(TransactionWizard):
                 if len(waiting_addresses) != 0:
                     print("Waiting for the following accounts: ")
                     for item in set(waiting_addresses):
-                        print(u'*  ..' + item[84:199] + '..._' + item.split("_")[1])
+                        comment = [elem[0] for elem in self.wallet_to_list() if elem[1] == item.split("_")[0]][0]
+                        print(u'* '+ comment + ' :')
+                        print(' ..' + item[84:199] + '..._' + item.split("_")[1])
                 print()
                 print("------------------------------------------------------------------")
             input('Press any key to go back to the main menu!')
