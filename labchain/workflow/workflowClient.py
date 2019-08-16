@@ -225,9 +225,6 @@ class TaskTransactionWizard(TransactionWizard):
         return received_workflow_transactions
 
     def check_if_wf_arrived(self, public_key, wf_id):
-        # TODO will not work if same adress is chosen for 2 entities with same number after "_" in workflow
-        # TODO i.e: if wf_ reviewer1_0 -> orderer_0 and if these two have same address, will look completed at the level of reviewer1_0
-        # TODO maybe some kind of control to not use one address for multiple entities?
         received = self.network_interface.search_transaction_from_receiver(public_key.split("_")[0])
         received_workflow_transactions = [TaskTransaction.from_json(t.get_json_with_signature()).payload["workflow_id"]==wf_id and TaskTransaction.from_json(t.get_json_with_signature()).payload["in_charge"] == public_key for t in received if
                                      'workflow_id' in t.payload]

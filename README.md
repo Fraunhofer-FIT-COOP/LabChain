@@ -106,6 +106,9 @@ python3 -m unittest discover
 - [ ] Implement a malicious test client
 - [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
 - [ ] Optimize current workflow status page as it takes long time to show the workflows
+- [ ] See todos inside the code
+- [ ] Now, if same adress is chosen for 2 entities, the workflow will look completed even though it is not because of the numbers after "_".
+      i.e: if wf: reviewer1_0 -> orderer_0 and if these two have same address, the workflow will look completed at the level of reviewer1_0. Maybe adding some kind of control to not use one address for multiple entities?
 
 ## Nice to have
 
