@@ -31,9 +31,15 @@ class TaskTransactionWizard(TransactionWizard):
             return ''
 
         print(u'Current workflows that are waiting with the following ids: ')
+        print()
+        tasks = sorted(tasks, key=lambda tup: int(tup[0]))
         for counter, key in enumerate(tasks, 1):
-            print()
-            print(u'\t' + str(key))
+            print(u'- Workflow ID: ' + str(key[0] + ' with input:'))
+            if len(key[1]) >= 0:
+                for dict_key, dict_value in key[1].items():
+                    if dict_value == "":
+                        dict_value = "-"
+                    print("\t* " + dict_key + " : " + dict_value)
             print()
 
         user_input = input('Please choose a workflow id to work on or press enter to return: ')
@@ -352,13 +358,13 @@ class TaskTransactionWizard(TransactionWizard):
 
             #   retrieve waiting tasks
             tasks = self.check_tasks(public_key)
-            workflow_ids = [task.payload['workflow_id'] for task in tasks]
+            workflow_ids = [(task.payload['workflow_id'], task.payload['document']) for task in tasks]
             chosen_wf_id = self.ask_for_task_id(workflow_ids)
             if chosen_wf_id == '':
                 return
 
             # ask for valid wf id input in a loop
-            while not self.validate_wf_id_input(chosen_wf_id, workflow_ids):
+            while not self.validate_wf_id_input(chosen_wf_id, [i[0] for i in workflow_ids]):
                 clear_screen()
                 print('Invalid input! Please choose a correct workflow id!')
                 print()
@@ -580,8 +586,6 @@ class WorkflowTransactionWizard(TransactionWizard):
                 chosen_payload = json.load(f)
 
             print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
-            self.pp.pprint(chosen_payload)
-            print("-------------------------------------------------------------")
             print("Please enter a sender account.")
             chosen_sender = self.ask_for_key_from_wallet(wallet_list)
             if chosen_sender == '':
@@ -593,8 +597,6 @@ class WorkflowTransactionWizard(TransactionWizard):
                 print('Invalid input! Please choose a correct index!')
                 print()
                 print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
-                self.pp.pprint(chosen_payload)
-                print("-------------------------------------------------------------")
                 print("Please enter a sender account.")
                 chosen_key = self.ask_for_key_from_wallet(wallet_list)
                 if chosen_key == '':
