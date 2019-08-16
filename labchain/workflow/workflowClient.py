@@ -111,17 +111,15 @@ class TaskTransactionWizard(TransactionWizard):
                 workflow_payload = received_tx_dict[tx_hash].payload
             else:
                 workflow_hash = received_tx_dict[tx_hash].payload["workflow_transaction"]
-                tx = self.network_interface.requestTransaction(workflow_hash)
-                print(tx)
-                input("")
-                pass
+                tx = self.network_interface.requestTransaction(workflow_hash)[0]
+                workflow_payload = tx.payload
             last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
             result = True
             for addr in last_accounts:
                 if not self.check_if_wf_arrived(addr, workflow_payload["workflow_id"]):
                     result = False
-                if result:
-                    completed.append(tx_hash)
+            if result:
+                completed.append(tx_hash)
 
         for completed_hash in completed:
             diff_set.remove(completed_hash)
@@ -221,13 +219,15 @@ class TaskTransactionWizard(TransactionWizard):
         return received_workflow_transactions
 
     def check_if_wf_arrived(self, public_key, wf_id):
-        received = self.network_interface.search_transaction_from_receiver(public_key)
-        received_workflow_transactions = [TaskTransaction.from_json(t.get_json_with_signature()).payload["workflow_id"]==wf_id for t in received if
+        # TODO will not work if same adress is chosen for 2 entities with same number after "_" in workflow
+        # TODO i.e: if wf_ reviewer1_0 -> orderer_0 and if these two have same address, will look completed at the level of reviewer1_0
+        # TODO maybe some kind of control to not use one address for multiple entities?
+        received = self.network_interface.search_transaction_from_receiver(public_key.split("_")[0])
+        received_workflow_transactions = [TaskTransaction.from_json(t.get_json_with_signature()).payload["workflow_id"]==wf_id and TaskTransaction.from_json(t.get_json_with_signature()).payload["in_charge"] == public_key for t in received if
                                      'workflow_id' in t.payload]
         return True if True in received_workflow_transactions else False
 
     def get_workflow_status(self, workflow_payload):
-        # TODO doesn't work when the last point participated somewhere before because we only check the addresses, not after _
         #   check if the ending points in the workflow received a transaction of the given workflow
         last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
         result = True
@@ -249,9 +249,10 @@ class TaskTransactionWizard(TransactionWizard):
     def get_last_accounts(workflow_payload):
         #   get the ending points in a workflow
         all_addresses = set([item.split('_')[0] for sublist in workflow_payload["processes"].values() for item in sublist])
+        all_addresses_with_stages = [item for sublist in workflow_payload["processes"].values() for item in sublist]
         last_accounts = list()
-        for addr in all_addresses:
-            if addr not in [item.split('_')[0] for item in workflow_payload["processes"].keys()]:
+        for addr in all_addresses_with_stages:
+            if addr not in [item for item in workflow_payload["processes"].keys()]:
                 last_accounts.append(addr)
         return last_accounts, all_addresses
 
