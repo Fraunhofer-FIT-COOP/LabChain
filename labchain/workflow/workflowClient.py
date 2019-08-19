@@ -260,13 +260,13 @@ class TaskTransactionWizard(TransactionWizard):
             return "In progress", waiting_accounts
 
     def get_document_details(self, workflow_payload):
+        #   get the permissions
         permission_dict = workflow_payload["permissions"]
-        process_dict = workflow_payload["processes"]
-        document = workflow_payload["document"]
         wf_id = workflow_payload["workflow_id"]
         clear_screen()
         print("Document details with workflow_id: ", wf_id)
         print()
+        #   for each document item, look who's permissioned the change it, and search the transactions made from those addresses
         for key, values in permission_dict.items():
             print("*{:<10s}:".format(key))
             for addr in values:
@@ -274,6 +274,7 @@ class TaskTransactionWizard(TransactionWizard):
                 if len(related_tx_docs) == 0:
                     print("\t -")
                 else:
+                    #   do not include the same change in status, only show different statuses
                     status = ""
                     for doc in related_tx_docs:
                         if key in doc and doc[key] != "":
@@ -362,6 +363,7 @@ class TaskTransactionWizard(TransactionWizard):
         clear_screen()
         wallet_list = self.wallet_to_list()
 
+        #   ask for a sender account
         if not len(self.wallet) == 0:
             print("Please choose the account to see related workflows!")
             chosen_key = self.ask_for_key_from_wallet(wallet_list)
@@ -404,7 +406,6 @@ class TaskTransactionWizard(TransactionWizard):
             wf_tx = [wf_tx for wf_tx in workflow_transactions if wf_tx["workflow_id"] == chosen_wf_id][0]
             self.get_document_details(wf_tx)
             input('Press any key to go back to the main menu!')
-
 
     def show(self):
         """Start the wizard."""
