@@ -45,6 +45,18 @@ class TaskTransactionWizard(TransactionWizard):
         user_input = input('Please choose a workflow id to work on or press enter to return: ')
         return user_input
 
+    @staticmethod
+    def ask_for_workflow_id(workflows):
+        print(u'Current workflows that are waiting with the following ids: ')
+        print()
+        tasks = sorted(workflows, key=lambda tup: int(tup[0]))
+        for counter, key in enumerate(tasks, 1):
+            print(u'- Workflow ID: ' + str(key[0]))
+            print()
+
+        user_input = input('Please choose a workflow id to work on or press enter to return: ')
+        return user_input
+
     def ask_for_receiver(self, receiver_list, comment_dict):
         print(u'Possible receivers listed: ')
         print()
@@ -217,7 +229,6 @@ class TaskTransactionWizard(TransactionWizard):
                         send_task_transaction.remove([tx for tx in grouped_dict_by_wf_id[workflow_tx] if tx.in_charge == addr][0])
         return send_task_transaction
 
-
     def get_all_received_workflow_transactions(self, public_key):
         received = self.network_interface.search_transaction_from_receiver(public_key)
         received_workflow_transactions = [WorkflowTransaction.from_json(t.get_json_with_signature()).payload for t in received if
@@ -248,6 +259,30 @@ class TaskTransactionWizard(TransactionWizard):
                     waiting_accounts = tasks
             return "In progress", waiting_accounts
 
+    def get_document_details(self, workflow_payload):
+        permission_dict = workflow_payload["permissions"]
+        process_dict = workflow_payload["processes"]
+        document = workflow_payload["document"]
+        wf_id = workflow_payload["workflow_id"]
+        clear_screen()
+        print("Document details with workflow_id: ", wf_id)
+        print()
+        for key, values in permission_dict.items():
+            print("*{:<10s}:".format(key))
+            for addr in values:
+                related_tx_docs = [tx.payload["document"] for tx in self.network_interface.search_transaction_from_sender(addr.split("_")[0]) if tx.payload["workflow_id"] == wf_id]
+                if len(related_tx_docs) == 0:
+                    print("\t -")
+                else:
+                    status = ""
+                    for doc in related_tx_docs:
+                        if key in doc and doc[key] != "":
+                            status += doc[key]
+                            status += ", "
+                    status = status[:-2]
+                    print("\t ", status)
+            print()
+
     @staticmethod
     def get_last_accounts(workflow_payload):
         #   get the ending points in a workflow
@@ -258,7 +293,6 @@ class TaskTransactionWizard(TransactionWizard):
             if addr not in [item for item in workflow_payload["processes"].keys()]:
                 last_accounts.append(addr)
         return last_accounts, all_addresses
-
 
     def get_workflow_name(self, workflow_payload):
         for file in os.listdir(self.my_dir):
@@ -319,6 +353,55 @@ class TaskTransactionWizard(TransactionWizard):
                 print()
                 print("------------------------------------------------------------------")
             input('Press any key to go back to the main menu!')
+
+    def show_workflow_details(self):
+        """Start wizard to show the current status of the workflows"""
+        clear_screen()
+        wallet_list = self.wallet_to_list()
+
+        if not len(self.wallet) == 0:
+            print("Please choose the account to see related workflows!")
+            chosen_key = self.ask_for_key_from_wallet(wallet_list)
+            if chosen_key == '':
+                return
+
+            while not self.validate_sender_input(chosen_key):
+                print("Please choose the account to see related workflows!")
+                chosen_key = self.ask_for_key_from_wallet(wallet_list)
+                if chosen_key == '':
+                    return
+                clear_screen()
+                print('Invalid input! Please choose a correct index!')
+                print()
+
+            clear_screen()
+            print(u'Account: ' + str(chosen_key))
+            public_key = wallet_list[int(chosen_key) - 1][1]
+
+            workflow_transactions = self.get_all_received_workflow_transactions(public_key)
+            if len(workflow_transactions) == 0:
+                print("You have not started any workflows!")
+                input('Press any key to go back to the main menu!')
+                return
+
+            workflow_ids = [wf_tx["workflow_id"] for wf_tx in workflow_transactions]
+            chosen_wf_id = self.ask_for_workflow_id(workflow_ids)
+            if chosen_wf_id == '':
+                return
+
+            # ask for valid wf id input in a loop
+            while not self.validate_wf_id_input(chosen_wf_id, [i[0] for i in workflow_ids]):
+                clear_screen()
+                print('Invalid input! Please choose a correct workflow id!')
+                print()
+                chosen_wf_id = self.ask_for_workflow_id(workflow_ids)
+                if chosen_wf_id == '':
+                    return
+
+            wf_tx = [wf_tx for wf_tx in workflow_transactions if wf_tx["workflow_id"] == chosen_wf_id][0]
+            self.get_document_details(wf_tx)
+            input('Press any key to go back to the main menu!')
+
 
     def show(self):
         """Start the wizard."""
@@ -692,6 +775,7 @@ class WorkflowClient:
             '1': ('Create workflow transaction', self.send_workflow_transaction, []),
             '2': ('Send transaction', self.send_task_transaction, []),
             '3': ('Show workflow status', self.show_workflow_status, []),
+            '4': ('Show workflow details', self.show_workflow_details, []),
         }, 'Please select a value: ', 'Exit Workflow Client')
 
     def main(self):
@@ -706,3 +790,6 @@ class WorkflowClient:
 
     def show_workflow_status(self):
         self.task_transaction_wizard.show_workflow_status()
+
+    def show_workflow_details(self):
+        self.task_transaction_wizard.show_workflow_details()

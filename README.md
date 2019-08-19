@@ -108,6 +108,8 @@ python3 -m unittest discover
 - [ ] Implement a malicious test client
 - [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
 - [ ] Optimize current workflow status page as it takes long time to show the workflows
+- [ ] Show document evaluation through the process (improve Show workflow details option)
+- [ ] Separate document flow related static functions from wizards
 
 ## Nice to have
 

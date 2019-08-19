@@ -104,9 +104,11 @@ class TransactionWizard:
 
     @staticmethod
     def validate_receiver_input(usr_input):
-        if len(usr_input) > 0:
-            return True
-        else:
+        try:
+            val = int(usr_input)
+            if val > 0:
+                return True
+        except ValueError:
             return False
 
     @staticmethod
