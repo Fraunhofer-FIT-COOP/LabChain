@@ -34,8 +34,9 @@ class TaskTransactionWizard(TransactionWizard):
         print()
         tasks = sorted(tasks, key=lambda tup: int(tup[0]))
         for counter, key in enumerate(tasks, 1):
-            print(u'- Workflow ID: ' + str(key[0] + ' with input:'))
-            if len(key[1]) >= 0:
+            print(u'- Workflow ID: ' + str(key[0]))
+            if len(key[1]) > 0:
+                print(u' with input:')
                 for dict_key, dict_value in key[1].items():
                     if dict_value == "":
                         dict_value = "-"
@@ -131,10 +132,13 @@ class TaskTransactionWizard(TransactionWizard):
                 workflow_payload = tx.payload
             last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
             result = True
+            owner_last_account = False
             for addr in last_accounts:
+                if addr.split("_")[0] == public_key:
+                    owner_last_account = True
                 if not self.check_if_wf_arrived(addr, workflow_payload["workflow_id"]):
                     result = False
-            if result:
+            if result and not owner_last_account:
                 completed.append(tx_hash)
 
         for completed_hash in completed:

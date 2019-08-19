@@ -70,6 +70,14 @@ For running all the unit tests execute:
 python3 -m unittest discover
 ```
 
+# Workflow Management System Tutorial
+
+The tutorial for the workflow management system can be found in:
+
+```
+labchain/workflow/tutorial.md
+```
+
 # TODO
 
 - [x] Check if README is still correct
@@ -107,11 +115,12 @@ python3 -m unittest discover
 - [x] Add a tutorial file
 - [ ] Provide feedback to the client if the transaction is not validated
 - [ ] Implement a malicious test client
+- [ ] Create new templates for testing
 - [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
-      One idea might be: Adding a flag to the workflow template as completed, and sending the tx to itself
 - [ ] Optimize current workflow status page as it takes long time to show the workflows
 - [ ] Show document evaluation through the process (improve Show workflow details option)
 - [ ] Separate document flow related static functions from wizards
+- [ ] Show completed workflows separately on last accounts on check tasks
 
 ## Nice to have
 
