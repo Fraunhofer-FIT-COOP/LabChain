@@ -15,22 +15,18 @@ import flask
 sys.path.insert(0, '../')  # noqa
 from labchain.network.networking import JsonRpcClient, NetworkInterface  # noqa
 
-
 networkInterface = None
-
-watched_transactions = []
-
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
-THRESHOLD_EMPTY_COUNT = 4
 
-benchmark_data = []
+benchmark_data = {}
+lookup_thread_running = False
 
 
 def lookupThread():
     global benchmark_data
-    global watched_transactions
+    global lookup_thread_running
+    lookup_thread_running = True
     last_block_checked = -1
-    empty_count = 0
     while True:
         blocks = networkInterface.requestBlock(None)
 
@@ -39,39 +35,32 @@ def lookupThread():
 
         block = blocks[0]
 
-        if block._block_id == last_block_checked:
+        if block._block_id == last_block_checked:  # block already considered
             continue
 
         print(str(block))
 
-        if len(block._transactions) > 0:
-            empty_count = 0
-        else:
-            empty_count += 1
-
-        if len(block._transactions) == 0 and empty_count == THRESHOLD_EMPTY_COUNT and len(watched_transactions) > 0:
-            watched_transactions = []
-            store_benchmark_data(benchmark_data)
-            benchmark_data = []
+        if len(block._transactions) == 0:  # no transactions to consider
             continue
 
         for tx in block._transactions:
             print("Check hash: {}".format(tx.transaction_hash))
-            _txs = list(filter(lambda x: x["transaction_hash"] == tx.transaction_hash, watched_transactions))
-            if len(_txs) > 0:
-                print("Identified transaction: {}".format(tx))
-                _tx = _txs[0]
-                _tx["end_time"] = calendar.timegm(time.gmtime())
-                benchmark_data.append(_tx)
 
-                watched_transactions.remove(_tx)
-                print("Watched transactions now #{}".format(len(watched_transactions)))
+            for benchmark in benchmark_data:
+                _txs = list(filter(lambda x: x["transaction_hash"] == tx.transaction_hash, benchmark_data[benchmark]["watched_transactions"]))
+                if len(_txs) > 0:
+                    print("Identified transaction: {}".format(tx))
+                    _tx = _txs[0]
+                    _tx["end_time"] = time.time()
+                    benchmark_data[benchmark]["found_transactions"].append(_tx)
+
+                    benchmark_data[benchmark]["watched_transactions"].remove(_tx)
+
+                if len(benchmark_data[benchmark]["watched_transactions"]) == 0:
+                    benchmark_data[benchmark]["finished"] = True
+                    store_benchmark_data(benchmark_data[benchmark])
 
         last_block_checked = block._block_id
-
-        if len(watched_transactions) == 0 and len(benchmark_data) > 0:
-            store_benchmark_data(benchmark_data)
-            benchmark_data = []
 
 
 app = flask.Flask("labchainComposer", static_folder="./web/")
@@ -86,8 +75,6 @@ client = docker.from_env()
 running_instances_count = 1
 
 running_instances = {}
-
-data_filename = None
 
 
 def getDockerInstances():
@@ -179,7 +166,7 @@ def stopInstance(name):
 def store_benchmark_data(data):
     """ Stores the data into a file locally
     """
-    global data_filename
+    data_filename = data.get("benchmark_name", "")
 
     if data_filename is None:
         data_filename = "testData"
@@ -187,32 +174,70 @@ def store_benchmark_data(data):
     filename = "{}/{}_{}.json".format(BENCHMARK_DATA_DIRECTORY, data_filename, str(datetime.datetime.now()).replace(" ", "_"))
 
     with open(filename, "w") as f:
-        f.write(json.dumps(data, default=str))
+        f.write(json.dumps(data["found_transactions"], default=str))
 
 
-@app.route("/dumpBenchmarkData", methods=["GET"])
-def dump_benchmark_data():
-    store_benchmark_data(benchmark_data)
-    return "done", 200
+@app.route("/benchmarkStatus", methods=["GET"])
+def get_benchmark_status():
+    global benchmark_data
+    data = []
+    for benchmark in benchmark_data:
+        if benchmark["finished"]:
+            continue
+
+        data.append({"name": benchmark, "found_txs": len(benchmark_data[benchmark]["found_transactions"]), "remaining_txs": len(benchmark_data[benchmark]["watched_transactions"]), "total_txs": benchmark_data[benchmark]["n_transactions"]})
+
+    return json.dumps(data), 200
 
 
-@app.route("/watchTransactions", methods=["POST"])
-def set_watch_transactions():
-    """ Watches the given transactions to determine when those got mined
+@app.route("/benchmarkFiles", methods=["GET"])
+def get_benchmarkFiles():
+    return json.dumps(os.listdir(BENCHMARK_DATA_DIRECTORY)), 200
+
+
+@app.route("/benchmarkSimple", methods=["POST"])
+def benchmark_simple():
+    """ Executes a benchmark simple, what means it sends the number of transctions 'n'
+    to the peers 'p' provided as parameters in the call.
+
+    The parameter is a JSON of the form:
+    { benchmark_name: "", n_transactions : <number>, peers : [] }
+
+    The composer will watch the blocks in the blockchain to determine when a transaction got mined.
     """
     data = json.loads(request.data.decode('utf-8'))
 
-    print("Watch transactions: {}".format(data))
+    global benchmark_data
 
-    global data_filename
-    data_filename = data["filename"]
+    if data.get("benchmark_name", "") in benchmark_data:
+        return "Benchmark exists", 300
 
-    print("Received {} transactions to watch".format(len(data["transactions"])))
+    benchmark_data["benchmark_name"] = data
+    benchmark_data["benchmark_name"]["watched_transactions"] = []
+    benchmark_data["benchmark_name"]["found_transactions"] = []
+    benchmark_data["benchmark_name"]["finished"] = False
 
-    for tx in data["transactions"]:
-        watched_transactions.append(tx)
+    def txSpawner(benchmark):
+        for peer in benchmark["peers"]:
+            networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + int(peer.split("_")[1])): {}}})
+            crypto_helper = CryptoHelper.instance()
+            sender_pr_key, sender_pub_key = crypto_helper.generate_key_pair()
+            recv_pr_key, recv_pub_key = crypto_helper.generate_key_pair()
 
-    return "Added transactions", 200
+            for i in range(benchmark["n_transactions"] / len(benchmark["peers"])):
+                payload = "Example Transaction Payload #" + str(i)
+                new_transaction = Transaction(str(sender_pub_key), str(recv_pub_key), payload)
+                new_transaction.sign_transaction(crypto_helper, sender_pr_key)
+                transaction_hash = crypto_helper.hash(new_transaction.get_json())
+
+                benchmark["watched_transactions"].append({"transaction_hash": transaction_hash, "start_time": time.time()})
+
+                networkInterface.sendTransaction(new_transaction)
+
+    t = threading.Thread(target=txSpawner, args=(benchmark_data["benchmark_name"]))
+    t.start()
+
+    return "Benchmark created", 200
 
 
 @app.route("/spawnNetwork", methods=["GET"])
@@ -231,6 +256,12 @@ def spawn_network():
         instances.append(createInstance(instances))
 
     instances = getDockerInstances()
+
+    if len(instances) > 0 and not lookup_thread_running:
+        networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
+        t = threading.Thread(target=lookupThread)
+        t.start()
+
     return json.dumps(instances), 200
 
 
@@ -255,21 +286,6 @@ def get_instances():
     return json.dumps(instances), 200
 
 
-@app.route("/deleteInstance", methods=["GET"])
-def delete_instance():
-    """ Deletes the instance with the given name
-    """
-    name = request.args.get("name", None)
-
-    if name is None:
-        return "Specify a name", 404
-
-    os.system("docker rm " + str(name))
-
-    instances = getDockerInstances()
-    return json.dumps(instances), 200
-
-
 @app.route("/startInstance", methods=["GET"])
 def start_instance():
     """ Starts an existing docker instance or creates a new one
@@ -283,17 +299,13 @@ def start_instance():
             return "No such instance", 300
 
     instances = getDockerInstances()
+
+    if len(instances) > 0 and not lookup_thread_running:
+        networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
+        t = threading.Thread(target=lookupThread)
+        t.start()
+
     return json.dumps(instances), 200
-
-
-@app.route("/benchmarkStatus", methods=["GET"])
-def get_benchmark_status():
-    return json.dumps({"found_txs": len(benchmark_data), "remaining_txs": len(watched_transactions)}), 200
-
-
-@app.route("/benchmarkFiles", methods=["GET"])
-def get_benchmarkFiles():
-    return json.dumps(os.listdir(BENCHMARK_DATA_DIRECTORY)), 200
 
 
 @app.route("/stopInstance", methods=["GET"])
@@ -307,6 +319,21 @@ def stop_instance():
 
     if not stopInstance(name):
         return "Cannot find instance", 300
+
+    instances = getDockerInstances()
+    return json.dumps(instances), 200
+
+
+@app.route("/deleteInstance", methods=["GET"])
+def delete_instance():
+    """ Deletes the instance with the given name
+    """
+    name = request.args.get("name", None)
+
+    if name is None:
+        return "Specify a name", 404
+
+    os.system("docker rm " + str(name))
 
     instances = getDockerInstances()
     return json.dumps(instances), 200
@@ -365,7 +392,7 @@ if "__main__" == __name__:
 
     print("Starting server at http://{}:{}".format(_host, _port))
 
-    if len(instances) > 0:
+    if len(instances) > 0 and not lookup_thread_running:
         networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
         t = threading.Thread(target=lookupThread)
         t.start()
