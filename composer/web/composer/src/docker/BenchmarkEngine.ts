@@ -56,9 +56,9 @@ export default class BenchmarkEngine {
 
                 console.log("Analyse mining process");
                 Promise.all(proms).then(benchmarkData => {
-                    DockerInterface.addWatchTransactions(benchmarkData, this._filename).then(() => {
-                        p2();
-                    });
+                    //    DockerInterface.addWatchTransactions(benchmarkData, this._filename).then(() => {
+                    //        p2();
+                    //    });
                 });
             });
         });

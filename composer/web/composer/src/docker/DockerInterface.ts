@@ -1,4 +1,3 @@
-import { BenchmarkData } from "./BenchmarkEngine";
 import { LabchainClient } from "../labchainSDK/Client";
 
 export interface DockerInstance {
@@ -80,13 +79,6 @@ export class DockerInterface {
         return instances;
     }
 
-    public static async deleteInstance(name: string): Promise<DockerInstance[]> {
-        const response = await fetch(DockerInterface.url + "/deleteInstance?name=" + name);
-        const instances = await response.json();
-
-        return instances;
-    }
-
     public static async stopInstance(name: string): Promise<DockerInstance[]> {
         const response = await fetch(DockerInterface.url + "/stopInstance?name=" + name);
         const instances = await response.json();
@@ -94,8 +86,8 @@ export class DockerInterface {
         return instances;
     }
 
-    public static async pruneNetwork(): Promise<DockerInstance[]> {
-        const response = await fetch(DockerInterface.url + "/pruneNetwork");
+    public static async deleteInstance(name: string): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/deleteInstance?name=" + name);
         const instances = await response.json();
 
         return instances;
@@ -108,6 +100,13 @@ export class DockerInterface {
         return instances;
     }
 
+    public static async pruneNetwork(): Promise<DockerInstance[]> {
+        const response = await fetch(DockerInterface.url + "/pruneNetwork");
+        const instances = await response.json();
+
+        return instances;
+    }
+
     public static async getBenchmarkFiles(): Promise<string[]> {
         const response = await fetch(DockerInterface.url + "/benchmarkFiles");
         const files = await response.json();
@@ -115,34 +114,10 @@ export class DockerInterface {
         return files;
     }
 
-    public static async dumpBenchmarkData(): Promise<string> {
-        const response = await fetch(DockerInterface.url + "/dumpBenchmarkData");
-
-        return response.toString();
-    }
-
     public static async getBenchmarkStatus(): Promise<{ found_txs: number; remaining_txs: number }> {
         const response = await fetch(DockerInterface.url + "/benchmarkStatus");
         const data = await response.json();
 
         return data;
-    }
-
-    public static async addWatchTransactions(txs: BenchmarkData[], filename: string): Promise<any> {
-        const response = await fetch(DockerInterface.url + "/watchTransactions", {
-            method: "POST",
-            body: JSON.stringify({ transactions: txs, filename: filename })
-        });
-
-        return response.toString();
-    }
-
-    public static async storeData(data: any): Promise<String> {
-        const response = await fetch(DockerInterface.url + "/storeBenchmarkData", {
-            method: "POST",
-            body: JSON.stringify(data)
-        });
-
-        return response.toString();
     }
 }
