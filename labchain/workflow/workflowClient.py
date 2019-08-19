@@ -538,7 +538,8 @@ class WorkflowTransactionWizard(TransactionWizard):
                     task_entities.add(value.split("_")[0])
         return in_charge_entity, task_entities
 
-    def exchange_entities_with_pks(self, workflow_template, exchange_dict, wallet_list):
+    @staticmethod
+    def exchange_entities_with_pks(workflow_template, exchange_dict, wallet_list):
         #   exchange the meaningful names with public key values chosen by the client
         workflow_str = json.dumps(workflow_template)
         for key, value in exchange_dict.items():
@@ -628,6 +629,7 @@ class WorkflowTransactionWizard(TransactionWizard):
                     if chosen_key == '':
                         return
                 if wallet_list[int(chosen_key) - 1][1] in exchange_dict.values():
+                    #   if an address selected multiple times, give warning and cancel the workflow
                     clear_screen()
                     print("You have chosen this address for another person. Either choose another person or change your workflow template!")
                     input("Press any key to go back to main menu!")
