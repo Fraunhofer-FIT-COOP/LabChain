@@ -500,7 +500,7 @@ class WorkflowTransactionWizard(TransactionWizard):
 
     @staticmethod
     def ask_for_workflow_id():
-        usr_input = input('Please type in a workflow id: ')
+        usr_input = input('Please type in a workflow id or press enter to return: ')
         return str(usr_input)
 
     @staticmethod
