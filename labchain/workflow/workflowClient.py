@@ -97,19 +97,19 @@ class TaskTransactionWizard(TransactionWizard):
                                      'processes' in t.payload]
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
                                      'workflow_id' in t.payload and 'processes' not in t.payload]
-        send_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
+        sent_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
                                  'workflow_id' in t.payload and 'processes' not in t.payload]
 
         #   remove or keep the transaction according to split&merge status of the workflow
-        send_task_transaction = self.rearrange_send_task_transactions(send_task_transaction)
+        sent_task_transaction = self.rearrange_sent_task_transactions(sent_task_transaction)
         received_task_transaction = self.rearrange_received_task_transactions(received_task_transaction)
         received_task_transaction_dict = {self.crypto_helper.hash(t.get_json()): t for t in received_task_transaction}
 
         #   merge the workflow transactions with the rearranged received transactions
         received_tx_dict = {**received_task_transaction_dict, **{self.crypto_helper.hash(t.get_json()): t for t in received_workflow_transaction}}
-        send_task_transaction_dict = {t.previous_transaction: t for t in send_task_transaction}
+        sent_task_transaction_dict = {t.previous_transaction: t for t in sent_task_transaction}
         #   look for the difference of the sent and received transactions and remove duplicates
-        diff_set = set(received_tx_dict) - set(send_task_transaction_dict)
+        diff_set = set(received_tx_dict) - set(sent_task_transaction_dict)
         diff_in_charge_list = [received_tx_dict[k].in_charge.split("_")[0] for k in diff_set]
         diff_in_charge_stages = [received_tx_dict[k].in_charge.split("_")[1] for k in diff_set]
         duplicates = list([x for x in diff_in_charge_list if diff_in_charge_list.count(x) > 1])
@@ -196,8 +196,8 @@ class TaskTransactionWizard(TransactionWizard):
                         received_task_transaction.remove(received_split_txs[0])
         return received_task_transaction
 
-    def rearrange_send_task_transactions(self, send_task_transaction):
-        grouped_dict_by_wf_id = self.grouped_dict_by_wf_tx(send_task_transaction)
+    def rearrange_sent_task_transactions(self, sent_task_transaction):
+        grouped_dict_by_wf_id = self.grouped_dict_by_wf_tx(sent_task_transaction)
 
         for workflow_tx in grouped_dict_by_wf_id:
             #   retrieve the split dictionary of the wf
@@ -226,8 +226,8 @@ class TaskTransactionWizard(TransactionWizard):
             for split in not_completed:
                 for addr in split:
                     if addr in next_in_charge_list:
-                        send_task_transaction.remove([tx for tx in grouped_dict_by_wf_id[workflow_tx] if tx.in_charge == addr][0])
-        return send_task_transaction
+                        sent_task_transaction.remove([tx for tx in grouped_dict_by_wf_id[workflow_tx] if tx.in_charge == addr][0])
+        return sent_task_transaction
 
     def get_all_received_workflow_transactions(self, public_key):
         received = self.network_interface.search_transaction_from_receiver(public_key)
@@ -777,7 +777,7 @@ class WorkflowClient:
                                                                      self.network_interface)
         self.main_menu = Menu(['Main menu'], {
             '1': ('Create workflow transaction', self.send_workflow_transaction, []),
-            '2': ('Send transaction', self.send_task_transaction, []),
+            '2': ('Send task transaction', self.send_task_transaction, []),
             '3': ('Show workflow status', self.show_workflow_status, []),
             '4': ('Show workflow details', self.show_workflow_details, []),
         }, 'Please select a value: ', 'Exit Workflow Client')
