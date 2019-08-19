@@ -21,13 +21,16 @@ networkInterface = None
 watched_transactions = []
 
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
+THRESHOLD_EMPTY_COUNT = 4
 
 benchmark_data = []
 
 
 def lookupThread():
     global benchmark_data
+    global watched_transactions
     last_block_checked = -1
+    empty_count = 0
     while True:
         blocks = networkInterface.requestBlock(None)
 
@@ -40,6 +43,17 @@ def lookupThread():
             continue
 
         print(str(block))
+
+        if len(block._transactions) > 0:
+            empty_count = 0
+        else:
+            empty_count += 1
+
+        if len(block._transactions) == 0 and empty_count == THRESHOLD_EMPTY_COUNT and len(watched_transactions) > 0:
+            watched_transactions = []
+            store_benchmark_data(benchmark_data)
+            benchmark_data = []
+            continue
 
         for tx in block._transactions:
             print("Check hash: {}".format(tx.transaction_hash))
