@@ -670,6 +670,12 @@ class WorkflowTransactionWizard(TransactionWizard):
             with open(path) as f:
                 chosen_payload = json.load(f)
 
+            in_charge_entity, task_entities = self.get_all_entities_in_wf(chosen_payload)
+            if len(task_entities) + 1 > len(self.wallet):
+                print(u'There is not enough keys in the wallet for the chosen workflow. Please make sure you do!')
+                input("Press any key to go back to main menu!")
+                return
+
             print(u'Workflow: ' + str(workflow_list[int(chosen_workflow) - 1]))
             print("Please enter a sender account.")
             chosen_sender = self.ask_for_key_from_wallet(wallet_list)
@@ -691,7 +697,6 @@ class WorkflowTransactionWizard(TransactionWizard):
             sender_private_key = wallet_list[int(chosen_sender) - 1][2]
             sender_public_key = wallet_list[int(chosen_sender) - 1][1]
 
-            in_charge_entity, task_entities = self.get_all_entities_in_wf(chosen_payload)
             exchange_dict = dict()
             exchange_dict[in_charge_entity] = sender_public_key
             # ask for valid input in a loop for each entity in the workflow template
