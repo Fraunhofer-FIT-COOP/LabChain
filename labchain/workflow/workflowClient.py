@@ -277,10 +277,13 @@ class TaskTransactionWizard(TransactionWizard):
                     status = ""
                     for doc in related_tx_docs:
                         if key in doc and doc[key] != "":
-                            status += doc[key]
-                            status += ", "
+                            if doc[key] not in status:
+                                status += doc[key]
+                                status += ", "
                     status = status[:-2]
-                    print("\t ", status)
+                    if status == "":
+                        status = "-"
+                    print("\t", status)
             print()
 
     @staticmethod
