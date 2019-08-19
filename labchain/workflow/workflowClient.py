@@ -67,7 +67,7 @@ class TaskTransactionWizard(TransactionWizard):
             print()
 
         user_input = input('Please choose a receiver account (by number) or press enter to return: ')
-        return str(int(user_input) - 1)
+        return str(int(user_input))
 
     def ask_for_data(self, modifiable):
         print(u'Please enter values for:')
@@ -80,11 +80,9 @@ class TaskTransactionWizard(TransactionWizard):
     def validate_receiver_input(self, usr_input, receivers_len):
         try:
             int_usr_input = int(usr_input)
+            if int_usr_input <= receivers_len:
+                return True
         except ValueError:
-            return False
-        if int_usr_input <= receivers_len:
-            return True
-        else:
             return False
 
     def check_tasks(self, public_key):
@@ -484,7 +482,7 @@ class TaskTransactionWizard(TransactionWizard):
             if receiver_index == '':
                 return
             while not self.validate_receiver_input(receiver_index, len(next_in_charge_list)):
-                # clear_screen()
+                clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Chosen workflow id: ' + str(chosen_wf_id))
@@ -492,7 +490,7 @@ class TaskTransactionWizard(TransactionWizard):
                 if receiver_index == '':
                     return
                 print()
-            next_in_charge = next_in_charge_list[int(receiver_index)]
+            next_in_charge = next_in_charge_list[int(receiver_index)-1]
             chosen_receiver = next_in_charge.split('_')[0]
 
             clear_screen()

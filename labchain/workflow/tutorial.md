@@ -20,7 +20,7 @@ Depending on the value chosen on client, the following functionalities can be ac
  ```sh
 $ python3 client.py
 ```
-and choose `1- Manage Waller` to manage your wallet in case the number of keys required are not defined yet. After choosing the entity addresses, the client will show the the whole workflow with the given addresses. Finally, enter the workflow id (which should be a number) and the workflow transaction is created and its hash is displayed.
+and choose `1- Manage Wallet` to manage your wallet in case the number of keys required are not defined yet. After choosing the entity addresses, the client will show the the whole workflow with the given addresses. Finally, enter the workflow id (which should be a number) and the workflow transaction is created and its hash is displayed.
 
 ### Sending a transaction for a defined workflow:
 
