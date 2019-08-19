@@ -627,6 +627,11 @@ class WorkflowTransactionWizard(TransactionWizard):
                     chosen_key = self.ask_for_key_from_wallet(wallet_list)
                     if chosen_key == '':
                         return
+                if wallet_list[int(chosen_key) - 1][1] in exchange_dict.values():
+                    clear_screen()
+                    print("You have chosen this address for another person. Either choose another person or change your workflow template!")
+                    input("Press any key to go back to main menu!")
+                    return
                 exchange_dict[entity] = wallet_list[int(chosen_key) - 1][1]
                 clear_screen()
 
