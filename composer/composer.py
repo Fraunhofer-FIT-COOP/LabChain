@@ -25,10 +25,15 @@ lookup_thread_running = False
 def lookupThread():
     global benchmark_data
     global lookup_thread_running
+    global networkInterface
     lookup_thread_running = True
     last_block_checked = -1
     while True:
-        blocks = networkInterface.requestBlock(None)
+        blocks = None
+        try:
+            blocks = networkInterface.requestBlock(None)
+        except Exception as e:
+            continue
 
         if len(blocks) > 1:
             print("WARNING Multiplebranch heads")
@@ -219,7 +224,7 @@ def benchmark_simple():
 
     def txSpawner(benchmark):
         for peer in benchmark["peers"]:
-            networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + int(peer.split("_")[1])): {}}})
+            _networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + int(peer.split("_")[1])): {}}})
             crypto_helper = CryptoHelper.instance()
             sender_pr_key, sender_pub_key = crypto_helper.generate_key_pair()
             recv_pr_key, recv_pub_key = crypto_helper.generate_key_pair()
@@ -232,7 +237,7 @@ def benchmark_simple():
 
                 benchmark["watched_transactions"].append({"transaction_hash": transaction_hash, "start_time": time.time()})
 
-                networkInterface.sendTransaction(new_transaction)
+                _networkInterface.sendTransaction(new_transaction)
 
     t = threading.Thread(target=txSpawner, args=(benchmark_data["benchmark_name"]))
     t.start()
@@ -257,8 +262,11 @@ def spawn_network():
 
     instances = getDockerInstances()
 
-    if len(instances) > 0 and not lookup_thread_running:
+    if len(instances) > 0:
+        global networkInterface
         networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
+
+        time.sleep(3)  # wait 3 seconds
         t = threading.Thread(target=lookupThread)
         t.start()
 
@@ -301,7 +309,10 @@ def start_instance():
     instances = getDockerInstances()
 
     if len(instances) > 0 and not lookup_thread_running:
+        global networkInterface
         networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
+
+        time.sleep(3)  # wait 3 seconds
         t = threading.Thread(target=lookupThread)
         t.start()
 
