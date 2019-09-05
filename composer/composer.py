@@ -2,6 +2,7 @@ from flask import request
 from flask_cors import CORS
 import threading
 import os
+import math
 import docker
 import subprocess
 import sys
@@ -14,6 +15,8 @@ import calendar
 import flask
 sys.path.insert(0, '../')  # noqa
 from labchain.network.networking import JsonRpcClient, NetworkInterface  # noqa
+from labchain.util.cryptoHelper import CryptoHelper
+from labchain.datastructure.transaction import Transaction
 
 networkInterface = None
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
@@ -43,7 +46,7 @@ def lookupThread():
         if block._block_id == last_block_checked:  # block already considered
             continue
 
-        print(str(block))
+        # print(str(block))
 
         if len(block._transactions) == 0:  # no transactions to consider
             continue
@@ -187,7 +190,7 @@ def get_benchmark_status():
     global benchmark_data
     data = []
     for benchmark in benchmark_data:
-        if benchmark["finished"]:
+        if benchmark_data[benchmark]["finished"]:
             continue
 
         data.append({"name": benchmark, "found_txs": len(benchmark_data[benchmark]["found_transactions"]), "remaining_txs": len(benchmark_data[benchmark]["watched_transactions"]), "total_txs": benchmark_data[benchmark]["n_transactions"]})
@@ -208,29 +211,45 @@ def benchmark_simple():
     The parameter is a JSON of the form:
     { benchmark_name: "", n_transactions : <number>, peers : [] }
 
+    The peer list contains the names of the targetted peers.
+
     The composer will watch the blocks in the blockchain to determine when a transaction got mined.
     """
     data = json.loads(request.data.decode('utf-8'))
 
     global benchmark_data
 
-    if data.get("benchmark_name", "") in benchmark_data:
+    benchmark_name = data.get("benchmark_name", None)
+
+    if benchmark_name is None:
+        return "Please specify a benchmark name", 300
+
+    if benchmark_name in benchmark_data:
         return "Benchmark exists", 300
 
-    benchmark_data["benchmark_name"] = data
-    benchmark_data["benchmark_name"]["watched_transactions"] = []
-    benchmark_data["benchmark_name"]["found_transactions"] = []
-    benchmark_data["benchmark_name"]["finished"] = False
+    benchmark_data[benchmark_name] = data
+    benchmark_data[benchmark_name]["watched_transactions"] = []
+    benchmark_data[benchmark_name]["found_transactions"] = []
+    benchmark_data[benchmark_name]["finished"] = False
+    benchmark_data[benchmark_name]["peers"] = data["peers"]
+
+    transactions_per_peer = math.ceil(float(benchmark_data[benchmark_name]["n_transactions"] / len(benchmark_data[benchmark_name]["peers"])))
+    # update number of transactions if number of transactions is not divisable by the number of peers
+    benchmark_data[benchmark_name]["n_transactions"] = transactions_per_peer * len(benchmark_data[benchmark_name]["peers"])
 
     def txSpawner(benchmark):
+        print("Distribute {} transactions to {} peers, so {} per peer".format(benchmark["n_transactions"], len(benchmark["peers"]), transactions_per_peer))
+        tx_count = 0
+
         for peer in benchmark["peers"]:
             _networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + int(peer.split("_")[1])): {}}})
             crypto_helper = CryptoHelper.instance()
             sender_pr_key, sender_pub_key = crypto_helper.generate_key_pair()
             recv_pr_key, recv_pub_key = crypto_helper.generate_key_pair()
 
-            for i in range(benchmark["n_transactions"] / len(benchmark["peers"])):
-                payload = "Example Transaction Payload #" + str(i)
+            for i in range(transactions_per_peer):
+                payload = "Example Transaction Payload #" + str(tx_count)
+                tx_count += 1
                 new_transaction = Transaction(str(sender_pub_key), str(recv_pub_key), payload)
                 new_transaction.sign_transaction(crypto_helper, sender_pr_key)
                 transaction_hash = crypto_helper.hash(new_transaction.get_json())
@@ -239,7 +258,7 @@ def benchmark_simple():
 
                 _networkInterface.sendTransaction(new_transaction)
 
-    t = threading.Thread(target=txSpawner, args=(benchmark_data["benchmark_name"]))
+    t = threading.Thread(target=txSpawner, args=(benchmark_data[benchmark_name],))
     t.start()
 
     return "Benchmark created", 200

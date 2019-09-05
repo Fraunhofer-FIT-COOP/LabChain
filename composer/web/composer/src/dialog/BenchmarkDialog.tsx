@@ -46,6 +46,15 @@ export default function BenchmarkDialog(props: any) {
                         <h2>Benchmark Configuration</h2>
                     </div>
                 </div>
+                {props.errorMessage.length > 0 && (
+                    <div className="row">
+                        <div className="col-md-12">
+                            <div className="alert alert-danger" role="alert">
+                                {props.errorMessage}
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div className="row">
                     <div className="col-md-2">
                         <h4>Filename:</h4>

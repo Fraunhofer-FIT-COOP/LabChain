@@ -1,5 +1,11 @@
 import { LabchainClient } from "../labchainSDK/Client";
 
+export interface BenchmarkStatus {
+    remaining_txs: number;
+    found_txs: number;
+    total_txs: number;
+}
+
 export interface DockerInstance {
     id: string;
     ipv4: string;
@@ -107,6 +113,32 @@ export class DockerInterface {
         return instances;
     }
 
+    public static async benchmarkSimple(benchmarkName: string, transaction_count: number, peers: string[]): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            fetch(DockerInterface.url + "/benchmarkSimple", {
+                method: "POST",
+                body: JSON.stringify({ benchmark_name: benchmarkName, n_transactions: transaction_count, peers: peers }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(result => {
+                    if (result.status !== 200) {
+                        result.text().then(t => {
+                            reject(t);
+                        });
+                    } else {
+                        result.text().then(t => {
+                            resolve(t);
+                        });
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    }
+
     public static async getBenchmarkFiles(): Promise<string[]> {
         const response = await fetch(DockerInterface.url + "/benchmarkFiles");
         const files = await response.json();
@@ -114,7 +146,7 @@ export class DockerInterface {
         return files;
     }
 
-    public static async getBenchmarkStatus(): Promise<{ found_txs: number; remaining_txs: number }> {
+    public static async getBenchmarkStatus(): Promise<BenchmarkStatus[]> {
         const response = await fetch(DockerInterface.url + "/benchmarkStatus");
         const data = await response.json();
 

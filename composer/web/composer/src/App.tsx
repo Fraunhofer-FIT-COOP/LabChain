@@ -18,6 +18,7 @@ const App: React.FC = () => {
     const [showSpawnDialog, setShowSpawnDialog] = useState(false);
     const [showBenchmarkDialog, setShowBenchmarkDialog] = useState(false);
     const [benchmarkId, setBenchmarkId] = useState("");
+    const [benchmarkDialogErrorMessage, setBenchmarkDialogErrorMessage] = useState<string[]>([]);
 
     let noteColor = { background: "#0E1717", text: "#FFFFFF" };
 
@@ -100,8 +101,7 @@ const App: React.FC = () => {
     };
 
     let startBenchmark = function(receiver: DockerInstance[], filename: string) {
-        console.log("Start benchmark: " + benchmarkId);
-        setShowBenchmarkDialog(false);
+        console.log("Start benchmark: " + benchmarkId + " with name: " + filename);
         let bc: BenchmarkEngine = new BenchmarkEngine(receiver, filename);
         let b: any;
 
@@ -125,9 +125,13 @@ const App: React.FC = () => {
 
         b.then((data: any) => {
             console.log("Its done");
+            setShowBenchmarkDialog(false);
+            setBenchmarkId("");
+        }).catch((error: any) => {
+            console.log("Could not create benchmark");
+            console.log(error);
+            setBenchmarkDialogErrorMessage([error]);
         });
-
-        setBenchmarkId("");
     };
 
     return (
@@ -151,6 +155,7 @@ const App: React.FC = () => {
                     ></SpawnNetworkDialog>
                     <BenchmarkDialog
                         show={showBenchmarkDialog}
+                        errorMessage={benchmarkDialogErrorMessage}
                         ok={startBenchmark}
                         dockerInstances={dockerInstances}
                         cancel={() => {
