@@ -200,7 +200,9 @@ def get_benchmark_status():
 
 @app.route("/benchmarkFiles", methods=["GET"])
 def get_benchmarkFiles():
-    return json.dumps(os.listdir(BENCHMARK_DATA_DIRECTORY)), 200
+    files = [x[0] for x in sorted([(fn, os.stat(os.path.join(BENCHMARK_DATA_DIRECTORY, fn))) for fn in os.listdir(BENCHMARK_DATA_DIRECTORY)], key=lambda x: x[1].st_ctime)]
+    files.reverse()
+    return json.dumps(files), 200
 
 
 @app.route("/benchmarkSimple", methods=["POST"])
