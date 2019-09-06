@@ -4,6 +4,7 @@ export interface BenchmarkStatus {
     remaining_txs: number;
     found_txs: number;
     total_txs: number;
+    name: string;
 }
 
 export interface DockerInstance {
@@ -153,7 +154,7 @@ export class DockerInterface {
         return benchmarks;
     }
 
-    public static async getBenchmarkStatus(): Promise<BenchmarkStatus[]> {
+    public static async getBenchmarkStatus(): Promise<BenchmarkStatus> {
         const response = await fetch(DockerInterface.url + "/benchmarkStatus");
         const data = await response.json();
 

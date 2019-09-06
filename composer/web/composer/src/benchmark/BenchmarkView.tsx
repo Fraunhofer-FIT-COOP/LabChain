@@ -9,7 +9,7 @@ import "./BenchmarkView.css";
 interface IState {
     files: string[];
     benchmarkQueue: string[];
-    benchmarkStatus: BenchmarkStatus[];
+    benchmarkStatus: BenchmarkStatus;
 }
 
 interface IProps {}
@@ -20,7 +20,7 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
 
     constructor(props: any) {
         super(props);
-        this.state = { files: [], benchmarkQueue: [], benchmarkStatus: [{ remaining_txs: 0, found_txs: 0, total_txs: 0 }] };
+        this.state = { files: [], benchmarkQueue: [], benchmarkStatus: { name: "", remaining_txs: 0, found_txs: 0, total_txs: 0 } };
     }
 
     componentDidMount() {
@@ -57,14 +57,16 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
                         <h1>Benchmark Overview</h1>
                     </div>
                 </div>
-                {this.state.benchmarkStatus.length > 0 && (
+                {this.state.benchmarkStatus.name !== "" && (
                     <div className="row">
                         <div className="col-md-6">
-                            <h4>Remaining transactions to analyse:</h4>
+                            <h4>
+                                Active Benchmark <b>{this.state.benchmarkStatus.name}</b> Remaining transactions to analyse:
+                            </h4>
                         </div>
                         <div className="col-md-1">
                             <h4>
-                                {this.state.benchmarkStatus[0].found_txs}/{this.state.benchmarkStatus[0].total_txs}
+                                {this.state.benchmarkStatus.found_txs}/{this.state.benchmarkStatus.total_txs}
                             </h4>
                         </div>
                         <div className="col-md-5">
@@ -81,12 +83,7 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
                 </div>
                 <div className="row">
                     <div className="col-md-12">
-                        <BenchmarkBatchControl></BenchmarkBatchControl>
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="col-md-12">
-                        <BenchmarkBatchTable></BenchmarkBatchTable>
+                        <BenchmarkBatchTable benchmarks={this.state.benchmarkQueue}></BenchmarkBatchTable>
                     </div>
                 </div>
                 <div className="row">

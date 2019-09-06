@@ -35,30 +35,28 @@ lookup_thread_running = False
 def spawnBenchmarkTransactions(benchmark_name):
     global benchmark_data
 
-    def txSpawner(benchmark):
-        transactions_per_peer = benchmark["n_transactions_per_peer"]
-        print("Distribute {} transactions to {} peers, so {} per peer".format(benchmark["n_transactions"], len(benchmark["peers"]), transactions_per_peer))
-        tx_count = 0
+    benchmark = benchmark_data[benchmark_name]
 
-        for peer in benchmark["peers"]:
-            _networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + int(peer.split("_")[1])): {}}})
-            crypto_helper = CryptoHelper.instance()
-            sender_pr_key, sender_pub_key = crypto_helper.generate_key_pair()
-            recv_pr_key, recv_pub_key = crypto_helper.generate_key_pair()
+    transactions_per_peer = benchmark["n_transactions_per_peer"]
+    print("Distribute {} transactions to {} peers, so {} per peer".format(benchmark["n_transactions"], len(benchmark["peers"]), transactions_per_peer))
+    tx_count = 0
 
-            for i in range(transactions_per_peer):
-                payload = "Example Transaction Payload #" + str(tx_count)
-                tx_count += 1
-                new_transaction = Transaction(str(sender_pub_key), str(recv_pub_key), payload)
-                new_transaction.sign_transaction(crypto_helper, sender_pr_key)
-                transaction_hash = crypto_helper.hash(new_transaction.get_json())
+    for peer in benchmark["peers"]:
+        _networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + int(peer.split("_")[1])): {}}})
+        crypto_helper = CryptoHelper.instance()
+        sender_pr_key, sender_pub_key = crypto_helper.generate_key_pair()
+        recv_pr_key, recv_pub_key = crypto_helper.generate_key_pair()
 
-                benchmark["watched_transactions"].append({"transaction_hash": transaction_hash, "start_time": time.time()})
+        for i in range(transactions_per_peer):
+            payload = "Example Transaction Payload #" + str(tx_count)
+            tx_count += 1
+            new_transaction = Transaction(str(sender_pub_key), str(recv_pub_key), payload)
+            new_transaction.sign_transaction(crypto_helper, sender_pr_key)
+            transaction_hash = crypto_helper.hash(new_transaction.get_json())
 
-                _networkInterface.sendTransaction(new_transaction)
+            benchmark["watched_transactions"].append({"transaction_hash": transaction_hash, "start_time": time.time()})
 
-    t = threading.Thread(target=txSpawner, args=(benchmark_data[benchmark_name],))
-    t.start()
+            _networkInterface.sendTransaction(new_transaction)
 
 
 def lookupThread():
@@ -72,6 +70,8 @@ def lookupThread():
     while True:
         if "" == currently_running_benchmark_name and len(benchmark_queue) > 0:
             next_benchmark_name = benchmark_queue[0]
+            print("Picked up new benchmark {}".format(next_benchmark_name))
+            currently_running_benchmark_name = next_benchmark_name
             benchmark_queue = benchmark_queue[1:]
             spawnBenchmarkTransactions(next_benchmark_name)
 
@@ -234,12 +234,12 @@ def store_benchmark_data(data):
 @app.route("/benchmarkStatus", methods=["GET"])
 def get_benchmark_status():
     global benchmark_data
-    data = []
-    for benchmark in benchmark_data:
-        if benchmark_data[benchmark]["finished"]:
-            continue
+    global currently_running_benchmark_name
 
-        data.append({"name": benchmark, "found_txs": len(benchmark_data[benchmark]["found_transactions"]), "remaining_txs": len(benchmark_data[benchmark]["watched_transactions"]), "total_txs": benchmark_data[benchmark]["n_transactions"]})
+    if "" == currently_running_benchmark_name:
+        return {"name": "", "found_txs": 0, "remaining_txs": 0, "total_txs": 0}
+
+    data = {"name": currently_running_benchmark_name, "found_txs": len(benchmark_data[currently_running_benchmark_name]["found_transactions"]), "remaining_txs": len(benchmark_data[currently_running_benchmark_name]["watched_transactions"]), "total_txs": benchmark_data[currently_running_benchmark_name]["n_transactions"]}
 
     return json.dumps(data), 200
 
@@ -247,7 +247,14 @@ def get_benchmark_status():
 @app.route("/benchmarkQueue")
 def get_benchmark_queue():
     global benchmark_queue
-    return json.dumps(benchmark_queue), 200
+    global currently_running_benchmark_name
+    qu = []
+
+    if "" != currently_running_benchmark_name:
+        qu.append(currently_running_benchmark_name)
+
+    qu.extend(benchmark_queue)
+    return json.dumps(qu), 200
 
 
 @app.route("/benchmarkFiles", methods=["GET"])
