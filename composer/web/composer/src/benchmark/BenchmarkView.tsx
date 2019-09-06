@@ -2,6 +2,7 @@ import React from "react";
 import BenchmarkTable from "./BenchmarkTable";
 import FooterComponent from "../FooterComponent";
 import { DockerInterface, BenchmarkStatus } from "../docker/DockerInterface";
+import "./BenchmarkView.css";
 
 interface IState {
     files: string[];
@@ -69,7 +70,7 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
                     </div>
                 )}
                 <div className="row">
-                    <div className="col-md-12">
+                    <div className="col-md-12 benchmarkTable">
                         <BenchmarkTable files={this.state.files}></BenchmarkTable>
                     </div>
                 </div>
