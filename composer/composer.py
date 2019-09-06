@@ -59,6 +59,32 @@ def spawnBenchmarkTransactions(benchmark_name):
             _networkInterface.sendTransaction(new_transaction)
 
 
+def setupBenchmarkNetwork(benchmark_name):
+    global benchmark_data
+    node_count = benchmark_data[benchmark_name]["nodecount"]
+
+    if -1 == node_count:
+        raise Exception("Invalid node count")
+
+    # first stop all currently running instances
+    stopAllDockerInstances()
+    print("Pruned existing network")
+    print("Spawn new network with {} nodes".format(node_count))
+    instances = spawnNodes(node_count)
+    print("Spawned new network")
+
+    benchmark_data[benchmark_name]["peers"] = list(map(lambda x: x["name"], instances))
+
+
+def setupBenchmark(benchmark_name):
+    global benchmark_data
+
+    if benchmark_data[benchmark_name]["nodecount"] != -1:
+        setupBenchmarkNetwork(benchmark_name)
+
+    spawnBenchmarkTransactions(benchmark_name)
+
+
 def lookupThread():
     global benchmark_data
     global benchmark_queue
@@ -73,7 +99,7 @@ def lookupThread():
             print("Picked up new benchmark {}".format(next_benchmark_name))
             currently_running_benchmark_name = next_benchmark_name
             benchmark_queue = benchmark_queue[1:]
-            spawnBenchmarkTransactions(next_benchmark_name)
+            setupBenchmark(next_benchmark_name)
 
         if "" == currently_running_benchmark_name:
             continue
@@ -293,15 +319,40 @@ def benchmark_simple():
     data["found_transactions"] = []
     data["finished"] = False
 
-    transactions_per_peer = math.ceil(float(data["n_transactions"] / len(data["peers"])))
+    peercount = len(data["peers"])
+
+    if data["nodecount"] != -1:
+        peercount = data["nodecount"]
+
+    transactions_per_peer = math.ceil(float(data["n_transactions"] / peercount))
     # update number of transactions if number of transactions is not divisable by the number of peers
-    data["n_transactions"] = transactions_per_peer * len(data["peers"])
+    data["n_transactions"] = transactions_per_peer * peercount
     data["n_transactions_per_peer"] = transactions_per_peer
 
     benchmark_data[benchmark_name] = data
     benchmark_queue.append(benchmark_name)
 
     return "Benchmark enqueued", 200
+
+
+def spawnNodes(number):
+    instances = []
+    for i in range(number):
+        instances.append(createInstance(instances))
+        time.sleep(4)  # this is necessary, since otherwise the nodes will not connect to each other
+
+    instances = getDockerInstances()
+
+    if len(instances) > 0:
+        global networkInterface
+        networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
+
+        if not lookup_thread_running:
+            time.sleep(3)  # wait 3 seconds
+            t = threading.Thread(target=lookupThread)
+            t.start()
+
+    return instances
 
 
 @app.route("/spawnNetwork", methods=["GET"])
@@ -315,32 +366,24 @@ def spawn_network():
 
     number = int(number)
 
-    instances = []
-    for i in range(number):
-        instances.append(createInstance(instances))
-
-    instances = getDockerInstances()
-
-    if len(instances) > 0:
-        global networkInterface
-        networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
-
-        time.sleep(3)  # wait 3 seconds
-        t = threading.Thread(target=lookupThread)
-        t.start()
+    instances = spawnNodes(number)
 
     return json.dumps(instances), 200
+
+
+def stopAllDockerInstances():
+    instances = getDockerInstances()
+
+    for instance in instances:
+        stopInstance(instance["name"])
+        os.system("docker rm " + str(instance["name"]))
 
 
 @app.route("/pruneNetwork", methods=["GET"])
 def prune_network():
     """ Prune the network
     """
-    instances = getDockerInstances()
-
-    for instance in instances:
-        stopInstance(instance["name"])
-        os.system("docker rm " + str(instance["name"]))
+    stopAllDockerInstances()
 
     return json.dumps([]), 200
 

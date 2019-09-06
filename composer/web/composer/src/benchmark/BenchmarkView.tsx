@@ -1,7 +1,6 @@
 import React from "react";
 import BenchmarkTable from "./BenchmarkTable";
 import BenchmarkBatchTable from "./BenchmarkBatchTable";
-import BenchmarkBatchControl from "./BenchmarkBatchControl";
 import FooterComponent from "../FooterComponent";
 import { DockerInterface, BenchmarkStatus } from "../docker/DockerInterface";
 import "./BenchmarkView.css";

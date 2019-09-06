@@ -17,6 +17,8 @@ const pruneDialogStyle = {
 export default function BenchmarkDialog(props: any) {
     const [selectedReceiver, setSelectedReceiver] = useState<DockerInstance[]>([]);
     const [filename, setFilename] = useState<string>("testData");
+    const [nodecount, setNodecount] = useState<number>(-1);
+    const [configureNetwork, setConfigureNetwork] = useState<boolean>(false);
 
     let handleReceiverChange = function(_sel: any) {
         setSelectedReceiver(_sel);
@@ -36,6 +38,14 @@ export default function BenchmarkDialog(props: any) {
 
     let handleFilenameChange = function(evt: any) {
         setFilename(evt.target.value);
+    };
+
+    let handleNodecountChange = function(evt: any) {
+        setNodecount(+evt.target.value);
+    };
+
+    let toggleControlNetwork = function() {
+        setConfigureNetwork(!configureNetwork);
     };
 
     return (
@@ -65,34 +75,75 @@ export default function BenchmarkDialog(props: any) {
                 </div>
                 <div className="row">
                     <div className="col-md-12">
-                        <h4>Select the receiving nodes:</h4>
+                        <div className="form-check">
+                            <input type="checkbox" className="from-check-input" onChange={toggleControlNetwork} id="configureNetwork" />
+                            <label className="form-check-label">Configure Network for benchmark</label>
+                        </div>
                     </div>
                 </div>
-                <div className="row">
-                    <div className="col-md-8">The send transactions will be evenly distributed between the selected nodes.</div>
-                    <div className="col-md-2">
-                        <button className="btn btn-secondary" onClick={selectAllReceivers}>
-                            Select all
-                        </button>
+                {configureNetwork && (
+                    <div className="row">
+                        <div className="col-md-12">
+                            <div className="card">
+                                <div className="card-header">Network Configuration</div>
+                                <div className="card-body">
+                                    <div className="container">
+                                        <div className="row">
+                                            <div className="col-md-12">
+                                                <p className="card-text">
+                                                    Configure the network for the benchmark. Note that the transactions are transmitted to all the configured
+                                                    peers in equal parts.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="row">
+                                            <div className="col-md-4">Define the number of nodes to create:</div>
+                                            <div className="col-md-8">
+                                                <input type="text" name="nodecount" value={nodecount} onChange={handleNodecountChange} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="col-md-2">
-                        <button className="btn btn-secondary" onClick={deselectAllReceivers}>
-                            Deselect all
-                        </button>
+                )}
+                {!configureNetwork && (
+                    <div className="row">
+                        <div className="col-md-12">
+                            <h4>Select the receiving nodes:</h4>
+                        </div>
                     </div>
-                </div>
-                <div className="row">
-                    <div className="col-md-12">
-                        <Select
-                            value={selectedReceiver}
-                            onChange={handleReceiverChange}
-                            isMulti={true}
-                            options={props.dockerInstances.map(function(x: DockerInstance) {
-                                return { label: x.name, value: x };
-                            })}
-                        />
+                )}
+                {!configureNetwork && (
+                    <div className="row">
+                        <div className="col-md-8">The send transactions will be evenly distributed between the selected nodes.</div>
+                        <div className="col-md-2">
+                            <button className="btn btn-secondary" onClick={selectAllReceivers}>
+                                Select all
+                            </button>
+                        </div>
+                        <div className="col-md-2">
+                            <button className="btn btn-secondary" onClick={deselectAllReceivers}>
+                                Deselect all
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
+                {!configureNetwork && (
+                    <div className="row">
+                        <div className="col-md-12">
+                            <Select
+                                value={selectedReceiver}
+                                onChange={handleReceiverChange}
+                                isMulti={true}
+                                options={props.dockerInstances.map(function(x: DockerInstance) {
+                                    return { label: x.name, value: x };
+                                })}
+                            />
+                        </div>
+                    </div>
+                )}
                 <div className="row">
                     <div className="col-md-6">
                         <button className="btn btn-secondary" onClick={props.cancel}>
@@ -103,7 +154,7 @@ export default function BenchmarkDialog(props: any) {
                         <button
                             className="btn btn-primary"
                             onClick={() => {
-                                props.ok(selectedReceiver.map(x => (x as any).value), filename);
+                                props.ok(selectedReceiver.map(x => (x as any).value), filename, nodecount);
                             }}
                         >
                             Ok

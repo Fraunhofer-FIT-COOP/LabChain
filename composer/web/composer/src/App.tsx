@@ -76,9 +76,9 @@ const App: React.FC = () => {
         notify.show("Network generated", "custom", 5000, noteColor);
     };
 
-    let startBenchmark = function(receiver: DockerInstance[], filename: string) {
+    let startBenchmark = function(receiver: DockerInstance[], filename: string, nodecount: number) {
         console.log("Start benchmark: " + benchmarkId + " with name: " + filename);
-        let bc: BenchmarkEngine = new BenchmarkEngine(receiver, filename);
+        let bc: BenchmarkEngine = new BenchmarkEngine(receiver, filename, nodecount);
         let b: any;
 
         switch (benchmarkId) {

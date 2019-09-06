@@ -114,11 +114,11 @@ export class DockerInterface {
         return instances;
     }
 
-    public static async benchmarkSimple(benchmarkName: string, transaction_count: number, peers: string[]): Promise<any> {
+    public static async benchmarkSimple(benchmarkName: string, transaction_count: number, peers: string[], nodecount: number): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             fetch(DockerInterface.url + "/benchmarkSimple", {
                 method: "POST",
-                body: JSON.stringify({ benchmark_name: benchmarkName, n_transactions: transaction_count, peers: peers }),
+                body: JSON.stringify({ benchmark_name: benchmarkName, n_transactions: transaction_count, peers: peers, nodecount: nodecount }),
                 headers: {
                     "Content-Type": "application/json"
                 }
