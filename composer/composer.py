@@ -64,7 +64,7 @@ def lookupThread():
 
                     benchmark_data[benchmark]["watched_transactions"].remove(_tx)
 
-                if len(benchmark_data[benchmark]["watched_transactions"]) == 0:
+                if len(benchmark_data[benchmark]["watched_transactions"]) == 0 and not benchmark_data[benchmark]["finished"]:
                     benchmark_data[benchmark]["finished"] = True
                     store_benchmark_data(benchmark_data[benchmark])
 
