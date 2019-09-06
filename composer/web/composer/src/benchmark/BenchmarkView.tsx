@@ -8,6 +8,7 @@ import "./BenchmarkView.css";
 
 interface IState {
     files: string[];
+    benchmarkQueue: string[];
     benchmarkStatus: BenchmarkStatus[];
 }
 
@@ -19,7 +20,7 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
 
     constructor(props: any) {
         super(props);
-        this.state = { files: [], benchmarkStatus: [{ remaining_txs: 0, found_txs: 0, total_txs: 0 }] };
+        this.state = { files: [], benchmarkQueue: [], benchmarkStatus: [{ remaining_txs: 0, found_txs: 0, total_txs: 0 }] };
     }
 
     componentDidMount() {
@@ -37,9 +38,11 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
     tick() {
         DockerInterface.getBenchmarkFiles().then(_files => {
             DockerInterface.getBenchmarkStatus().then(_status => {
-                console.log("Received benchmark status");
-                console.log(_status);
-                this.setState({ files: _files, benchmarkStatus: _status });
+                DockerInterface.getBenchmarkQueue().then(_queue => {
+                    console.log("Received benchmark status");
+                    console.log(_status);
+                    this.setState({ files: _files, benchmarkQueue: _queue, benchmarkStatus: _status });
+                });
             });
         });
     }

@@ -146,6 +146,13 @@ export class DockerInterface {
         return files;
     }
 
+    public static async getBenchmarkQueue(): Promise<string[]> {
+        const response = await fetch(DockerInterface.url + "/benchmarkQueue");
+        const benchmarks = await response.json();
+
+        return benchmarks;
+    }
+
     public static async getBenchmarkStatus(): Promise<BenchmarkStatus[]> {
         const response = await fetch(DockerInterface.url + "/benchmarkStatus");
         const data = await response.json();
