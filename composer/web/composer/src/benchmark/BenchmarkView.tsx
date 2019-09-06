@@ -1,5 +1,7 @@
 import React from "react";
 import BenchmarkTable from "./BenchmarkTable";
+import BenchmarkBatchTable from "./BenchmarkBatchTable";
+import BenchmarkBatchControl from "./BenchmarkBatchControl";
 import FooterComponent from "../FooterComponent";
 import { DockerInterface, BenchmarkStatus } from "../docker/DockerInterface";
 import "./BenchmarkView.css";
@@ -69,6 +71,26 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
                         </div>
                     </div>
                 )}
+                <div className="row">
+                    <div className="col-md-12">
+                        <h3>Benchmark Batch Queue</h3>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col-md-12">
+                        <BenchmarkBatchControl></BenchmarkBatchControl>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col-md-12">
+                        <BenchmarkBatchTable></BenchmarkBatchTable>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col-md-12">
+                        <h3>Benchmark Files</h3>
+                    </div>
+                </div>
                 <div className="row">
                     <div className="col-md-12 benchmarkTable">
                         <BenchmarkTable files={this.state.files}></BenchmarkTable>
