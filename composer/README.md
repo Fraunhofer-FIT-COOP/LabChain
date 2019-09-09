@@ -5,6 +5,7 @@ The LabChain network composer is a web-based GUI component heavily relying on do
 - Spawning networks of arbitrary sizes locally (at some point your machine overburdened)
 - Measures the connectivity. What node is connect to what other nodes?
 - Easy application of benchmarks.
+- Benchmarks can be queued. The benchmark logs are stored into file and can be evaluated.
 
 The general idea is to provide a benchmark application that can easily be executed to measure the performance continuously during
 development.
@@ -43,3 +44,8 @@ cd composer/web/composer
 npm install
 npm start
 ```
+
+## Evaluators
+
+In the directory `evaluators` are scripts to evaluate the benchmark results. The existing evaluation scripts follow
+the measures proposed by the Hyperledger foundation as described in "Hyperledger Blockchain Performance Metrics" (https://www.hyperledger.org/wp-content/uploads/2018/10/HL_Whitepaper_Metrics_PDF_V1.01.pdf).
