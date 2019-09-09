@@ -24,6 +24,7 @@ RUN pip3 install --trusted-host pypi.python.org -r requirements.txt
 ENV PORT 8080
 ENV PEER NONE
 ENV CORS NONE
+ENV BENCHMARK NONE
 
 # Make port 8080 available to the world outside this container
 EXPOSE $PORT

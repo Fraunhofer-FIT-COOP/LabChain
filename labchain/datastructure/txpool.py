@@ -1,6 +1,7 @@
 import logging
 
 from labchain.datastructure.transaction import Transaction
+from labchain.util.benchmarkEngine import BenchmarkEngine
 
 
 class TxPool:
@@ -67,6 +68,7 @@ class TxPool:
                     transaction.transaction_hash = hash_val
                 self._transactions.append(transaction)
                 logging.info('Added transaction to pool: {}'.format(transaction))
+                BenchmarkEngine.log('Added transaction to pool: {}'.format(transaction))
                 return True
             else:
                 return False

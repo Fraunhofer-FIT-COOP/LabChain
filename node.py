@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import logging
 import os
 import socket
@@ -8,6 +9,7 @@ import sys
 from labchain.blockchainNode import BlockChainNode
 from labchain.util.configReader import ConfigReader
 from labchain.util.utility import Utility
+from labchain.util.benchmarkEngine import BenchmarkEngine
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -42,6 +44,8 @@ def parse_args():
                         help='The port address of the Labchain node')
     parser.add_argument('--peers', nargs='*', default=[],
                         help='The peer list address of the Labchain node')
+    parser.add_argument('--benchmark', '-b', default="",
+                        help='Outputs detailed process information to enable benchmarking the implementation')
     parser.add_argument('--verbose', '-v', action='store_true', help="Debug level INFO")
     parser.add_argument('--very-verbose', '-vv', action='store_true', help="Debug level DEBUG")
     parser.add_argument('--peer-discovery', action='store_true', help="Use zero-conf service to connect to nodes in the same network")
@@ -91,6 +95,8 @@ if __name__ == '__main__':
     args = parse_args()
     setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
+    BenchmarkEngine.setFilepath(args.benchmark)
+    atexit.register(BenchmarkEngine.write)
     Utility.print_labchain_logo()
 
     ip = '127.0.0.1' if args.localhost else get_private_ip()

@@ -14,4 +14,8 @@ else
         CONFIG="${CONFIG} --peers ${PEER}"
 fi
 
+if [ "${BENCHMARK}" != "NONE" ] ; then
+        CONFIG="${CONFIG} --benchmark ${BENCHMARK}"
+fi
+
 python3 ${CONFIG}

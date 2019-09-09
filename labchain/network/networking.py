@@ -19,6 +19,7 @@ from labchain.datastructure.transaction import Transaction
 from labchain.network.discover import PeerDiscoverySystem
 from labchain.util.TransactionFactory import TransactionFactory
 from labchain.util.utility import Utility
+from labchain.util.benchmarkEngine import BenchmarkEngine
 
 logger = logging.getLogger(__name__)
 
@@ -258,6 +259,7 @@ class NetworkInterface:
             logger.debug('Peer {}:{} unchanged. Skipping...'.format(ip_address, str(port)))
             return
         logger.info('Peer {}:{} added/updated'.format(str(ip_address), str(port)))
+        BenchmarkEngine.log("Peer {}:{} added".format(str(ip_address), str(port)))
         update(self.peers, {str(ip_address): {int(port): info}})
         logger.debug('My peers are now: {}'.format(str(self.peers)))
 

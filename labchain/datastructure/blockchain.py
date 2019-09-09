@@ -7,6 +7,7 @@ from labchain.datastructure.block import LogicalBlock
 from labchain.workflow.taskTransaction import TaskTransaction
 from labchain.workflow.taskTransaction import WorkflowTransaction
 from labchain.datastructure.transaction import NoHashError
+from labchain.util.benchmarkEngine import BenchmarkEngine
 
 
 class BlockChain:
@@ -465,6 +466,9 @@ class BlockChain:
             self.check_block_in_mining(block)
 
         self._logger.info("Added new block --- \n {h} \n {b} \n"
+                          .format(h=str(block.get_computed_hash()),
+                                  b=str(block)))
+        BenchmarkEngine.log("Added new block --- \n {h} \n {b} \n"
                           .format(h=str(block.get_computed_hash()),
                                   b=str(block)))
         self._logger.debug("Number of branches currently branch heads = {}"
