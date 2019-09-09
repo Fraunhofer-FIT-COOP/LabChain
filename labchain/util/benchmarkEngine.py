@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class __BenchmarkEngine:
     def __init__(self):
-        self.log = []
+        self._log = []
         self.filename = "./benchmark.json"
         self.activated = False
         self.mutex = Lock()
@@ -32,7 +32,7 @@ class __BenchmarkEngine:
                 return
 
             with open(self.filename, "w") as f:
-                f.write(json.dumps(self.log))
+                f.write(json.dumps(self._log))
                 logger.info("Written benchmark file: {}".format(self.filename))
 
         finally:
@@ -43,7 +43,7 @@ class __BenchmarkEngine:
             return
 
         # append is thread-safe (cf. https://stackoverflow.com/questions/6319207/are-lists-thread-safe)
-        self.log.append("{}:{}".format(time.time(), text))
+        self._log.append("{}:{}".format(time.time(), text))
 
 
 # singleton class!

@@ -259,9 +259,9 @@ class NetworkInterface:
             logger.debug('Peer {}:{} unchanged. Skipping...'.format(ip_address, str(port)))
             return
         logger.info('Peer {}:{} added/updated'.format(str(ip_address), str(port)))
-        BenchmarkEngine.log("Peer {}:{} added".format(str(ip_address), str(port)))
         update(self.peers, {str(ip_address): {int(port): info}})
         logger.debug('My peers are now: {}'.format(str(self.peers)))
+        BenchmarkEngine.log("Peers {}".format(str(self.peers)))
 
     def _add_peer_bulk(self, peer_dict):
         """Add multiple peers from a dict."""
