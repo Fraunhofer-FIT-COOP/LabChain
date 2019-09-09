@@ -18,4 +18,4 @@ if [ "${BENCHMARK}" != "NONE" ] ; then
         CONFIG="${CONFIG} --benchmark ${BENCHMARK}"
 fi
 
-python3 ${CONFIG}
+exec python3 ${CONFIG}

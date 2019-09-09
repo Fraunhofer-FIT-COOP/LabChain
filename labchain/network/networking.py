@@ -252,7 +252,10 @@ class NetworkInterface:
     def add_peer(self, ip_address, port, info=None):
         """Add a single peer to the peer list."""
         if not Utility.is_valid_ipv4(ip_address) and not Utility.is_valid_ipv6(ip_address):
-            ip_address = self.__resolve_hostname(ip_address)
+            try:
+                ip_address = self.__resolve_hostname(ip_address)
+            except Exception as e:
+                logger.error(e)
         if info is None:
             info = {}
         if ip_address in self.peers and port in self.peers[ip_address] and info == self.peers[ip_address][port]:

@@ -30,4 +30,4 @@ ENV BENCHMARK NONE
 EXPOSE $PORT
 
 # Run app.py when the container launches
-CMD ["./start.sh"]
+ENTRYPOINT ["./start.sh"]

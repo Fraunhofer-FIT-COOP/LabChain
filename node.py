@@ -99,7 +99,6 @@ if __name__ == '__main__':
 
     def gracefulKill(signum, frame):
         BenchmarkEngine.write()
-        sys.exit()
 
     signal.signal(signal.SIGINT, gracefulKill)
     signal.signal(signal.SIGTERM, gracefulKill)

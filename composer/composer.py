@@ -4,6 +4,7 @@ import threading
 import os
 import math
 import docker
+from docker.types import Mount
 import subprocess
 import sys
 import string
@@ -233,6 +234,11 @@ def createInstance(instances=[]):
         envr = ["PEER=" + " ".join([str(x) + ":8080" for x in instances])]
 
     envr.append("CORS=\"*\"")
+    envr.append("BENCHMARK=benchmark.json")
+
+    target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name)))
+
+    mnt = Mount(target="/app/LabChain/benchmark.json", source=target_path, type="bind")
 
     container = client.containers.run(
         "labchain:latest",
@@ -240,6 +246,7 @@ def createInstance(instances=[]):
         ports={8080: (5000 + running_instances_count)},
         network="labchain_network",
         environment=envr,
+        mounts=[mnt],
         detach=True,
     )
 
@@ -267,7 +274,10 @@ def store_benchmark_data(data):
     if data_filename is None:
         data_filename = "testData"
 
-    filename = "{}/{}_{}.json".format(BENCHMARK_DATA_DIRECTORY, data_filename, str(datetime.datetime.now()).replace(" ", "_"))
+    if not os.path.exists(os.path.join(BENCHMARK_DATA_DIRECTORY, data_filename)):
+        os.makedirs(os.path.join(BENCHMARK_DATA_DIRECTORY, data_filename))
+
+    filename = "{}/{}/{}_{}.json".format(BENCHMARK_DATA_DIRECTORY, data_filename, data_filename, str(datetime.datetime.now()).replace(" ", "_"))
 
     with open(filename, "w") as f:
         f.write(json.dumps(data["found_transactions"], default=str))
