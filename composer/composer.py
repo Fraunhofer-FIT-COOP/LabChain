@@ -21,6 +21,10 @@ from labchain.datastructure.transaction import Transaction
 networkInterface = None
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
 
+# If 15 consecutive bloks are empty we assume that potentially
+# not-mined transactions will not be mined and the benchmark will be finished
+EMPTY_COUNT_THRESHOLD = 15
+
 benchmark_data = {}
 
 # contains the name of the currently running benchmark or an empty string, if no benchmark
@@ -93,6 +97,8 @@ def lookupThread():
     global networkInterface
     lookup_thread_running = True
     last_block_checked = -1
+    empty_count = 0
+
     while True:
         if "" == currently_running_benchmark_name and len(benchmark_queue) > 0:
             next_benchmark_name = benchmark_queue[0]
@@ -121,7 +127,17 @@ def lookupThread():
         # print(str(block))
 
         if len(block._transactions) == 0:  # no transactions to consider
-            continue
+            empty_count += 1
+
+            if empty_count == EMPTY_COUNT_THRESHOLD:
+                empty_count = 0
+                benchmark_data[currently_running_benchmark_name]["finished"] = True
+                store_benchmark_data(benchmark_data[currently_running_benchmark_name])
+                currently_running_benchmark_name = ""
+            else:
+                continue
+        else:
+            empty_count = 0
 
         for tx in block._transactions:
             print("Check hash: {}".format(tx.transaction_hash))
