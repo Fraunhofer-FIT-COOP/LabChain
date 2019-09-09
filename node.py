@@ -1,5 +1,5 @@
 import argparse
-import atexit
+import signal
 import logging
 import os
 import socket
@@ -96,7 +96,14 @@ if __name__ == '__main__':
     setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
     BenchmarkEngine.setFilepath(args.benchmark)
-    atexit.register(BenchmarkEngine.write)
+
+    def gracefulKill(signum, frame):
+        BenchmarkEngine.write()
+        sys.exit()
+
+    signal.signal(signal.SIGINT, gracefulKill)
+    signal.signal(signal.SIGTERM, gracefulKill)
+
     Utility.print_labchain_logo()
 
     ip = '127.0.0.1' if args.localhost else get_private_ip()
