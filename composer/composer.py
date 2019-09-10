@@ -530,7 +530,7 @@ if "__main__" == __name__:
 
     # initiate program
     instances = [
-        x for x in client.containers.list(all=True) if x.name.startswith("labchain_")
+        x for x in client.containers.list(all=True) if x.name.startswith("labchain_") and not x.name == "labchain_network_composer"
     ]
 
     i = 0
