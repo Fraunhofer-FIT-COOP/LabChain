@@ -160,4 +160,11 @@ export class DockerInterface {
 
         return data;
     }
+
+    public static async dumpBenchmarkData(): Promise<string> {
+        const response = await fetch(DockerInterface.url + "/dumpBenchmarkData");
+        const data = await response.json();
+
+        return data;
+    }
 }

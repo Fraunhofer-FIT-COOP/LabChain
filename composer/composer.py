@@ -292,6 +292,19 @@ def store_benchmark_data(data):
         f.write(json.dumps(data["found_transactions"], default=str))
 
 
+@app.route("/dumpBenchmarkData", methods=["GET"])
+def dump_benchmark_data():
+    global benchmark_data
+    global currently_running_benchmark_name
+
+    if currently_running_benchmark_name == "":
+        return "No active benchmark", 200
+
+    store_benchmark_data(benchmark_data[currently_running_benchmark_name])
+
+    return "dumped benchmark", 200
+
+
 @app.route("/benchmarkStatus", methods=["GET"])
 def get_benchmark_status():
     global benchmark_data

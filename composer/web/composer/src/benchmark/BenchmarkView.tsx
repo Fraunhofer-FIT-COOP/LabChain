@@ -46,7 +46,9 @@ export default class BenchmarkView extends React.Component<IProps, IState> {
         });
     }
 
-    dumpBenchmarkData() {}
+    dumpBenchmarkData() {
+        DockerInterface.dumpBenchmarkData().then(res => {});
+    }
 
     render() {
         return (
