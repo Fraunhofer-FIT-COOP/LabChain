@@ -16,20 +16,17 @@ RUN git checkout network-composer
 
 RUN pip3 install --trusted-host pypi.python.org -r requirements.txt
 
-WORKDIR /app/LabChain/composer/web/composer
-
-RUN npm install
-
-RUN npm run build
-
 WORKDIR /app/LabChain/composer
+
+ADD start.sh ./start.sh
+
+RUN chmod +x start.sh
 
 RUN pip3 install --trusted-host pypi.python.org -r requirements.txt
 
 RUN pip3 install json-rpc
 
+ENV HOST_NAME localhost
 ENV PORT 8080
 
-EXPOSE $PORT
-
-ENTRYPOINT ["python3", "composer.py"]
+ENTRYPOINT ["./start.sh"]
