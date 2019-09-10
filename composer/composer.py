@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, render_template
 from flask_cors import CORS
 import threading
 import os
@@ -160,7 +160,7 @@ def lookupThread():
         last_block_checked = block._block_id
 
 
-app = flask.Flask("labchainComposer", static_folder="./web/")
+app = flask.Flask("labchainComposer", static_folder="web/composer/build/static", template_folder="web/composer/build")
 app.secret_key = "".join(
     random.choice(string.ascii_uppercase + string.digits) for _ in range(10)
 )
@@ -172,6 +172,11 @@ client = docker.from_env()
 running_instances_count = 1
 
 running_instances = {}
+
+
+@app.route('/')
+def main():
+    return render_template('index.html')
 
 
 def getDockerInstances():
@@ -560,4 +565,4 @@ if "__main__" == __name__:
         t = threading.Thread(target=lookupThread)
         t.start()
 
-    app.run(debug=True, host=_host, port=_port)
+    app.run(debug=True, threaded=True, use_reloader=True, host=_host, port=_port)
