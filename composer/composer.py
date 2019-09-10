@@ -181,7 +181,7 @@ def main():
 
 def getDockerInstances():
     instances = [
-        x for x in client.containers.list(all=True) if x.name.startswith("labchain_")
+        x for x in client.containers.list(all=True) if x.name.startswith("labchain_") and not x.name == "labchain_network_composer"
     ]
     network_containers = client.networks.get("labchain_network").attrs["Containers"]
 
