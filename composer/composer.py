@@ -75,7 +75,7 @@ def setupBenchmarkNetwork(benchmark_name):
     stopAllDockerInstances()
     print("Pruned existing network")
     print("Spawn new network with {} nodes".format(node_count))
-    instances = spawnNodes(node_count)
+    instances = spawnNodes(node_count, benchmark_name)
     print("Spawned new network")
 
     benchmark_data[benchmark_name]["peers"] = list(map(lambda x: x["name"], instances))
@@ -212,12 +212,13 @@ def startInstance(name):
     return True
 
 
-def createInstance(instances=[]):
+def createInstance(instances=[], test_name=None):
     """ Starts a new instance with the given name and the port
 
         Return the 'name' of the given instance
     """
     global running_instances_count
+    global benchmark_data
 
     try:
         client.networks.get("labchain_network")
@@ -237,6 +238,14 @@ def createInstance(instances=[]):
     envr.append("BENCHMARK=benchmark.json")
 
     target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name)))
+
+    if test_name is not None:
+        target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}_{}.json".format(test_name, name)))
+        benchmark_logs = benchmark_data[test_name].get("benchmark_logs", [])
+        benchmark_logs.append(target_path)
+        benchmark_data[test_name]["benchmark_logs"] = benchmark_logs
+
+    open(target_path, "a").close()
 
     mnt = Mount(target="/app/LabChain/benchmark.json", source=target_path, type="bind")
 
@@ -361,10 +370,10 @@ def benchmark_simple():
     return "Benchmark enqueued", 200
 
 
-def spawnNodes(number):
+def spawnNodes(number, test_name=None):
     instances = []
     for i in range(number):
-        instances.append(createInstance(instances))
+        instances.append(createInstance(instances, test_name))
         time.sleep(4)  # this is necessary, since otherwise the nodes will not connect to each other
 
     instances = getDockerInstances()
@@ -531,8 +540,10 @@ if "__main__" == __name__:
 
     print("Starting server at http://{}:{}".format(_host, _port))
 
-    if len(instances) > 0 and not lookup_thread_running:
+    if len(instances) > 0:
         networkInterface = NetworkInterface(JsonRpcClient(), {"localhost": {(5000 + running_instances_count): {}}})
+
+    if not lookup_thread_running:
         t = threading.Thread(target=lookupThread)
         t.start()
 
