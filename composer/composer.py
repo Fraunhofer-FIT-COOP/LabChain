@@ -547,7 +547,7 @@ if "__main__" == __name__:
     print(running_instances)
 
     arguments = sys.argv
-    _host = "127.0.0.1"
+    _host = "0.0.0.0"
     _port = 8080
 
     if len(arguments) == 2:
