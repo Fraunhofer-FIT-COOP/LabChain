@@ -252,17 +252,18 @@ def createInstance(instances=[], test_name=None):
         print("Use environment variable for benchmark directory {}".format(os.environ["BENCHMARK_DIR"]))
         target_path = os.path.join(os.environ["BENCHMARK_DIR"], "{}.json".format(name))
 
+    relative_path = os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name))
+
     if test_name is not None:
         target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}_{}.json".format(test_name, name)))
 
         if os.environ.get("BENCHMARK_DIR", None) is not None:
             target_path = os.path.join(os.environ["BENCHMARK_DIR"], "{}_{}.json".format(test_name, name))
+            relative_path = os.path.join(BENCHMARK_DATA_DIRECTORY, "{}_{}.json".format(test_name, name))
 
         benchmark_logs = benchmark_data[test_name].get("benchmark_logs", [])
         benchmark_logs.append(target_path)
         benchmark_data[test_name]["benchmark_logs"] = benchmark_logs
-
-    relative_path = os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name))
 
     open(relative_path, "a").close()
 
