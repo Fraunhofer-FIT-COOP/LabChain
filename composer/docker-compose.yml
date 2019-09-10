@@ -1,0 +1,10 @@
+version: '3'
+services:
+        labchain_network_composer:
+                image: labchain_network_composer:latest
+                container_name: labchain_network_composer
+                ports:
+                        - "8080:8080"
+                volumes:
+                        - "/var/run/docker.sock:/var/run/docker.sock"
+                        - "./benchmark_data:/app/LabChain/composer/benchmark_data"
