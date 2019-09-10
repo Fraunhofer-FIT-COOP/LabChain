@@ -1,12 +1,13 @@
-version: '3'
+version: '3.5'
 services:
-        labchain_network_composer:
-                image: labchain_network_composer:latest
-                container_name: labchain_network_composer
-                ports:
-                        - "8080:8080"
-                environment:
-                        - HOST_NAME=0.0.0.0
-                volumes:
-                        - "/var/run/docker.sock:/var/run/docker.sock"
-                        - "./benchmark_data:/app/LabChain/composer/benchmark_data"
+  labchain_network_composer:
+    image: labchain_network_composer:latest
+    container_name: labchain_network_composer
+    ports:
+      - "8080:8080"
+    environment:
+      - HOST_NAME=localhost
+      - BENCHMARK_DIR=/home/osterland/Projekte/LabChain/composer/benchmark_data
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./benchmark_data:/app/LabChain/composer/benchmark_data"

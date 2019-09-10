@@ -183,7 +183,11 @@ def getDockerInstances():
     instances = [
         x for x in client.containers.list(all=True) if x.name.startswith("labchain_") and not x.name == "labchain_network_composer"
     ]
-    network_containers = client.networks.get("labchain_network").attrs["Containers"]
+
+    network_containers = {}
+
+    if client.networks.get("labchain_network"):
+        network_containers = client.networks.get("labchain_network").attrs["Containers"]
 
     return [
         {
@@ -244,13 +248,26 @@ def createInstance(instances=[], test_name=None):
 
     target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name)))
 
+    if os.environ.get("BENCHMARK_DIR", None) is not None:
+        print("Use environment variable for benchmark directory {}".format(os.environ["BENCHMARK_DIR"]))
+        target_path = os.path.join(os.environ["BENCHMARK_DIR"], "{}.json".format(name))
+
     if test_name is not None:
         target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}_{}.json".format(test_name, name)))
+
+        if os.environ.get("BENCHMARK_DIR", None) is not None:
+            target_path = os.path.join(os.environ["BENCHMARK_DIR"], "{}_{}.json".format(test_name, name))
+
         benchmark_logs = benchmark_data[test_name].get("benchmark_logs", [])
         benchmark_logs.append(target_path)
         benchmark_data[test_name]["benchmark_logs"] = benchmark_logs
 
-    open(target_path, "a").close()
+    relative_path = os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name))
+
+    open(relative_path, "a").close()
+
+    if not os.path.exists(relative_path):
+        raise Exception("Target container benchmark file {} was not created".format(relative_path))
 
     mnt = Mount(target="/app/LabChain/benchmark.json", source=target_path, type="bind")
 
