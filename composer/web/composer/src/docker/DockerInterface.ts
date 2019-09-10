@@ -18,7 +18,8 @@ export interface DockerInstance {
 }
 
 export class DockerInterface {
-    public static url = "http://localhost:8080";
+    public static host = "localhost";
+    public static url = "http://" + DockerInterface.host + ":8080";
 
     /**
      * Returns a labchain client connected to an arbitrary docker instance, or if an
@@ -28,7 +29,7 @@ export class DockerInterface {
         if (instance) {
             return new Promise<LabchainClient>((resolve, reject) => {
                 let id: number = +instance.name.split("_")[1];
-                resolve(new LabchainClient("http://localhost:" + (id + 5000)));
+                resolve(new LabchainClient("http://" + DockerInterface.host + ":" + (id + 5000)));
             });
         }
         return new Promise<LabchainClient>((resolve, reject) => {
@@ -38,7 +39,7 @@ export class DockerInterface {
                 } else {
                     let instance: DockerInstance = instances[0];
                     let id: number = +instance.name.split("_")[1];
-                    resolve(new LabchainClient("http://localhost:" + (id + 5000)));
+                    resolve(new LabchainClient("http://" + DockerInterface.host + ":" + (id + 5000)));
                 }
             });
         });
@@ -55,7 +56,7 @@ export class DockerInterface {
                     if (inst.status !== "running") continue;
                     let id: number = +inst.name.split("_")[1];
 
-                    let client: LabchainClient = new LabchainClient("http://localhost:" + (id + 5000) + "/");
+                    let client: LabchainClient = new LabchainClient("http://" + DockerInterface.host + ":" + (id + 5000) + "/");
 
                     clients.push({ instance: inst, client: client });
                 }
