@@ -14,6 +14,7 @@ labchaindb.sqlite
 .Python
 env/
 develop-eggs/
+build/
 dist/
 downloads/
 eggs/
