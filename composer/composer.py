@@ -47,7 +47,7 @@ def spawnBenchmarkTransactions(benchmark_name):
     tx_count = 0
 
     for peer in benchmark["peers"]:
-        _networkInterface = NetworkInterface(JsonRpcClient(), {"0.0.0.0": {(5000 + int(peer.split("_")[1])): {}}})
+        _networkInterface = NetworkInterface(JsonRpcClient(), {os.environ.get("HOST_NAME", "localhost"): {(5000 + int(peer.split("_")[1])): {}}})
         crypto_helper = CryptoHelper.instance()
         sender_pr_key, sender_pub_key = crypto_helper.generate_key_pair()
         recv_pr_key, recv_pub_key = crypto_helper.generate_key_pair()
@@ -416,7 +416,7 @@ def spawnNodes(number, test_name=None):
 
     if len(instances) > 0:
         global networkInterface
-        networkInterface = NetworkInterface(JsonRpcClient(), {"0.0.0.0": {(5000 + running_instances_count): {}}})
+        networkInterface = NetworkInterface(JsonRpcClient(), {os.environ.get("HOST_NAME", "localhost"): {(5000 + running_instances_count): {}}})
 
         if not lookup_thread_running:
             time.sleep(3)  # wait 3 seconds
@@ -483,7 +483,7 @@ def start_instance():
 
     if len(instances) > 0 and not lookup_thread_running:
         global networkInterface
-        networkInterface = NetworkInterface(JsonRpcClient(), {"0.0.0.0": {(5000 + running_instances_count): {}}})
+        networkInterface = NetworkInterface(JsonRpcClient(), {os.environ.get("HOST_NAME", "localhost"): {(5000 + running_instances_count): {}}})
 
         time.sleep(3)  # wait 3 seconds
         t = threading.Thread(target=lookupThread)
@@ -577,7 +577,7 @@ if "__main__" == __name__:
     print("Starting server at http://{}:{}".format(_host, _port))
 
     if len(instances) > 0:
-        networkInterface = NetworkInterface(JsonRpcClient(), {"0.0.0.0": {(5000 + running_instances_count): {}}})
+        networkInterface = NetworkInterface(JsonRpcClient(), {os.environ.get("HOST_NAME", "localhost"): {(5000 + running_instances_count): {}}})
 
     if not lookup_thread_running:
         t = threading.Thread(target=lookupThread)
