@@ -28,7 +28,27 @@ One requirement is that you have installed _docker_ and that you can execute doc
 
 `sudo usermod -aG docker $USER` on Ubuntu
 
-Then start the network composer by:
+### Using Docker
+
+Build the docker container of the network composer
+
+```
+cd composer
+docker build -t labchain_network_composer:latest .
+```
+
+Configure the `HOST_NAME` and the `BECHMARK_DIR` variable in the `composer/docker-compose.yml` file.
+
+Start the container:
+
+```
+cd composer
+docker-compose up
+```
+
+### Starting without docker
+
+Start the network composer by:
 
 ```
 cd composer
