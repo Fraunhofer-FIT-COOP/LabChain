@@ -179,6 +179,17 @@ def main():
     return render_template('index.html')
 
 
+def getDockerInstance(name):
+    instances = [
+        x for x in client.containers.list(all=True) if x.name == name
+    ]
+
+    if len(instances) == 0:
+        return None
+
+    return instances[0]
+
+
 def getDockerInstances():
     instances = [
         x for x in client.containers.list(all=True) if x.name.startswith("labchain_") and not x.name == "labchain_network_composer"
@@ -447,7 +458,7 @@ def stopAllDockerInstances():
 
     for instance in instances:
         stopInstance(instance["name"])
-        os.system("docker rm " + str(instance["name"]))
+        getDockerInstance(instance["name"]).remove()
 
 
 @app.route("/pruneNetwork", methods=["GET"])
@@ -517,7 +528,7 @@ def delete_instance():
     if name is None:
         return "Specify a name", 404
 
-    os.system("docker rm " + str(name))
+    getDockerInstance(instance["name"]).remove()
 
     instances = getDockerInstances()
     return json.dumps(instances), 200
