@@ -128,3 +128,4 @@ python3 -m unittest discover
 - [ ] Remove large number of parameters in functions
 - [ ] Create a setup.py
 - [ ] Create a docker file (data directory must be mountable and the node must be configurable)
+- [x] move to gitlab
