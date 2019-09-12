@@ -20,5 +20,6 @@ for d in data:
 plt.plot(x, y)
 plt.xlabel("Block number")
 plt.ylabel("Transactions per block")
+plt.title(sys.argv[1])
 
 plt.show()

@@ -28,11 +28,24 @@ for i in range(len(data) - 1):
     y_3.append(time.mktime(data[i + 1]["time"]) - time.mktime(data[i]["time"]))
     y_2.append(data[i]["data"]["difficulty"])
 
-plt.plot(x, y, label="Mining time for block")
-plt.plot(x, y_2, label="Difficulty")
-plt.plot(x, y_3, label="Mining time of logs")
-plt.xlabel("Block number")
-plt.grid(True)
+fig = plt.figure()
+host = fig.add_subplot(111)
 
-plt.legend()
+par1 = host.twinx()
+
+color1 = plt.cm.viridis(0)
+color2 = plt.cm.viridis(0.5)
+
+host.plot(x, y, color=color1, label="Mining time for block")
+par1.plot(x, y_2, color=color2, label="Difficulty")
+par1.set_ylabel("Difficulty")
+par1.yaxis.label.set_color(color2)
+#plt.plot(x, y_3, label="Mining time of logs")
+host.set_xlabel("Block number")
+host.set_ylabel("Mining time for block [s]")
+host.yaxis.label.set_color(color1)
+# plt.grid(True)
+plt.title("{} - Avg mining time: {}, Avg difficulty: {}".format(sys.argv[1], sum(y) / len(y), sum(y_2) / len(y_2)))
+
+# plt.legend()
 plt.show()
