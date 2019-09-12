@@ -127,7 +127,7 @@ def setupBenchmarkNetwork(benchmark_name):
     logger.info("Pruned existing network")
     logger.info("Spawn new network with {} nodes".format(node_count))
     instances = spawnNodes(node_count, benchmark_name)
-    logge.info("Spawned new network")
+    logger.info("Spawned new network")
 
     benchmark_data[benchmark_name]["peers"] = list(map(lambda x: x["name"], instances))
 
