@@ -14,6 +14,7 @@ import datetime
 import time
 import calendar
 import flask
+import logging
 sys.path.insert(0, '../')  # noqa
 from labchain.network.networking import JsonRpcClient, NetworkInterface  # noqa
 from labchain.util.cryptoHelper import CryptoHelper
@@ -21,6 +22,10 @@ from labchain.datastructure.transaction import Transaction
 
 networkInterface = None
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 # If 15 consecutive bloks are empty we assume that potentially
 # not-mined transactions will not be mined and the benchmark will be finished
@@ -87,7 +92,7 @@ def spawnBenchmarkTransactions(benchmark_name):
     benchmark = benchmark_data[benchmark_name]
 
     transactions_per_peer = benchmark["n_transactions_per_peer"]
-    print("Distribute {} transactions to {} peers, so {} per peer".format(benchmark["n_transactions"], len(benchmark["peers"]), transactions_per_peer))
+    logger.info("Distribute {} transactions to {} peers, so {} per peer".format(benchmark["n_transactions"], len(benchmark["peers"]), transactions_per_peer))
     tx_count = 0
 
     for peer in benchmark["peers"]:
@@ -117,10 +122,10 @@ def setupBenchmarkNetwork(benchmark_name):
 
     # first stop all currently running instances
     stopAllDockerInstances()
-    print("Pruned existing network")
-    print("Spawn new network with {} nodes".format(node_count))
+    logger.info("Pruned existing network")
+    logger.info("Spawn new network with {} nodes".format(node_count))
     instances = spawnNodes(node_count, benchmark_name)
-    print("Spawned new network")
+    logge.info("Spawned new network")
 
     benchmark_data[benchmark_name]["peers"] = list(map(lambda x: x["name"], instances))
 
@@ -147,7 +152,7 @@ def lookupThread():
     while True:
         if "" == currently_running_benchmark_name and len(benchmark_queue) > 0:
             next_benchmark_name = benchmark_queue[0]
-            print("Picked up new benchmark {}".format(next_benchmark_name))
+            logger.info("Picked up new benchmark {}".format(next_benchmark_name))
             currently_running_benchmark_name = next_benchmark_name
             benchmark_queue = benchmark_queue[1:]
             setupBenchmark(next_benchmark_name)
@@ -162,14 +167,14 @@ def lookupThread():
             continue
 
         if len(blocks) > 1:
-            print("WARNING Multiple branch heads")
+            logger.info("WARNING Multiple branch heads")
 
         block = blocks[0]
 
         if block._block_id == last_block_checked:  # block already considered
             continue
 
-        # print(str(block))
+        # logger.info(str(block))
 
         if len(block._transactions) == 0:  # no transactions to consider
             empty_count += 1
@@ -185,11 +190,11 @@ def lookupThread():
             empty_count = 0
 
         for tx in block._transactions:
-            print("Check hash: {}".format(tx.transaction_hash))
+            logger.info("Check hash: {}".format(tx.transaction_hash))
 
             _txs = list(filter(lambda x: x["transaction_hash"] == tx.transaction_hash, benchmark_data[currently_running_benchmark_name]["watched_transactions"]))
             if len(_txs) > 0:
-                print("Identified transaction: {}".format(tx))
+                logger.info("Identified transaction: {}".format(tx))
                 _tx = _txs[0]
                 _tx["end_time"] = time.time()
                 benchmark_data[currently_running_benchmark_name]["found_transactions"].append(_tx)
@@ -576,14 +581,14 @@ if "__main__" == __name__:
 
     # check if labchain container is available
     if not hasContainer():
-        print("Try to pull")
+        logger.info("Try to pull")
         try:
             client.images.pull("labchain")
         except docker.errors.ImageNotFound as e:
-            print("Could not pull image")
-            print("Build docker image locally and tag it with 'labchain:latest'")
-            print("     cd ROOT/docker")
-            print("     docker build -t labchain:latest .")
+            logger.info("Could not pull image")
+            logger.info("Build docker image locally and tag it with 'labchain:latest'")
+            logger.info("     cd ROOT/docker")
+            logger.info("     docker build -t labchain:latest .")
             sys.exit()
 
     # initiate program
@@ -601,8 +606,8 @@ if "__main__" == __name__:
 
     running_instances_count = i
 
-    print("Recognized instances: {}".format(len(instances)))
-    print(running_instances)
+    logger.info("Recognized instances: {}".format(len(instances)))
+    logger.info(running_instances)
 
     arguments = sys.argv
     _host = "0.0.0.0"
@@ -614,7 +619,7 @@ if "__main__" == __name__:
         _host = arguments[1]
         _port = int(arguments[2])
 
-    print("Starting server at http://{}:{}".format(_host, _port))
+    logger.info("Starting server at http://{}:{}".format(_host, _port))
 
     if len(instances) > 0:
         networkInterface = NetworkInterface(JsonRpcClient(), {os.environ.get("HOST_NAME", "localhost"): {(5000 + running_instances_count): {}}})
