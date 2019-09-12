@@ -317,7 +317,7 @@ def createInstance(instances=[], test_name=None):
         benchmark_logs.append(host_path)
         benchmark_data[test_name]["benchmark_logs"] = benchmark_logs
 
-    open(host_path, "a").close()
+    open(BenchmarkDir.absolutePath(test_name, container_benchmark_file_name), "a").close()
 
     logger.info("Mount({}, {})".format("/app/LabChain/benchmark.json", host_path))
 
