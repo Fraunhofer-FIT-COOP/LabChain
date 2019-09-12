@@ -65,12 +65,14 @@ class BenchmarkDir:
         return abs_path
 
     @staticmethod
-    def relativePath(test_name=None, file_name=None):
-        """ Returns the relative path to the benchmark directory
+    def hostPath(test_name=None, file_name=None):
+        """ Returns the host path to the benchmark directory. This is configurable, since in case
+        the composer is running as docker container it must be possible to spawn siblings that put their
+        benchmark logs into directories of the host system
         If test_name is not None it creates a sub folder in the benchmark directory and returns the relative path to it
         If file_name is not None it will also append the file name
         """
-        rel_path = os.environ.get("BENCHMARK_DIR", BENCHMARK_DATA_DIRECTORY)
+        rel_path = os.environ.get("HOST_DIR", BenchmarkDir.absolutePath())
 
         if test_name is not None:
             rel_path = os.path.join(rel_path, test_name)
@@ -308,22 +310,18 @@ def createInstance(instances=[], test_name=None):
 
     container_benchmark_file_name = "{}.json".format(name)
 
-    target_path = BenchmarkDir.absolutePath(test_name, container_benchmark_file_name)
-    relative_path = BenchmarkDir.relativePath(test_name, container_benchmark_file_name)
+    host_path = BenchmarkDir.hostPath(test_name, container_benchmark_file_name)
 
     if test_name is not None:
         benchmark_logs = benchmark_data[test_name].get("benchmark_logs", [])
-        benchmark_logs.append(target_path)
+        benchmark_logs.append(host_path)
         benchmark_data[test_name]["benchmark_logs"] = benchmark_logs
 
-    open(relative_path, "a").close()
+    open(host_path, "a").close()
 
-    if not os.path.exists(relative_path):
-        raise Exception("Target container benchmark file {} was not created".format(relative_path))
+    logger.info("Mount({}, {})".format("/app/LabChain/benchmark.json", host_path))
 
-    logger.info("Mount({}, {}) : relative_path: {}".format("/app/LabChain/benchmark.json", target_path, relative_path))
-
-    mnt = Mount(target="/app/LabChain/benchmark.json", source=target_path, type="bind")
+    mnt = Mount(target="/app/LabChain/benchmark.json", source=host_path, type="bind")
 
     container = client.containers.run(
         "labchain:latest",
@@ -356,7 +354,7 @@ def store_benchmark_data(data):
     """
     data_filename = data.get("benchmark_name", "testData")
 
-    filename = BenchmarkDir.relativePath(data_filename, "benchmark_results_{}.json".format(data_filename))
+    filename = BenchmarkDir.absolutePath(data_filename, "benchmark_results_{}.json".format(data_filename))
 
     with open(filename, "w") as f:
         f.write(json.dumps(data["found_transactions"], default=str))
