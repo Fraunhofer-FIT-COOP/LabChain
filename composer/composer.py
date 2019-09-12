@@ -321,6 +321,8 @@ def createInstance(instances=[], test_name=None):
     if not os.path.exists(relative_path):
         raise Exception("Target container benchmark file {} was not created".format(relative_path))
 
+    logger.info("Mount({}, {}) : relative_path: {}".format("/app/LabChain/benchmark.json", target_path, relative_path))
+
     mnt = Mount(target="/app/LabChain/benchmark.json", source=target_path, type="bind")
 
     container = client.containers.run(
