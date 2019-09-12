@@ -36,8 +36,52 @@ benchmark_queue = []
 lookup_thread_running = False
 
 
-# spawns the transactions of a benchmark
+class BenchmarkDir:
+    """ Holds the directory information where to store the benchmark data
+    """
+
+    @staticmethod
+    def absolutePath(test_name=None, file_name=None):
+        """ Returns the absolute path to the benchmark directory
+        If test_name is not None it creates a sub folder in the benchmark directory and returns the absolute path to it
+        If file_name is not None it will also append the file name
+        """
+        abs_path = os.path.abspath(os.environ.get("BENCHMARK_DIR", BENCHMARK_DATA_DIRECTORY))
+
+        if test_name is not None:
+            abs_path = os.path.join(abs_path, test_name)
+
+            if not os.path.exists(abs_path):
+                os.makedirs(abs_path)
+
+        if file_name is not None:
+            abs_path = os.path.join(abs_path, file_name)
+
+        return abs_path
+
+    @staticmethod
+    def relativePath(test_name=None, file_name=None):
+        """ Returns the relative path to the benchmark directory
+        If test_name is not None it creates a sub folder in the benchmark directory and returns the relative path to it
+        If file_name is not None it will also append the file name
+        """
+        rel_path = os.environ.get("BENCHMARK_DIR", BENCHMARK_DATA_DIRECTORY)
+
+        if test_name is not None:
+            rel_path = os.path.join(rel_path, test_name)
+
+            if not os.path.exists(rel_path):
+                os.makedirs(rel_path)
+
+        if file_name is not None:
+            rel_path = os.path.join(rel_path, file_name)
+
+        return rel_path
+
+
 def spawnBenchmarkTransactions(benchmark_name):
+    """ spawns the transactions of a benchmark
+    """
     global benchmark_data
 
     benchmark = benchmark_data[benchmark_name]
@@ -257,21 +301,12 @@ def createInstance(instances=[], test_name=None):
     envr.append("CORS=\"*\"")
     envr.append("BENCHMARK=benchmark.json")
 
-    target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name)))
+    container_benchmark_file_name = "{}.json".format(name)
 
-    if os.environ.get("BENCHMARK_DIR", None) is not None:
-        print("Use environment variable for benchmark directory {}".format(os.environ["BENCHMARK_DIR"]))
-        target_path = os.path.join(os.environ["BENCHMARK_DIR"], "{}.json".format(name))
-
-    relative_path = os.path.join(BENCHMARK_DATA_DIRECTORY, "{}.json".format(name))
+    target_path = BenchmarkDir.absolutePath(test_name, container_benchmark_file_name)
+    relative_path = BenchmarkDir.relativePath(test_name, container_benchmark_file_name)
 
     if test_name is not None:
-        target_path = os.path.abspath(os.path.join(BENCHMARK_DATA_DIRECTORY, "{}_{}.json".format(test_name, name)))
-
-        if os.environ.get("BENCHMARK_DIR", None) is not None:
-            target_path = os.path.join(os.environ["BENCHMARK_DIR"], "{}_{}.json".format(test_name, name))
-            relative_path = os.path.join(BENCHMARK_DATA_DIRECTORY, "{}_{}.json".format(test_name, name))
-
         benchmark_logs = benchmark_data[test_name].get("benchmark_logs", [])
         benchmark_logs.append(target_path)
         benchmark_data[test_name]["benchmark_logs"] = benchmark_logs
@@ -312,15 +347,9 @@ def stopInstance(name):
 def store_benchmark_data(data):
     """ Stores the data into a file locally
     """
-    data_filename = data.get("benchmark_name", "")
+    data_filename = data.get("benchmark_name", "testData")
 
-    if data_filename is None:
-        data_filename = "testData"
-
-    if not os.path.exists(os.path.join(BENCHMARK_DATA_DIRECTORY, data_filename)):
-        os.makedirs(os.path.join(BENCHMARK_DATA_DIRECTORY, data_filename))
-
-    filename = "{}/{}/{}_{}.json".format(BENCHMARK_DATA_DIRECTORY, data_filename, data_filename, str(datetime.datetime.now()).replace(" ", "_"))
+    filename = BenchmarkDir.relativePath(data_filename, "benchmark_results_{}.json".format(data_filename))
 
     with open(filename, "w") as f:
         f.write(json.dumps(data["found_transactions"], default=str))
