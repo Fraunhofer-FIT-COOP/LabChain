@@ -519,6 +519,14 @@ class BlockChain:
         :param db_flag: True, if block should be added to database
         """
         _prev_block = self._blockchain.get(block.predecessor_hash)
+
+        if _prev_block is None:
+            self._logger.error("Block:")
+            self._logger.error(block)
+            self._logger.error("Blockchain:")
+            self._logger.error(self._blockchain)
+            raise RuntimeError("Predecessor block with hash {} of block {} not available".format(block.predecessor_hash, block))
+
         _prev_block_pos = _prev_block.get_block_pos()
 
         if block.predecessor_hash in self._current_branch_heads:
