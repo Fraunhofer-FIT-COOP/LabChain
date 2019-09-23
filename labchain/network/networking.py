@@ -299,7 +299,7 @@ class NetworkInterface:
                     responses.append(response)
                     if return_on_first_success:
                         return responses
-                except Error as e:
+                except Exception as e:
                     # catch all errors, since a node should be uneffected by the reaction of other nodes
                     # otherwise an undefined message might kill the mining process or a malicious node can
                     # bring down the network
