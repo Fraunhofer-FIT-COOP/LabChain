@@ -26,6 +26,7 @@ RUN pip3 install --trusted-host pypi.python.org -r requirements.txt
 
 RUN pip3 install json-rpc
 
+ENV LABCHAIN_DOCKER_NAME labchain:latest
 ENV HOST_NAME localhost
 ENV PORT 8080
 

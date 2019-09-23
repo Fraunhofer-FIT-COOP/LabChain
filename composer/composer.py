@@ -324,7 +324,7 @@ def createInstance(instances=[], test_name=None):
     mnt = Mount(target="/app/LabChain/benchmark.json", source=host_path, type="bind")
 
     container = client.containers.run(
-        "labchain:latest",
+        os.environ.get("LABCHAIN_DOCKER_NAME", "labchain:latest"),
         name=name,
         ports={8080: (5000 + running_instances_count)},
         network="labchain_network",
@@ -571,7 +571,7 @@ def delete_instance():
 def hasContainer():
     images = [x.tags for x in getDockerImages()]
 
-    return ["labchain:latest"] in images
+    return [os.environ.get("LABCHAIN_DOCKER_NAME", "labchain:latest")] in images
 
 
 if "__main__" == __name__:
@@ -589,6 +589,7 @@ if "__main__" == __name__:
             logger.info("Build docker image locally and tag it with 'labchain:latest'")
             logger.info("     cd ROOT/docker")
             logger.info("     docker build -t labchain:latest .")
+            logger.info("or change the docker instance by defining the environment variable LABCHAIN_DOCKER_NAME")
             sys.exit()
 
     # initiate program
