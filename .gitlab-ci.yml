@@ -1,0 +1,5 @@
+include:
+  - project: it/gitlab-ci
+    file: templates/stages.gitlab-ci.yml
+  - project: it/gitlab-ci
+    file: templates/docker/build.gitlab-ci.yml
