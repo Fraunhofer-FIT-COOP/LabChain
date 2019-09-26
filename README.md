@@ -133,3 +133,5 @@ labchain/workflow/tutorial.md
 - [ ] Remove large number of parameters in functions
 - [ ] Create a setup.py
 - [ ] Create a docker file (data directory must be mountable and the node must be configurable)
+
+-test
