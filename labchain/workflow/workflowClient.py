@@ -18,10 +18,7 @@ class TaskTransactionWizard(TransactionWizard):
 
     @staticmethod
     def validate_wf_id_input(chosen_wf_id, wf_ids):
-        if chosen_wf_id in wf_ids:
-            return True
-        else:
-            return False
+        return True if chosen_wf_id in wf_ids else False
 
     @staticmethod
     def ask_for_task_id(tasks):
@@ -294,10 +291,7 @@ class TaskTransactionWizard(TransactionWizard):
         #   get the ending points in a workflow
         all_addresses = set([item.split('_')[0] for sublist in workflow_payload["processes"].values() for item in sublist])
         all_addresses_with_stages = [item for sublist in workflow_payload["processes"].values() for item in sublist]
-        last_accounts = list()
-        for addr in all_addresses_with_stages:
-            if addr not in [item for item in workflow_payload["processes"].keys()]:
-                last_accounts.append(addr)
+        last_accounts = [addr for addr in all_addresses_with_stages if addr not in [item for item in workflow_payload["processes"].keys()]]
         return last_accounts, all_addresses
 
     def get_workflow_name(self, workflow_payload):
@@ -569,11 +563,7 @@ class WorkflowTransactionWizard(TransactionWizard):
         self.pp = pprint.PrettyPrinter(indent=2)
 
     def get_workflow_list(self):
-        path_list = list()
-        for file in os.listdir(self.my_dir):
-            if file.endswith(".json"):
-                path_list.append(file)
-        return path_list
+        return [file for file in os.listdir(self.my_dir) if file.endswith(".json")]
 
     @staticmethod
     def validate_workflow_input(usr_input, workflow_resource_len):
@@ -582,15 +572,11 @@ class WorkflowTransactionWizard(TransactionWizard):
         except ValueError:
             return False
 
-        if int_usr_input != 0 and int_usr_input <= workflow_resource_len:
-            return True
-        else:
-            return False
+        return True if int_usr_input != 0 and int_usr_input <= workflow_resource_len else False
 
     @staticmethod
     def ask_for_workflow_id():
-        usr_input = input('Please type in a workflow id or press enter to return: ')
-        return str(usr_input)
+        return str(input('Please type in a workflow id or press enter to return: '))
 
     @staticmethod
     def ask_for_key_from_wallet(wallet_list):
