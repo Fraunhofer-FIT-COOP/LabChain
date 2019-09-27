@@ -243,30 +243,26 @@ class TaskTransactionWizard(TransactionWizard):
     def get_workflow_status(self, workflow_payload):
         #   check if the ending points in the workflow received a transaction of the given workflow
         last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
-        result = True
         for addr in last_accounts:
             if not self.check_if_wf_arrived(addr, workflow_payload["workflow_id"]):
-                result = False
-        if result:
-            return "Completed", []
-        else:
-            remaining_accounts = all_accounts - set(last_accounts)
-            waiting_accounts = list()
-            for account in remaining_accounts:
-                tasks = [task.payload["in_charge"] for task in self.check_tasks(account) if task.payload["workflow_id"] == workflow_payload["workflow_id"]]
-                if tasks:
-                    waiting_accounts = tasks
-            return "In progress", waiting_accounts
+                remaining_accounts = all_accounts - set(last_accounts)
+                waiting_accounts = list()
+                for account in remaining_accounts:
+                    tasks = [task.payload["in_charge"] for task in self.check_tasks(account) if
+                             task.payload["workflow_id"] == workflow_payload["workflow_id"]]
+                    if tasks:
+                        waiting_accounts = tasks
+                return "In progress", waiting_accounts
+        return "Completed", []
 
     def get_document_details(self, workflow_payload):
         #   get the permissions
-        permission_dict = workflow_payload["permissions"]
         wf_id = workflow_payload["workflow_id"]
         clear_screen()
         print("Document details with workflow_id: ", wf_id)
         print()
         #   for each document item, look who's permissioned the change it, and search the transactions made from those addresses
-        for key, values in permission_dict.items():
+        for key, values in workflow_payload["permissions"].items():
             print("*{:<10s}:".format(key))
             for addr in values:
                 related_tx_docs = [tx.payload["document"] for tx in self.network_interface.search_transaction_from_sender(addr.split("_")[0]) if tx.payload["workflow_id"] == wf_id]
@@ -306,7 +302,7 @@ class TaskTransactionWizard(TransactionWizard):
                 split_val_cond = [len(value_list) for value_list in wf_definition["splits"].values()].sort() == \
                                        [len(value_list) for value_list in workflow_payload["splits"].values()].sort()
 
-                if document_cond  and permissions_key_cond and permissions_val_cond and split_key_cond and split_val_cond:
+                if document_cond and permissions_key_cond and permissions_val_cond and split_key_cond and split_val_cond:
                     return file
         return "File not found."
 
@@ -569,10 +565,10 @@ class WorkflowTransactionWizard(TransactionWizard):
     def validate_workflow_input(usr_input, workflow_resource_len):
         try:
             int_usr_input = int(usr_input)
+            if int_usr_input != 0 and int_usr_input <= workflow_resource_len:
+                return True
         except ValueError:
             return False
-
-        return True if int_usr_input != 0 and int_usr_input <= workflow_resource_len else False
 
     @staticmethod
     def ask_for_workflow_id():
