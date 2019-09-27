@@ -23,7 +23,7 @@ class TaskTransactionWizard(TransactionWizard):
     @staticmethod
     def ask_for_task_id(tasks):
         if len(tasks) == 0:
-            print(u'There is no task received.')
+            print(u'There is no to-do task received.')
             input('Press any key to go back to the main menu!')
             return ''
 
@@ -135,14 +135,15 @@ class TaskTransactionWizard(TransactionWizard):
                     owner_last_account = True
                 if not self.check_if_wf_arrived(addr, workflow_payload["workflow_id"]):
                     result = False
-            if result and not owner_last_account:
+            if result and owner_last_account:
                 completed.append(tx_hash)
 
         for completed_hash in completed:
             diff_set.remove(completed_hash)
-
         diff = {k: received_tx_dict[k] for k in diff_set}
-        return [diff[k] for k in diff]
+        completed = {k: received_tx_dict[k] for k in completed}
+        tasks = dict(completed=[completed[k] for k in completed], to_do=[diff[k] for k in diff])
+        return tasks
 
     @staticmethod
     def grouped_dict_by_wf_tx(tx_list):
@@ -248,7 +249,7 @@ class TaskTransactionWizard(TransactionWizard):
                 remaining_accounts = all_accounts - set(last_accounts)
                 waiting_accounts = list()
                 for account in remaining_accounts:
-                    tasks = [task.payload["in_charge"] for task in self.check_tasks(account) if
+                    tasks = [task.payload["in_charge"] for task in self.check_tasks(account)["to_do"] if
                              task.payload["workflow_id"] == workflow_payload["workflow_id"]]
                     if tasks:
                         waiting_accounts = tasks
@@ -433,7 +434,13 @@ class TaskTransactionWizard(TransactionWizard):
             public_key = wallet_list[int(chosen_key) - 1][1]
 
             #   retrieve waiting tasks
-            tasks = self.check_tasks(public_key)
+            all_tasks_dict = self.check_tasks(public_key)
+            completed = [task.payload["workflow_id"] for task in all_tasks_dict["completed"]]
+            if len(completed) != 0:
+                print("Received completed tasks with workflow ids: ")
+                print(','.join(completed))
+                print("----------------------------------------------------------")
+            tasks = all_tasks_dict["to_do"]
             workflow_ids = [(task.payload['workflow_id'], task.payload['document']) for task in tasks]
             chosen_wf_id = self.ask_for_task_id(workflow_ids)
             if chosen_wf_id == '':

@@ -113,14 +113,14 @@ labchain/workflow/tutorial.md
 - [x] Now, if same address is chosen for 2 entities, the workflow will look completed even though it is not because of the numbers after "_".
       i.e: if wf: reviewer1_0 -> orderer_0 and if these two have same address, the workflow will look completed at the level of reviewer1_0. Maybe adding some kind of control to not use one address for multiple entities?
 - [x] Add a tutorial file
+- [x] Show completed workflows separately on last accounts on check tasks
+- [x] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
 - [ ] Provide feedback to the client if the transaction is not validated
 - [ ] Implement a malicious test client
 - [ ] Create new templates for testing
-- [ ] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
 - [ ] Optimize current workflow status page as it takes long time to show the workflows
 - [ ] Show document evaluation through the process (improve Show workflow details option)
 - [ ] Separate document flow related static functions from wizards
-- [ ] Show completed workflows separately on last accounts on check tasks
 
 ## Nice to have
 
