@@ -244,6 +244,7 @@ class TaskTransactionWizard(TransactionWizard):
     def get_workflow_status(self, workflow_payload):
         #   check if the ending points in the workflow received a transaction of the given workflow
         last_accounts, all_accounts = self.get_last_accounts(workflow_payload)
+        last_accounts = [account.split("_")[0] for account in last_accounts]
         for addr in last_accounts:
             if not self.check_if_wf_arrived(addr, workflow_payload["workflow_id"]):
                 remaining_accounts = all_accounts - set(last_accounts)
@@ -287,6 +288,7 @@ class TaskTransactionWizard(TransactionWizard):
     def get_last_accounts(workflow_payload):
         #   get the ending points in a workflow
         all_addresses = set([item.split('_')[0] for sublist in workflow_payload["processes"].values() for item in sublist])
+        all_addresses.add(workflow_payload["in_charge"].split("_")[0])
         all_addresses_with_stages = [item for sublist in workflow_payload["processes"].values() for item in sublist]
         last_accounts = [addr for addr in all_addresses_with_stages if addr not in [item for item in workflow_payload["processes"].keys()]]
         return last_accounts, all_addresses
