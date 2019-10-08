@@ -70,7 +70,8 @@ class Db:
             "(sender text NOT NULL, receiver text NOT NULL, " \
             "payload text NOT NULL, signature text NOT NULL, " \
             "transaction_hash text PRIMARY KEY, block_hash text" \
-            " NOT NULL, FOREIGN KEY (block_hash) REFERENCES {}" \
+            " NOT NULL, transaction_type text NOT NULL, " \
+            " FOREIGN KEY (block_hash) REFERENCES {}" \
             " (hash))".format(self.transaction_table, self.blockchain_table)
         try:
             self.cursor.execute(create_blockchain_table)
@@ -106,8 +107,8 @@ class Db:
              "merkle_tree_root, predecessor_hash, nonce, ts, difficulty) " \
              "VALUES (?,?,?,?,?,?,?,?)".format(self.blockchain_table)
         insert_into_transactions = "INSERT INTO {} (sender, receiver, " \
-            "payload, signature, transaction_hash, block_hash) " \
-            "VALUES (?,?,?,?,?,?)".format(self.transaction_table)
+            "payload, signature, transaction_hash, block_hash, transaction_type) " \
+            "VALUES (?,?,?,?,?,?,?)".format(self.transaction_table)
 
         try:
             self.cursor.execute(insert_into_blockchain, block_data)
@@ -117,11 +118,11 @@ class Db:
                     payload = json.dumps(payload)
                 self.cursor.execute(insert_into_transactions,
                                     (t.sender, t.receiver, payload, t.signature,
-                                     t.transaction_hash, block_hash))
+                                     t.transaction_hash, block_hash, t.transaction_type))
             self.conn.commit()
             self.conn.close()
         except sqlite3.Error as e:
-            self.logger.error("Error in adding block: " + str(e.args[0]))
+            self.logger.error("*************Error in adding block: " + str(e.args[0]))
             return False
         return True
 
@@ -151,14 +152,14 @@ class Db:
                         json_payload = json.loads(txn_db[2])
                         if isinstance(json_payload, dict):
                             transaction_data = {'payload': json_payload, 'signature': txn_db[3], 'sender': txn_db[0],
-                                                'receiver': txn_db[1]}
+                                                'receiver': txn_db[1], 'transaction_type': txn_db[6]}
                             txn = TransactionFactory.create_transaction(transaction_data)
                         elif isinstance(json_payload, int):
-                            txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                            txn = Transaction(txn_db[0], txn_db[1], txn_db[6], txn_db[2], txn_db[3])
                         else:
                             txn = None
                     except json.JSONDecodeError:
-                        txn = Transaction(txn_db[0], txn_db[1], txn_db[2], txn_db[3])
+                        txn = Transaction(txn_db[0], txn_db[1], txn_db[6], txn_db[2], txn_db[3])
                     if not txn.transaction_hash:
                         txn.transaction_hash = txn_db[4]
                     txns.append(txn)

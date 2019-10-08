@@ -90,11 +90,11 @@ class TaskTransactionWizard(TransactionWizard):
 
         #   separate received transactions into workflow and task transactions
         received_workflow_transaction = [WorkflowTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     t.transaction_type == '1']
+                                     str(t.transaction_type) == '1']
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     t.transaction_type == '2']
+                                     str(t.transaction_type) == '2']
         sent_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
-                                 t.transaction_type == '2']
+                                 str(t.transaction_type) == '2']
 
         #   remove or keep the transaction according to split&merge status of the workflow
         sent_task_transaction = self.rearrange_sent_task_transactions(sent_task_transaction)
