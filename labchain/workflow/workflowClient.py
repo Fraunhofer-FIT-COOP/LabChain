@@ -548,7 +548,7 @@ class TaskTransactionWizard(TransactionWizard):
             clear_screen()
             print('Transaction successfully created!')
             print()
-            print(u'Sender: ' + wallet_list[int(chosen_key) - 1][2])
+            print(u'Sender: ' + wallet_list[int(chosen_key) - 1][1])
             print(u'Receiver: ' + str(chosen_receiver))
             print(u'Payload: ' + str(chosen_payload))
             print(u'Hash: ' + str(transaction_hash))

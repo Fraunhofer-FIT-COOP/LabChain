@@ -2,7 +2,6 @@ import argparse
 import logging
 import os
 import socket
-import sys
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode
@@ -16,9 +15,6 @@ if 'TERM' not in os.environ:
 CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'labchain', 'resources',
                                            'node_configuration.ini'))
-CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
-DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
-
 
 def create_node(node_ip, node_port, peer_list, peer_discovery):
     return BlockChainNode(CONFIG_FILE, node_ip, node_port, peer_list,
@@ -67,15 +63,6 @@ def get_private_ip():
 
 def parse_peers(peer_args):
     result = {}
-    try:
-        config = ConfigReader(CONFIG_FILE)
-        default_port = config.get_config(section="NETWORK", option="PORT",
-                                         fallback=8080)
-        default_port = str(default_port)
-
-        own_ip = get_private_ip()
-    except Exception as e:
-        logging.error(str(e))
 
     for peer_str in peer_args:
         host, port = peer_str.replace("\"", "").replace("'", "").split(':')
@@ -86,7 +73,6 @@ def parse_peers(peer_args):
 
 
 if __name__ == '__main__':
-    test = sys.argv
     args = parse_args()
     setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
