@@ -8,15 +8,12 @@ from Crypto.PublicKey import ECC
 
 import labchain.datastructure.txpool as txpool
 from labchain.datastructure.transaction import Transaction
-from labchain.util.cryptoHelper import CryptoHelper
-
 
 class TaskTransaction(Transaction):
     _validation_lock = threading.Lock()
 
-    def __init__(self, sender, receiver, payload: Dict, signature=None):
-        super().__init__(sender, receiver, payload, signature)
-        self.payload['transaction_type'] = '2'
+    def __init__(self, sender, receiver, transaction_type, payload: Dict, signature=None):
+        super().__init__(sender, receiver, transaction_type, payload, signature)
 
     def validate_transaction(self, crypto_helper, blockchain):
         """
@@ -26,7 +23,7 @@ class TaskTransaction(Transaction):
         :return result: True if transaction is valid
         """
         TaskTransaction._validation_lock.acquire()
-        if self.payload['transaction_type'] is not '2' and self.payload['transaction_type'] is not '1':
+        if self.transaction_type is not '2':
             logging.warning('Transaction has wrong transaction type')
             TaskTransaction._validation_lock.release()
             return False
@@ -217,25 +214,15 @@ class TaskTransaction(Transaction):
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
-        type = data_dict['payload'].get('transaction_type', '0')
-        if type == '1':
-            t = WorkflowTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                                    payload=data_dict['payload'], signature=data_dict['signature'])
-        elif type == '2':
-            t = TaskTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                                payload=data_dict['payload'], signature=data_dict['signature'])
-        else:
-            t = Transaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                            payload=data_dict['payload'], signature=data_dict['signature'])
-        t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
-        return t
+        return TaskTransaction(data_dict['sender'], data_dict['receiver'],
+                                   data_dict['transaction_type'], data_dict['payload'],
+                                   data_dict['signature'])
 
 
 class WorkflowTransaction(TaskTransaction):
 
-    def __init__(self, sender, receiver, payload, signature=None):
-        super().__init__(sender, receiver, payload, signature)
-        self.payload['transaction_type'] = '1'
+    def __init__(self, sender, receiver, transaction_type, payload, signature=None):
+        super().__init__(sender, receiver, transaction_type, payload, signature)
 
     @staticmethod
     def from_json(json_data):
@@ -245,11 +232,12 @@ class WorkflowTransaction(TaskTransaction):
     @staticmethod
     def from_dict(data_dict):
         return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
-                                   data_dict['payload'], data_dict['signature'])
+                                   data_dict['transaction_type'], data_dict['payload'],
+                                   data_dict['signature'])
 
     def validate_transaction(self, crypto_helper, blockchain):
         TaskTransaction._validation_lock.acquire()
-        if self.payload['transaction_type'] is not '1':
+        if self.transaction_type is not '1':
             logging.warning('Transaction has wrong transaction type')
             TaskTransaction._validation_lock.release()
             return False

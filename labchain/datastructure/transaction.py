@@ -6,9 +6,10 @@ from labchain.util.cryptoHelper import CryptoHelper
 class Transaction:
     """Represents a single transaction within the blockchain."""
 
-    def __init__(self, sender, receiver, payload, signature=None):
+    def __init__(self, sender, receiver, transaction_type, payload, signature=None):
         self.__sender = sender
         self.__receiver = receiver
+        self.__transaction_type = transaction_type
         self.__payload = payload
         self.__signature = signature
         self.__transaction_hash = None
@@ -18,6 +19,7 @@ class Transaction:
         return {
             'sender': self.__sender,
             'receiver': self.__receiver,
+            'transaction_type':self.__transaction_type,
             'payload': self.__payload,
             'signature': self.__signature,
         }
@@ -27,6 +29,7 @@ class Transaction:
         return json.dumps({
             'sender': self.__sender,
             'receiver': self.__receiver,
+            'transaction_type': self.__transaction_type,
             'payload': self.__payload,
             'signature': self.__signature
         }, sort_keys=True)
@@ -36,6 +39,7 @@ class Transaction:
         return json.dumps({
             'sender': self.__sender,
             'receiver': self.__receiver,
+            'transaction_type': self.__transaction_type,
             'payload': self.__payload
         }, sort_keys=True)
 
@@ -48,7 +52,8 @@ class Transaction:
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
         t = Transaction(data_dict['sender'], data_dict['receiver'],
-                        data_dict['payload'], data_dict['signature'])
+                        data_dict['transaction_type'], data_dict['payload'],
+                        data_dict['signature'])
         t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
         return t
 
@@ -65,6 +70,7 @@ class Transaction:
             return None
         return (self.sender == other.sender
                 and self.receiver == other.receiver
+                and self.transaction_type == other.transaction_type
                 and self.payload == other.payload
                 and self.signature == other.signature)
 
@@ -87,6 +93,10 @@ class Transaction:
     @property
     def receiver(self):
         return self.__receiver
+
+    @property
+    def transaction_type(self):
+        return self.__transaction_type
 
     @property
     def payload(self):

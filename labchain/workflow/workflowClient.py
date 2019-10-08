@@ -89,12 +89,12 @@ class TaskTransactionWizard(TransactionWizard):
         send = self.network_interface.search_transaction_from_sender(public_key)
 
         #   separate received transactions into workflow and task transactions
-        received_workflow_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     'processes' in t.payload]
+        received_workflow_transaction = [WorkflowTransaction.from_json(t.get_json_with_signature()) for t in received if
+                                     t.transaction_type == '1']
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     'workflow_id' in t.payload and 'processes' not in t.payload]
+                                     t.transaction_type == '2']
         sent_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
-                                 'workflow_id' in t.payload and 'processes' not in t.payload]
+                                 t.transaction_type == '2']
 
         #   remove or keep the transaction according to split&merge status of the workflow
         sent_task_transaction = self.rearrange_sent_task_transactions(sent_task_transaction)
@@ -538,6 +538,7 @@ class TaskTransactionWizard(TransactionWizard):
                                   previous_transaction=task_hash)
             new_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
                                                                      receiver=chosen_receiver,
+                                                                     transaction_type='2',
                                                                      payload=chosen_payload,
                                                                      signature=''))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
@@ -748,6 +749,7 @@ class WorkflowTransactionWizard(TransactionWizard):
             # prepare the transaction and send it to the sender
             transaction = TransactionFactory.create_transaction(dict(sender=sender_public_key,
                                                                      receiver=sender_public_key,
+                                                                     transaction_type='1',
                                                                      payload=chosen_payload,
                                                                      signature=''))
             transaction.sign_transaction(self.crypto_helper, sender_private_key)
