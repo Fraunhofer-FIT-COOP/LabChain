@@ -71,8 +71,8 @@ class Transaction:
         return (self.sender == other.sender
                 and self.receiver == other.receiver
                 and self.transaction_type == other.transaction_type
-                and self.payload == other.payload
-                and self.signature == other.signature)
+                and self.payload == other.payload)
+                #and self.signature == other.signature)
 
     def validate_transaction(self, crypto_helper, blockchain) -> bool:
         """

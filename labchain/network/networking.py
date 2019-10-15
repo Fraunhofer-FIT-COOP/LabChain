@@ -494,7 +494,7 @@ class ServerNetworkInterface(NetworkInterface):
         transaction_in_pool, _ = self.get_transaction_callback(transaction_hash)
         self.on_transaction_received_callback(transaction)
         if not self.get_transaction_callback(transaction_hash)[0]:
-            # if transaction still not present, it must have been delined
+            # if transaction still not present, it must have been declined
             self.__add_transaction_to_cache(transaction)
         if not transaction_in_pool == transaction and not self.__transaction_in_cache(transaction):
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
