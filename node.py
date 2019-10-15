@@ -16,8 +16,8 @@ CONFIG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'labchain', 'resources',
                                            'node_configuration.ini'))
 
-def create_node(node_ip, node_port, peer_list, peer_discovery):
-    return BlockChainNode(CONFIG_FILE, node_ip, node_port, peer_list,
+def create_node(node_ip, malicious, node_port, peer_list, peer_discovery):
+    return BlockChainNode(CONFIG_FILE, malicious, node_ip, node_port, peer_list,
                           peer_discovery)
 
 
@@ -43,6 +43,7 @@ def parse_args():
     parser.add_argument('--peer-discovery', action='store_true')
     parser.add_argument('--drop_db', '-d', action='store_true')
     parser.add_argument('--localhost', action='store_true')
+    parser.add_argument('--malicious', '-m', action='store_true')
     return parser.parse_args()
 
 
@@ -85,4 +86,4 @@ if __name__ == '__main__':
         if os.path.exists(db_path):
             os.remove(db_path)
 
-    node = create_node(ip, args.port, initial_peers, args.peer_discovery)
+    node = create_node(ip, args.malicious, args.port, initial_peers, args.peer_discovery)

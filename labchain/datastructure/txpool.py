@@ -6,13 +6,15 @@ from labchain.datastructure.transaction import Transaction
 class TxPool:
     _singleton = None
     _first_time = True
+    _malicious = False
 
-    def __init__(self, crypto_helper_obj):
+    def __init__(self, crypto_helper_obj, malicious):
         #  Note: Re-look this logic again later
         if self._first_time:
             self._transactions = []
             self._crypto_helper = crypto_helper_obj
             self._first_time = False
+            self._malicious = malicious
 
     def __new__(cls, *args, **kwargs):
         if not cls._singleton:
@@ -60,8 +62,12 @@ class TxPool:
 
     def add_transaction_if_not_exist(self, transaction, blockchain):
         if isinstance(transaction, Transaction):
-            if transaction not in self._transactions and \
-                    transaction.validate_transaction(self._crypto_helper, blockchain):
+            validation_condition = True if self._malicious else transaction.validate_transaction(self._crypto_helper,
+                                                                                                blockchain)
+            print()
+            logging.info("*************validation condition: {}, am I bad: {}".format(validation_condition, self._malicious))
+            print()
+            if transaction not in self._transactions and validation_condition:
                 if not transaction.transaction_hash:
                     hash_val = self._crypto_helper.hash(transaction.get_json())
                     transaction.transaction_hash = hash_val

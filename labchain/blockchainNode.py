@@ -25,7 +25,7 @@ from labchain.workflow.taskTransaction import WorkflowTransaction
 
 class BlockChainNode:
 
-    def __init__(self, config_file_path, node_ip="127.0.0.1", node_port=None,
+    def __init__(self, config_file_path, malicious, node_ip="127.0.0.1", node_port=None,
                  peer_list=None, peer_discovery=True, new_database=False):
         """Constructor for BlockChainNode
 
@@ -75,6 +75,11 @@ class BlockChainNode:
         self.logger = logging.getLogger(__name__)
         self.rb_thread = None
         self.q = None
+        self.malicious = malicious
+
+        if self.malicious:
+            self.logger.debug("-----------------------ATTENTION: I am a bad node! Böse!-----------------------")
+
         try:
             self.config_reader = ConfigReader(config_file_path)
             self.logger.debug("Read config file successfully!")
@@ -282,7 +287,7 @@ class BlockChainNode:
         self.logger.debug("Initialized every component for the node")
         self.consensus_obj = Consensus()
         self.crypto_helper_obj = CryptoHelper.instance()
-        self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj)
+        self.txpool_obj = TxPool(crypto_helper_obj=self.crypto_helper_obj, malicious=self.malicious)
         self.db = Db(block_chain_db_file=os.path.abspath(os.path.join(
             os.path.dirname(__file__), 'resources/labchaindb.sqlite')), create_new_database=new_database)
 
@@ -337,7 +342,8 @@ class BlockChainNode:
                                          crypto_helper_obj=self.crypto_helper_obj,
                                          min_blocks_for_difficulty=min_blocks,
                                          db=self.db,
-                                         q=self.q)
+                                         q=self.q,
+                                         malicious=self.malicious)
 
         self.logger.debug("Initialized web server")
         """init network interface"""

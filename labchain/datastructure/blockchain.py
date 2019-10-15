@@ -12,7 +12,7 @@ from labchain.datastructure.transaction import NoHashError
 class BlockChain:
     def __init__(self, node_id, tolerance_value, pruning_interval,
                  consensus_obj, txpool_obj, crypto_helper_obj,
-                 min_blocks_for_difficulty, db, q):
+                 min_blocks_for_difficulty, db, q, malicious):
         """Constructor for BlockChain
 
         Parameters
@@ -76,6 +76,7 @@ class BlockChain:
         self._active_mine_block = None
         self._db = db
         self._q = q
+        self._malicious = malicious
 
         # RLock allows for recursive use of add_block
         self._blockchain_lock = threading.RLock()
@@ -430,7 +431,7 @@ class BlockChain:
             self._blockchain_lock.release()
             return False
 
-        validation_result = self._get_validation_data(block)
+        validation_result = self._get_validation_data(block) if not self._malicious else 0
 
         if validation_result == 0:  # Block is valid and can be added
             self._add_block_to_blockchain(block, db_flag)
