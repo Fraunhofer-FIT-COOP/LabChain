@@ -388,7 +388,7 @@ class ServerNetworkInterface(NetworkInterface):
             def callback(info):
                 new_ip = socket.inet_ntoa(info.address)
                 logger.info('Add new peer {}:{}'.format(ip, info.port))
-                if new_ip != self.ip and self.port != int(info.port):
+                if new_ip != self.ip or self.port != int(info.port):
                     self.add_peer(new_ip, info.port)
 
             self.peerDiscovery = PeerDiscoverySystem(self.ip, self.port,
@@ -497,6 +497,7 @@ class ServerNetworkInterface(NetworkInterface):
             # if transaction still not present, it must have been declined
             self.__add_transaction_to_cache(transaction)
         if not transaction_in_pool == transaction and not self.__transaction_in_cache(transaction):
+            #TODO the bad node is not broadcasting the duplicate transaction because it is already on blockchain
             logger.debug('Broadcasting transaction: {}'.format(str(transaction)))
             logger.debug('Broadcasting transaction hash: ' + str(transaction_hash))
             try:
