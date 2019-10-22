@@ -780,6 +780,7 @@ class WorkflowClient:
             '2': ('Send task transaction', self.send_task_transaction, []),
             '3': ('Show workflow status', self.show_workflow_status, []),
             '4': ('Show workflow details', self.show_workflow_details, []),
+            '5': ('Run malicious client', self.run_malicious_client, []),
         }, 'Please select a value: ', 'Exit Workflow Client')
 
     def main(self):
@@ -797,3 +798,24 @@ class WorkflowClient:
 
     def show_workflow_details(self):
         self.task_transaction_wizard.show_workflow_details()
+
+    def run_malicious_client(self):
+        # Example case of linear workflow task tx that is already sent with a different status
+        # ATTENTION: change the data below with a transaction data that already exists on blockchain
+        public_key = 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNTJtZUE3RlhXZDFtMlM0VzFvRVF1VGozMTkrdwpRZVFsdVpNbEZCSEdxNFZyY1plYWRKUFNjMEJ4NkxVY3A0RFF5K3oxVlRmNXMwZWp4QnRHMC8vZDZBPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t'
+        chosen_receiver = 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcUM1dm5Qazdwb3pLczRRRTA0K2t6cnZILy9aawptMmlqL05LdVg4c3J0N2hyZWd0bDZPT09xVUhNOUFZZ1hFWEhCRndYK3BJZHlQVXRRWFlUVGhWeEtRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t'
+        chosen_payload = {'document': {'coffee_status': 'full'},'in_charge': 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcUM1dm5Qazdwb3pLczRRRTA0K2t6cnZILy9aawptMmlqL05LdVg4c3J0N2hyZWd0bDZPT09xVUhNOUFZZ1hFWEhCRndYK3BJZHlQVXRRWFlUVGhWeEtRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0','previous_transaction': 'b2798402df69723bfe2582da789a8bbf189abfc59b13f4cb8c5fb04c3b75a660','workflow_id': '1', 'workflow_transaction': 'b2798402df69723bfe2582da789a8bbf189abfc59b13f4cb8c5fb04c3b75a660'}
+        private_key = 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ1A0VnhaWi9PQm5LWnNOaTAKcjFpcVU4bS9sWDY4OEMrb2g5azd5aEVadk5haFJBTkNBQVRuYVo0RHNWZFozV2JaTGhiV2dSQzVPUGZYMzdCQgo1Q1c1a3lVVUVjYXJoV3R4bDVwMGs5SnpRSEhvdFJ5bmdOREw3UFZWTi9telI2UEVHMGJULzkzbwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t'
+        new_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
+                                                                     receiver=chosen_receiver,
+                                                                     transaction_type='2',
+                                                                     payload=chosen_payload,
+                                                                     signature=''))
+        new_transaction.sign_transaction(self.crypto_helper, private_key)
+        transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
+
+        self.network_interface.sendTransaction(new_transaction)
+        clear_screen()
+        print('Created a duplicate transaction! Böse!')
+        input('Press any key to go back to the main menu!')
+
