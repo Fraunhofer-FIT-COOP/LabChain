@@ -431,7 +431,17 @@ class BlockChain:
             self._blockchain_lock.release()
             return False
 
-        validation_result = self._get_validation_data(block) if not self._malicious else 0
+        validation_result = self._get_validation_data(block)
+
+        #TODO remove prints below when not necessary anymore
+        print()
+        print("----------------------------------VALIDATION RESULT 1: ", validation_result)
+
+        validation_result = 0 if self._malicious and validation_result == -1 else validation_result
+        validation_result = -1 if not self._malicious and not self._check_for_double_transactions(block) else validation_result
+
+        print("----------------------------------VALIDATION RESULT 2: ", validation_result)
+        print()
 
         if validation_result == 0:  # Block is valid and can be added
             self._add_block_to_blockchain(block, db_flag)
@@ -470,6 +480,23 @@ class BlockChain:
         self._blockchain_lock.release()
 
         self.switch_to_longest_branch()
+        return True
+
+    def _check_for_double_transactions(self, block):
+        """
+        Checks if any of the block transactions has been mined previously
+        :param block: block whose transactions to be checked
+        :return:
+            True - if block all transactions are new.
+            False - if block has some transactions that are already mined.
+        """
+        existing_tx_hashes = [tx_tuple.transaction_hash for tx_tuple in self.get_all_transactions()]
+        block_transactions = block._transactions
+        if block_transactions is not None:
+            for t in block_transactions:
+                if t.transaction_hash in existing_tx_hashes:
+                    self._logger.debug('Duplicate transaction found: {}'.format(t))
+                    return False
         return True
 
     def _get_validation_data(self, block: LogicalBlock):
@@ -689,7 +716,7 @@ class BlockChain:
             # self._current_branch_heads.remove(_new_head_hash)
             for _head in self._current_branch_heads:
                 _b_hash = _head
-                while _b_hash not in _longest_chain:
+                while _b_hash not in _longest_chain and _b_hash in self._blockchain:
                     _b = self._blockchain.pop(_b_hash)
                     if _b.is_block_ours(self._node_id):
                         _txns = _b.transactions
