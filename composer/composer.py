@@ -48,7 +48,8 @@ class BenchmarkDir:
     @staticmethod
     def absolutePath(test_name=None, file_name=None):
         """ Returns the absolute path to the benchmark directory
-        If test_name is not None it creates a sub folder in the benchmark directory and returns the absolute path to it
+        If test_name is not None it creates a sub folder in the benchmark directory
+        and returns the absolute path to it
         If file_name is not None it will also append the file name
         """
         abs_path = os.path.abspath(os.environ.get("BENCHMARK_DIR", BENCHMARK_DATA_DIRECTORY))
@@ -165,7 +166,7 @@ def lookupThread():
         blocks = None
         try:
             blocks = networkInterface.requestBlock(None)
-        except Exception as e:
+        except Exception:
             continue
 
         if len(blocks) > 1:
@@ -211,7 +212,9 @@ def lookupThread():
         last_block_checked = block._block_id
 
 
-app = flask.Flask("labchainComposer", static_folder="web/composer/build/static", template_folder="web/composer/build")
+app = flask.Flask("labchainComposer",
+                  static_folder="web/composer/build/static",
+                  template_folder="web/composer/build")
 app.secret_key = "".join(
     random.choice(string.ascii_uppercase + string.digits) for _ in range(10)
 )
@@ -319,21 +322,25 @@ def createInstance(instances=[], test_name=None):
 
     open(BenchmarkDir.absolutePath(test_name, container_benchmark_file_name), "a").close()
 
-    logger.info("Mount({}, {})".format("/app/LabChain/benchmark.json", host_path))
+    logger.info("Mount(%s, %s)", "/app/LabChain/benchmark.json", host_path)
 
     mnt = Mount(target="/app/LabChain/benchmark.json", source=host_path, type="bind")
 
-    container = client.containers.run(
-        os.environ.get("LABCHAIN_DOCKER_NAME", "labchain:latest"),
-        name=name,
-        ports={8080: (5000 + running_instances_count)},
-        network="labchain_network",
-        environment=envr,
-        mounts=[mnt],
-        detach=True,
-    )
+    try:
+        container = client.containers.run(
+            os.environ.get("LABCHAIN_DOCKER_NAME", "labchain:latest"),
+            name=name,
+            ports={8080: (5000 + running_instances_count)},
+            network="labchain_network",
+            environment=envr,
+            mounts=[mnt],
+            detach=True
+        )
 
-    running_instances[name] = container
+        running_instances[name] = container
+    except docker.errors.APIError as e:
+        logger.error("Could not run %s", name)
+        logger.error(e)
 
     return name
 
@@ -562,7 +569,7 @@ def delete_instance():
     if name is None:
         return "Specify a name", 404
 
-    getDockerInstance(instance["name"]).remove()
+    getDockerInstance(instances[name]).remove()
 
     instances = getDockerInstances()
     return json.dumps(instances), 200
@@ -574,7 +581,7 @@ def hasContainer():
     return [os.environ.get("LABCHAIN_DOCKER_NAME", "labchain:latest")] in images
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
 
     if not os.path.exists(BENCHMARK_DATA_DIRECTORY):
         os.makedirs(BENCHMARK_DATA_DIRECTORY)
@@ -607,7 +614,7 @@ if "__main__" == __name__:
 
     running_instances_count = i
 
-    logger.info("Recognized instances: {}".format(len(instances)))
+    logger.info("Recognized instances: %i", len(instances))
     logger.info(running_instances)
 
     arguments = sys.argv
@@ -620,10 +627,11 @@ if "__main__" == __name__:
         _host = arguments[1]
         _port = int(arguments[2])
 
-    logger.info("Starting server at http://{}:{}".format(_host, _port))
+    logger.info("Starting server at http://%s:%s", _host, _port)
 
     if len(instances) > 0:
-        networkInterface = NetworkInterface(JsonRpcClient(), {os.environ.get("HOST_NAME", "localhost"): {(5000 + running_instances_count): {}}})
+        networkInterface = NetworkInterface(JsonRpcClient(),
+                                            {os.environ.get("HOST_NAME", "localhost"): {(5000 + running_instances_count): {}}})
 
     if not lookup_thread_running:
         t = threading.Thread(target=lookupThread)
