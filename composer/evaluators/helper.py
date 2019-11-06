@@ -20,23 +20,55 @@ def importNodeLog(path):
 
         output_message = ":".join(ds[1:])
 
-        me = re.search('\{(.*)\}', output_message, re.DOTALL)
+        me = re.search(r'\{(.*)\}', output_message, re.DOTALL)
 
         if ds[1].startswith("Peers"):
             _type = "PEERS"
         elif ds[1].startswith("Added new block ---"):
             _type = "ADD_BLOCK"
-            re_block_hash = re.search("Added new block ---\s*([a-zA-Z0-9]*)\s*\{.*", output_message, re.DOTALL)
-            data.append({"time": time.localtime(float(ds[0])), "type": _type, "hash": re_block_hash.group(1), "data": json.loads(me.group(0).replace("'", '"').replace("None", '"None"'))})
+            try:
+                re_block_hash = re.search(r"Added new block ---\s*([a-zA-Z0-9]*)\s*\{.*",
+                                          output_message, re.DOTALL)
+                data.append({"time": time.localtime(float(ds[0])), "type": _type,
+                             "hash": re_block_hash.group(1),
+                             "data": json.loads(me.group(0)
+                                                .replace("'", '"').replace("None", '"None"'))})
+            except Exception as regex_error:
+                print(regex_error)
+                print(me.group(0))
+                raise regex_error
             continue
         elif ds[1].startswith("Added transaction to pool"):
             _type = "ADD_TRANSACTION"
+            try:
+                data.append({"time": time.localtime(float(ds[0])),
+                             "type": _type,
+                             "data": json.loads(me.group(0)
+                                                .replace("'", '"').replace("None", '"None"'))})
+            except Exception as e:
+                print(e)
+                print(me.group(0))
+                raise e
+            continue
 
         assert _type != "UNKNOWN"
 
         data.append({"time": time.localtime(float(ds[0])), "type": _type, "data": me.group(0)})
 
     return data
+
+
+def get_events_before_time(nodelog, _time):
+    """ Returns the events before and at the given time
+    """
+
+    cleaned_log = []
+
+    for log in nodelog:
+        if log["time"] <= _time:
+            cleaned_log.append(log)
+
+    return cleaned_log
 
 
 def getCleanedBlockLog(nodelog):
