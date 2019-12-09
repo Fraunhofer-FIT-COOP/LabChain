@@ -251,8 +251,10 @@ def getDockerInstances():
 
     network_containers = {}
 
-    if client.networks.get("labchain_network"):
+    try:
         network_containers = client.networks.get("labchain_network").attrs["Containers"]
+    except docker.errors.NotFound:
+        return []
 
     return [
         {
@@ -448,7 +450,8 @@ def benchmark_simple():
         peercount = data["nodecount"]
 
     transactions_per_peer = math.ceil(float(data["n_transactions"] / peercount))
-    # update number of transactions if number of transactions is not divisable by the number of peers
+    # update number of transactions if number of transactions is not divisable
+    # by the number of peers
     data["n_transactions"] = transactions_per_peer * peercount
     data["n_transactions_per_peer"] = transactions_per_peer
 
