@@ -829,6 +829,8 @@ class WorkflowClient:
                                            "Thomas" in wf][0])
         with open(workflow_file_path) as f:
             chosen_payload = json.load(f)
+
+        #   Create the workflow definition transaction
         in_charge_entity, task_entities = self.workflow_transaction_wizard.get_all_entities_in_wf(chosen_payload)
         exchange_dict = dict()
         exchange_dict[in_charge_entity] = public_key
@@ -850,13 +852,16 @@ class WorkflowClient:
                           if tx.payload['workflow_id'] == workflow_id]
         previous_len = 0
         prev_tx_hash = wf_transaction_hash
-        while len(received_wf_tx) <= len(workflow_payload['processes'].keys()):  # TODO check if <=
+
+        # Check if the previous transaction is mined, if yes send the next one in line
+        while len(received_wf_tx) <= len(workflow_payload['processes'].keys()):
             if previous_len == len(received_wf_tx):
-                sleep(0.2)
+                sleep(0.2)      #TODO might be smaller?
                 received_wf_tx = [tx for tx in self.network_interface.search_transaction_from_receiver(public_key)
                                   if tx.payload['workflow_id'] == workflow_id]
             else:
                 print("Process {}:previous mined!".format(process_no))
+                #   Create the related task transaction
                 prev_transaction = self.network_interface.requestTransaction(prev_tx_hash)[0]
                 if len(received_wf_tx) == 1:
                     workflow_transaction_hash = wf_transaction_hash
