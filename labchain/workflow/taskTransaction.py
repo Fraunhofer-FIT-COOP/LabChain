@@ -145,7 +145,7 @@ class TaskTransaction(Transaction):
             set(blockchain.search_transaction_from_sender(self.sender))
             & set(blockchain.search_transaction_to_receiver(self.receiver)))
         parallel_transactions = [t for t in parallel_transactions if
-                                 isinstance(t, TaskTransaction) or isinstance(t, WorkflowTransaction)]
+                                 isinstance(t, TaskTransaction)]
         parallel_transactions = [t for t in parallel_transactions if t.workflow_ID == self.workflow_ID]
         parallel_transactions = [t for t in parallel_transactions if
                                  t.previous_transaction == self.previous_transaction]
@@ -297,3 +297,7 @@ class WorkflowTransaction(TaskTransaction):
     @property
     def permissions(self):
         return self.payload['permissions']
+
+    @property
+    def previous_transaction(self):
+        return None

@@ -64,9 +64,9 @@ class TxPool:
         if isinstance(transaction, Transaction):
             validation_condition = True if self._malicious else transaction.validate_transaction(self._crypto_helper,
                                                                                                 blockchain)
-            print()
-            logging.info("*************validation condition: {}, am I bad: {}".format(validation_condition, self._malicious))
-            print()
+            # print()
+            # logging.info("*************validation condition: {}, am I bad: {}".format(validation_condition, self._malicious))
+            # print()
             if transaction not in self._transactions and validation_condition:
                 if not transaction.transaction_hash:
                     hash_val = self._crypto_helper.hash(transaction.get_json())

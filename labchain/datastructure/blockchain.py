@@ -433,15 +433,15 @@ class BlockChain:
 
         validation_result = self._get_validation_data(block)
 
-        #TODO remove prints below when not necessary anymore
-        print()
-        print("----------------------------------VALIDATION RESULT 1: ", validation_result)
+        # #TODO remove prints below when not necessary anymore
+        # print()
+        # print("----------------------------------VALIDATION RESULT 1: ", validation_result)
 
         validation_result = 0 if self._malicious and validation_result == -1 else validation_result
         validation_result = -1 if not self._malicious and not self._check_for_double_transactions(block) else validation_result
 
-        print("----------------------------------VALIDATION RESULT 2: ", validation_result)
-        print()
+        # print("----------------------------------VALIDATION RESULT 2: ", validation_result)
+        # print()
 
         if validation_result == 0:  # Block is valid and can be added
             self._add_block_to_blockchain(block, db_flag)
