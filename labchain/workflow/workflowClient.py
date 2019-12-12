@@ -822,3 +822,78 @@ class WorkflowClient:
         print('Created a duplicate transaction! Böse!')
         input('Press any key to go back to the main menu!')
 
+    def run_workflow(self, process_no):
+        priv_key, public_key = self.crypto_helper.generate_key_pair()
+        workflow_file_path = os.path.join(self.workflow_transaction_wizard.my_dir,
+                                          [wf for wf in self.workflow_transaction_wizard.get_workflow_list() if
+                                           "Thomas" in wf][0])
+        with open(workflow_file_path) as f:
+            chosen_payload = json.load(f)
+        in_charge_entity, task_entities = self.workflow_transaction_wizard.get_all_entities_in_wf(chosen_payload)
+        exchange_dict = dict()
+        exchange_dict[in_charge_entity] = public_key
+        workflow_payload = self.workflow_transaction_wizard.exchange_entities_with_pks(chosen_payload, exchange_dict,
+                                                                                       self.workflow_transaction_wizard.wallet_to_list())
+        workflow_id = 0
+        workflow_payload["workflow_id"] = workflow_id
+        wf_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
+                                                                    receiver=public_key,
+                                                                    transaction_type='1',
+                                                                    payload=workflow_payload,
+                                                                    signature=''))
+        wf_transaction.sign_transaction(self.crypto_helper, priv_key)
+        self.network_interface.sendTransaction(wf_transaction)
+        wf_transaction_hash = self.crypto_helper.hash(wf_transaction.get_json())
+        print("WFTX hash for process {}:{}".format(process_no, wf_transaction_hash))
+
+        received_wf_tx = [tx for tx in self.network_interface.search_transaction_from_receiver(public_key)
+                          if tx.payload['workflow_id'] == workflow_id]
+        previous_len = 0
+        prev_tx_hash = wf_transaction_hash
+        while len(received_wf_tx) <= len(workflow_payload['processes'].keys()):  # TODO check if <=
+            if previous_len == len(received_wf_tx):
+                sleep(0.2)
+                received_wf_tx = [tx for tx in self.network_interface.search_transaction_from_receiver(public_key)
+                                  if tx.payload['workflow_id'] == workflow_id]
+            else:
+                print("Process {}:previous mined!".format(process_no))
+                prev_transaction = self.network_interface.requestTransaction(prev_tx_hash)[0]
+                if len(received_wf_tx) == 1:
+                    workflow_transaction_hash = wf_transaction_hash
+                    workflow_transaction = prev_transaction
+                else:
+                    workflow_transaction_hash = prev_transaction.payload["workflow_transaction"]
+                    workflow_transaction = self.network_interface.requestTransaction(workflow_transaction_hash)[0]
+
+                #   check if it is end of the workflow
+                in_charge = prev_transaction.payload['in_charge']
+                next_in_charge = workflow_transaction.payload['processes'][in_charge][0]
+                chosen_payload = dict(workflow_id=workflow_id, document=dict(),
+                                      in_charge=next_in_charge, workflow_transaction=workflow_transaction_hash,
+                                      previous_transaction=prev_tx_hash)
+                print(chosen_payload)
+                new_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
+                                                                             receiver=public_key,
+                                                                             transaction_type='2',
+                                                                             payload=chosen_payload,
+                                                                             signature=''))
+                new_transaction.sign_transaction(self.crypto_helper, priv_key)
+                transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
+
+                self.network_interface.sendTransaction(new_transaction)
+                prev_tx_hash = transaction_hash
+                previous_len += 1
+                print("TX hash for process {}:{}".format(process_no, transaction_hash))
+        print("Full wf completed for process: {}.".format(process_no))
+
+    def run_benchmarking(self, num_workflows):
+        proc = []
+        for i in range(num_workflows):
+            p = Process(target=self.run_workflow, args=(i+1,))
+            proc.append(p)
+
+        for p in proc:
+            p.start()
+
+        for p in proc:
+            p.join()
