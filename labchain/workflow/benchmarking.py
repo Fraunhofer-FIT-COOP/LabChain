@@ -88,7 +88,7 @@ class Benchmarking:
         self.workflow_json["workflow"]["workflow_id"] = workflow_id
         wf_tx_hash = self.send_workflow_transaction()
         print("WFTX hash for workflow id {}:{}".format(workflow_id, wf_tx_hash))
-
+        public_key = self.workflow_json["workflow"]["sender"]
         received_wf_tx = [tx for tx in self.network_interface.search_transaction_from_receiver(public_key)
                           if tx.payload['workflow_id'] == workflow_id]
         previous_len = 0
