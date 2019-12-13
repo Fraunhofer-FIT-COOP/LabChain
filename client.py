@@ -7,6 +7,7 @@ from labchain.util.cryptoHelper import CryptoHelper
 from labchain.network.networking import ClientNetworkInterface, JsonRpcClient
 from labchain.blockchainClient import Wallet, BlockchainClient
 from labchain.workflow.workflowClient import WorkflowClient
+from labchain.workflow.benchmarking import Benchmarking
 
 # set TERM environment variable if not set
 if 'TERM' not in os.environ:
@@ -32,6 +33,12 @@ def create_document_flow_client(wallet_file, node_ip, node_port):
     return WorkflowClient(Wallet(wallet_file), network_interface, crypto_helper)
 
 
+def create_benchmarking_client(node_ip, node_port):
+    crypto_helper = CryptoHelper.instance()
+    network_interface = ClientNetworkInterface(JsonRpcClient(), {node_ip: {node_port: {}}})
+    return Benchmarking(network_interface, crypto_helper)
+
+
 def setup_logging(verbose, very_verbose):
     if very_verbose:
         logging.basicConfig(level=logging.DEBUG)
@@ -48,6 +55,10 @@ def parse_args():
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     parser.add_argument('--doc', help='Use this argument if you want to use the document flow client.', action='store_true')
+    parser.add_argument('--benchmarking', help='Use this argument if you want to run benchmarking test setup.',
+                        action='store_true')
+    parser.add_argument('--num_workflows', nargs='?', help='The number of processes to run for benchmarking test',
+                        default=10, type=int)
 
     return parser.parse_args()
 
@@ -64,10 +75,13 @@ if __name__ == '__main__':
         if args.doc:
             client = create_document_flow_client(open_wallet_file, args.node_ip, args.node_port)
             client.main()
+        elif args.benchmarking and args.num_workflows:
+            num_of_workflows = args.num_workflows
+            client = create_benchmarking_client(args.node_ip, args.node_port)
+            client.run_benchmarking(num_of_workflows)
         else:
             client = create_client(open_wallet_file, args.node_ip, args.node_port)
             client.main()
-
 
 def create_document_flow_client_instance():
     args = parse_args()
