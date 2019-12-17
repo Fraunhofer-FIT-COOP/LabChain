@@ -103,14 +103,14 @@ class TransactionWizard:
             return False
 
     @staticmethod
-    def __validate_receiver_input(usr_input):
+    def validate_receiver_input(usr_input):
         if len(usr_input) > 0:
             return True
         else:
             return False
 
     @staticmethod
-    def __validate_payload_input(usr_input):
+    def validate_payload_input(usr_input):
         if len(usr_input) > 0:
             return True
         else:
@@ -126,7 +126,7 @@ class TransactionWizard:
             print(u'\tPublic Key: ' + str(key[1]))
             print()
 
-        user_input = input('Please choose a sender account (by number) or press enter to return: ')
+        user_input = input('Please choose an account (by number) or press enter to return: ')
         return user_input
 
     @staticmethod
@@ -168,7 +168,7 @@ class TransactionWizard:
             print(u'Sender: ' + str(chosen_key))
             chosen_receiver = self.ask_for_receiver()
 
-            while not self.__validate_receiver_input(chosen_receiver):
+            while not self.validate_receiver_input(chosen_receiver):
                 # clear_screen()
                 print('Invalid input! Please choose a correct receiver!')
                 print(u'Sender: ' + str(chosen_key))
@@ -179,22 +179,20 @@ class TransactionWizard:
             print(u'Sender: ' + str(chosen_key))
             print(u'Receiver: ' + str(chosen_receiver))
             chosen_payload = self.ask_for_payload()
-
-            while not self.__validate_payload_input(chosen_payload):
+            while not self.validate_payload_input(chosen_payload):
                 # clear_screen()
                 print('Invalid input! Please choose a correct payload!')
                 print(u'Sender: ' + str(chosen_key))
                 print(u'Receiver: ' + str(chosen_receiver))
                 chosen_payload = self.ask_for_payload()
                 print()
-
             clear_screen()
 
             # Create transaction object and send to network
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
-
-            new_transaction = Transaction(str(public_key), str(chosen_receiver), str(chosen_payload))
+            transaction_type = 0
+            new_transaction = Transaction(str(public_key), str(chosen_receiver),str(transaction_type), str(chosen_payload))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
             transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
 

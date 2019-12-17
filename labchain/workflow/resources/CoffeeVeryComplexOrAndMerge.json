@@ -1,0 +1,60 @@
+{
+  "document": {
+    "coffee_status": "",
+    "coffee_empty_review_one": "",
+    "coffee_empty_review_two": ""
+  },
+  "in_charge": "decider_0",
+  "processes": {
+    "decider_0": [
+      "reviewer1_0",
+      "reviewer2_0"
+    ],
+    "reviewer1_0": [
+      "reviewer2_1",
+      "orderer_0"
+    ],
+    "reviewer2_0": [
+      "reviewer1_1",
+      "orderer_1"
+    ],
+    "reviewer1_1": [
+      "decider_2"
+    ],
+    "reviewer2_1": [
+      "decider_1"
+    ],
+    "orderer_0": [
+      "decider_1"
+    ],
+    "orderer_1": [
+      "decider_2"
+    ],
+    "decider_1": [
+      "orderer_2"
+    ],
+    "decider_2": [
+      "orderer_2"
+    ]
+  },
+  "permissions": {
+    "coffee_status": [
+      "decider_0", "decider_1", "decider_2", "orderer_0", "orderer_1"
+    ],
+    "coffee_empty_review_one": [
+      "reviewer1_0","reviewer1_1"
+    ],
+    "coffee_empty_review_two": [
+      "reviewer2_0", "reviewer2_1"
+    ]
+  },
+  "splits": {
+    "OR": [
+      "orderer_2"
+    ],
+    "AND": [
+      "decider_1", "decider_2"
+    ]
+  },
+  "comments": {}
+}

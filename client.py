@@ -48,6 +48,8 @@ def parse_args():
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--very-verbose', '-vv', action='store_true')
     parser.add_argument('--doc', help='Use this argument if you want to use the document flow client.', action='store_true')
+    parser.add_argument('--benchmarking', help='Use this argument if you want to run benchmarking test setup.', action='store_true')
+    parser.add_argument('--num_workflows', nargs='?', help='The number of processes to run for benchmarking test', default=10, type=int)
 
     return parser.parse_args()
 
@@ -64,17 +66,11 @@ if __name__ == '__main__':
         if args.doc:
             client = create_document_flow_client(open_wallet_file, args.node_ip, args.node_port)
             client.main()
+        elif args.benchmarking and args.num_workflows:
+            num_of_workflows = args.num_workflows
+            client = create_document_flow_client(open_wallet_file, args.node_ip, args.node_port)
+            client.run_benchmarking(num_of_workflows)
+
         else:
             client = create_client(open_wallet_file, args.node_ip, args.node_port)
             client.main()
-
-
-def create_document_flow_client_instance():
-    args = parse_args()
-    create_config_directory()
-    if os.path.exists(WALLET_FILE_PATH):
-        file_mode = 'r+'
-    else:
-        file_mode = 'w+'
-    with open(WALLET_FILE_PATH, file_mode) as open_wallet_file:
-        return create_document_flow_client(open_wallet_file, args.node_ip, args.node_port)
