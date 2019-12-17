@@ -18,7 +18,7 @@ import logging
 sys.path.insert(0, '../')  # noqa
 from labchain.network.networking import JsonRpcClient, NetworkInterface  # noqa
 from labchain.util.cryptoHelper import CryptoHelper
-from labchain.datastructure.transaction import Transaction
+from labchain.datastructure.transaction import Transaction, TYPE_SIMPLE_TRANSACTION
 
 networkInterface = None
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
@@ -107,7 +107,7 @@ def spawnBenchmarkTransactions(benchmark_name):
         for i in range(transactions_per_peer):
             payload = "Example Transaction Payload #" + str(tx_count)
             tx_count += 1
-            new_transaction = Transaction(str(sender_pub_key), str(recv_pub_key), payload)
+            new_transaction = Transaction(str(sender_pub_key), str(recv_pub_key), TYPE_SIMPLE_TRANSACTION, payload)
             new_transaction.sign_transaction(crypto_helper, sender_pr_key)
             transaction_hash = crypto_helper.hash(new_transaction.get_json())
 
