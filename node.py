@@ -2,6 +2,7 @@ import argparse
 import signal
 import logging
 import os
+import sys
 import socket
 
 # append project dir to python path
