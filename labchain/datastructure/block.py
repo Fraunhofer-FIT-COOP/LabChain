@@ -5,7 +5,7 @@ from pprint import pformat
 import time
 
 from labchain.util.cryptoHelper import CryptoHelper
-from labchain.datastructure.transaction import Transaction
+from labchain.util.TransactionFactory import TransactionFactory
 
 
 class Block(object):
@@ -106,7 +106,7 @@ class Block(object):
                      merkle_tree_root=data_dict['merkleHash'],
                      predecessor_hash=data_dict['predecessorBlock'],
                      block_creator_id=data_dict['creator'],
-                     transactions=[Transaction.from_dict(transaction_dict)
+                     transactions=[TransactionFactory.create_transaction(transaction_dict)
                                    for transaction_dict in data_dict['transactions']],
                      nonce=data_dict['nonce'],
                      timestamp=data_dict['timestamp'],
@@ -279,7 +279,7 @@ class LogicalBlock(Block):
                             merkle_tree_root=data_dict['merkleHash'],
                             predecessor_hash=data_dict['predecessorBlock'],
                             block_creator_id=data_dict['creator'],
-                            transactions=[Transaction.from_dict(transaction_dict)
+                            transactions=[TransactionFactory.create_transaction(transaction_dict)
                                           for transaction_dict in _transactions],
                             nonce=data_dict['nonce'],
                             difficulty=data_dict['difficulty'],

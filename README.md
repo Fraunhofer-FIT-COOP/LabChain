@@ -45,10 +45,6 @@ python3 node.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 ```
 
 `-v` and `-vv` set the log level to INFO or DEBUG.
-`-p` or `--plot` enables frequent plotting of the blockchain into `~/.labchain/plot`
-`--plot-dir <directory>` lets you choose a different directory for plot output
-`--plot-auto-open` enables opening the plot in your browser whenever it is created (may become annoying)
-
 
 # Run the Client
 
@@ -56,23 +52,7 @@ python3 node.py --port 8080 --peers <ip1>:<port1> <ip2>:<port2> ...
 python3 client.py <blockchain-node-ip> <blockchain-node-port>
 ```
 
-`-v` and `-vv` set the log level to INFO or DEBUG.
-
-# Run the Web Client
-
-Run `python3 client_api.py`.
-
-Make a copy of the directory `~/web-client` and move the copy outside the project directory, so that you won't push the Node packages to repository.
-
-Install Node.js: https://nodejs.org/en/
-
-After installing Node, run the command `npm install` inside the copy of web-client directory to install the necessary Node packages.
-
-After installing the necessary packages, run `npm run build`. You will see a directory named 'dist' afterward.
-
-Run `npm install -g serve` to install Serve, a static file server to host the web client in local network.
-
-After installing Serve, run the command `serve` inside the dist directory to host our web client. You can test the web client in http://localhost:5000
+`--doc` to start the Workflow Management System
 
 # Run the unit tests
 
@@ -90,6 +70,14 @@ For running all the unit tests execute:
 python3 -m unittest discover
 ```
 
+# Workflow Management System Tutorial
+
+The tutorial for the workflow management system can be found in:
+
+```
+labchain/workflow/tutorial.md
+```
+
 # TODO
 
 - [x] Check if README is still correct
@@ -100,6 +88,8 @@ python3 -m unittest discover
 - [x] Remove visualizer
 - [x] Clean up existing branches
 - [x] Remove `nogas` and check PEP8 Styleguide
+- [x] The `test_account.py` uses the `MockCryptoHelper` but should use the real CryptoHelper
+- [x] Update versions in PIP requirements file
 - [ ] Check unit tests
 - [ ] Add an example (quick start/ getting started) to the README
 - [ ] Remove mocks
@@ -108,19 +98,34 @@ python3 -m unittest discover
 - [ ] Check difficulty calculation
 - [ ] Check block timestamp
 - [ ] Put every class into a file
-- [ ] Update versions in PIP requirements file
 - [ ] Remove 10 seconds delay to wait for incoming transactions
 - [ ] Currently the blocksynchronisation seems not to work ( > 2 peers) -> fix it
 - [ ] Remove auto discovery mechanism
-- [ ] The `test_account.py` uses the `MockCryptoHelper` but should use the real CryptoHelper
 - [ ] Check the calls of the crypto helper methods (First `json.dumps(...)` then in the crypto helper `json.loads(...)`. There must be a better way.)
 - [ ] Add Status Information when starting the node (without verbose mode)
 - [ ] Clean up logging (better differentiation between log levels)
 
+# TODO for Workflow Management System
+
+- [x] Improve the current status of workflows by showing at which user it is at the moment
+- [x] Improve retrieving the type of workflow while showing the workflow status
+- [x] Add comments in the workflow for the addresses while creating the workflow, so that client can see a better explanation about the receiver of his transaction.
+- [x] Now, if same address is chosen for 2 entities, the workflow will look completed even though it is not because of the numbers after "_".
+      i.e: if wf: reviewer1_0 -> orderer_0 and if these two have same address, the workflow will look completed at the level of reviewer1_0. Maybe adding some kind of control to not use one address for multiple entities?
+- [x] Add a tutorial file
+- [x] Show completed workflows separately on last accounts on check tasks
+- [x] Look for a better way of ending a workflow. (It currently gets hanged in check tasks of the last user)
+- [ ] Provide feedback to the client if the transaction is not validated
+- [ ] Implement a malicious test client
+- [ ] Create new templates for testing
+- [ ] Optimize current workflow status page as it takes long time to show the workflows
+- [ ] Show document evaluation through the process (improve Show workflow details option)
+- [ ] Separate document flow related static functions from wizards
+
 ## Nice to have
 
 - [ ] Use JSON for configuration
-- [ ] Remove SQLite file from ressource directory
+- [ ] Remove SQLite file from resource directory
 - [ ] Rename configuration in default_configuration and copy it in case there is no configuration provided
 - [ ] Check and refactor block explorer
 - [ ] Blockchain instance as singleton

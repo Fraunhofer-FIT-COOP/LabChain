@@ -3,7 +3,6 @@ import signal
 import logging
 import os
 import socket
-import sys
 
 # append project dir to python path
 from labchain.blockchainNode import BlockChainNode
@@ -22,8 +21,8 @@ CONFIG_DIRECTORY = os.path.join(os.path.expanduser("~"), '.labchain')
 DEFAULT_PLOT_DIRECTORY = os.path.join(CONFIG_DIRECTORY, 'plot')
 
 
-def create_node(node_ip, node_port, peer_list, peer_discovery, cors):
-    return BlockChainNode(CONFIG_FILE, node_ip, node_port, peer_list,
+def create_node(node_ip, malicious, node_port, peer_list, peer_discovery, cors):
+    return BlockChainNode(CONFIG_FILE, malicious, node_ip, node_port, peer_list,
                           peer_discovery, cors=cors)
 
 
@@ -52,6 +51,7 @@ def parse_args():
     parser.add_argument('--drop_db', '-d', action='store_true', help="Delete database")
     parser.add_argument('--localhost', action='store_true', help="Start as localhost")
     parser.add_argument('--cors', default="", action="store", help="Set CORS headers for the networking component")
+    parser.add_argument('--malicious', '-m', action='store_true')
     return parser.parse_args()
 
 
@@ -72,15 +72,6 @@ def get_private_ip():
 
 def parse_peers(peer_args):
     result = {}
-    try:
-        config = ConfigReader(CONFIG_FILE)
-        default_port = config.get_config(section="NETWORK", option="PORT",
-                                         fallback=8080)
-        default_port = str(default_port)
-
-        own_ip = get_private_ip()
-    except Exception as e:
-        logging.error(str(e))
 
     for peer_str in peer_args:
         host, port = peer_str.replace("\"", "").replace("'", "").split(':')
@@ -91,7 +82,6 @@ def parse_peers(peer_args):
 
 
 if __name__ == '__main__':
-    test = sys.argv
     args = parse_args()
     setup_logging(args.verbose, args.very_verbose)
     initial_peers = parse_peers(args.peers)
@@ -115,4 +105,4 @@ if __name__ == '__main__':
 
     cors = args.cors.replace("\"", "")
 
-    node = create_node(ip, args.port, initial_peers, args.peer_discovery, cors)
+    node = create_node(ip, args.malicious, args.port, initial_peers, args.peer_discovery, cors)

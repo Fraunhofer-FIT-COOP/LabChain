@@ -235,7 +235,9 @@ class TaskTransactionCommon(unittest.TestCase):
                     "floatAttributes": ["{}_2".format(receiver_key)]
                 },
                 "previous_transaction": "",
-                "workflow_transaction": ""
+                "workflow_transaction": "",
+                "splits": {},
+                "comments":{}
             }
         }
         return workflow_transaction_json

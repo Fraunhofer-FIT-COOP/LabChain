@@ -8,17 +8,15 @@ from Crypto.PublicKey import ECC
 
 import labchain.datastructure.txpool as txpool
 from labchain.datastructure.transaction import Transaction
-from labchain.util.cryptoHelper import CryptoHelper
 
 
 class TaskTransaction(Transaction):
     _validation_lock = threading.Lock()
 
-    def __init__(self, sender, receiver, payload: Dict, signature=None):
-        super().__init__(sender, receiver, payload, signature)
-        self.payload['transaction_type'] = '2'
+    def __init__(self, sender, receiver, transaction_type, payload: Dict, signature=None):
+        super().__init__(sender, receiver, transaction_type, payload, signature)
 
-    def validate_transaction(self, crypto_helper, blockchain) -> bool:
+    def validate_transaction(self, crypto_helper, blockchain):
         """
         Passing the arguments for validation with given public key and signature.
         :param crypto_helper: CryptoHelper object
@@ -26,7 +24,7 @@ class TaskTransaction(Transaction):
         :return result: True if transaction is valid
         """
         TaskTransaction._validation_lock.acquire()
-        if self.payload['transaction_type'] is not '2' and self.payload['transaction_type'] is not '1':
+        if self.transaction_type is not '2':
             logging.warning('Transaction has wrong transaction type')
             TaskTransaction._validation_lock.release()
             return False
@@ -39,12 +37,12 @@ class TaskTransaction(Transaction):
             raise ValueError(
                     'Corrupted transaction, no previous_transaction found')
 
-            if self.workflow_ID != previous_transaction.workflow_ID:
-                logging.warning('Workflow_ID of the new transaction does not match with the previous transaction.')
+        if self.workflow_ID != previous_transaction.payload["workflow_id"]:
+            logging.warning('Workflow_ID of the new transaction does not match with the previous transaction.')
             TaskTransaction._validation_lock.release()
             return False
 
-        if self.workflow_ID != workflow_transaction.workflow_ID:
+        if self.workflow_ID != workflow_transaction.payload["workflow_id"]:
             logging.warning('Workflow_ID of the new transaction does not match with the initial transaction.')
             TaskTransaction._validation_lock.release()
             return False
@@ -55,13 +53,13 @@ class TaskTransaction(Transaction):
             TaskTransaction._validation_lock.release()
             return False
 
-        if not previous_transaction.in_charge.split(sep='_')[0] == self.sender:
+        if not previous_transaction.payload["in_charge"].split(sep='_')[0] == self.sender:
             logging.warning(
                     'Sender is not the current owner of the document flow!')
             TaskTransaction._validation_lock.release()
             return False
 
-        if not self.in_charge.split(sep='_')[0] == self.receiver:
+        if not self.payload["in_charge"].split(sep='_')[0] == self.receiver:
             logging.warning('Receiver does not correspond to in_charge flag')
             TaskTransaction._validation_lock.release()
             return False
@@ -82,29 +80,64 @@ class TaskTransaction(Transaction):
                     'Duplicated transaction found!')
             TaskTransaction._validation_lock.release()
             return False
+
+        if not self._check_merge_conditions(blockchain, previous_transaction, workflow_transaction):
+            logging.warning(
+                'Merge conditions not met!')
+            TaskTransaction._validation_lock.release()
+            return False
+
         TaskTransaction._validation_lock.release()
         return self.validate_transaction_common(crypto_helper, blockchain)
 
     def validate_transaction_common(self, crypto_helper, blockchain):
-        if not self._check_pid_well_formedness(self.in_charge):
+        if not self._check_pid_well_formedness(self.payload["in_charge"]):
             return False
         return super().validate_transaction(crypto_helper, blockchain)
+
+    def _check_merge_conditions(self, blockchain, previous_transaction, workflow_transaction):
+        is_merge_tx = False
+        for list in workflow_transaction.payload["splits"].values():
+            if previous_transaction.payload["in_charge"] in list:
+                is_merge_tx = True
+                break
+        if not is_merge_tx:
+            return True
+
+        processes = workflow_transaction.payload["processes"]
+        all_tx_sender_received = [TaskTransaction.from_json(t.get_json_with_signature()) for t in blockchain.search_transaction_to_receiver(self.sender) if
+                                     'workflow_id' in t.payload]
+        split_tx_received = [t.sender for t in all_tx_sender_received if
+                             t.workflow_ID == self.workflow_ID and
+                             t.in_charge == previous_transaction.payload["in_charge"]]
+
+        merge_type = [type for type, addresses in workflow_transaction.payload["splits"].items() if previous_transaction.payload["in_charge"] in addresses][0]
+        senders = [sender.split("_")[0] for sender, receivers in processes.items() if
+                   previous_transaction.payload["in_charge"] in receivers]
+        if merge_type == "AND":
+            if set(split_tx_received) == set(senders):
+                return True
+        else:
+            if previous_transaction.sender in set(senders):
+                return True
+
+        return False
 
     def _check_permissions_write(self, previous_transaction, workflow_transaction):
         if not workflow_transaction:
             return False
-        permissions = workflow_transaction.permissions
+        permissions = workflow_transaction.payload["permissions"]
         for attributeName in self.document:
             if attributeName not in permissions:
                 return False
-            if previous_transaction.in_charge not in permissions[attributeName]:
+            if previous_transaction.payload["in_charge"] not in permissions[attributeName]:
                 return False
         return True
 
     def _check_process_definition(self, previous_transaction, workflow_transaction):
-        process_definition = workflow_transaction.processes
+        process_definition = workflow_transaction.payload["processes"]
         if previous_transaction:
-            if self.in_charge not in process_definition[previous_transaction.in_charge]:
+            if self.payload["in_charge"] not in process_definition[previous_transaction.payload["in_charge"]]:
                 return False
         return True
 
@@ -113,7 +146,7 @@ class TaskTransaction(Transaction):
                 set(blockchain.search_transaction_from_sender(self.sender))
                 & set(blockchain.search_transaction_to_receiver(self.receiver)))
         parallel_transactions = [t for t in parallel_transactions if
-                isinstance(t, TaskTransaction) or isinstance(t, WorkflowTransaction)]
+                                 isinstance(t, TaskTransaction)]
         parallel_transactions = [t for t in parallel_transactions if t.workflow_ID == self.workflow_ID]
         parallel_transactions = [t for t in parallel_transactions if
                 t.previous_transaction == self.previous_transaction]
@@ -151,7 +184,7 @@ class TaskTransaction(Transaction):
 
     @property
     def type(self):
-        return self.payload['transaction_type']
+        return self.transaction_type
 
     @property
     def document(self):
@@ -182,25 +215,15 @@ class TaskTransaction(Transaction):
     @staticmethod
     def from_dict(data_dict):
         """Instantiate a Transaction from a data dictionary."""
-        type = data_dict['payload'].get('transaction_type', '0')
-        if type == '1':
-            t = WorkflowTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                    payload=data_dict['payload'], signature=data_dict['signature'])
-        elif type == '2':
-            t = TaskTransaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                    payload=data_dict['payload'], signature=data_dict['signature'])
-        else:
-            t = Transaction(sender=data_dict['sender'], receiver=data_dict['receiver'],
-                    payload=data_dict['payload'], signature=data_dict['signature'])
-            t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
-        return t
+        return TaskTransaction(data_dict['sender'], data_dict['receiver'],
+                                   data_dict['transaction_type'], data_dict['payload'],
+                                   data_dict['signature'])
 
 
 class WorkflowTransaction(TaskTransaction):
 
-    def __init__(self, sender, receiver, payload: Dict, signature=None):
-        super().__init__(sender, receiver, payload, signature)
-        self.payload['transaction_type'] = '1'
+    def __init__(self, sender, receiver, transaction_type, payload, signature=None):
+        super().__init__(sender, receiver, transaction_type, payload, signature)
 
     @staticmethod
     def from_json(json_data):
@@ -210,18 +233,19 @@ class WorkflowTransaction(TaskTransaction):
     @staticmethod
     def from_dict(data_dict):
         return WorkflowTransaction(data_dict['sender'], data_dict['receiver'],
-                data_dict['payload'], data_dict['signature'])
+                                   data_dict['transaction_type'], data_dict['payload'],
+                                   data_dict['signature'])
 
-        def validate_transaction(self, crypto_helper, blockchain):
-            TaskTransaction._validation_lock.acquire()
-        if self.payload['transaction_type'] is not '1':
+    def validate_transaction(self, crypto_helper, blockchain):
+        TaskTransaction._validation_lock.acquire()
+        if self.transaction_type is not '1':
             logging.warning('Transaction has wrong transaction type')
             TaskTransaction._validation_lock.release()
             return False
 
         # Check if workflow_id is already present
         list_of_transactions = blockchain.get_all_transactions()
-        list_of_transactions += txpool.TxPool(None).get_workflow_transactions()
+        list_of_transactions += txpool.TxPool(None, False).get_workflow_transactions()
         list_of_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature())
                 for t in list_of_transactions if 'workflow_id' in t.payload]
         list_of_workflow_transactions = [t for t in list_of_task_transaction if t.type == '1']
@@ -230,8 +254,8 @@ class WorkflowTransaction(TaskTransaction):
             if self.payload['workflow_id'] == workflow.payload['workflow_id']:
                 TaskTransaction._validation_lock.release()
                 return False
-
-        for sender, receivers in self.processes.items():
+        all_receivers = set()
+        for sender, receivers in self.payload["processes"].items():
             if not self._check_pid_well_formedness(sender):
                 TaskTransaction._validation_lock.release()
                 return False
@@ -239,6 +263,7 @@ class WorkflowTransaction(TaskTransaction):
                 if not self._check_pid_well_formedness(receiver):
                     TaskTransaction._validation_lock.release()
                     return False
+                all_receivers.add(receiver)
         document_keys = self.document.keys()
         for attr, pids in self.permissions.items():
             for pid in pids:
@@ -249,6 +274,16 @@ class WorkflowTransaction(TaskTransaction):
                 TaskTransaction._validation_lock.release()
                 return False
 
+        for type, addresses in self.payload["splits"].items():
+            for address in addresses:
+                if address not in all_receivers:
+                    TaskTransaction._validation_lock.release()
+                    return False
+                sender_size = len([sender for sender, receivers in self.payload["processes"].items() if address in receivers])
+                if sender_size <= 1:
+                    TaskTransaction._validation_lock.release()
+                    return False
+
         TaskTransaction._validation_lock.release()
         return super().validate_transaction_common(crypto_helper, blockchain)
 
@@ -257,5 +292,13 @@ class WorkflowTransaction(TaskTransaction):
         return self.payload['processes']
 
     @property
+    def splits(self):
+        return self.payload['splits']
+
+    @property
     def permissions(self):
         return self.payload['permissions']
+
+    @property
+    def previous_transaction(self):
+        return None
