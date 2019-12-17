@@ -3,6 +3,7 @@ import os
 from labchain.datastructure.transaction import Transaction
 from labchain.network.networking import TransactionDoesNotExistException, BlockDoesNotExistException, NoPeersException
 from labchain.util.Menu import Menu
+from labchain.datastructure.transaction import TYPE_SIMPLE_TRANSACTION
 
 
 def clear_screen():
@@ -191,8 +192,8 @@ class TransactionWizard:
             # Create transaction object and send to network
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
-            transaction_type = 0
-            new_transaction = Transaction(str(public_key), str(chosen_receiver),str(transaction_type), str(chosen_payload))
+            transaction_type = TYPE_SIMPLE_TRANSACTION
+            new_transaction = Transaction(str(public_key), str(chosen_receiver), str(transaction_type), str(chosen_payload))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
             transaction_hash = self.crypto_helper.hash(new_transaction.get_json())
 

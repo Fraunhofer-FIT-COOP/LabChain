@@ -2,31 +2,31 @@ from labchain.workflow.taskTransaction import TaskTransaction
 from labchain.workflow.taskTransaction import WorkflowTransaction
 from labchain.datastructure.transaction import Transaction
 from labchain.util.cryptoHelper import CryptoHelper
-
-#   Transaction types:
-#   0: Normal transaction
-#   1: Workflow transaction (includes workflow definition)
-#   2: Task transaction (includes changes on the document inside the workflow)
+from labchain.datastructure.transaction import TYPE_SIMPLE_TRANSACTION, TYPE_WORKFLOW_TRANSACTION, TYPE_TASK_TRANSACTION
 
 
 class TransactionFactory:
 
     @staticmethod
     def create_transaction(transaction_data):
-        transaction_type = 0
+        transaction_type = TYPE_SIMPLE_TRANSACTION
         try:
-            transaction_type = transaction_data["transaction_type"]
-        except:
-            pass
+            transaction_type = int(transaction_data["transaction_type"])
+        except ValueError as e:
+            raise Exception("Invalid transaction type: {}".format(transaction_type))
+        except Exception as e:
+            raise e
 
-        if transaction_type is '0':
+        if transaction_type == TYPE_SIMPLE_TRANSACTION:
             t = Transaction(transaction_data['sender'], transaction_data['receiver'], transaction_type,
                             transaction_data['payload'], transaction_data['signature'])
-        elif transaction_type is '1':
+        elif transaction_type == TYPE_WORKFLOW_TRANSACTION:
             t = WorkflowTransaction(transaction_data['sender'], transaction_data['receiver'], transaction_type,
                                     transaction_data['payload'], transaction_data['signature'])
-        else:   #elif 'document' in transaction_data['payload']:
+        elif transaction_type == TYPE_TASK_TRANSACTION:
             t = TaskTransaction(transaction_data['sender'], transaction_data['receiver'], transaction_type,
                                 transaction_data['payload'], transaction_data['signature'])
+        else:
+            raise Exception("Invalid transaction type: {}".format(transaction_type))
         t.transaction_hash = CryptoHelper.instance().hash(t.get_json())
         return t

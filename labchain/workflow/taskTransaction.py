@@ -3,6 +3,7 @@ import logging
 import threading
 from base64 import b64decode
 from typing import Dict
+from labchain.datastructure.transaction import TYPE_WORKFLOW_TRANSACTION, TYPE_TASK_TRANSACTION
 
 from Crypto.PublicKey import ECC
 
@@ -24,7 +25,7 @@ class TaskTransaction(Transaction):
         :return result: True if transaction is valid
         """
         TaskTransaction._validation_lock.acquire()
-        if self.transaction_type is not '2':
+        if self.transaction_type is not TYPE_TASK_TRANSACTION:
             logging.warning('Transaction has wrong transaction type')
             TaskTransaction._validation_lock.release()
             return False
@@ -238,7 +239,7 @@ class WorkflowTransaction(TaskTransaction):
 
     def validate_transaction(self, crypto_helper, blockchain):
         TaskTransaction._validation_lock.acquire()
-        if self.transaction_type is not '1':
+        if self.transaction_type is not TYPE_WORKFLOW_TRANSACTION:
             logging.warning('Transaction has wrong transaction type')
             TaskTransaction._validation_lock.release()
             return False

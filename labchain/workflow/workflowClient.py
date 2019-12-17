@@ -8,9 +8,11 @@ from labchain.util.TransactionFactory import TransactionFactory
 from labchain.workflow.taskTransaction import TaskTransaction, WorkflowTransaction
 from time import sleep
 from multiprocessing import Process
+from labchain.datastructure.transaction import TYPE_WORKFLOW_TRANSACTION, TYPE_TASK_TRANSACTION
 
 
 RESOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources'))
+
 
 class TaskTransactionWizard(TransactionWizard):
     """CLI wizard for creating new task transactions and showing workflow status."""
@@ -63,7 +65,7 @@ class TaskTransactionWizard(TransactionWizard):
         print()
 
         for tuple in list(enumerate(receiver_list)):
-            print(str(tuple[0]+1) + u': '+ comment_dict[tuple[1].split('_')[0]] +':')
+            print(str(tuple[0] + 1) + u': ' + comment_dict[tuple[1].split('_')[0]] + ':')
             print('...' + str(tuple[1].split('_')[0][84:199]) + '...')
             print()
 
@@ -93,11 +95,11 @@ class TaskTransactionWizard(TransactionWizard):
 
         #   separate received transactions into workflow and task transactions
         received_workflow_transaction = [WorkflowTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     str(t.transaction_type) == '1']
+                                     t.transaction_type == TYPE_WORKFLOW_TRANSACTION]
         received_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in received if
-                                     str(t.transaction_type) == '2']
+                                     t.transaction_type == TYPE_TASK_TRANSACTION]
         sent_task_transaction = [TaskTransaction.from_json(t.get_json_with_signature()) for t in send if
-                                 str(t.transaction_type) == '2']
+                                 t.transaction_type == TYPE_TASK_TRANSACTION]
 
         #   remove or keep the transaction according to split&merge status of the workflow
         sent_task_transaction = self.rearrange_sent_task_transactions(sent_task_transaction)
@@ -121,7 +123,7 @@ class TaskTransactionWizard(TransactionWizard):
             for elem in to_remove:
                 diff_set.remove(elem)
 
-        #remove completed txs
+        # remove completed txs
         completed = list()
         for tx_hash in diff_set:
             if "processes" in received_tx_dict[tx_hash].payload:
@@ -240,7 +242,7 @@ class TaskTransactionWizard(TransactionWizard):
 
     def check_if_wf_arrived(self, public_key, wf_id):
         received = self.network_interface.search_transaction_from_receiver(public_key.split("_")[0])
-        received_workflow_transactions = [TaskTransaction.from_json(t.get_json_with_signature()).payload["workflow_id"]==wf_id and TaskTransaction.from_json(t.get_json_with_signature()).payload["in_charge"] == public_key for t in received if
+        received_workflow_transactions = [TaskTransaction.from_json(t.get_json_with_signature()).payload["workflow_id"] == wf_id and TaskTransaction.from_json(t.get_json_with_signature()).payload["in_charge"] == public_key for t in received if
                                      'workflow_id' in t.payload]
         return True if True in received_workflow_transactions else False
 
@@ -300,11 +302,11 @@ class TaskTransactionWizard(TransactionWizard):
         for file in os.listdir(self.my_dir):
             with open(os.path.join(self.my_dir, file)) as f:
                 wf_definition = json.load(f)
-                document_cond = set(wf_definition["document"].keys())  == set(workflow_payload["document"].keys())
-                permissions_key_cond = set(wf_definition["permissions"].keys())  == set(workflow_payload["permissions"].keys())
+                document_cond = set(wf_definition["document"].keys()) == set(workflow_payload["document"].keys())
+                permissions_key_cond = set(wf_definition["permissions"].keys()) == set(workflow_payload["permissions"].keys())
                 permissions_val_cond = [len(value_list) for value_list in wf_definition["permissions"].values()].sort() == \
                                        [len(value_list) for value_list in workflow_payload["permissions"].values()].sort()
-                split_key_cond = set(wf_definition["splits"].keys())  == set(workflow_payload["splits"].keys())
+                split_key_cond = set(wf_definition["splits"].keys()) == set(workflow_payload["splits"].keys())
                 split_val_cond = [len(value_list) for value_list in wf_definition["splits"].values()].sort() == \
                                        [len(value_list) for value_list in workflow_payload["splits"].values()].sort()
 
@@ -344,13 +346,13 @@ class TaskTransactionWizard(TransactionWizard):
             for (key, wf_tx) in enumerate(workflow_transactions):
                 status, waiting_addresses = self.get_workflow_status(wf_tx)
                 print()
-                print(str(key+1) + u':  Workflow id: ' + str(wf_tx["workflow_id"] + '\t---->\t' +
+                print(str(key + 1) + u':  Workflow id: ' + str(wf_tx["workflow_id"] + '\t---->\t' +
                       self.get_workflow_name(wf_tx) + '\t---->\t' + status))
                 if len(waiting_addresses) != 0:
                     print("Waiting for the following accounts: ")
                     for item in set(waiting_addresses):
                         comment = [elem[0] for elem in self.wallet_to_list() if elem[1] == item.split("_")[0]][0]
-                        print(u'* '+ comment + ' :')
+                        print(u'* ' + comment + ' :')
                         print(' ..' + item[84:199] + '..._' + item.split("_")[1])
                 print()
                 print("------------------------------------------------------------------")
@@ -434,7 +436,6 @@ class TaskTransactionWizard(TransactionWizard):
             clear_screen()
             print(u'Sender: ' + str(chosen_key))
 
-
             private_key = wallet_list[int(chosen_key) - 1][2]
             public_key = wallet_list[int(chosen_key) - 1][1]
 
@@ -496,7 +497,7 @@ class TaskTransactionWizard(TransactionWizard):
                 if receiver_index == '':
                     return
                 print()
-            next_in_charge = next_in_charge_list[int(receiver_index)-1]
+            next_in_charge = next_in_charge_list[int(receiver_index) - 1]
             chosen_receiver = next_in_charge.split('_')[0]
 
             clear_screen()
@@ -541,7 +542,7 @@ class TaskTransactionWizard(TransactionWizard):
                                   previous_transaction=task_hash)
             new_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
                                                                      receiver=chosen_receiver,
-                                                                     transaction_type='2',
+                                                                     transaction_type=TYPE_TASK_TRANSACTION,
                                                                      payload=chosen_payload,
                                                                      signature=''))
             new_transaction.sign_transaction(self.crypto_helper, private_key)
@@ -562,6 +563,7 @@ class TaskTransactionWizard(TransactionWizard):
             print(u'Wallet does not contain any keys! Please create one first!')
 
         input('Press any key to go back to the main menu!')
+
 
 class WorkflowTransactionWizard(TransactionWizard):
     """CLI wizard for creating new workflow transactions."""
@@ -752,7 +754,7 @@ class WorkflowTransactionWizard(TransactionWizard):
             # prepare the transaction and send it to the sender
             transaction = TransactionFactory.create_transaction(dict(sender=sender_public_key,
                                                                      receiver=sender_public_key,
-                                                                     transaction_type='1',
+                                                                     transaction_type=TYPE_WORKFLOW_TRANSACTION,
                                                                      payload=chosen_payload,
                                                                      signature=''))
             transaction.sign_transaction(self.crypto_helper, sender_private_key)
@@ -765,6 +767,7 @@ class WorkflowTransactionWizard(TransactionWizard):
             print(u'Hash: ' + str(transaction_hash))
             print()
         input('Press any key to go back to the main menu!')
+
 
 class WorkflowClient:
 
@@ -807,11 +810,11 @@ class WorkflowClient:
         # ATTENTION: change the data below with a transaction data that already exists on blockchain
         public_key = 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFNTJtZUE3RlhXZDFtMlM0VzFvRVF1VGozMTkrdwpRZVFsdVpNbEZCSEdxNFZyY1plYWRKUFNjMEJ4NkxVY3A0RFF5K3oxVlRmNXMwZWp4QnRHMC8vZDZBPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t'
         chosen_receiver = 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcUM1dm5Qazdwb3pLczRRRTA0K2t6cnZILy9aawptMmlqL05LdVg4c3J0N2hyZWd0bDZPT09xVUhNOUFZZ1hFWEhCRndYK3BJZHlQVXRRWFlUVGhWeEtRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t'
-        chosen_payload = {'document': {'coffee_status': 'full'},'in_charge': 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcUM1dm5Qazdwb3pLczRRRTA0K2t6cnZILy9aawptMmlqL05LdVg4c3J0N2hyZWd0bDZPT09xVUhNOUFZZ1hFWEhCRndYK3BJZHlQVXRRWFlUVGhWeEtRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0','previous_transaction': 'b2798402df69723bfe2582da789a8bbf189abfc59b13f4cb8c5fb04c3b75a660','workflow_id': '1', 'workflow_transaction': 'b2798402df69723bfe2582da789a8bbf189abfc59b13f4cb8c5fb04c3b75a660'}
+        chosen_payload = {'document': {'coffee_status': 'full'}, 'in_charge': 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcUM1dm5Qazdwb3pLczRRRTA0K2t6cnZILy9aawptMmlqL05LdVg4c3J0N2hyZWd0bDZPT09xVUhNOUFZZ1hFWEhCRndYK3BJZHlQVXRRWFlUVGhWeEtRPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t_0', 'previous_transaction': 'b2798402df69723bfe2582da789a8bbf189abfc59b13f4cb8c5fb04c3b75a660', 'workflow_id': '1', 'workflow_transaction': 'b2798402df69723bfe2582da789a8bbf189abfc59b13f4cb8c5fb04c3b75a660'}
         private_key = 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JR0hBZ0VBTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEJHMHdhd0lCQVFRZ1A0VnhaWi9PQm5LWnNOaTAKcjFpcVU4bS9sWDY4OEMrb2g5azd5aEVadk5haFJBTkNBQVRuYVo0RHNWZFozV2JaTGhiV2dSQzVPUGZYMzdCQgo1Q1c1a3lVVUVjYXJoV3R4bDVwMGs5SnpRSEhvdFJ5bmdOREw3UFZWTi9telI2UEVHMGJULzkzbwotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t'
         new_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
                                                                      receiver=chosen_receiver,
-                                                                     transaction_type='2',
+                                                                     transaction_type=TYPE_TASK_TRANSACTION,
                                                                      payload=chosen_payload,
                                                                      signature=''))
         new_transaction.sign_transaction(self.crypto_helper, private_key)
@@ -840,7 +843,7 @@ class WorkflowClient:
         workflow_payload["workflow_id"] = workflow_id
         wf_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
                                                                     receiver=public_key,
-                                                                    transaction_type='1',
+                                                                    transaction_type=TYPE_WORKFLOW_TRANSACTION,
                                                                     payload=workflow_payload,
                                                                     signature=''))
         wf_transaction.sign_transaction(self.crypto_helper, priv_key)
@@ -856,7 +859,7 @@ class WorkflowClient:
         # Check if the previous transaction is mined, if yes send the next one in line
         while len(received_wf_tx) <= len(workflow_payload['processes'].keys()):
             if previous_len == len(received_wf_tx):
-                sleep(0.2)      #TODO might be smaller?
+                sleep(0.2)  # TODO might be smaller?
                 received_wf_tx = [tx for tx in self.network_interface.search_transaction_from_receiver(public_key)
                                   if tx.payload['workflow_id'] == workflow_id]
             else:
@@ -879,7 +882,7 @@ class WorkflowClient:
                 print(chosen_payload)
                 new_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
                                                                              receiver=public_key,
-                                                                             transaction_type='2',
+                                                                             transaction_type=TYPE_TASK_TRANSACTION,
                                                                              payload=chosen_payload,
                                                                              signature=''))
                 new_transaction.sign_transaction(self.crypto_helper, priv_key)
@@ -894,7 +897,7 @@ class WorkflowClient:
     def run_benchmarking(self, num_workflows):
         proc = []
         for i in range(num_workflows):
-            p = Process(target=self.run_workflow, args=(i+1,))
+            p = Process(target=self.run_workflow, args=(i + 1,))
             proc.append(p)
 
         for p in proc:

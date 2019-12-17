@@ -2,6 +2,13 @@ import json
 
 from labchain.util.cryptoHelper import CryptoHelper
 
+# Represents a simple transaction with arbitrary payload
+TYPE_SIMPLE_TRANSACTION = 0
+# Represents the initiation transaction of a workflow
+TYPE_WORKFLOW_TRANSACTION = 1
+# Represents a delta-transaction of a workflow that means it moves the process
+TYPE_TASK_TRANSACTION = 2
+
 
 class Transaction:
     """Represents a single transaction within the blockchain."""

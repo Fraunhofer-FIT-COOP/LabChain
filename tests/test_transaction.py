@@ -12,6 +12,7 @@ from labchain.datastructure.transaction import Transaction
 from labchain.datastructure.txpool import TxPool
 from labchain.util.configReader import ConfigReader
 from labchain.util.cryptoHelper import CryptoHelper
+from labchain.datastructure.transaction import TYPE_WORKFLOW_TRANSACTION, TYPE_TASK_TRANSACTION
 
 
 class TransactionTestCase(unittest.TestCase):
@@ -170,13 +171,12 @@ class TransactionTestCase(unittest.TestCase):
                          'Receiver Address: r\n' +
                          'Payload:          1\n' +
                          'Signature:        sig\n' +
-                         'Hash:             0x123456\n'
-                         , capturedOutput.getvalue())
+                         'Hash:             0x123456\n', capturedOutput.getvalue())
 
 
 class TaskTransactionCommon(unittest.TestCase):
     def setUp(self):
-        self.init_blockchain();
+        self.init_blockchain()
 
     def init_blockchain(self):
         self.crypto_helper_obj = CryptoHelper.instance()
@@ -213,7 +213,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "signature": None,
             "payload": {
                 "workflow_id": "0",
-                "transaction_type": "1",
+                "transaction_type": TYPE_WORKFLOW_TRANSACTION,
                 "document": {
                     "stringAttribute": "stringValue",
                     "booleanAttribute": 'true',
@@ -237,7 +237,7 @@ class TaskTransactionCommon(unittest.TestCase):
                 "previous_transaction": "",
                 "workflow_transaction": "",
                 "splits": {},
-                "comments":{}
+                "comments": {}
             }
         }
         return workflow_transaction_json
@@ -256,7 +256,7 @@ class TaskTransactionCommon(unittest.TestCase):
             "signature": None,
             "payload": {
                 "workflow_id": "0",
-                "transaction_type": "2",
+                "transaction_type": TYPE_TASK_TRANSACTION,
                 "document": {
                     "stringAttribute": "1234"
                 },
