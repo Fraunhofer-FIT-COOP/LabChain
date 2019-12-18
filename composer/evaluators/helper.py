@@ -4,6 +4,14 @@ import re
 import sys
 
 
+def importBenchmarkLog(path):
+    _data = []
+    with open(path, "r") as f:
+        _data = json.loads(f.read())
+
+    return _data
+
+
 def importNodeLog(path):
     _data = []
 
