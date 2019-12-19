@@ -130,7 +130,7 @@ def spawnWorkflowTransactions(benchmark_name):
             client = create_document_flow_client(open_wallet_file, "localhost", 5000 + int(benchmark["docker_receiver"][0]["name"].split("_")[1]))
         elif client is None:
             raise Exception("Invalid environment type")
-        client.run_benchmarking(1)
+        client.run_benchmarking(500)
 
 
 def setupBenchmarkNetwork(benchmark_name):

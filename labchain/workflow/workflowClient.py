@@ -1,6 +1,8 @@
 import os
+import sys
 import json
 import pprint
+import logging
 
 from labchain.util.Menu import Menu
 from labchain.blockchainClient import TransactionWizard, clear_screen
@@ -847,6 +849,9 @@ class WorkflowClient:
                                                                     payload=workflow_payload,
                                                                     signature=''))
         wf_transaction.sign_transaction(self.crypto_helper, priv_key)
+        print(("-" * 40) + "Self check")
+        print(wf_transaction.get_json())
+        assert self.crypto_helper.validate(wf_transaction.sender, wf_transaction.get_json(), wf_transaction.signature)
         self.network_interface.sendTransaction(wf_transaction)
         wf_transaction_hash = self.crypto_helper.hash(wf_transaction.get_json())
         print("WFTX hash for process {}:{}".format(process_no, wf_transaction_hash))
@@ -899,6 +904,8 @@ class WorkflowClient:
         for i in range(num_workflows):
             p = Process(target=self.run_workflow, args=(i + 1,))
             proc.append(p)
+
+        print("Processes started: {}".format(len(proc)))
 
         for p in proc:
             p.start()
