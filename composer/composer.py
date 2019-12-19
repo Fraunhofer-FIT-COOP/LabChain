@@ -19,6 +19,7 @@ sys.path.insert(0, '../')  # noqa
 from labchain.network.networking import JsonRpcClient, NetworkInterface  # noqa
 from labchain.util.cryptoHelper import CryptoHelper
 from labchain.datastructure.transaction import Transaction, TYPE_SIMPLE_TRANSACTION
+from client import create_document_flow_client, WALLET_FILE_PATH
 
 networkInterface = None
 BENCHMARK_DATA_DIRECTORY = "./benchmark_data"
@@ -116,6 +117,20 @@ def spawnBenchmarkTransactions(benchmark_name):
             _networkInterface.sendTransaction(new_transaction)
 
 
+def spawnWorkflowTransactions(benchmark_name):
+    global benchmark_data
+
+    benchmark = benchmark_data[benchmark_name]
+
+    with open(WALLET_FILE_PATH, "r+") as open_wallet_file:
+        client = None
+        if benchmark["environment_type"] == "specific_node":
+            client = create_document_flow_client(open_wallet_file, benchmark["specific_target_url"], benchmark["specific_target_port"])
+        elif benchmark["environment_type"] == "setup_docker_network" or benchmark["environment_type"] == "exisitng_docker_network":
+            client = create_document_flow_client(open_wallet_file, "localhost", 5000 + int(benchmark["peers"][0].split("_")[1]))
+        client.run_benchmarking(1)
+
+
 def setupBenchmarkNetwork(benchmark_name):
     global benchmark_data
     node_count = benchmark_data[benchmark_name]["nodecount"]
@@ -136,10 +151,17 @@ def setupBenchmarkNetwork(benchmark_name):
 def setupBenchmark(benchmark_name):
     global benchmark_data
 
-    if benchmark_data[benchmark_name]["nodecount"] != -1:
-        setupBenchmarkNetwork(benchmark_name)
+    print("Setup Benchmark: {}".format(benchmark_data[benchmark_name]))
 
-    spawnBenchmarkTransactions(benchmark_name)
+    if benchmark_data[benchmark_name]["environment_type"] == "setup_docker_network":
+        setupBenchmarkNetwork(benchmark_name)
+    elif benchmark_data[benchmark_name]["environment_type"] == "specfic_node":
+        pass
+    elif benchmark_data[benchmark_name]["environment_type"] == "existing_docker_network":
+        pass
+
+    # spawnBenchmarkTransactions(benchmark_name)
+    spawnWorkflowTransactions(benchmark_name)
 
 
 def lookupThread():
@@ -176,8 +198,6 @@ def lookupThread():
 
         if block._block_id == last_block_checked:  # block already considered
             continue
-
-        # logger.info(str(block))
 
         if len(block._transactions) == 0:  # no transactions to consider
             empty_count += 1
@@ -428,6 +448,7 @@ def benchmark_simple():
     The composer will watch the blocks in the blockchain to determine when a transaction got mined.
     """
     data = json.loads(request.data.decode('utf-8'))
+    print(data)
 
     global benchmark_data
     global benchmark_queue
@@ -444,15 +465,21 @@ def benchmark_simple():
     data["found_transactions"] = []
     data["finished"] = False
 
-    peercount = len(data["peers"])
+    peercount = -1
 
-    if data["nodecount"] != -1:
+    if data["environment_type"] == "setup_docker_network":
         peercount = data["nodecount"]
+    elif data["environment_type"] == "specific_node":
+        peercount = 1
+    elif data["environment_type"] == "existing_docker_network":
+        peercount = len(data["peers"])
+    else:
+        raise Exception("Invalid environment type for benchmak {}".format(data.get("environment_type", "None")))
 
-    transactions_per_peer = math.ceil(float(data["n_transactions"] / peercount))
+    transactions_per_peer = math.ceil(float(data["transactionCount"] / peercount))
     # update number of transactions if number of transactions is not divisable
     # by the number of peers
-    data["n_transactions"] = transactions_per_peer * peercount
+    data["transactionCount"] = transactions_per_peer * peercount
     data["n_transactions_per_peer"] = transactions_per_peer
 
     benchmark_data[benchmark_name] = data

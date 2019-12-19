@@ -1,4 +1,5 @@
-import { LabchainClient } from "../labchainSDK/Client";
+import {LabchainClient} from "../labchainSDK/Client";
+import {StartBenchmarkConfig} from "./BenchmarkEngine";
 
 export interface BenchmarkStatus {
     remaining_txs: number;
@@ -48,9 +49,9 @@ export class DockerInterface {
     /**
      * Returns the labchain interfaces to the running docker instances
      * */
-    public static getClientInterfaces(): Promise<{ instance: DockerInstance; client: LabchainClient }[]> {
-        return new Promise<{ instance: DockerInstance; client: LabchainClient }[]>((resolve, reject) => {
-            let clients: { instance: DockerInstance; client: LabchainClient }[] = [];
+    public static getClientInterfaces(): Promise<{instance: DockerInstance; client: LabchainClient}[]> {
+        return new Promise<{instance: DockerInstance; client: LabchainClient}[]>((resolve, reject) => {
+            let clients: {instance: DockerInstance; client: LabchainClient}[] = [];
             DockerInterface.getInstances().then(instances => {
                 for (let inst of instances) {
                     if (inst.status !== "running") continue;
@@ -58,7 +59,7 @@ export class DockerInterface {
 
                     let client: LabchainClient = new LabchainClient("http://" + DockerInterface.host + ":" + (id + 5000) + "/");
 
-                    clients.push({ instance: inst, client: client });
+                    clients.push({instance: inst, client: client});
                 }
 
                 resolve(clients);
@@ -115,11 +116,11 @@ export class DockerInterface {
         return instances;
     }
 
-    public static async benchmarkSimple(benchmarkName: string, transaction_count: number, peers: string[], nodecount: number): Promise<any> {
+    public static async benchmarkSimple(startBenchmarkConfig: StartBenchmarkConfig): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             fetch(DockerInterface.url + "/benchmarkSimple", {
                 method: "POST",
-                body: JSON.stringify({ benchmark_name: benchmarkName, n_transactions: transaction_count, peers: peers, nodecount: nodecount }),
+                body: JSON.stringify(startBenchmarkConfig),
                 headers: {
                     "Content-Type": "application/json"
                 }

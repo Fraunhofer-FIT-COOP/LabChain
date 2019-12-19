@@ -1,4 +1,14 @@
-import { DockerInstance, DockerInterface } from "./DockerInterface";
+import {DockerInstance, DockerInterface} from "./DockerInterface";
+
+export interface StartBenchmarkConfig {
+    benchmark_name: string;
+    environment_type: string;
+    nodecount?: number;
+    docker_receiver?: DockerInstance[];
+    specific_target_url?: string;
+    specific_target_port?: number;
+    transactionCount?: number;
+}
 
 export interface BenchmarkData {
     transaction_hash: string;
@@ -6,14 +16,10 @@ export interface BenchmarkData {
     end_time?: number;
 }
 
-export default class BenchmarkEngine {
-    _receiver: DockerInstance[];
-    _filename: string;
-    _nodecount: number;
-    constructor(receiver: DockerInstance[], filename: string, nodecount: number) {
-        this._receiver = receiver;
-        this._filename = filename;
-        this._nodecount = nodecount;
+export class BenchmarkEngine {
+    _startBenchmarkConfig: StartBenchmarkConfig;
+    constructor(startBenchmarkConfig: StartBenchmarkConfig) {
+        this._startBenchmarkConfig = startBenchmarkConfig;
     }
 
     /**
@@ -21,6 +27,7 @@ export default class BenchmarkEngine {
      * the average time until those transactions become visible in the block of a sampler.
      * */
     benchmarkSimpleTransactions(n: number): Promise<any> {
-        return DockerInterface.benchmarkSimple(this._filename, n, this._receiver.map(x => x.name), this._nodecount);
+        this._startBenchmarkConfig.transactionCount = n;
+        return DockerInterface.benchmarkSimple(this._startBenchmarkConfig);
     }
 }
