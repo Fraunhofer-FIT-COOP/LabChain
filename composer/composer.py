@@ -96,10 +96,10 @@ def spawnBenchmarkTransactions(benchmark_name):
     benchmark = benchmark_data[benchmark_name]
 
     transactions_per_peer = benchmark["n_transactions_per_peer"]
-    logger.info("Distribute {} transactions to {} peers, so {} per peer".format(benchmark["n_transactions"], len(benchmark["peers"]), transactions_per_peer))
+    logger.info("Distribute {} transactions to {} peers, so {} per peer".format(benchmark["n_transactions"], len(benchmark["docker_receiver"]), transactions_per_peer))
     tx_count = 0
 
-    for peer in benchmark["peers"]:
+    for peer in benchmark["docker_receiver"]:
         _networkInterface = NetworkInterface(JsonRpcClient(), {os.environ.get("HOST_NAME", "localhost"): {(5000 + int(peer.split("_")[1])): {}}})
         crypto_helper = CryptoHelper.instance()
         sender_pr_key, sender_pub_key = crypto_helper.generate_key_pair()
@@ -126,8 +126,10 @@ def spawnWorkflowTransactions(benchmark_name):
         client = None
         if benchmark["environment_type"] == "specific_node":
             client = create_document_flow_client(open_wallet_file, benchmark["specific_target_url"], benchmark["specific_target_port"])
-        elif benchmark["environment_type"] == "setup_docker_network" or benchmark["environment_type"] == "exisitng_docker_network":
-            client = create_document_flow_client(open_wallet_file, "localhost", 5000 + int(benchmark["peers"][0].split("_")[1]))
+        elif benchmark["environment_type"] == "setup_docker_network" or benchmark["environment_type"] == "existing_docker_network":
+            client = create_document_flow_client(open_wallet_file, "localhost", 5000 + int(benchmark["docker_receiver"][0]["name"].split("_")[1]))
+        elif client is None:
+            raise Exception("Invalid environment type")
         client.run_benchmarking(1)
 
 
@@ -145,7 +147,7 @@ def setupBenchmarkNetwork(benchmark_name):
     instances = spawnNodes(node_count, benchmark_name)
     logger.info("Spawned new network")
 
-    benchmark_data[benchmark_name]["peers"] = list(map(lambda x: x["name"], instances))
+    benchmark_data[benchmark_name]["docker_receiver"] = list(map(lambda x: x["name"], instances))
 
 
 def setupBenchmark(benchmark_name):
@@ -472,7 +474,7 @@ def benchmark_simple():
     elif data["environment_type"] == "specific_node":
         peercount = 1
     elif data["environment_type"] == "existing_docker_network":
-        peercount = len(data["peers"])
+        peercount = len(data["docker_receiver"])
     else:
         raise Exception("Invalid environment type for benchmak {}".format(data.get("environment_type", "None")))
 

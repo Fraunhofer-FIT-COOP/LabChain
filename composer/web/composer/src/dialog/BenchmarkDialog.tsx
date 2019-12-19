@@ -317,7 +317,12 @@ export default function BenchmarkDialog(props: any) {
                                                 <button
                                                         className="btn btn-primary"
                                                         onClick={() => {
-                                                                props.ok(selectedReceiver.map(x => (x as any).value), filename, nodecount);
+                                                                props.ok({
+                                                                        benchmark_name: filename,
+                                                                        nodecount: nodecount,
+                                                                        docker_receiver: selectedReceiver.map(x => (x as any).value),
+                                                                        environment_type: configureNetwork ? "setup_docker_network" : "existing_docker_network"
+                                                                });
                                                         }}
                                                 >
                                                         Ok
