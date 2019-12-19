@@ -105,3 +105,19 @@ class Tests(TestCase):
         key = ECC.import_key(private_key)
         public_key_true = key.public_key().export_key(format='PEM')
         self.assertEqual(public_key_true, public_key)
+
+    def test_unpack_payload(self):
+        helper = CryptoHelper.instance()
+
+        data = '{"a": 1, "c": 2, "b": 3}'
+        self.assertEqual(helper.unpack_payload(data), "132")
+
+        # check nested jsons
+        data = '{"a": 1, "c": 2, "b": { "d" : 3, "i" : 4, "g": 5}}'
+        self.assertEqual(helper.unpack_payload(data), "13542")
+
+        data = 1
+        self.assertEqual(helper.unpack_payload(data), "1")
+
+        data = "2"
+        self.assertEqual(helper.unpack_payload(data), "2")

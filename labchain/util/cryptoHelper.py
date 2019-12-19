@@ -74,7 +74,7 @@ class CryptoHelper:
 
     def __hash(self, payload):
         try:
-            real_payload = self.__unpack_payload(payload)  # Get the real payload to be hashed
+            real_payload = self.unpack_payload(payload)  # Get the real payload to be hashed
         except ValueError:
             raise ValueError('Payload is not json')
         message = real_payload.encode()  # Encode string for hashing
@@ -90,17 +90,33 @@ class CryptoHelper:
         hash_object = self.__hash(payload)  # Hash the payload
         return hash_object.hexdigest()  # Return hex representation of the hash
 
-    def __unpack_payload(self, payload):
+    def unpack_payload(self, payload):
+        """ Unpacks the json (nested) payload
+        """
 
-        if not Utility.is_json(payload):
-            raise ValueError('Payload is not json')
+        if Utility.is_json(payload):
+            payload_dict = json.loads(payload)  # Get JSON string
+            if type(payload_dict) == str:
+                return payload_dict
+            elif type(payload_dict) == int:
+                return str(payload_dict)
+        elif type(payload) == dict:
+            payload_dict = payload
+        elif type(payload) == int:
+            return str(payload)
+        else:
+            raise Exception("Unrecognized type ({}) to unpack: {}".format(type(payload), payload))
 
-        payload_dict = json.loads(payload)  # Get JSON string
         sorted_payload = sorted(payload_dict)  # Get the sorted list of keys
 
         real_payload = ""
 
         for i in sorted_payload:
-            real_payload += str(payload_dict[i])  # Concatenate all values according to sorted keys
+            if Utility.is_json(payload_dict[i]):
+                real_payload += self.unpack_payload(payload_dict[i])
+            elif type(payload_dict[i]) == dict:
+                real_payload += self.unpack_payload(payload_dict[i])
+            else:
+                real_payload += str(payload_dict[i])  # Concatenate all values according to sorted keys
 
         return real_payload

@@ -34,6 +34,9 @@ class Utility:
 
     @staticmethod
     def is_json(object_param):
+        if type(object_param) is not str:
+            return False
+
         try:
             json.loads(object_param)
         except ValueError:

@@ -48,8 +48,9 @@ class Wallet:
             try:
                 label, public_key, private_key = line.split(';', 2)
                 result[label] = (public_key, private_key)
-            except ValueError:
-                pass
+            except ValueError as e:
+                logging.error(e)
+                raise Exception("Could not parse wallet file")
         return result
 
     @staticmethod
