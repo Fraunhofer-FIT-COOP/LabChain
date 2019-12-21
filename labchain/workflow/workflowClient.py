@@ -631,6 +631,7 @@ class WorkflowTransactionWizard(TransactionWizard):
         #   exchange the meaningful names with public key values chosen by the client
         workflow_str = json.dumps(workflow_template)
         for key, value in exchange_dict.items():
+            print("-- replace {} by {}".format(key, value))
             workflow_str = workflow_str.replace(key, value)
         new_workflow = json.loads(workflow_str)
         new_workflow["comments"] = dict()
@@ -832,26 +833,37 @@ class WorkflowClient:
         workflow_file_path = os.path.join(self.workflow_transaction_wizard.my_dir,
                                           [wf for wf in self.workflow_transaction_wizard.get_workflow_list() if
                                            "Thomas" in wf][0])
+
+        print(workflow_file_path)
         with open(workflow_file_path) as f:
             chosen_payload = json.load(f)
 
+        print(chosen_payload)
         #   Create the workflow definition transaction
         in_charge_entity, task_entities = self.workflow_transaction_wizard.get_all_entities_in_wf(chosen_payload)
+        print("-" * 40)
+        print(in_charge_entity)
+        print(task_entities)
+        print("-" * 40)
         exchange_dict = dict()
         exchange_dict[in_charge_entity] = public_key
+        print(exchange_dict)
         workflow_payload = self.workflow_transaction_wizard.exchange_entities_with_pks(chosen_payload, exchange_dict,
                                                                                        self.workflow_transaction_wizard.wallet_to_list())
+        print(workflow_payload)
         workflow_id = 0
         workflow_payload["workflow_id"] = workflow_id
+        print(workflow_payload)
         wf_transaction = TransactionFactory.create_transaction(dict(sender=public_key,
                                                                     receiver=public_key,
                                                                     transaction_type=TYPE_WORKFLOW_TRANSACTION,
                                                                     payload=workflow_payload,
                                                                     signature=''))
+
         wf_transaction.sign_transaction(self.crypto_helper, priv_key)
         print(("-" * 40) + "Self check")
-        print(wf_transaction.get_json())
         assert self.crypto_helper.validate(wf_transaction.sender, wf_transaction.get_json(), wf_transaction.signature)
+        print(wf_transaction)
         self.network_interface.sendTransaction(wf_transaction)
         wf_transaction_hash = self.crypto_helper.hash(wf_transaction.get_json())
         print("WFTX hash for process {}:{}".format(process_no, wf_transaction_hash))

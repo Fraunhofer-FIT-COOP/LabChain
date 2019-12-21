@@ -56,7 +56,7 @@ class TaskTransaction(Transaction):
 
         if not previous_transaction.payload["in_charge"].split(sep='_')[0] == self.sender:
             logging.warning(
-                    'Sender is not the current owner of the document flow!')
+                    'Sender is not the current owner of the document flow! Sender: {} - in_charge: {}'.format(self.sender, previous_transaction.payload["in_charge"].split(sep='_')[0]))
             TaskTransaction._validation_lock.release()
             return False
 
@@ -256,6 +256,8 @@ class WorkflowTransaction(TaskTransaction):
                 TaskTransaction._validation_lock.release()
                 return False
         all_receivers = set()
+        print("empty?")
+        print(self.payload["processes"])
         for sender, receivers in self.payload["processes"].items():
             if not self._check_pid_well_formedness(sender):
                 TaskTransaction._validation_lock.release()

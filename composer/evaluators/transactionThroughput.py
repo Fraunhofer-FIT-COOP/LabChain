@@ -57,9 +57,15 @@ for d in data_add_block:
     x.append(d["data"]["nr"])
     y.append(compute_transaction_throughput(d))
 
-plt.plot(x, y)
-plt.xlabel("Block number")
-plt.ylabel("Transactions throughput")
-plt.title(sys.argv[1])
+plt.rc("text", usetex=True)
+plt.rc("font", family="serif")
 
+plt.plot(x, y)
+
+plt.xlabel(r"\textbf{Block number}")
+plt.ylabel(r"\textbf{Transaction throughput}")
+# plt.title(sys.argv[1])
+plt.title(r"\textbf{Performance Measurements of the WoLabchain}")
+
+plt.savefig("res.pdf", bbox_inches="tight")
 plt.show()
