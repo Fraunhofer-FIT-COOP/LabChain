@@ -129,3 +129,4 @@ python3 -m unittest discover
 - [ ] Create a setup.py
 - [ ] Create a docker file (data directory must be mountable and the node must be configurable)
 - [x] move to gitlab
+- [x] mirror to github repository (https://github.com/Fraunhofer-FIT-COOP/LabChain)
